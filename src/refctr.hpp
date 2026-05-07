@@ -12,8 +12,8 @@ namespace IRefCtr {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntType=unsigned int>
-  requires StdIsInteger<IntType>
+template<typename IntType = unsigned>
+  requires StdIsIntegral<IntType>
 class RefCtrMaster
 { /* -- Private variables -------------------------------------------------- */
   IntType          itMaster;           // Reference to protected variable
@@ -27,9 +27,9 @@ class RefCtrMaster
   /* ----------------------------------------------------------------------- */
 };                                     // End of class
 /* ------------------------------------------------------------------------- */
-template<typename IntType=unsigned int,
-         class RmcType=RefCtrMaster<IntType>>
-  requires StdIsInteger<IntType>
+template<typename IntType = unsigned,
+         class RmcType = RefCtrMaster<IntType>>
+  requires StdIsIntegral<IntType>
 class RefCtrSlave
 { /* -- Private variables -------------------------------------------------- */
   RmcType         &rtMaster;           // Reference to protected variable

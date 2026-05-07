@@ -11,15 +11,16 @@ namespace ILuaCommand {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace ICollector::P;
 using namespace IConsole::P;           using namespace IError::P;
-using namespace IIdent::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-typedef StdPair<LuaFunc, CmdMapIt> LuaCmdPair; // Lua id/cvar list
+using LuaCmdPair = StdPair<LuaFunc, CmdMapIt>; // Lua id/cvar list
 MAPPACK_BUILD(LuaCmd, const StdString, LuaCmdPair); // Map for lua vars
 /* -- Variables ollector class for collector data and custom variables ----- */
 CTOR_BEGIN(Commands, Command, CLHelperSafe,
@@ -48,20 +49,20 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   /* -- Unregister the console command from lua -------------------- */ public:
   const StdString &Name() const { return lcmiIt->first; }
   /* -- Register user console command from lua ----------------------------- */
-  void Init(lua_State*const lS, const StdString &strName,
-    const unsigned int uiMinimum, const unsigned int uiMaximum)
+  void Init(lua_State*const lS, const StdStringView &strvName,
+    const unsigned uMinimum, const unsigned uMaximum)
   { // Check that the console command is valid
-    if(!cConsole->IsValidConsoleCommandName(strName))
+    if(!cConsole->IsValidConsoleCommandName(strvName))
       XC("Console command name is invalid!",
-        "Command", strName, "Minimum", cConsole->stConCmdMinLength,
+        "Command", strvName, "Minimum", cConsole->stConCmdMinLength,
         "Maximum", cConsole->stConCmdMaxLength);
     // Check min/Max params and that they're valid
-    if(uiMinimum && uiMaximum && uiMaximum < uiMinimum)
+    if(uMinimum && uMaximum && uMaximum < uMinimum)
       XC("Minimum greater than maximum!",
-        "Identifier", strName, "Minimum",  uiMinimum, "Maximum", uiMaximum);
+        "Name", strvName, "Minimum",  uMinimum, "Maximum", uMaximum);
     // Find command and throw exception if already exists
-    if(GetLuaCmdsList().contains(strName))
-      XC("Virtual command already exists!", "Command", strName);
+    if(cConsole->CommandIsRegistered(strvName))
+      XC("Console command already exists!", "Command", strvName);
     // Since the userdata for this class object is at arg 5, we need to make
     // sure the callback function is ahead of it in arg 6 or the LuaFunc()
     // class which calls luaL_ref will fail as it ONLY reads position -1.
@@ -71,17 +72,17 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // is called. Create a function and reference the function on the lua
     // stack and insert the reference into the list
     lcmiIt = GetLuaCmdsList().insert(GetLuaCmdsListEnd(),
-      { StdMove(strName),
-        make_pair(LuaFunc{ StrAppend("CC:", strName), true },
-          cConsole->RegisterCommand(strName,
-            uiMinimum, uiMaximum, LuaCallbackStatic)) });
+      { StdString{ strvName },
+        make_pair(LuaFunc{ StrAppend("CC:", strvName), true },
+          cConsole->RegisterCommand(strvName,
+            uMinimum, uMaximum, LuaCallbackStatic)) });
   }
   /* -- Basic constructor with no init ----------------------------- */ public:
   Command() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperCommand{                   // Initialise and register the object
       cCommands, this },
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     lcmiIt{ GetLuaCmdsListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
     {}

@@ -21,16 +21,16 @@ using namespace Common;                using namespace IClock::P;
 using namespace ICredit::P;            using namespace ICmdLine::P;
 using namespace IConDef::P;            using namespace IConsole::P;
 using namespace ICore::P;              using namespace IDisplay::P;
-using namespace IEvtMain::P;           using namespace ILog::P;
-using namespace ILua::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ITimer::P;             using namespace IUtil::P;
+using namespace IEvtMain::P;           using namespace IFrame::P;
+using namespace ILog::P;               using namespace ILua::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace IUtil::P;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Core common helper classes                                          ## **
 ** ######################################################################### **
 ** -- Get process pid argument --------------------------------------------- */
-struct AgPid : public AgIntegerL<unsigned int> {
+struct AgPid : public AgIntegerL<unsigned> {
   explicit AgPid(lua_State*const lS, const int iArg) :
     AgIntegerL{lS, iArg, 1}{} };
 /* -- Read a credit id ----------------------------------------------------- */
@@ -48,7 +48,7 @@ struct AgCreditEnum : public AgIntegerLGE<CreditEnums> {
 // ? play properly if this is constantly used. Only use when doing loading
 // ? screens.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Catchup, 0, cTimer->TimerCatchup())
+LLFUNC(Catchup, 0, cFrame->FrameCatchup())
 /* ========================================================================= */
 // $ Core.CPU
 // < CPUid:string=The CPUID string.
@@ -69,7 +69,7 @@ LLFUNC(CPU, 6,
 // ? Get CPU loops processed in the last second. Should be the same as GPU for
 // ? most people but at times may be different, sometimes much higher.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPUFPS, 1, LuaUtilPushVar(lS, cTimer->TimerGetFPS()))
+LLFUNC(CPUFPS, 1, LuaUtilPushVar(lS, cFrame->FrameGetFPS()))
 /* ========================================================================= */
 // $ Core.CPUProcUsage
 // < Percent:number=Percentage process.
@@ -106,7 +106,7 @@ LLFUNC(CPUUsage, 2,
 // ? the delay and you want to offset a time point by the thread delay.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Delay, 1,
-  LuaUtilPushVar(lS, static_cast<lua_Number>(cTimer->TimerGetDelay()) / 1000))
+  LuaUtilPushVar(lS, static_cast<lua_Number>(cFrame->FrameGetDelay()) / 1000))
 /* ========================================================================= */
 // $ Core.Done
 // ? Confirms that you want the engine to exit. This is so you can perform
@@ -153,7 +153,8 @@ LLFUNC(Engine, 12,
 // ? empty. All environment variables are converted to upper-case at startup.
 // ? Type 'env' in the console to see the current environment.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Env, 1, LuaUtilPushExtStr(lS, cCmdLine->CmdLineGetEnv(AgString{lS,1})))
+LLFUNC(Env, 1,
+  LuaUtilPushExtStr(lS, cCmdLine->CmdLineGetEnv(AgString{lS,1}())))
 /* ========================================================================= */
 // $ Core.Events
 // < Events:integer=Number of events in the engine events system.
@@ -408,7 +409,7 @@ LLFUNC(RestartNP, 0, cEvtMain->Add(EMC_QUIT_RESTARTNP))
 // $ Core.RestoreDelay
 // ? Restores the frame thread suspend value set via cvars
 /* ------------------------------------------------------------------------- */
-LLFUNC(RestoreDelay, 0, cTimer->TimerRestoreDelay())
+LLFUNC(RestoreDelay, 0, cFrame->FrameRestoreDelay())
 /* ========================================================================= */
 // $ Core.ScrollDown
 // ? Scrolls the console up one line.
@@ -426,7 +427,7 @@ LLFUNC(ScrollUp, 0, cConsole->MoveLogUp())
 // ? is not updated and not saved.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
-  cTimer->TimerUpdateDelay(aMilliseconds))
+  cFrame->FrameUpdateDelay(aMilliseconds))
 /* ========================================================================= */
 // $ Core.SetIcon
 // > Filename:string=The filenames of the large icon to set.
@@ -435,7 +436,7 @@ LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
 // ? but the first and the last icon are dropped so make sure you list the
 // ? first filename as the large icon and the last filename as the small icon.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetIcon, 0, cDisplay->DisplaySetIconFromLua(AgString{lS, 1}))
+LLFUNC(SetIcon, 0, cDisplay->DisplaySetIconFromLua(AgString{lS, 1}()))
 /* ========================================================================= */
 // $ Core.Stack
 // < Stack:string=The current stack trace.
@@ -474,7 +475,7 @@ LLFUNC(Suspend, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
 // < Ticks:integer=Number of ticks.
 // ? Returns the total number of frames rendered since the engine started.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Ticks, 1, LuaUtilPushVar(lS, cTimer->TimerGetTicks()))
+LLFUNC(Ticks, 1, LuaUtilPushVar(lS, cFrame->FrameGetTicks()))
 /* ========================================================================= */
 // $ Core.Time
 // < Time:number=The time in seconds.
@@ -525,7 +526,7 @@ LLFUNC(WaitAsync, 0, cCore->CoreWaitAllAsync())
 // ? Writes the specified line of text directly to the console with no regard
 // ? to colour of text.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Write, 0, cConsole->ConsoleAddLine(COLOUR_CYAN, AgString{lS, 1}))
+LLFUNC(Write, 0, cConsole->ConsoleAddLine(COLOUR_CYAN, AgString{lS, 1}()))
 /* ========================================================================= */
 // $ Core.WriteEx
 // > Message:string=Text to write to console.
@@ -582,7 +583,6 @@ LLRSKTBEGIN(Colours)                   // Beginning of console colours
   LLRSKTITEM(COLOUR_,LGREEN),          LLRSKTITEM(COLOUR_,LCYAN),
   LLRSKTITEM(COLOUR_,LRED),            LLRSKTITEM(COLOUR_,LMAGENTA),
   LLRSKTITEM(COLOUR_,YELLOW),          LLRSKTITEM(COLOUR_,WHITE),
-  LLRSKTITEM(COLOUR_,MAX),
 LLRSKTEND                              // End of console colours
 /* ========================================================================= */
 // @ Core.Libraries
@@ -598,7 +598,7 @@ LLRSKTBEGIN(Libraries)                 // Beginning of supported library ids
 #endif                                 // Not using windows
   LLRSKTITEM(CL_,OGG),  LLRSKTITEM(CL_,AL),  LLRSKTITEM(CL_,SSL),
   LLRSKTITEM(CL_,JSON), LLRSKTITEM(CL_,SQL), LLRSKTITEM(CL_,THEO),
-  LLRSKTITEM(CL_,ZLIB), LLRSKTITEM(CL_,MAX),
+  LLRSKTITEM(CL_,ZLIB),
 LLRSKTEND                              // End of supported library ids
 /* ========================================================================= */
 // @ Core.LogLevels
@@ -608,7 +608,7 @@ LLRSKTEND                              // End of supported library ids
 LLRSKTBEGIN(LogLevels)                 // Beginning of log levels
   LLRSKTITEM(LH_,CRITICAL),            LLRSKTITEM(LH_,ERROR),
   LLRSKTITEM(LH_,WARNING),             LLRSKTITEM(LH_,INFO),
-  LLRSKTITEM(LH_,DEBUG),               LLRSKTITEM(LH_,MAX),
+  LLRSKTITEM(LH_,DEBUG),
 LLRSKTEND                              // End of log levels
 /* ========================================================================= **
 ** ######################################################################### **

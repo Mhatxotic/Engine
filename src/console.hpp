@@ -16,17 +16,15 @@ using namespace ICommon::P;            using namespace IConDef::P;
 using namespace IConLib::P;            using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags::P;             using namespace IGlFW::P;
+using namespace IFlags::P;             using namespace IFormat::P;
+using namespace IFrame::P;             using namespace IGlFW::P;
 using namespace IHelper::P;            using namespace IInterval::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISocket::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-/* -- Aliases -------------------------------------------------------------- */
-template<typename AnyType>using StdQueue = ::std::queue<AnyType>;
-using StdWOStream = ::std::wostream;
-constexpr static StdWOStream &(*StdIOSWEndLine)(StdWOStream&) = std::endl;
+using namespace ISysCon::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITime::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -76,9 +74,7 @@ struct Console :                       // Members initially private
     stConCmdMinLength = 1,             // Minimum length of a console command
     stConCmdMaxLength = 255;           // Maximum length of a console command
   /* -- Private typedefs ------------------------------------------ */ private:
-  typedef StdQueue<ConLine> ConLineQueue; // Pending console lines
-  /* -- Aliases ------------------------------------------------------------ */
-  constexpr static auto StdIOSSetFillWc = ::std::setfill<wchar_t>;
+  using ConLineQueue = StdQueue<ConLine>; // Pending console lines
   /* -- Input -------------------------------------------------------------- */
   ConLineQueue     clqOutput;          // Console lines pending
   ConLinesConstRevIt clriPosition;     // Console output position
@@ -104,8 +100,8 @@ struct Console :                       // Members initially private
   StdStringView    strvTimeFormat;     // Default time format
   /* -- Autocomplete ------------------------------------------------------- */
   AutoCompleteFlags acFlags;           // Flags for autocomplete
-  typedef StdSet<StdString>            AuComItSet;
-  typedef AuComItSet::const_iterator   AuComItSetConstIt;
+  using AuComItSet        = StdSet<StdString>;
+  using AuComItSetConstIt = AuComItSet::const_iterator;
   AuComItSet        acisList;          // Autocompleted strings list
   AuComItSetConstIt acisciCurrent;     // Current position iterator
   /* -- Other -------------------------------------------------------------- */
@@ -238,11 +234,11 @@ struct Console :                       // Members initially private
     return true;
   }
   /* -- Return text input -------------------------------------------------- */
-  bool InputEmpty()
+  bool InputEmpty() const
     { return strConsoleBegin.empty() && strConsoleEnd.empty(); }
+  bool InputNotEmpty() const { return !InputEmpty(); }
   /* -- Return text input -------------------------------------------------- */
-  const StdString InputText()
-    { return StrAppend(strConsoleBegin, strConsoleEnd); }
+  StdString InputText() { return StrAppend(strConsoleBegin, strConsoleEnd); }
   /* -- OnExecute event ------------------------ Execute inputted command -- */
   void Execute()
   { // Do not proceed further if no text is inputted
@@ -255,13 +251,13 @@ struct Console :                       // Members initially private
     if(const Args aList{ strCmd }) ExecuteArguments(strCmd, aList);
   }
   /* -- OnCharPress --------------------------- Console character pressed -- */
-  void OnCharPress(const Codepoint cKey)
+  void OnCharPress(const Codepoint coChar)
   { // Ignore first key? Ignore it
     if(FlagIsSet(CF_IGNOREKEY)) return FlagClear(CF_IGNOREKEY);
     // Insert character if insert mode is on
-    if(FlagIsSet(CF_INSERT)) AddInputChar(cKey);
+    if(FlagIsSet(CF_INSERT)) AddInputChar(coChar);
     // Repalce character in input buffer
-    else ReplaceInputChar(cKey);
+    else ReplaceInputChar(coChar);
     // Reset autocomplete
     AutoCompleteReset();
   }
@@ -455,20 +451,20 @@ struct Console :                       // Members initially private
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void AddInputChar(const Codepoint cChar)
+  void AddInputChar(const Codepoint coChar)
   { // Make sure line is under max characters
     if(strConsoleBegin.size() + strConsoleEnd.size() >= stMaxInputLine) return;
     // Encode character to utf-8
-    UtfAppend(cChar, strConsoleBegin);
+    UtfAppend(coChar, strConsoleBegin);
     // Redraw the buffer, it changed
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void ReplaceInputChar(const Codepoint cChar)
+  void ReplaceInputChar(const Codepoint coChar)
   { // Add character if we are at the end of the line input
-    if(strConsoleEnd.empty()) return AddInputChar(cChar);
+    if(strConsoleEnd.empty()) return AddInputChar(coChar);
     // Encode character to utf-8
-    UtfAppend(cChar, strConsoleBegin);
+    UtfAppend(coChar, strConsoleBegin);
     // Remove character from beginning of end of line input
     UtfPopFront(strConsoleEnd);
     // Redraw the buffer, it changed
@@ -496,15 +492,17 @@ struct Console :                       // Members initially private
   void HideConsole() { FlagClear(CF_ENABLED); }
   /* -- Do Set Console status ---------------------------------------------- */
   bool SetVisible(const bool bState)
-  { // Can't change state?
-    if(FlagIsSet(CF_LOCKED))
-      cLog->LogDebugExSafe(
-        "Console visibility cannot be set to $ because it is locked.",
-          StrFromBoolTF(bState));
-    // Graphical console not allowed?
-    else if(IsHidingGraphicalConsole())
+  { // Graphical console not allowed?
+    if(IsHidingGraphicalConsole())
+    { // Log message return true to block handling the key
       cLog->LogDebugExSafe(
         "Console visibility cannot be set to $ as graphical console locked.",
+          StrFromBoolTF(bState));
+      return true;
+    } // Can't change state?
+    else if(FlagIsSet(CF_LOCKED))
+      cLog->LogDebugExSafe(
+        "Console visibility cannot be set to $ because it is locked.",
           StrFromBoolTF(bState));
     // Enabling and not enabled?
     else if(bState && IsNotVisible())
@@ -635,9 +633,9 @@ struct Console :                       // Members initially private
     else
     { // Get data structure and check if enough parameters specified
       const ConLib &clData = cmciIt->second;
-      if(clData.uiMinimum && aList.size() < clData.uiMinimum)
+      if(clData.uMinimum && aList.size() < clData.uMinimum)
         ConsoleAddLine("Required parameter missing!");
-      else if(clData.uiMaximum && aList.size() > clData.uiMaximum)
+      else if(clData.uMaximum && aList.size() > clData.uMaximum)
         ConsoleAddLine("Too many parameters!");
       // Enough parameters so capture exceptions so we can't halt execution
       else try { clData.ccfFunc(aList); }
@@ -722,11 +720,13 @@ struct Console :                       // Members initially private
   size_t GetOutputCount() { return size(); }
   size_t GetInputCount() { return slHistory.size(); }
   /* -- Get buffer position ------------------------------------------------ */
-  const ConLinesConstRevIt GetConBufPos() const { return clriPosition; }
-  const ConLinesConstRevIt GetConBufPosEnd() { return rend(); }
+  ConLinesConstRevIt GetConBufPos() const { return clriPosition; }
+  ConLinesConstRevIt GetConBufPosEnd() { return rend(); }
   /* -- Set console input status bar (left and right) ---------------------- */
-  void SetStatusLeft(const StdString &strValue) { strStatusLeft = strValue; }
-  void SetStatusRight(const StdString &strValue) { strStatusRight = strValue; }
+  void SetStatusLeft(const StdStringView &strvValue)
+    { strStatusLeft = strvValue; }
+  void SetStatusRight(const StdStringView &strvValue)
+    { strStatusRight = strvValue; }
   /* -- Clear both statuses ------------------------------------------------ */
   void ConsoleClearStatus()
   { // Clear left if empty
@@ -743,9 +743,7 @@ struct Console :                       // Members initially private
   }
   /* -- Tick for stdout render --------------------------------------------- */
   void ConsoleFlushToTerminal()
-  { // Get handle to wide output in terminal
-    static auto &StdWcOut = ::std::wcout;
-    // Return if no data
+  { // Return if no data
     if(clqOutput.empty()) return;
     // Setup output
     StdWcOut << StdIOSFixed << StdIOSSetPrecision(6)
@@ -764,66 +762,43 @@ struct Console :                       // Members initially private
     // Scan text as UTF-8
     UtfDecoder udLine{ clLine.strLine };
     // Get next character
-    NextChar: switch(const Codepoint cChar = udLine.UtfNext())
+    NextChar: switch(const Codepoint coChar = udLine.UtfNext())
     { // Carriage return or space char? Restore position and return no wrap
       case '\n': StdWcOut << StdIOSWEndLine; goto NextChar;
       // Other control character?
       case '\r':
-      { // Compare it
-        switch(udLine.UtfNext())
-        { // Colour change requested?
-          case 'c':
-          { // Scan for the hexadecimal value and ignore it
-            unsigned int uiCol;
-            // Write ANSI underline value in anything but Windows
+      { // Set to global print control function
+        FormatPrintControl(udLine, false,
 #if defined(WINDOWS)
-            udLine.UtfScanValue(uiCol);
+          [](const unsigned) { /* SetFace */ },
+          []() { /* PushFace */ },
+          []() { /* ResetFace */ },
+          [](const unsigned) { /* SetOutline */ },
+          []() { /* PushOutline */ },
+          []() { /* ResetOutline */ },
 #else
-            if(udLine.UtfScanValue(uiCol) == 8) StdWcOut << "\x1b[4m";
+          [](const unsigned) { /* SetFace */ },
+          []() { StdWcOut << "\x1b[3m"; },
+          []() { StdWcOut << "\x1b[23m"; },
+          [](const unsigned) { /* SetOutline */ },
+          []() { StdWcOut << "\x1b[4m"; },
+          []() { StdWcOut << "\x1b[24m"; },
 #endif
-            // Next character
-            goto NextChar;
-          } // Outline colour change requested?
-          case 'o':
-          { // Scan for the hexadecimal value and ignore it
-            unsigned int uiCol;
-            // Write ANSI italic value in anything but Windows
-#if defined(WINDOWS)
-            udLine.UtfScanValue(uiCol);
-#else
-            if(udLine.UtfScanValue(uiCol) == 8) StdWcOut << "\x1b[3m";
-#endif
-            // Next character
-            goto NextChar;
-          } // Texture change requested?
-          case 't':
-          { // Scan for the hexadecimal value and ignore it
-            unsigned int uiCol;
-            udLine.UtfScanValue(uiCol);
-            // Next character
-            goto NextChar;
-          } // Reset colour (ignore it)
-          case 'r':
-          { // Write ANSI reset value in anything but Windows
-#if !defined(WINDOWS)
-            StdWcOut << "\x1b[0m\x1b[1m";
-#endif
-            // Next character
-            goto NextChar;
-          } // Invalid control character
-          default: goto NextChar;
-          // Finished
-          case '\0': break;
-        } // Finished
-        break;
+          [](const unsigned) { /* SetTexture */ });
+        // Finished
+        goto NextChar;
       } // Other character?
-      default: StdWcOut << static_cast<wchar_t>(cChar); goto NextChar;
+      default: StdWcOut << static_cast<wchar_t>(coChar); goto NextChar;
       // Finished
       case '\0': break;
-    } // Finished so remove attributes in terminal
+    } // Finished so remove attributes in terminal if set
 #if !defined(WINDOWS)
-    StdWcOut << "\x1b[0m" << StdIOSEndLine;
+    FormatHandleFinish(
+      [](){ StdWcOut << "\x1b[23m"; },
+      [](){ StdWcOut << "\x1b[24m"; });
 #endif
+    // Remove bold and end the line flushing the buffer
+    StdWcOut << "\x1b[22m" << StdIOSWEndLine;
     // remove the old item
     clqOutput.pop();
     // Goto next line if there are no lines left
@@ -834,7 +809,7 @@ struct Console :                       // Members initially private
   { // Process queued console log lines
     MoveQueuedLines();
     // If thread delay enabled and input polling interval ready to poll?
-    if(cTimer->TimerGetDelay() != 0.0 || ivInputRefresh.CIIsTrigger())
+    if(cFrame->FrameGetDelay() != 0.0 || ivInputRefresh.CIIsTrigger())
     {  // Loop forever until no more keys are pressed
       for(int iKey, iMods;;) switch(cSystem->GetKey(iKey, iMods))
       { // No key is pressed (ignore)
@@ -848,7 +823,7 @@ struct Console :                       // Members initially private
         // A scan code was pressed?
         case SysCon::KT_CHAR:
           // Send it to the key character handler
-          OnCharPress(static_cast<unsigned int>(iKey));
+          OnCharPress(static_cast<unsigned>(iKey));
           // Try more keys
           continue;
         // No key is pressed but a reset was requested?
@@ -870,9 +845,9 @@ struct Console :                       // Members initially private
       // Redraw title
       cSystem->RedrawTitleBar(StrFormat("CPU:$$$%$  FPS:$  MEM:$  NET:$  UP:$",
         StdIOSFixed, StdIOSSetPrecision(1), cSystem->CPUUsage(),
-        StdIOSSetPrecision(0), cTimer->TimerGetFPS(),
+        StdIOSSetPrecision(0), cFrame->FrameGetFPS(),
         StrToBytes(cSystem->RAMProcUse(), 0), cSockets->astConnected.load(),
-        StrShortFromDuration(cLog->CCDeltaToDouble(), 0)),
+        TimeToShortDuration(cLog->CCDeltaToDouble(), 0)),
         cmSys.FormatTime(strvTimeFormat.data()));
       // Not redrawing?
       if(GetRedrawFlags().FlagIsClear(RD_TEXT))
@@ -902,44 +877,48 @@ struct Console :                       // Members initially private
     return size();
   }
   /* -- Command exists? ---------------------------------------------------- */
-  bool CommandIsRegistered(const StdString &strName) const
-    { return cmMap.contains(strName); }
+  bool CommandIsRegistered(const StdStringView &strvName) const
+    { return cmMap.contains(strvName); }
   /* -- Check that the console variable name is valid ---------------------- */
-  bool IsValidConsoleCommandName(const StdString &strName) const
+  template<class StrType>
+    requires StdIsString<StrType>
+  bool IsValidConsoleCommandName(const StrType &strName) const
   { // Return true if length is over or equal minimum allowed and length is
     // under or equal maximum allowed and first character is valid and the rest
     // of the characters are valid.
-    return strName.length() >= stConCmdMinLength &&
-      strName.length() <= stConCmdMaxLength &&
+    return strName.size() >= stConCmdMinLength &&
+      strName.size() <= stConCmdMaxLength &&
       StdIsAlpha(strName.front()) &&
       StdFindIf(par_unseq, StdNext(strName.cbegin()), strName.cend(),
         [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; })
           == strName.cend();
   }
   /* -- Register console command ------------------------------------------- */
-  const CmdMapIt RegisterCommand(const StdString &strName,
-    const unsigned int uiMin, const unsigned int uiMax,
-    const ConCbFunc ccfFunc)
+  template<class StrType>
+    requires StdIsString<StrType>
+  CmdMapIt RegisterCommand(const StrType &strName, const unsigned uMin,
+    const unsigned uMax, const ConCbFunc ccfFunc)
   { // Insert trusted command into commands list
-    return cmMap.insert({ strName,
-      { strName, uiMin, uiMax, CFL_BASIC, ccfFunc } }).first;
+    return cmMap.insert({ StdString{ strName },
+      { StdString{ strName }, uMin, uMax, CFL_BASIC, ccfFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
   /* -- Add line as string with specified text colour ---------------------- */
-  void ConsoleAddLine(const ConColour ccColour, const StdString &strText)
+  void ConsoleAddLine(const ConColour ccColour, const StdStringView &strvText)
   { // Tokenise lines into a list limited by the maximum number of lines.
-    if(const TokenList tlLines{
-      strText, cCommon->CommonLf(), GetOutputMaximum() })
+    if(const TokenList tlLines{ strvText, cCommon->CommonLf(),
+      GetOutputMaximum() })
     { // Add all the lines to the output queue
       const double dTime = cLog->CCDeltaToDouble();
-      for(const StdString &strLine : tlLines)
+      for(const StdStringView &strvLine : tlLines)
       { // Move the line across if it is long enough
-        if(strLine.length() <= stMaxOutputLine)
-          clqOutput.push({ dTime, ccColour, StdMove(strLine) });
+        if(strvLine.size() <= stMaxOutputLine)
+          clqOutput.push({ dTime, ccColour, StdString{ strvLine } });
         // Push a truncated line
         else clqOutput.push({ dTime, ccColour,
-          strLine.substr(0, stMaxOutputLineE) + cCommon->CommonEllipsis() });
+          StdString{ strvLine.substr(0, stMaxOutputLineE) } +
+            cCommon->CommonEllipsis() });
       }
     }
   }
@@ -947,15 +926,16 @@ struct Console :                       // Members initially private
   void ConsoleAddLine(const StdString &strText)
     { ConsoleAddLine(ccTextColour, strText); }
   /* -- Formatted console output ------------------------------------------- */
-  template<typename ...VarArgs>
-    void ConsoleAddLineF(const char*const cpFormat, VarArgs &&...vaArgs)
-      { ConsoleAddLine(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
+  template<typename StrType, typename ...VarArgs>
+    void ConsoleAddLineF(StrType &&strFormat, VarArgs &&...vaArgs)
+  { ConsoleAddLine(StrFormat(StdForward<StrType>(strFormat),
+                             StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output with colour ------------------------------- */
-  template<typename ...VarArgs>
-    void ConsoleAddLineF(const ConColour ccColour, const char*const cpFormat,
-      VarArgs &&...vaArgs)
-        { ConsoleAddLine(ccColour,
-            StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
+  template<typename StrType, typename ...VarArgs>
+  void ConsoleAddLineF(const ConColour ccColour, StrType &&strFormat,
+    VarArgs &&...vaArgs)
+  { ConsoleAddLine(ccColour, StrFormat(StdForward<StrType>(strFormat),
+                                       StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted console output using StrAppend() ------------------------- */
   template<typename ...VarArgs>
     void ConsoleAddLineAC(const ConColour ccColour, VarArgs &&...vaArgs)
@@ -1018,8 +998,8 @@ struct Console :                       // Members initially private
     // Iterate each item and register command if required core flags match
     for(const ConLibStatic &clCmd : ccslInt)
       if(cSystem->SysIsCoreFlagsHave(clCmd.cfcRequired))
-        RegisterCommand(StdString{ clCmd.strvName }, clCmd.uiMinimum,
-          clCmd.uiMaximum, clCmd.ccfFunc);
+        RegisterCommand(clCmd.strvName, clCmd.uMinimum,
+          clCmd.uMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command
       else cLog->LogDebugExSafe(
         "Console ignoring registration of command '$'.", clCmd.strvName);
@@ -1124,7 +1104,7 @@ struct Console :                       // Members initially private
       1024UL, 65536UL)))
         return DENY;
     // Set subtracted value from ellipsis size
-    stMaxOutputLineE = stMaxOutputLine - cCommon->CommonEllipsis().length();
+    stMaxOutputLineE = stMaxOutputLine - cCommon->CommonEllipsis().size();
     // Value accepted
     return ACCEPT;
   }
@@ -1175,19 +1155,19 @@ struct Console :                       // Members initially private
   CVarReturn SetAutoScroll(const bool bState)
     { FlagSetOrClear(CF_AUTOSCROLL, bState); return ACCEPT; }
   /* -- Set console input refresh rate ------------------------------------- */
-  CVarReturn InputRefreshModified(const unsigned int uiMicroseconds)
-    { if(uiMicroseconds < 1000 || uiMicroseconds > 1000000) return DENY;
-      ivInputRefresh.CISetLimit(microseconds{ uiMicroseconds });
+  CVarReturn InputRefreshModified(const unsigned uMicroseconds)
+    { if(uMicroseconds < 1000 || uMicroseconds > 1000000) return DENY;
+      ivInputRefresh.CISetLimit(microseconds{ uMicroseconds });
       return ACCEPT; }
   /* -- Set text-mode console refresh rate --------------------------------- */
-  CVarReturn OutputRefreshModified(const unsigned int uiMilliseconds)
-    { if(uiMilliseconds < 100 || uiMilliseconds > 1000) return DENY;
-      ivOutputRefresh.CISetLimit(milliseconds{ uiMilliseconds });
+  CVarReturn OutputRefreshModified(const unsigned uMilliseconds)
+    { if(uMilliseconds < 100 || uMilliseconds > 1000) return DENY;
+      ivOutputRefresh.CISetLimit(milliseconds{ uMilliseconds });
       return ACCEPT; }
   /* -- Set console text colour -------------------------------------------- */
-  CVarReturn TextForegroundColourModified(const unsigned int uiNewColour)
+  CVarReturn TextForegroundColourModified(const unsigned uNewColour)
     { return CVarSimpleSetIntNG(ccTextColour,
-        static_cast<ConColour>(uiNewColour), COLOUR_MAX); }
+        static_cast<ConColour>(uNewColour), COLOUR_MAX); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

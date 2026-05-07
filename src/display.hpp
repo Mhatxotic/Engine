@@ -20,9 +20,9 @@ using namespace IFboCore::P;           using namespace IFlags::P;
 using namespace IFont::P;              using namespace IGlFW::P;
 using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
 using namespace IGlFWUtil::P;          using namespace IHelper::P;
-using namespace IIdent::P;             using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IInput::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IInput::P;             using namespace ILog::P;
+using namespace ILookupArray::P;       using namespace ILuaFunc::P;
 using namespace IMutex::P;             using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
@@ -121,8 +121,8 @@ class Display :                        // Actual class body
     /* --------------------------------------------------------------------- */
   } fsType;                            // Current value
   /* -- Display class ------------------------------------------------------ */
-  typedef IdList<FST_MAX> FSTStrings;  // List of FST_ id strings typedef.
-  const FSTStrings    fstStrings;      // " container
+  using FSTStrings = LookupArray<FST_MAX>; // List of FST_ id strings typedef.
+  const FSTStrings fstStrings;             // " container
   /* -- Check if window moved ------------------------------------- */ private:
   void DisplayCheckWindowMoved(const int iNewX, const int iNewY)
   { // If position not changed? Report event and return
@@ -974,30 +974,37 @@ class Display :                        // Actual class body
         { // Get first icon and log data
           const ImageSlot &imsD = imC.GetSlotsConst().front();
           cLog->LogNLCDebugExSafe("- $x$x$: $.", imsD.DimGetWidth(),
-            imsD.DimGetHeight(), imC.GetBitsPerPixel(), imC.IdentGet());
+            imsD.DimGetHeight(), imC.GetBitsPerPixel(), imC.NameGet());
         }
     } // Using console mode
     else cSystem->UpdateIcons();
 #endif
   }
   /* -- Set window icons --------------------------------------------------- */
-  bool DisplaySetIcon(const StdString &strNames)
-  { // Seperate icon names and if we got an icon name
-    if(Token tIcons{ strNames, ":", 3 })
+  bool DisplaySetIcon(const StdStringView &strvNames)
+  { // Separate icon names and if we got an icon name? Since we are building
+    // the file name list with StdStringView's, we have to finalise these
+    // strings eventually because if they get to the file system C function, we
+    // will have sent the full list of file names (strvNames) instead since
+    // those functions just parse the whole .data() part.
+    if(const TokenStrView tsvIcons{ strvNames, cCommon->CommonColonV(), 3 })
     { // If using interactive mode?
       if(cSystem->SysIsGraphicalMode())
       { // Clear images and icons
         gfwivIcons.clear();
         ivIcons.clear();
         // Create contiguous memory for glfw icon descriptors and icon data
-        gfwivIcons.reserve(tIcons.size());
-        ivIcons.reserve(tIcons.size());
+        gfwivIcons.reserve(tsvIcons.size());
+        ivIcons.reserve(tsvIcons.size());
         // Build icons
-        for(StdString &strName : tIcons)
-        { // Check filename and load icon and force to RGB 32BPP.
-          DirVerifyFileNameIsValid(strName);
+        for(const StdStringView &strvName : tsvIcons)
+        { // Check filename and load icon and force to RGB 32BPP. Note that
+          DirVerifyFileNameIsValid(strvName);
+          // GLFW only accepts reversed 32BPP images in RGB order so we need to
+          // force that by the image loader class too.
           const Image &imC = ivIcons.emplace_back(
-            Image{ StdMove(strName), IL_REVERSE|IL_TORGB|IL_TO32BPP });
+            Image{ StdString{ strvName }, IL_REVERSE|IL_TORGB|IL_TO32BPP });
+          // Add to the available images we loaded
           const ImageSlot &imsD = imC.GetSlotsConst().front();
           gfwivIcons.push_back({ imsD.DimGetWidth<int>(),
             imsD.DimGetHeight<int>(), imsD.MemPtr<unsigned char>() });
@@ -1007,18 +1014,17 @@ class Display :                        // Actual class body
       { // Only Win32 terminal windows can change the icon
 #if defined(WINDOWS)
         // Have two icons at least?
-        if(tIcons.size() >= 2)
+        if(tsvIcons.size() >= 2)
         { // Get string and set small icon from the last icon specified
-          StdString &strFile = tIcons.back();
-          const Image imC{ StdMove(strFile), IL_REVERSE|IL_TOBGR };
+          const Image imC{ StdString{ tsvIcons.back() },
+            IL_REVERSE|IL_TOBGR };
           const ImageSlot &imsD = imC.GetSlotsConst().front();
-          cSystem->SetSmallIcon(imC.IdentGet(), imsD.DimGetWidth(),
+          cSystem->SetSmallIcon(imC.NameGet(), imsD.DimGetWidth(),
             imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
         } // Set large icon from the first icon specified
-        StdString &strFile = tIcons.front();
-        const Image imC{ StdMove(strFile), IL_REVERSE|IL_TOBGR };
+        const Image imC{ StdString{ tsvIcons.front() }, IL_REVERSE|IL_TOBGR };
         const ImageSlot &imsD = imC.GetSlotsConst().front();
-        cSystem->SetLargeIcon(imC.IdentGet(), imsD.DimGetWidth(),
+        cSystem->SetLargeIcon(imC.NameGet(), imsD.DimGetWidth(),
           imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
        // Not using windows?
 #else
@@ -1032,8 +1038,8 @@ class Display :                        // Actual class body
     return false;
   }
   /* -- Update icons and refresh icon if succeeded ------------------------- */
-  void DisplaySetIconFromLua(const StdString &strNames)
-    { if(DisplaySetIcon(strNames)) return cEvtWin->Add(EWC_WIN_SETICON); }
+  void DisplaySetIconFromLua(const StdStringView &strvNames)
+    { if(DisplaySetIcon(strvNames)) return cEvtWin->Add(EWC_WIN_SETICON); }
   /* -- Get window full-screen type ---------------------------------------- */
   FSType DisplayGetFSType() const { return fsType; }
   const StdStringView &DisplayGetFSTypeString(const FSType fsT) const
@@ -1405,8 +1411,8 @@ class Display :                        // Actual class body
     return ACCEPT;
   }
   /* -- Icon filenames changed (allow blank strings) ----------------------- */
-  CVarReturn DisplaySetIcon(const StdString &strF, StdString&)
-    { return BoolToCVarReturn(strF.empty() || DisplaySetIcon(strF)); }
+  CVarReturn DisplaySetIcon(const StdStringView &strvF, StdString&)
+    { return BoolToCVarReturn(strvF.empty() || DisplaySetIcon(strvF)); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -11,10 +11,11 @@
 namespace ILuaFunc {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaRef::P;            using namespace ILuaUtil::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaRef::P;
+using namespace ILuaUtil::P;           using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- LuaFunc ollector class for collector data and custom variables ------- */
@@ -22,7 +23,7 @@ CTOR_BEGIN(LuaFuncs, LuaFunc, CLHelperSafe,,,public LuaRef<1>)
 /* -- LuaFunc base class --------------------------------------------------- */
 class LuaFuncBase                      // Just for de-duplicating initialisers
 { /* -- Private variables -------------------------------------------------- */
-  typedef StdArray<int, 2> References; // Type for our pair of LUA references
+  using References = StdArray<int, 2>; // Type for our pair of LUA references
   /* -- Protected variables ------------------------------------- */ protected:
   References       aReferences;        // LUA variable references
   int             &iLiveReference,     // Reference to the live ref
@@ -66,9 +67,9 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   /* -- Public functions ------------------------------------------- */ public:
   void LuaFuncSwap(LuaFunc &oCref)
   { // Swap members, ident and collector iterators
-    swap(iLiveReference, oCref.iLiveReference);
-    swap(iPauseReference, oCref.iPauseReference);
-    IdentSwap(oCref);
+    StdSwap(iLiveReference, oCref.iLiveReference);
+    StdSwap(iPauseReference, oCref.iPauseReference);
+    NameSwap(oCref);
     CollectorSwapRegistration(oCref);
   }
   /* -- Restore reference and reset saved reference if it is not set ------- */
@@ -99,7 +100,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     // Write warning to log
     cLog->LogWarningExSafe("LuaFunc cannot add $ more $ parameters for "
       "calling '$' due to integer or potential stack overflow!",
-      stParams, cpType, IdentGet());
+      stParams, cpType, NameGet());
     // Failed
     return false;
   }
@@ -141,10 +142,10 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     LuaFuncParams(++iParams, StdForward<VarArgs>(vaArgs)...); \
   }
   /* -- A function for each type ------------------------------------------- */
-  MP(signed long long,   "int64",  LuaUtilPushInt)
+  MP(long long,          "int64",  LuaUtilPushInt)
   MP(unsigned long long, "uint64", LuaUtilPushInt)
-  MP(signed int,         "int",    LuaUtilPushInt)
-  MP(unsigned int,       "uint",   LuaUtilPushInt)
+  MP(int,                "int",    LuaUtilPushInt)
+  MP(unsigned,           "uint",   LuaUtilPushInt)
 #if !defined(WINDOWS)
   MP(size_t,             "size_t", LuaUtilPushInt)
 #endif
@@ -158,7 +159,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   { // Get referenced function and return if succeeded else break execution
     if(LuaUtilGetRefFunc(LuaFuncGetState(), iLiveReference)) return;
     XC("Pushed function is not a valid function!",
-      "Name",  IdentGet(), "Value", iLiveReference,
+      "Name",  NameGet(), "Value", iLiveReference,
       "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
   }
   /* -- Send a function or blank ------------------------------------------- */
@@ -226,11 +227,11 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       iLiveReference = LuaUtilRefInit(LuaFuncGetState());
       if(LuaUtilIsNotRefValid(iLiveReference))
         XC("Failed to create refid to C function!",
-          "Name",  IdentGet(),
+          "Name",  NameGet(),
           "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
       // Succeeded so put in log
       cLog->LogDebugExSafe("LuaFunc allocated refid #$ for C function '$'.",
-        iLiveReference, IdentGet());
+        iLiveReference, NameGet());
     } // If last item on stack is a regular function?
     else if(LuaUtilIsFunction(LuaFuncGetState(), -1))
     { // Set reference to c function. Do NOT de-initialise empty function
@@ -239,14 +240,14 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       iLiveReference = LuaUtilRefInit(LuaFuncGetState());
       if(LuaUtilIsNotRefValid(iLiveReference))
         XC("Failed to create refid to function!",
-          "Name",  IdentGet(),
+          "Name",  NameGet(),
           "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
       // Succeeded so put in log
       cLog->LogDebugExSafe("LuaFunc allocated refid #$ for function '$'.",
-        iLiveReference, IdentGet());
+        iLiveReference, NameGet());
     } // Don't know what this was?
     else XC("Expected C or regular function type on stack!",
-      "Name",  IdentGet(),
+      "Name",  NameGet(),
       "Type",  LuaUtilGetType(LuaFuncGetState(), -1),
       "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
   }
@@ -256,32 +257,32 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   LuaFunc() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperLuaFunc{ cLuaFuncs },      // Init collector class unregistered
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Move constructor --------------------------------------------------- */
   LuaFunc(LuaFunc &&lfOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(lfOther) },         // Initialise identification
+    Name{ StdMove(lfOther) },          // Initialise identification
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector class
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     LuaFuncBase{ StdMove(lfOther) }    // Move base over
     /* -- Clear other references and unregister other from collector ------- */
     { lfOther.aReferences.fill(LUA_REFNIL); lfOther.CollectorUnregister(); }
   /* -- Name constructor --------------------------------------------------- */
   explicit LuaFunc(const StdString &strN, const bool bSet=false) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strN },                     // Move name of function over
+    Name{ strN },                      // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector class
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Name(move) constructor --------------------------------------------- */
   explicit LuaFunc(StdString &&strN, const bool bSet=false) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(strN) },            // Move name of function over
+    Name{ StdMove(strN) },             // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Destructor --------------------------------------------------------- */

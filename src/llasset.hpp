@@ -19,9 +19,9 @@
 namespace LLAsset {                    // Asset namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IASync::P;
-using namespace IFStream::P;           using namespace ILuaCode::P;
-using namespace IStd::P;               using namespace IUtil::P;
-using namespace Common;
+using namespace IEndian::P;            using namespace IFStream::P;
+using namespace ILuaCode::P;           using namespace IStd::P;
+using namespace IUtil::P;              using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Archive common helper classes                                       ## **
@@ -42,6 +42,10 @@ template<typename AnyType>struct AgIntValue { const AnyType atV;
 struct AgBytes { const size_t stB;
   explicit AgBytes(lua_State*const lS) :
     stB{LuaUtilGetInt<decltype(stB)>(lS, 3)}{} };
+/* -- Read Asset, position and bytes --------------------------------------- */
+struct AgAsPoBy : public AgAsPo, AgBytes {
+  explicit AgAsPoBy(lua_State*const lS) :
+    AgAsPo{lS}, AgBytes{lS} {} };
 /* -- Read Asset, position, bytes and integer value------------------------- */
 template<typename AnyType>struct AgAsPoByVi :
   public AgAsPo, AgBytes, AgIntValue<AnyType> {
@@ -49,9 +53,9 @@ template<typename AnyType>struct AgAsPoByVi :
       AgAsPo{lS}, AgBytes{lS}, AgIntValue<AnyType>{lS, 4}{} };
 /* -- Read Asset, position, bytes and number value ------------------------- */
 template<typename AnyType>struct AgAsPoByVn :
-  public AgAsPo, AgBytes, AgNumValue<AnyType> {
+  public AgAsPoBy, AgNumValue<AnyType> {
     explicit AgAsPoByVn(lua_State*const lS) :
-      AgAsPo{lS}, AgBytes{lS}, AgNumValue<AnyType>{lS, 4}{} };
+      AgAsPoBy{lS}, AgNumValue<AnyType>{lS, 4}{} };
 /* -- Read Asset, position and integer value-------------------------------- */
 template<typename AnyType>struct AgAsPoVi :
   public AgAsPo, AgIntValue<AnyType> {
@@ -130,22 +134,22 @@ LLFUNCTMPL(FillI, 0, const AgAsPoByVi<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>(aAsset.stP, aAsset.atV, aAsset.stB))
 LLFUNCTMPL(FI16BE, 0, const AgAsPoByVi<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>
-    (aAsset.stP, UtilToI16BE(aAsset.atV), aAsset.stB))
+    (aAsset.stP, EndianTo16BE(aAsset.atV), aAsset.stB))
 LLFUNCTMPL(FI16LE, 0, const AgAsPoByVi<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>
-    (aAsset.stP, UtilToI16LE(aAsset.atV), aAsset.stB))
+    (aAsset.stP, EndianTo16LE(aAsset.atV), aAsset.stB))
 LLFUNCTMPL(FI32BE, 0, const AgAsPoByVi<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>
-    (aAsset.stP, UtilToI32BE(aAsset.atV), aAsset.stB))
+    (aAsset.stP, EndianTo32BE(aAsset.atV), aAsset.stB))
 LLFUNCTMPL(FI32LE, 0, const AgAsPoByVi<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>
-    (aAsset.stP, UtilToI32LE(aAsset.atV), aAsset.stB))
+    (aAsset.stP, EndianTo32LE(aAsset.atV), aAsset.stB))
 LLFUNCTMPL(FI64BE, 0, const AgAsPoByVi<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>
-    (aAsset.stP, UtilToI64BE(aAsset.atV), aAsset.stB))
+    (aAsset.stP, EndianTo64BE(aAsset.atV), aAsset.stB))
 LLFUNCTMPL(FI64LE, 0, const AgAsPoByVi<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>
-    (aAsset.stP, UtilToI64LE(aAsset.atV), aAsset.stB))
+    (aAsset.stP, EndianTo64LE(aAsset.atV), aAsset.stB))
 /* ------------------------------------------------------------------------- */
 LLFUNCTMPL(FillN, 0, const AgAsPoByVn<IntType> aAsset{lS};
   aAsset().template MemFillEx<IntType>(aAsset.stP, aAsset.atV, aAsset.stB))
@@ -184,17 +188,17 @@ LLFUNCTMPL(Invert, 0, const AgAsPo aAsset{lS};
 LLFUNCTMPL(InvertEx, 0, const AgAsPoVi<IntType> aAsset{lS};
   aAsset().template MemInvert<IntType>(aAsset.stP, aAsset.atV))
 LLFUNC(I16FBE, 0, const AgAsPoVi<uint16_t> aAsset{lS};
-  aAsset().MemInvert<uint16_t>(aAsset.stP, UtilToI16BE(aAsset.atV)))
+  aAsset().MemInvert<uint16_t>(aAsset.stP, EndianTo16BE(aAsset.atV)))
 LLFUNC(I16FLE, 0, const AgAsPoVi<uint16_t> aAsset{lS};
-  aAsset().MemInvert<uint16_t>(aAsset.stP, UtilToI16LE(aAsset.atV)))
+  aAsset().MemInvert<uint16_t>(aAsset.stP, EndianTo16LE(aAsset.atV)))
 LLFUNC(I32FBE, 0, const AgAsPoVi<uint32_t> aAsset{lS};
-  aAsset().MemInvert<uint32_t>(aAsset.stP, UtilToI32BE(aAsset.atV)))
+  aAsset().MemInvert<uint32_t>(aAsset.stP, EndianTo32BE(aAsset.atV)))
 LLFUNC(I32FLE, 0, const AgAsPoVi<uint32_t> aAsset{lS};
-  aAsset().MemInvert<uint32_t>(aAsset.stP, UtilToI32LE(aAsset.atV)))
+  aAsset().MemInvert<uint32_t>(aAsset.stP, EndianTo32LE(aAsset.atV)))
 LLFUNC(I64FBE, 0, const AgAsPoVi<uint64_t> aAsset{lS};
-  aAsset().MemInvert<uint64_t>(aAsset.stP, UtilToI64BE(aAsset.atV)))
+  aAsset().MemInvert<uint64_t>(aAsset.stP, EndianTo64BE(aAsset.atV)))
 LLFUNC(I64FLE, 0, const AgAsPoVi<uint64_t> aAsset{lS};
-  aAsset().MemInvert<uint64_t>(aAsset.stP, UtilToI64LE(aAsset.atV)))
+  aAsset().MemInvert<uint64_t>(aAsset.stP, EndianTo64LE(aAsset.atV)))
 /* ========================================================================= */
 // $ Asset:Read
 // > Position:integer=Position to write in the array.
@@ -232,37 +236,37 @@ LLFUNC(I64FLE, 0, const AgAsPoVi<uint64_t> aAsset{lS};
 LLFUNCTMPL(ReadI, 1, const AgAsPo aAsset{lS};
   LuaUtilPushVar(lS, aAsset().template MemReadInt<IntType>(aAsset.stP)))
 LLFUNCTMPL(RI16LE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilToI16LE(aAsset().
+  LuaUtilPushVar(lS, EndianTo16LE(aAsset().
     template MemReadInt<IntType>(aAsset.stP))))
 LLFUNCTMPL(RI16BE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilToI16BE(aAsset().
+  LuaUtilPushVar(lS, EndianTo16BE(aAsset().
     template MemReadInt<IntType>(aAsset.stP))))
 LLFUNCTMPL(RI32LE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilToI32LE(aAsset().
+  LuaUtilPushVar(lS, EndianTo32LE(aAsset().
     template MemReadInt<IntType>(aAsset.stP))))
 LLFUNCTMPL(RI32BE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilToI32BE(aAsset().
+  LuaUtilPushVar(lS, EndianTo32BE(aAsset().
     template MemReadInt<IntType>(aAsset.stP))))
 LLFUNCTMPL(RI64LE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilToI64LE(aAsset().
+  LuaUtilPushVar(lS, EndianTo64LE(aAsset().
     template MemReadInt<IntType>(aAsset.stP))))
 LLFUNCTMPL(RI64BE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilToI64BE(aAsset().
+  LuaUtilPushVar(lS, EndianTo64BE(aAsset().
     template MemReadInt<IntType>(aAsset.stP))))
 /* ------------------------------------------------------------------------- */
 LLFUNCTMPL(ReadN, 1, const AgAsPo aAsset{lS};
   LuaUtilPushVar(lS, aAsset().template MemReadInt<IntType>(aAsset.stP)))
 LLFUNC(RF32LE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilCastInt32ToFloat(UtilToI32LE(
+  LuaUtilPushVar(lS, UtilCastInt32ToFloat(EndianTo32LE(
     aAsset().MemReadInt<uint32_t>(aAsset.stP)))))
 LLFUNC(RF32BE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilCastInt32ToFloat(UtilToI32BE(
+  LuaUtilPushVar(lS, UtilCastInt32ToFloat(EndianTo32BE(
     aAsset().MemReadInt<uint32_t>(aAsset.stP)))))
 LLFUNC(RF64LE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilCastInt64ToDouble(UtilToI64LE(
+  LuaUtilPushVar(lS, UtilCastInt64ToDouble(EndianTo64LE(
     aAsset().MemReadInt<uint64_t>(aAsset.stP)))))
 LLFUNC(RF64BE, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, UtilCastInt64ToDouble(UtilToI64BE(
+  LuaUtilPushVar(lS, UtilCastInt64ToDouble(EndianTo64BE(
     aAsset().MemReadInt<uint64_t>(aAsset.stP)))))
 /* ========================================================================= */
 // $ Asset:Write
@@ -339,6 +343,29 @@ LLFUNC(S16, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap16(aAsset.stP))
 LLFUNC(S32, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap32(aAsset.stP))
 LLFUNC(S64, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap64(aAsset.stP))
 /* ========================================================================= */
+// $ Asset:SwapEx
+// > Position:integer=Position to swap the bytes at.
+// > Bytes:integer=Number of bytes to swap.
+// ? Same as Asset:Swap but swaps the specified number of bytes. The byte value
+// ? is always truncated by the integer size. Misaligned positions will cause
+// ? a copy to a new buffer and copy back which is a lot slower so keep the
+// ? position in multiples of the integer size for the fastest execution.
+// ?
+// ? Actual functions (replace 'SwapEx' with one of the following)...
+// ? - SX8     = Swaps high/low 4-bits.
+// ? - SX16    = Swaps high/low 8-bits.
+// ? - SX32    = Swaps high/low 16-bits.
+// ? - SX64    = Swaps high/low 32-bits.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SX8, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap8(aAsset.stP, aAsset.stB))
+LLFUNC(SX16, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap16(aAsset.stP, aAsset.stB))
+LLFUNC(SX32, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap32(aAsset.stP, aAsset.stB))
+LLFUNC(SX64, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap64(aAsset.stP, aAsset.stB))
+/* ========================================================================= */
 // $ Asset:Resize
 // > Size:integer=The new size of the array in bytes.
 // ? Resizes the specified array.
@@ -400,7 +427,7 @@ LLFUNC(Size, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().MemSize()))
 LLFUNC(Find, 1,
   const AgAsset aAsset{lS, 1};
   const AgNeString aText{lS, 2};
-  LuaUtilPushVar(lS, aAsset().MemFind(aText)))
+  LuaUtilPushVar(lS, aAsset().MemFind(aText())))
 /* ========================================================================= */
 // $ Asset:FindEx
 // > Text:string=String to find in array.
@@ -412,7 +439,7 @@ LLFUNC(FindEx, 1,
   const AgAsset aAsset{lS, 1};
   const AgNeString aText{lS, 2};
   const AgSizeT aPosition{lS, 3};
-  LuaUtilPushVar(lS, aAsset().MemFind(aText, aPosition)))
+  LuaUtilPushVar(lS, aAsset().MemFind(aText(), aPosition)))
 /* ========================================================================= */
 // $ Asset:Crop
 // > Position:integer=Position to start crop at.
@@ -460,14 +487,14 @@ LLFUNC(BitState, 1, const AgAsPo aAsset{lS};
 // < Id:integer=The id number of the Asset object.
 // ? Returns the unique id of the Asset object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Asset:Name
 // < Name:string=Name of the asset.
 // ? If this asset was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().NameGet()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Asset:* member functions structure                                  ## **
@@ -517,6 +544,8 @@ LLRSMFBEGIN                            // Asset:* member functions begin
   LLRSFUNCEX(RU8,ReadI<uint8_t>),      LLRSFUNC(S16),
   LLRSFUNC(S32),                       LLRSFUNC(S64),
   LLRSFUNC(S8),                        LLRSFUNC(Size),
+  LLRSFUNC(SX16),                      LLRSFUNC(SX32),
+  LLRSFUNC(SX64),                      LLRSFUNC(SX8),
   LLRSFUNC(ToFile),                    LLRSFUNC(ToString),
   LLRSFUNCEX(WF32,WriteN<float>),      LLRSFUNC(WF32BE),
   LLRSFUNC(WF32LE),                    LLRSFUNCEX(WF64,WriteN<double>),
@@ -545,10 +574,10 @@ LLRSEND                                // Asset:* member functions end
 // ? Copies, decompresses or decrypts the specified asset on the main thread.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Asset, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgAssetFlags aFlags{lS, 3};
-  AcAsset{lS}().AssetInitAsset(aIdentifier, aFlags, aAsset))
+  AcAsset{lS}().AssetInitAsset(aName(), aFlags, aAsset))
 /* ========================================================================= */
 // $ Asset.AssetAsync
 // > Id:string=The user specified identifier of the asset.
@@ -562,11 +591,11 @@ LLFUNC(Asset, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(AssetAsync, 0,
   LuaUtilCheckParams(lS, 6);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgAssetFlags aFlags{lS, 3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcAsset{lS}().AssetInitAsyncAsset(lS, aIdentifier, aFlags, aAsset))
+  AcAsset{lS}().AssetInitAsyncAsset(lS, aName(), aFlags, aAsset))
 /* ========================================================================= */
 // $ Asset.Compile
 // > Filename:string=The name of the file to parse
@@ -582,9 +611,9 @@ LLFUNC(Compile, 1, LuaCodeCompileFile(lS, AgFilename{lS, 1}))
 // ? Compiles the specified asset and returns the function.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CompileBlock, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
-  LuaCodeCompileBlock(lS, aAsset, aIdentifier))
+  LuaCodeCompileBlock(lS, aAsset, aName()))
 /* ========================================================================= */
 // $ Asset.CompileFunction
 // > Debug:boolean=Include debug data?
@@ -601,9 +630,9 @@ LLFUNC(CompileFunction, 1, LuaCodeCompileFunction(lS))
 // ? Compiles the specified string and returns the function
 /* ------------------------------------------------------------------------- */
 LLFUNC(CompileString, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgNeString aCode{lS, 2};
-  LuaCodeCompileString(lS, aCode, aIdentifier))
+  LuaCodeCompileString(lS, aCode, aName))
 /* ========================================================================= */
 // $ Asset.Create
 // > Id:string=The user specified identifier of the asset.
@@ -613,9 +642,9 @@ LLFUNC(CompileString, 1,
 // ? to. The memory is zero'd out after allocation for security reasons.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgSizeT aBytes{lS, 2};
-  AcAsset{lS}().AssetInitBlank(aIdentifier, aBytes))
+  AcAsset{lS}().AssetInitBlank(aName(), aBytes))
 /* ========================================================================= */
 // $ Asset.Count
 // < Count:integer=Total number of assets created.
@@ -656,7 +685,7 @@ LLFUNC(EnumerateEx, 1,
   const AgFilename aExtension{lS, 2};
   const AgBoolean aOnlyDirs{lS, 3};
   LuaUtilToTable(lS,
-    AssetList{ aDirectory, aExtension, aOnlyDirs }.ToStrSet()))
+    AssetList{ aDirectory(), aExtension(), aOnlyDirs }.ToStrSet()))
 /* ========================================================================= */
 // $ Asset.Exec
 // > CmdLine:string=The command-line to execute
@@ -672,7 +701,7 @@ LLFUNC(Exec, 0,
   const AgNeString aCmdLine{lS, 1};
   const AgAssetFlags aFlags{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcAsset{lS}().AssetInitAsyncCmdLine(lS, aCmdLine, aFlags))
+  AcAsset{lS}().AssetInitAsyncCmdLine(lS, aCmdLine(), aFlags))
 /* ========================================================================= */
 // $ Asset.ExecEx
 // > CmdLine:string=The command-line to execute
@@ -692,7 +721,7 @@ LLFUNC(ExecEx, 0,
   const AgAssetFlags aFlags{lS, 2};
   const AgAsset aAsset{lS,3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcAsset{lS}().AssetInitAsyncCmdLineEx(lS, aCmdLine, aFlags, aAsset))
+  AcAsset{lS}().AssetInitAsyncCmdLineEx(lS, aCmdLine(), aFlags, aAsset))
 /* ========================================================================= */
 // $ Asset.File
 // > Filename:string=The filename of the file to load
@@ -701,9 +730,9 @@ LLFUNC(ExecEx, 0,
 // ? Loads a file from assets in the main thread.
 /* ------------------------------------------------------------------------- */
 LLFUNC(File, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAssetFlags aFlags{lS, 2};
-  AcAsset{lS}().AssetInitFile(aIdentifier, aFlags))
+  AcAsset{lS}().AssetInitFile(aName(), aFlags))
 /* ========================================================================= */
 // $ Asset.FileAsync
 // > Filename:string=The filename to load.
@@ -718,7 +747,7 @@ LLFUNC(FileAsync, 0,
   const AgFilename aFilename{lS, 1};
   const AgAssetFlags aFlags{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcAsset{lS}().AssetInitAsyncFile(lS, aFilename, aFlags))
+  AcAsset{lS}().AssetInitAsyncFile(lS, aFilename(), aFlags))
 /* ========================================================================= */
 // $ Asset.FileExists
 // > Filename:string=The name of the file to check
@@ -756,10 +785,10 @@ LLFUNCENDEX(1 + aReturns)
 /* ------------------------------------------------------------------------- */
 LLFUNCBEGIN(ParseBlock)
   LuaUtilCheckParams(lS, 3);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgIntL aReturns{lS, 2, 0};
   const AgAsset aAsset{lS, 3};
-  LuaUtilPushVar(lS, LuaCodeExecuteBlock(lS, aAsset, aReturns, aIdentifier));
+  LuaUtilPushVar(lS, LuaCodeExecuteBlock(lS, aAsset, aReturns, aName));
 LLFUNCENDEX(1 + aReturns)
 /* ========================================================================= */
 // $ Asset.ParseString
@@ -773,10 +802,10 @@ LLFUNCENDEX(1 + aReturns)
 /* ------------------------------------------------------------------------- */
 LLFUNCBEGIN(ParseString)
   LuaUtilCheckParams(lS, 3);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgIntL aReturns{lS, 2, 0};
   const AgNeString aCode{lS, 3};
-  LuaUtilPushVar(lS, LuaCodeExecuteString(lS, aCode, aReturns, aIdentifier));
+  LuaUtilPushVar(lS, LuaCodeExecuteString(lS, aCode, aReturns, aName));
 LLFUNCENDEX(1 + aReturns)
 /* ========================================================================= */
 // $ Asset.String
@@ -788,10 +817,10 @@ LLFUNCENDEX(1 + aReturns)
 // ? main thread.
 /* ------------------------------------------------------------------------- */
 LLFUNC(String, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgLCString aText{lS, 2};
   const AgAssetFlags aFlags{lS, 3};
-  AcAsset{lS}().AssetInitPtr(aIdentifier, aFlags, aText.stB, aText.cpD))
+  AcAsset{lS}().AssetInitPtr(aName, aFlags, aText.stB, aText.cpD))
 /* ========================================================================= */
 // $ Asset.WaitAsync
 // ? Halts main-thread execution until all async asset events have completed

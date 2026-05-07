@@ -13,29 +13,29 @@ using namespace IAsset::P;             using namespace IClock::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace ILog::P;               using namespace IMutex::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace Lib::OS::OpenSSL;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 class Certs                            // Certificates store
 { /* -- Typedefs --------------------------------------------------- */ public:
-  typedef StdPair<const StdString, X509*> X509Pair; // Do not &ref string
-  typedef StdVector<X509Pair>          X509List;    // A vector of pairs
+  using X509Pair = StdPair<const StdString, X509*>; // Do not &ref string
+  using X509List = StdVector<X509Pair>;             // A vector of pairs
   /* -- X509 error database --------------------------------------- */ private:
   struct X509ErrInfo                   // Information about the X509 error
   { /* --------------------------------------------------------------------- */
     const char*const cpErr;            // Error as a string (X509_V_ERR_*)
-    const size_t     stBank;           // Override bank index (sdullCertBypass)
+    const size_t     stBank;           // Override bank index (adullCertBypass)
     const uint64_t   ullFlag;          // Flag required to ignore this error
   };/* --------------------------------------------------------------------- */
-  typedef StdMap<const size_t, const X509ErrInfo> X509Err;
-  typedef StdArray<AtomicUInt64, 2> AtomicDoubleUInt64;
+  using X509Err = StdMap<const size_t, const X509ErrInfo>;
+  using AtomicDoubleUInt64 = StdArray<AtomicUInt64, 2>;
   /* -- Variables ---------------------------------------------------------- */
   SSL_CTX           *scStore;          // Context used for cerificate store
   X509_STORE        *xsCerts;          // Certificate store inside OpenSSL
   X509List           lCAStore;         // Certificate store
-  AtomicDoubleUInt64 sdullCertBypass;  // Certificate bypass flags
+  AtomicDoubleUInt64 adullCertBypass;  // Certificate bypass flags
   const StdString    strExtension;     // Default extension
   const X509Err      xErrDB;           // X509 error database
   /* -- Unload open ssl certificate store ---------------------------------- */
@@ -90,7 +90,7 @@ class Certs                            // Certificates store
         // Get pointer
         const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
         // Load the raw certificate and ig it succeeded?
-        typedef StdUniquePtr<X509, function<decltype(X509_free)>> X509Ptr;
+        using X509Ptr = StdUniquePtr<X509, function<decltype(X509_free)>>;
         if(X509Ptr caCert{
           d2i_X509(nullptr, &ucpPtr, fmCert.MemSize<long>()), X509_free })
         { // Get purpose struct of certificate
@@ -105,29 +105,28 @@ class Certs                            // Certificates store
                 if(X509_STORE_add_cert(xsCerts, caCert.get()))
                 { // Lock access to the list
                   maLock.MutexCall([this, &fmCert, &caCert](){
-                    lCAStore.push_back({ fmCert.IdentGet(), caCert.get() });
+                    lCAStore.push_back({ fmCert.NameGet(), caCert.get() });
                   });
                 } // Failed to add certificate to CA store
                 else cLog->LogWarningExSafe(
-                  "Certs failed to add '$' to SSL context!",
-                  fmCert.IdentGet());
+                  "Certs failed to add '$' to SSL context!", fmCert.NameGet());
                 break;
               // The cert was not created to perform the purpose represented
               case 0:
                 cLog->LogWarningExSafe(
                   "Certs rejected '$' as not a server CA certificate!",
-                  fmCert.IdentGet());
+                  fmCert.NameGet());
                 break;
               // An error occurred so show warning
               default:
                 cLog->LogWarningExSafe(
                   "Certs rejected '$' because an error occurred!",
-                  fmCert.IdentGet());
+                  fmCert.NameGet());
                 break;
             }
           } // Failed to get purpose? Log the rejection
           else cLog->LogWarningExSafe(
-            "Certs rejected '$' as unable to get purpose!", fmCert.IdentGet());
+            "Certs rejected '$' as unable to get purpose!", fmCert.NameGet());
         } // Release the certificate (caCert)
       } // In the rare occurence that an exception occurs we skip the cert
       catch(const StdException &eReason)
@@ -166,7 +165,7 @@ class Certs                            // Certificates store
     { return !CertsIsErrorValid(aItem); }
   /* -- Verify if a X509 bypass flag is set -------------------------------- */
   bool CertsIsX509BypassFlagSet(const size_t stBank, uint64_t ullFlag)
-    { return sdullCertBypass[stBank] & ullFlag; }
+    { return adullCertBypass[stBank] & ullFlag; }
   bool CertsIsNotX509BypassFlagSet(const size_t stBank, uint64_t ullFlag)
     { return !CertsIsX509BypassFlagSet(stBank, ullFlag); }
   /* -- Constructor --------------------------------------------- */ protected:
@@ -174,8 +173,8 @@ class Certs                            // Certificates store
     /* -- Initialisers ----------------------------------------------------- */
     scStore(nullptr),                  // No store initialised
     xsCerts(nullptr),                  // No certificate chain initialised
-    sdullCertBypass{{0, 0}},           // No bypass flags setup yet
-    strExtension{ "." CER_EXTENSION }, // Default extension
+    adullCertBypass{{0, 0}},           // No bypass flags setup yet
+    strExtension{ "." DER_EXTENSION }, // Default extension
 #define X509ERR(b,f,e) { X509_V_ERR_ ## e, { STR(e), b, 1ULL << f } }
     xErrDB{                            // Init X509 Error code definitions
       X509ERR(0, 0, UNSPECIFIED),
@@ -257,11 +256,11 @@ class Certs                            // Certificates store
   /* -- Destructor that unloads all x509 certificates ---------------------- */
   DTORHELPER(~Certs, CertsUnload())
   /* --------------------------------------------------------------- */ public:
-  CVarReturn CertsSetBypassFlags1(const uint64_t uiFlags)
-    { return CVarSimpleSetInt(sdullCertBypass.front(), uiFlags); }
+  CVarReturn CertsSetBypassFlags1(const uint64_t ullFlags)
+    { return CVarSimpleSetInt(adullCertBypass.front(), ullFlags); }
   /* ----------------------------------------------------------------------- */
-  CVarReturn CertsSetBypassFlags2(const uint64_t uiFlags)
-    { return CVarSimpleSetInt(sdullCertBypass.back(), uiFlags); }
+  CVarReturn CertsSetBypassFlags2(const uint64_t ullFlags)
+    { return CVarSimpleSetInt(adullCertBypass.back(), ullFlags); }
   /* ----------------------------------------------------------------------- */
   CVarReturn CertsFileModified(const StdString &strD, StdString&)
   { // Empty string is ok, treat as no CA store
@@ -282,63 +281,36 @@ class Certs                            // Certificates store
     return ACCEPT;
   }
 }; /* ---------------------------------------------------------------------- */
-/* ========================================================================= */
+/* -- Convert ASN1 time to timestamp integer ------------------------------- */
 static StdTimeT CertGetTime(const ASN1_TIME &atD)
-{ // Get expiry string
-  const char*const cpStr = reinterpret_cast<const char*>(atD.data);
-  // String position
-  size_t stPos = 0;
-  // Time structure
-  StdTMStruct tD;
-  // Get time type
-  switch(atD.type)
-  { // Two digit year?
-    case V_ASN1_UTCTIME:
-      tD.tm_year = (cpStr[stPos++] - '0') * 10;
-      tD.tm_year += cpStr[++stPos] - '0';
-      if(tD.tm_year < 70) tD.tm_year += 100;
-      break;
-    // Four digit year?
-    case V_ASN1_GENERALIZEDTIME:
-      tD.tm_year = (cpStr[stPos++] - '0') * 1000;
-      tD.tm_year += (cpStr[++stPos] - '0') * 100;
-      tD.tm_year += (cpStr[++stPos] - '0') * 10;
-      tD.tm_year += (cpStr[++stPos] - '0');
-      tD.tm_year -= 1900;
-      break;
-    // Unknown, just return string
-    default: return 0;
-  } // Continue other fields (-1 since January is 0 not 1.)
-  tD.tm_mon   = (cpStr[stPos++] - '0') * 10;
-  tD.tm_mon  += (cpStr[++stPos] - '0') - 1;
-  tD.tm_mday  = (cpStr[stPos++] - '0') * 10;
-  tD.tm_mday +=  cpStr[++stPos] - '0';
-  tD.tm_hour  = (cpStr[stPos++] - '0') * 10;
-  tD.tm_hour +=  cpStr[++stPos] - '0';
-  tD.tm_min   = (cpStr[stPos++] - '0') * 10;
-  tD.tm_min  +=  cpStr[++stPos] - '0';
-  tD.tm_sec   = (cpStr[stPos++] - '0') * 10;
-  tD.tm_sec  +=  cpStr[++stPos] - '0';
-  // These are always zero
-  tD.tm_isdst = tD.tm_yday = tD.tm_wday = 0;
-  // Get local time and if the current time has expired
-  return mktime(&tD);
+{ // Convert ASN1 time to standard time structure
+  StdTMStruct tmsData;
+  if(!ASN1_TIME_to_tm(&atD, &tmsData)) return 0;
+  // Convert standard time struct to integer format
+  StdTimeT ttTime = StdMkTime(&tmsData);
+  if(ttTime == -1) return 0;
+  // Offset to local time and return the time
+  StdLocalTime(&tmsData, &ttTime);
+  return ttTime;
 }
-/* ========================================================================= */
+/* -- Convert ASN1 time to timestamp integer ------------------------------- */
+static StdTimeT CertGetExpiry(const X509*const x509)
+  { return CertGetTime(*X509_get0_notAfter(x509)); }
+/* -- Returns if the certificate is expired -------------------------------- */
 static bool CertIsExpired(const X509*const x509)
 { // Get current time and check expired begin and end date
   const StdTimeT tTime = cmSys.GetTimeS();
   return tTime < CertGetTime(*X509_get0_notBefore(x509)) ||
-         tTime > CertGetTime(*X509_get0_notAfter(x509));
+         tTime > CertGetExpiry(x509);
 }
-/* ========================================================================= */
+/* -- Get the subject part of a certificate -------------------------------- */
 static StdString CertGetSubject(const Certs::X509Pair &caPair)
 { // Storage for certificate field info
   StdResized<StdString> strD{ 1024 };
   // Grab the subject line form ceritificate. We couldn't get the subject if
   // failed.
   if(!X509_NAME_oneline(X509_get_subject_name(caPair.second),
-    const_cast<char*>(strD.data()), static_cast<int>(strD.length())))
+    const_cast<char*>(strD.data()), static_cast<int>(strD.size())))
       return {};
   // Resize and return string
   strD.resize(strlen(strD.data()));

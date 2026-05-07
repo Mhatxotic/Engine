@@ -10,15 +10,15 @@
 namespace IPalette {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IColour::P;
-using namespace IError::P;             using namespace IIdent::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IShaders::P;           using namespace IStd::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace IError::P;             using namespace IImage::P;
+using namespace IImageDef::P;          using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IShaders::P;
+using namespace IStd::P;               using namespace ITexDef::P;
+using namespace IUtil::P;              using Lib::OS::GlFW::GLfloat;
 /* ------------------------------------------------------------------------- */
-typedef StdArray<Colour, 256> PalData; // Palette data
+using PalData = StdArray<Colour, 256>; // Palette data
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -26,9 +26,9 @@ class Pal :                            // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public PalData                       // Palette data class
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef PalData::reverse_iterator PalDataRevIt;   // Reverse iterator
-  typedef PalData::iterator         PalDataIt;      // Forward iterator
-  typedef PalData::const_iterator   PalDataConstIt; // Const forward iterator
+  using PalDataRevIt   = PalData::reverse_iterator; // Reverse iterator
+  using PalDataIt      = PalData::iterator;         // Forward iterator
+  using PalDataConstIt = PalData::const_iterator;   // Const forward iterator
   /* -- Get PalData ------------------------------------------------ */ public:
   const Colour &GetSlotConst(const size_t stSlot) const
     { return (*this)[stSlot]; }
@@ -38,57 +38,56 @@ class Pal :                            // Members initially public
     { cShaderCore->sh2D8Pal.UpdatePalette(size(),
         reinterpret_cast<const GLfloat*>(data())); }
   /* -- Set palette entry -------------------------------------------------- */
-  void SetRGBA(const size_t stPos, const GLfloat fRed,
-    const GLfloat fGreen, const GLfloat fBlue, const GLfloat fAlpha)
-  { GetSlot(stPos) = { fRed, fGreen, fBlue, fAlpha }; }
+  void SetRGBA(const size_t stPos, const GLfloat glfRed,
+    const GLfloat glfGreen, const GLfloat glfBlue, const GLfloat glfAlpha)
+  { GetSlot(stPos) = { glfRed, glfGreen, glfBlue, glfAlpha }; }
   /* -- Set palette entry as integer --------------------------------------- */
-  void SetRGBAInt(const size_t stPos, const unsigned int uiRed,
-    const unsigned int uiGreen, const unsigned int uiBlue,
-    const unsigned int uiAlpha)
-  { GetSlot(stPos) = { uiRed, uiGreen, uiBlue, uiAlpha }; }
+  void SetRGBAInt(const size_t stPos, const unsigned uRed,
+    const unsigned uGreen, const unsigned uBlue, const unsigned uAlpha)
+  { GetSlot(stPos) = { uRed, uGreen, uBlue, uAlpha }; }
   /* -- Get red palette entry ---------------------------------------------- */
   GLfloat GetRed(const size_t stPos) const
     { return GetSlotConst(stPos).ColourGetRed(); }
-  unsigned int GetRedInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned int>(GetRed(stPos)); }
+  unsigned GetRedInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(GetRed(stPos)); }
   /* -- Get green palette entry -------------------------------------------- */
   GLfloat GetGreen(const size_t stPos) const
     { return GetSlotConst(stPos).ColourGetGreen(); }
-  unsigned int GetGreenInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned int>(GetGreen(stPos)); }
+  unsigned GetGreenInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(GetGreen(stPos)); }
   /* -- Get green palette entry -------------------------------------------- */
   GLfloat GetBlue(const size_t stPos) const
     { return GetSlotConst(stPos).ColourGetBlue(); }
-  unsigned int GetBlueInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned int>(GetBlue(stPos)); }
+  unsigned GetBlueInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(GetBlue(stPos)); }
   /* -- Get alpha palette entry -------------------------------------------- */
   GLfloat GetAlpha(const size_t stPos) const
     { return GetSlotConst(stPos).ColourGetAlpha(); }
-  unsigned int GetAlphaInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned int>(GetAlpha(stPos)); }
+  unsigned GetAlphaInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(GetAlpha(stPos)); }
   /* -- Set red palette entry ---------------------------------------------- */
-  void SetRed(const size_t stPos, const GLfloat fRed)
-    { GetSlot(stPos).ColourSetRed(fRed); }
-  void SetRedInt(const size_t stPos, const unsigned int uiRed)
-    { GetSlot(stPos).ColourSetRedInt(uiRed); }
+  void SetRed(const size_t stPos, const GLfloat glfRed)
+    { GetSlot(stPos).ColourSetRed(glfRed); }
+  void SetRedInt(const size_t stPos, const unsigned uRed)
+    { GetSlot(stPos).ColourSetRedInt(uRed); }
   /* -- Set green palette entry -------------------------------------------- */
-  void SetGreen(const size_t stPos, const GLfloat fGreen)
-    { GetSlot(stPos).ColourSetGreen(fGreen); }
-  void SetGreenInt(const size_t stPos, const unsigned int uiGreen)
-    { GetSlot(stPos).ColourSetGreenInt(uiGreen); }
+  void SetGreen(const size_t stPos, const GLfloat glfGreen)
+    { GetSlot(stPos).ColourSetGreen(glfGreen); }
+  void SetGreenInt(const size_t stPos, const unsigned uGreen)
+    { GetSlot(stPos).ColourSetGreenInt(uGreen); }
   /* -- Set blue palette entry --------------------------------------------- */
-  void SetBlue(const size_t stPos, const GLfloat fBlue)
-    { GetSlot(stPos).ColourSetBlue(fBlue); }
-  void SetBlueInt(const size_t stPos, const unsigned int uiBlue)
-    { GetSlot(stPos).ColourSetBlueInt(uiBlue); }
+  void SetBlue(const size_t stPos, const GLfloat glfBlue)
+    { GetSlot(stPos).ColourSetBlue(glfBlue); }
+  void SetBlueInt(const size_t stPos, const unsigned uBlue)
+    { GetSlot(stPos).ColourSetBlueInt(uBlue); }
   /* -- Set alpha palette entry -------------------------------------------- */
-  void SetAlpha(const size_t stPos, const GLfloat fAlpha)
-    { GetSlot(stPos).ColourSetAlpha(fAlpha); }
-  void SetAlphaInt(const size_t stPos, const unsigned int uiAlpha)
-    { GetSlot(stPos).ColourSetAlphaInt(uiAlpha); }
+  void SetAlpha(const size_t stPos, const GLfloat glfAlpha)
+    { GetSlot(stPos).ColourSetAlpha(glfAlpha); }
+  void SetAlphaInt(const size_t stPos, const unsigned uAlpha)
+    { GetSlot(stPos).ColourSetAlphaInt(uAlpha); }
   /* -- Size as signed size_t --------------------------------------------- */
   ssize_t Size() const { return static_cast<ssize_t>(size()); }
-  ssize_t SizeM1() const { return Size()-1; }
+  ssize_t SizeM1() const { return Size() - 1; }
   ssize_t SizeN() const { return -Size(); }
   /* -- Shift limited palette entries backwards ---------------------------- */
   void ShiftBck(const ssize_t stBegin, const ssize_t stEnd,
@@ -117,17 +116,23 @@ class Pal :                            // Members initially public
   void Copy(const size_t stDstPos, const PalData &pdSrc, const size_t stSrcPos,
     const size_t stSrcCount)
   { // Get source data position and then copy it to output
-    const PalDataConstIt pdciIt{ pdSrc.cbegin() + stSrcPos };
-    StdCopy(par_unseq, pdciIt, pdciIt + stSrcCount, begin() + stDstPos);
+    const PalDataConstIt pdciIt
+      { StdNext(pdSrc.cbegin(), static_cast<ssize_t>(stSrcPos)) };
+    StdCopy(par_unseq, pdciIt,
+      StdNext(pdciIt + static_cast<ssize_t>(stSrcCount)),
+      StdNext(begin() + static_cast<ssize_t>(stDstPos)));
   }
   /* -- Fill with specified value ------------------------------------------ */
   void Fill(const size_t stIndex, const size_t stCount,
-    const GLfloat fRed=0.0f, const GLfloat fGreen=0.0f,
-    const GLfloat fBlue=0.0f, const GLfloat fAlpha=0.0f)
+    const GLfloat glfRed = 0.0f, const GLfloat glfGreen = 0.0f,
+    const GLfloat glfBlue = 0.0f, const GLfloat glfAlpha = 0.0f)
   { // Get start and fill in the array
-    const PalDataIt pdiStart{ begin() + stIndex };
-    StdFill(par_unseq, pdiStart, pdiStart + stCount,
-      Colour{ fRed, fGreen, fBlue, fAlpha }); }
+    const PalDataIt pdiStart
+      { StdNext(begin(), static_cast<ssize_t>(stIndex)) };
+    StdFill(par_unseq, pdiStart,
+      StdNext(pdiStart, static_cast<ssize_t>(stCount)),
+      Colour{ glfRed, glfGreen, glfBlue, glfAlpha });
+  }
   /* -- Copy constructor from other palette data --------------------------- */
   explicit Pal(const PalData &pdOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -144,34 +149,34 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   public Lockable,                     // Lua garbage collector instruction
   public Pal                           // Base Palette class
 { /* -- Init name only --------------------------------------------- */ public:
-  void Init(const StdString &strName) { IdentSet(strName); }
+  void Init(const StdStringView &strvName) { NameSet(strvName); }
   /* -- Init name and data from another palette ---------------------------- */
-  void Init(const StdString &strName, const Pal &palOther)
-    { Init(strName); Pal::operator=(palOther); }
+  void Init(const StdStringView &strvName, const Pal &palOther)
+    { Init(strvName); Pal::operator=(palOther); }
   /* -- Load palette from image -------------------------------------------- */
-  void Init(const StdString &strName, const Image &imOther)
+  void Init(const StdStringView &strvName, const Image &imOther)
   { // Set name from image
-    IdentSet(strName);
+    NameSet(strvName);
     // Throw error if image doesn't have a palette
     if(imOther.IsNotPalette())
       XC("Image does not have a palette!",
-        "Palette", strName, "Image", imOther.IdentGet());
+        "Palette", strvName, "Image", imOther.NameGet());
     // Must have two images
     if(imOther.GetSlotCount() != 2)
       XC("Image must must have two slots!",
-        "Palette", strName, "Image", imOther.IdentGet(),
+        "Palette", strvName, "Image", imOther.NameGet(),
         "Slots",   imOther.GetSlotCount());
     // Get last item
     const ImageSlot &isPalette = imOther.GetSlotsConst().back();
     // Dimensions must be valid
     if(isPalette.DimIsNotWidthSet() || isPalette.DimGetWidth() > size())
       XC("Image palette has invalid count!",
-        "Palette", strName,                 "Image",   imOther.IdentGet(),
+        "Palette", strvName,                 "Image",   imOther.NameGet(),
         "Actual",  isPalette.DimGetWidth(), "Maximum", size());
     // Make sure palette entries are the same depth
     if(isPalette.DimGetHeight() != BY_RGB)
       XC("Image palette has invalid byte count!",
-        "Palette", strName,                  "Image",    imOther.IdentGet(),
+        "Palette", strvName,                  "Image",    imOther.NameGet(),
         "Actual",  isPalette.DimGetHeight(), "Required", BY_RGB);
     // Step through our palette and set values to zero
     for(size_t stIndex = 0; stIndex < isPalette.DimGetWidth(); ++stIndex)
@@ -189,7 +194,7 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   Palette() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperPalette{ cPalettes, this },// Register the object in collector
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

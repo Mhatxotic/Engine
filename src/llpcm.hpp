@@ -49,11 +49,17 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Pcm>(lS, cPcms))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cPcms)))
 /* ========================================================================= */
+// $ Pcm:Flags
+// < Flags:integer=Pcm flags value
+// ? Returns the current pcm flags.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Flags, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().FlagGet()))
+/* ========================================================================= */
 // $ Pcm:Id
 // < Id:integer=The id number of the PCM object.
 // ? Returns the unique id of the PCM object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Pcm:Name
 // < Name:string=The name of the object
@@ -61,7 +67,7 @@ LLFUNC(Id, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().CtrGet()))
 // ? by another function, a small trace of who took ownership of it prefixed
 // ? with an exclamation mark (!).
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().NameGet()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Pcm:* member functions structure                                    ## **
@@ -82,10 +88,10 @@ LLRSEND                                // Pcm:* member functions end
 // ? Loads an audio file on the main thread from the specified array object.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Asset, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgPcmFlags aFlags{lS, 3};
-  AcPcm{lS}().InitArray(aIdentifier, aAsset, aFlags))
+  AcPcm{lS}().InitArray(aName, aAsset, aFlags))
 /* ========================================================================= */
 // $ Pcm.AssetAsync
 // > Id:String=The identifier of the string
@@ -100,11 +106,11 @@ LLFUNC(Asset, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(AssetAsync, 0,
   LuaUtilCheckParams(lS, 6);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgPcmFlags aFlags{lS, 3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcPcm{lS}().InitAsyncArray(lS, aIdentifier, aAsset, aFlags))
+  AcPcm{lS}().InitAsyncArray(lS, aName, aAsset, aFlags))
 /* ========================================================================= */
 // $ Pcm.Count
 // < Count:integer=Total number of pcms created.
@@ -141,7 +147,7 @@ LLFUNC(FileAsync, 0,
   AcPcm{lS}().InitAsyncFile(lS, aFilename, aFlags))
 /* ========================================================================= */
 // $ Pcm.Raw
-// > Identifier:string=Identifier of the sample.
+// > Name:string=Identifier of the sample.
 // > Data:Asset=Sample PCM data.
 // > Rate:integer=Sample rate.
 // > Channels:integer=Sample channels.
@@ -150,12 +156,12 @@ LLFUNC(FileAsync, 0,
 // ? Loads an audio file on the main thread from the specified array object.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Raw, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgUIntLG aRate{lS, 3, 1, 5644800};
   const AgIntegerLG<PcmChannelType> aChannels{lS, 4, PCT_MONO, PCT_STEREO};
   const AgIntegerLGP2<PcmBitType> aBitsPerChannel{lS, 5, PBI_BYTE, PBI_LONG};
-  AcPcm{lS}().InitRaw(aIdentifier, aAsset, aRate, aChannels, aBitsPerChannel))
+  AcPcm{lS}().InitRaw(aName, aAsset, aRate, aChannels, aBitsPerChannel))
 /* ========================================================================= */
 // $ Pcm.WaitAsync
 // ? Halts main-thread execution until all async pcm events have completed
@@ -168,30 +174,54 @@ LLFUNC(WaitAsync, 0, cPcms->WaitAsync())
 ** ========================================================================= */
 LLRSBEGIN                              // Pcm.* namespace functions begin
   LLRSFUNC(AssetAsync), LLRSFUNC(Asset),     LLRSFUNC(Count),
-  LLRSFUNC(File),       LLRSFUNC(FileAsync), LLRSFUNC(Raw),
-  LLRSFUNC(WaitAsync),
+  LLRSFUNC(File),       LLRSFUNC(FileAsync), LLRSFUNC(Flags),
+  LLRSFUNC(Raw),        LLRSFUNC(WaitAsync),
 LLRSEND                                // Pcm.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Pcm.* namespace constants                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// @ Pcm.Flags
-// < Codes:table=The table of key/value pairs of available flags
-// ? Returns the pcm flags available. Returned as key/value pairs. The
-// ? value is a unique identifier to the flag.
+// @ Pcm.FlagsPcm
+// < Codes:table=The table of key/value pairs of available flags.
+// ? Returns the flags that define the original pcm before
+// ? manipulation. These values are used with the 'Flags()' function.
 /* ------------------------------------------------------------------------- */
-LLRSKTBEGIN(Flags)                     // Beginning of pcm loading flags
-  LLRSKTITEM(PL_,NONE),                LLRSKTITEM(PL_,FCE_CAF),
-  LLRSKTITEM(PL_,FCE_OGG),             LLRSKTITEM(PL_,FCE_WAV),
-LLRSKTEND                              // End of pcm loading flags
+LLRSKTBEGIN(FlagsPcm)                  // Beginning of pcm orig flags codes
+  LLRSKTITEM(PL_,NONE),                LLRSKTITEM(PL_,BE),
+  LLRSKTITEM(PL_,DYNAMIC),             LLRSKTITEM(PL_,SIGNED),
+LLRSKTEND                              // End of pcm flags orig codes
+/* ========================================================================= */
+// @ Pcm.FlagsPost
+// < Codes:table=The table of key/value pairs of available flags.
+// ? Returns the flags that were activated after manipulation functions
+// ? were completed. These values are used with the 'GetFlags()' function.
+/* ------------------------------------------------------------------------- */
+LLRSKTBEGIN(FlagsPost)                 // Beginning of pcm active flags codes
+  LLRSKTITEM(PL_,NONE), LLRSKTITEM(PA_,TOSPU),    LLRSKTITEM(PA_,TOBE),
+  LLRSKTITEM(PA_,TOLE), LLRSKTITEM(PA_,TOSIGNED), LLRSKTITEM(PA_,TOUNSIGNED),
+LLRSKTEND                              // End of pcm flags active codes
+/* ========================================================================= */
+// @ Pcm.FlagsPre
+// < Codes:table=The table of key/value pairs of available flags.
+// ? Returns the flags that are sent to the loader functions to manipulate the
+// ? the waveform. The flags that get activated are in the 'FlagsPost'
+// ? array. These values are used with the 'GetFlags()' function.
+/* ------------------------------------------------------------------------- */
+LLRSKTBEGIN(FlagsPre)                  // Beginning of pcm loader flags codes
+  LLRSKTITEM(PL_,NONE),                LLRSKTITEM(PL_,TOSPU),
+  LLRSKTITEM(PL_,TOBE),                LLRSKTITEM(PL_,TOLE),
+  LLRSKTITEM(PL_,TOSIGNED),            LLRSKTITEM(PL_,TOUNSIGNED),
+  LLRSKTITEM(PL_,FCE_CAF),             LLRSKTITEM(PL_,FCE_OGG),
+  LLRSKTITEM(PL_,FCE_WAV),
+LLRSKTEND                              // End of pcm loader flags codes
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Pcm.* namespace constants structure                                 ## **
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSCONSTBEGIN                         // Pcm.* namespace consts begin
-  LLRSCONST(Flags),
+  LLRSCONST(FlagsPcm), LLRSCONST(FlagsPost), LLRSCONST(FlagsPre),
 LLRSCONSTEND                           // Pcm.* namespace consts end
 /* ========================================================================= */
 }                                      // End of Pcm namespace

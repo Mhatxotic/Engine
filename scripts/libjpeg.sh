@@ -12,6 +12,7 @@ fi
 BASE=~/Assets/Engine
 ARCHIVE=$BASE/archive
 LIB=$BASE/lib
+INCLUDE=$BASE/include/jpeg
 FILEPREFIX=libjpeg-turbo-
 FILE=$FILEPREFIX$1
 ZIP=$ARCHIVE/$FILE.tar.gz
@@ -60,6 +61,9 @@ build()
     exit 8
   fi
 
+  cp -fv jconfig.h ${INCLUDE}/jconfig-$3.h
+  cp -fv ../src/*.h ${INCLUDE}/
+
   mv -fv libturbojpeg.a "../jpeg64-${1}-${2}.a"
   if [ ! $? -eq 0 ]; then
     exit 9
@@ -73,11 +77,11 @@ build()
 
 ISOSX=`uname`
 if [ $ISOSX = 'Darwin' ]; then
-  build x86_64 generic
-  build arm64 apple-m1
+  build arm64 apple-m1 osx64a
+  build x86_64 generic osx64i
   lipo jpeg64-*.a -create -output "${LIB}/jpeg64.ma"
 else
-  build x86_64 generic
+  build x86_64 generic lnx64
   ar rcs "${LIB}/jpeg64.la" jpeg64-*.a
 fi
 

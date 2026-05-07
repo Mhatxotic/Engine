@@ -10,11 +10,11 @@
 namespace ICodecWAV {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IIdent::P;             using namespace IFlags::P;
-using namespace ILog::P;               using namespace IMemory::P;
-using namespace IOal::P;               using namespace IPcmDef::P;
-using namespace IPcmLib::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IUtil::P;
+using namespace IFlags::P;             using namespace ILog::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace IPcmDef::P;            using namespace IPcmLib::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= **
@@ -70,11 +70,11 @@ class CodecWAV :                       // WAV codec object
       XC("WAVE file length mismatch with actual file length!",
         "Expected", stExpectedLength, "Actual", stActualLength);
     // Make sure its a MSWin WAV formatted file
-    const unsigned int uiExpectedMagic = HL_U32LE_V_WAVE,
-                       uiActualMagic = fmData.FileMapReadVar32LE();
-    if(uiActualMagic != uiExpectedMagic)
+    const unsigned uExpectedMagic = HL_U32LE_V_WAVE,
+                   uActualMagic = fmData.FileMapReadVar32LE();
+    if(uActualMagic != uExpectedMagic)
       XC("RIFF must have WAV formatted data!",
-        "Expected", uiExpectedMagic, "Actual", uiActualMagic);
+        "Expected", uExpectedMagic, "Actual", uActualMagic);
     // Flag for if we got the data chunks we need
     BUILD_FLAGS(WaveLoad, WL_NONE{1}, WL_GOTFORMAT{2}, WL_GOTDATA{4});
     WaveLoadFlags chunkFlags{ WL_NONE };
@@ -85,23 +85,23 @@ class CodecWAV :                       // WAV codec object
                stHeaderPos + stTwoDWords < fmData.MemSize();
                stHeaderPos = fmData.FileMapTell())
     { // Get chunk header and size
-      const unsigned int uiHeader = fmData.FileMapReadVar32LE(),
-                         uiSize = fmData.FileMapReadVar32LE();
+      const unsigned uHeader = fmData.FileMapReadVar32LE(),
+                     uSize = fmData.FileMapReadVar32LE();
       // Which chunk is it?
-      switch(uiHeader)
+      switch(uHeader)
       { // Is it the wave format chunk?
         case HL_U32LE_CNKT_FMT:
         { // Check that the chunk will fit into WAVEHDR
-          if(uiSize < 16)
-            XC("Wave format chunk size invalid!", "HeaderSize", uiSize);
+          if(uSize < 16)
+            XC("Wave format chunk size invalid!", "HeaderSize", uSize);
           // Compare wave data format type
-          switch(const unsigned int uiFormatTag = fmData.FileMapReadVar16LE())
+          switch(const unsigned uFormatTag = fmData.FileMapReadVar16LE())
           { // Must be PCM or floating-point type.
             case HL_U16LE_WF_PCM: case HL_U16LE_WF_FLOAT: break;
             // Unsupported type?
             default:
               XC("Wave format must be either integer PCM or IEEE FLOAT!",
-                "Actual", uiFormatTag);
+                "Actual", uFormatTag);
           } // Wave format data. Can't use #pragma pack nowadays :-(
           if(!pdData.SetChannelsSafe(
                static_cast<PcmChannelType>(fmData.FileMapReadVar16LE())))
@@ -115,32 +115,28 @@ class CodecWAV :                       // WAV codec object
               "Rate", pdData.GetRate(), "Minimum", HL_U32LE_MINRATE,
               "Maximum", HL_U32LE_MAXRATE);
           // Get bytes per second and block align
-          const unsigned int uiAvgBytesPerSec = fmData.FileMapReadVar32LE();
-          const unsigned int uiBlockAlign = fmData.FileMapReadVar16LE();
+          const unsigned uAvgBytesPerSec = fmData.FileMapReadVar32LE(),
+                         uBlockAlign = fmData.FileMapReadVar16LE();
           // Get bits and calculate bytes per channel
           pdData.SetBits(static_cast<PcmBitType>(fmData.FileMapReadVar16LE()));
           // Get and check bytes per second
-          const unsigned int uiCalcAvgBytes =
+          const unsigned uCalcAvgBytes =
             pdData.GetRate() * pdData.GetChannels() * pdData.GetBytes();
-          if(uiCalcAvgBytes != uiAvgBytesPerSec)
+          if(uCalcAvgBytes != uAvgBytesPerSec)
             XC("Average bytes per second mismatch!",
               "Rate",     pdData.GetRate(),
               "Channels", pdData.GetChannels(),
-               "BitsPC",   pdData.GetBits(), "BytesPC",    pdData.GetBytes(),
-               "Expected", uiAvgBytesPerSec, "Calculated", uiCalcAvgBytes);
+              "BitsPC",   pdData.GetBits(), "BytesPC",    pdData.GetBytes(),
+              "Expected", uAvgBytesPerSec, "Calculated", uCalcAvgBytes);
           // Check block align
-          const unsigned int uiCalcBlockAlign =
-            static_cast<unsigned int>(pdData.GetChannels()) *
+          const unsigned uCalcBlockAlign =
+            static_cast<unsigned>(pdData.GetChannels()) *
               pdData.GetBytes();
-          if(uiCalcBlockAlign != uiBlockAlign)
+          if(uCalcBlockAlign != uBlockAlign)
             XC("Block align size mismatch!",
               "Channels",   pdData.GetChannels(), "BitsPC",   pdData.GetBits(),
-              "BytesPC",    pdData.GetBytes(),    "Expected", uiBlockAlign,
-              "Calculated", uiCalcBlockAlign);
-          // Determine openal format type from the WAV file structure
-          if(!pdData.ParseOALFormat())
-            XC("Wave format not supported by AL!",
-              "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
+              "BytesPC",    pdData.GetBytes(),    "Expected", uBlockAlign,
+              "Calculated", uCalcBlockAlign);
           // We got the format chunk
           chunkFlags.FlagSet(WL_GOTFORMAT);
           // Done
@@ -148,7 +144,7 @@ class CodecWAV :                       // WAV codec object
         } // This is a data chunk?
         case HL_U32LE_CNKT_DATA:
         { // Store pcm data, mark that we got the data chunk and break
-          pdData.aPcmL.MemInitData(uiSize, fmData.FileMapReadPtr(uiSize));
+          pdData.aPcmL.MemInitData(uSize, fmData.FileMapReadPtr(uSize));
           chunkFlags.FlagSet(WL_GOTDATA);
           break;
         } // Unknown chunk?
@@ -156,13 +152,13 @@ class CodecWAV :                       // WAV codec object
         { // Report that we're ignoring it and goto next header
           cLog->LogDebugExSafe(
             "Pcm ignored unknown RIFF header 0x$$<$$> in '$'!",
-            StdIOSHex, uiHeader, StdIOSDec, uiHeader, fmData.IdentGet());
+            StdIOSHex, uHeader, StdIOSDec, uHeader, fmData.NameGet());
           break;
         }
       }
       // Set position of next header. This skips any extra padding we did
       // not read and also protects from overruning.
-      fmData.FileMapSeekSet(stHeaderPos + stTwoDWords + uiSize);
+      fmData.FileMapSeekSet(stHeaderPos + stTwoDWords + uSize);
     } // Throw error if we did not get a 'fmt' chunk?
     if(chunkFlags.FlagIsClear(WL_GOTFORMAT)) XC("WAV has no 'fmt' chunk!");
     // Throw error if we did not get a 'data' chunk?

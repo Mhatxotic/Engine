@@ -46,7 +46,7 @@ class CodecJPG :                       // JPEG codec object
   }
   /* --------------------------------------------------------------- */ public:
   bool Encode(const FStream &fmData, const ImageData &idData,
-                   const ImageSlot &isData)
+    const ImageSlot &isData)
   { // Only support 24-bit per pixel images
     if(idData.GetBitsPerPixel() != BD_RGB)
       XC("Only RGB supported!", "BitsPerPixel", idData.GetBitsPerPixel());
@@ -96,7 +96,7 @@ class CodecJPG :                       // JPEG codec object
     { // Get scanline
       JSAMPROW rPtr = reinterpret_cast<JSAMPROW>
         (isData.MemRead((ciData.image_height-1-ciData.next_scanline)*
-          static_cast<unsigned int>(ciData.input_components)*
+          static_cast<unsigned>(ciData.input_components)*
           ciData.image_width));
       // Write scanline to disk
       jpeg_write_scanlines(&ciData, &rPtr, 1);

@@ -34,7 +34,7 @@ struct AgTileId : public AgIntegerLGE<size_t> {
   explicit AgTileId(lua_State*const lS, const int iArg, const Texture &tCref) :
     AgIntegerLGE{lS, iArg, 0, tCref.GetTileCount()}{} };
 /* -- Other types ---------------------------------------------------------- */
-typedef AgInteger<GLint> AgGLint;
+using AgGLint = AgInteger<GLint>;
 /* -- Read vector of the specified integer type ---------------------------- */
 template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
   struct AgIntegerVector : public VectorType
@@ -472,14 +472,14 @@ LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().DimGetHeight()))
 // < Id:integer=The id number of the Texture object.
 // ? Returns the unique id of the Texture object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().CtrGet()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Texture:GetName
 // < Name:string=Name of the texture.
 // ? If this texture was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().IdentGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Texture:GetSubCount
 // < Count:integer=The number of sub-textures in this texture
@@ -603,12 +603,12 @@ LLFUNC(SetCRGBAI, 0,
 LLFUNC(SetCX, 0,
   const AgTexture aTexture{lS, 1};
   const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriColData tcdNew{
+  const FboBase::TriIntData tidColour{
     AgGLfloat{lS,  3}, AgGLfloat{lS,  4}, AgGLfloat{lS,  5}, AgGLfloat{lS,  6},
     AgGLfloat{lS,  7}, AgGLfloat{lS,  8}, AgGLfloat{lS,  9}, AgGLfloat{lS, 10},
     AgGLfloat{lS, 11}, AgGLfloat{lS, 12}, AgGLfloat{lS, 13}, AgGLfloat{lS, 14}
   };
-  aTexture().FboItemSetColourEx(aTriangleId, tcdNew))
+  aTexture().FboItemSetColourEx(aTriangleId, tidColour))
 /* ========================================================================= */
 // $ Texture:SetTCLTRB
 // > Left:number=The left co-ordinate.
@@ -655,11 +655,11 @@ LLFUNC(SetTCLTWH, 0,
 LLFUNC(SetTCX, 0,
   const AgTexture aTexture{lS, 1};
   const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriCoordData tcdNew{
+  const FboBase::TriTexData ttdCoords{
     AgGLfloat{lS, 3}, AgGLfloat{lS, 4}, AgGLfloat{lS, 5},
     AgGLfloat{lS, 6}, AgGLfloat{lS, 7}, AgGLfloat{lS, 8}
   };
-  aTexture().FboItemSetTexCoordEx(aTriangleId, tcdNew))
+  aTexture().FboItemSetTexCoordEx(aTriangleId, ttdCoords))
 /* ========================================================================= */
 // $ Texture:SetVLTRB
 // > Left:number=The starting column to draw from.

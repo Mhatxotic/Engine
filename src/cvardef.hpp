@@ -9,12 +9,12 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace ICVarDef {                   // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace IFlags::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-enum CVarReturn : unsigned int         // Callback return values
+enum CVarReturn : unsigned             // Callback return values
 { /* ----------------------------------------------------------------------- */
   DENY,                                // [0] New cvar value is not acceptable
   ACCEPT,                              // [1] New var value is acceptable
@@ -84,6 +84,8 @@ BUILD_FLAGS(CVar,                      // CVar flags
   CFILENAME                {Flag(24)}, // Variable must be a valid filename?
   /* -- Manipulation (M) --------------------------------------------------- */
   MTRIM                    {Flag(32)}, // Variable string should be trimmed?
+  MUPPER                   {Flag(33)}, // Variable string should be upcased?
+  MLOWER                   {Flag(34)}, // Variable string should be lowcased?
   /* -- Privates (Used internally) ----------------------------------------- */
   TLUA                     {Flag(48)}, // Variable was created by LUA?
   CTRUSTEDFN               {Flag(49)}, // Variable is a trusted filename?
@@ -104,9 +106,9 @@ BUILD_FLAGS(CVar,                      // CVar flags
   PCONSOLE                 {Flag(64)}, // Variable can be changed by user?
   /* -- Other -------------------------------------------------------------- */
   NONE                      {Flag(0)}, // No flags?
-  PRIVATE                      {TLUA}, // Private vars begin after here?
+  PRIVATE                    { TLUA }, // Private vars begin after here?
   /* -- Collections -------------------------------------------------------- */
-  TUINTEGER{ TINTEGER|CUNSIGNED },     // Shortcut to unsigned int type
+  TUINTEGER{ TINTEGER|CUNSIGNED },     // Shortcut to unsigned type
   TUFLOAT{ TFLOAT|CUNSIGNED },         // Shortcut to 'unsigned float' type
   TINTEGERSAVE{ TINTEGER|CSAVEABLE },  // Shortcut to int + saveable
   TFLOATSAVE{ TFLOAT|CSAVEABLE },      // Shortcut to float + saveable
@@ -117,13 +119,18 @@ BUILD_FLAGS(CVar,                      // CVar flags
   CALPHANUMERIC{ CALPHA|CNUMERIC },    // Only alphanumeric characeters
   SANY{ SCMDLINE|SAPPCFG|SUDB },       // Any source
   CVREGMASK{ COMMIT|SANY },            // Registration mask bits
-  PANY{PCMDLINE|PAPPCFG|PUDB|PCONSOLE},// All perms granted to modify
-  /* -- Allowed bits ------------------------------------------------------- */
+  PNOUI{ PCMDLINE|PAPPCFG },           // Variable can't be changed running?
+  PANY{ PNOUI|PUDB|PCONSOLE },         // All perms granted to modify
+  /* -- Allowed manipulation bits ------------------------------------------ */
+  MMASK{ MTRIM|MUPPER|MLOWER },
+  /* -- Allowed type bits -------------------------------------------------- */
+  TMASK{ TSTRING|TINTEGER|TFLOAT|TBOOLEAN },
+  /* -- Allowed total bits ------------------------------------------------- */
   CVMASK{ TSTRING|TINTEGER|TFLOAT|TBOOLEAN|CALPHA|CNUMERIC|CSAVEABLE|
           CPROTECTED|CDEFLATE|CNOTEMPTY|CUNSIGNED|CPOW2|CFILENAME|MTRIM }
 );/* ----------------------------------------------------------------------- */
 class CVarItem;                        // (Prototype) Cvar callback data
-typedef CVarReturn (*CbFunc)(CVarItem&, const StdString&); // Cb return type
+using CbFunc = CVarReturn (*)(CVarItem&, const StdString&); // Cb return type
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -171,22 +178,24 @@ enum CVarEnums : size_t                // CVars list (cvarlib.hpp for bodies)
   ERR_MINRAM,
   /* -- Lua cvars ---------------------------------------------------------- */
   LUA_CACHE,        LUA_DEBUGLOCALS,   LUA_ERRIGNORE,       LUA_ERRMODE,
-  LUA_GCPAUSE,      LUA_GCSTEPMUL,     LUA_LASTVER,         LUA_RANDOMSEED,
-  LUA_SCRIPT,       LUA_SIZESTACK,     LUA_TICKCHECK,       LUA_TICKTIMEOUT,
+  LUA_GCMAJMIN,     LUA_GCMINMUL,      LUA_GCMINMAJ,        LUA_GCMODE,
+  LUA_GCPAUSE,      LUA_GCSTEPMUL,     LUA_GCSTEPSIZE,      LUA_LASTVER,
+  LUA_RANDOMSEED,   LUA_SCRIPT,        LUA_SIZESTACK,       LUA_TICKCHECK,
+  LUA_TICKTIMEOUT,
   /* -- Audio cvars -------------------------------------------------------- */
-  AUD_DELAY,        AUD_VOL,           AUD_INTERFACE,       AUD_CHECK,
-  AUD_NUMSOURCES,   AUD_SAMVOL,        AUD_STRBUFCOUNT,     AUD_STRBUFFER,
-  AUD_STRVOL,       AUD_FMVVOL,        AUD_HRTF,
+  AUD_CHECK,        AUD_DELAY,         AUD_FMVVOL,          AUD_HRTF,
+  AUD_INTERFACE,    AUD_NUMSOURCES,    AUD_SAMVOL,          AUD_STRBUFCOUNT,
+  AUD_STRBUFFER,    AUD_STRVOL,        AUD_VERSION,         AUD_VOL,
   /* -- Console cvars ------------------------------------------------------ */
   CON_KEYPRIMARY,   CON_KEYSECONDARY,  CON_AUTOCOMPLETE,    CON_AUTOSCROLL,
   CON_AUTOCOPYCVAR, CON_HEIGHT,        CON_BLOUTPUT,        CON_BLINPUT,
   CON_DISABLED,     CON_CVSHOWFLAGS,   CON_BGCOLOUR,        CON_BGTEXTURE,
-  CON_FONT,         CON_FONTFLAGS,     CON_FONTCOLOUR,      CON_FONTHEIGHT,
-  CON_FONTPADDING,  CON_FONTPCMIN,     CON_FONTPCMAX,       CON_FONTSCALE,
-  CON_FONTSPACING,  CON_FONTLSPACING,  CON_FONTWIDTH,       CON_FONTTEXSIZE,
-  CON_GCWTERM,      CON_INPREFRESH,    CON_INPUTMAX,        CON_OUTPUTMAX,
-  CON_PAGELINES,    CON_TMCCOLS,       CON_TMCROWS,         CON_TMCREFRESH,
-  CON_TMCNOCLOSE,   CON_TMCTFORMAT,
+  CON_ENABLEBREAK,  CON_FONT,          CON_FONTFLAGS,       CON_FONTCOLOUR,
+  CON_FONTHEIGHT,   CON_FONTPADDING,   CON_FONTPCMIN,       CON_FONTPCMAX,
+  CON_FONTSCALE,    CON_FONTSPACING,   CON_FONTLSPACING,    CON_FONTWIDTH,
+  CON_FONTTEXSIZE,  CON_GCWTERM,       CON_INPREFRESH,      CON_INPUTMAX,
+  CON_OUTPUTMAX,    CON_PAGELINES,     CON_TMCCOLS,         CON_TMCROWS,
+  CON_TMCREFRESH,   CON_TMCNOCLOSE,    CON_TMCTFORMAT,
   /* -- Fmv cvars ---------------------------------------------------------- */
   FMV_ABUFFER,      FMV_IOBUFFER,      FMV_MAXDRIFT,
   /* -- Input cvars -------------------------------------------------------- */
@@ -230,7 +239,7 @@ struct CVarItemStatic                  // Start of CVar static struct
   const CbFunc         cbTrigger;      // Callback trigger event
   const CVarFlagsConst cFlags;         // Variable flags
 };/* ----------------------------------------------------------------------- */
-typedef StdArray<const CVarItemStatic, CVAR_MAX> CVarItemStaticList;
+using CVarItemStaticList = StdArray<const CVarItemStatic, CVAR_MAX>;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

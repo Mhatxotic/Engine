@@ -8,18 +8,18 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace ILuaRef {                    // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace IFillCon::P;           using namespace ILog::P;
 using namespace ILuaUtil::P;           using namespace IStd::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<size_t Refs=1>class LuaRef    // Lua easy reference class
-{ /* -- Private typedefs ---------------------------------------- */ protected:
-  typedef StdArray<int, Refs> References; // Type for LUA references list
-  typedef References::const_reverse_iterator ReferencesConstRevIt;
-  typedef References::reverse_iterator       ReferencesRevIt;
+template<size_t Refs = 1>class LuaRef  // Lua easy reference class
+{ /* -- Protected typedefs -------------------------------------- */ protected:
+  using References           = StdArray<int, Refs>; // Type for LUA refs list
+  using ReferencesConstRevIt = References::const_reverse_iterator;
+  using ReferencesRevIt      = References::reverse_iterator;
   /* -- Protected variables ------------------------------------- */ protected:
   lua_State       *lsState;            // State that owns the reference.
   References       aReferences;        // Reference that the state refers to.

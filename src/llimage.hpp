@@ -77,14 +77,14 @@ LLFUNC(Height, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetHeight()))
 // < Id:integer=The id number of the Image object.
 // ? Returns the unique id of the Image object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Image:Name
 // < Name:string=Name of the image.
 // ? If this font was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Image:Replace
 // > Data:Asset=The new pixel data to replace with.
@@ -137,10 +137,10 @@ LLRSEND                                // Image:* member functions end
 // ? Asset object specified is consumed upon load. Returns an image object.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Asset, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgImageFlags aFlags{lS, 3};
-  AcImage{lS}().InitArray(aIdentifier, aAsset, aFlags))
+  AcImage{lS}().InitArray(aName(), aAsset, aFlags))
 /* ========================================================================= */
 // $ Image.AssetAsync
 // > Name:string=A user-defined id of the image
@@ -154,11 +154,11 @@ LLFUNC(Asset, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(AssetAsync, 0,
   LuaUtilCheckParams(lS, 6);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgImageFlags aFlags{lS, 3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcImage{lS}().InitAsyncArray(lS, aIdentifier, aAsset, aFlags))
+  AcImage{lS}().InitAsyncArray(lS, aName(), aAsset, aFlags))
 /* ========================================================================= */
 // $ Image.Blank
 // > Name:string=The name of the texture
@@ -169,12 +169,12 @@ LLFUNC(AssetAsync, 0,
 // ? Creates an empty blank texture for manipulation.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Blank, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgDimension aWidth{lS, 2},
                     aHeight{lS, 3};
   const AgBoolean aAlpha{lS, 4},
                   aClear{lS, 5};
-  AcImage{lS}().InitBlank(aIdentifier, aWidth, aHeight, aAlpha, aClear))
+  AcImage{lS}().InitBlank(aName(), aWidth, aHeight, aAlpha, aClear))
 /* ========================================================================= */
 // $ Image.Colour
 // > Colour:integer=The colour of the pixel (Syntax: 0xAABBGGRR)
@@ -200,7 +200,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cImages->CollectorCount()))
 LLFUNC(File, 1,
   const AgFilename aFilename{lS, 1};
   const AgImageFlags aFlags{lS, 2};
-  AcImage{lS}().InitFile(aFilename, aFlags))
+  AcImage{lS}().InitFile(aFilename(), aFlags))
 /* ========================================================================= */
 // $ Image.FileAsync
 // > Filename:string=The filename of the image to load
@@ -228,12 +228,12 @@ LLFUNC(FileAsync, 0,
 // ? Loads a image on the main thread from the specified array object.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Raw, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgDimension aWidth{lS, 3},
                     aHeight{lS, 4};
   const AgIntegerLG<BitDepth> aBits{lS, 5, BD_BINARY, BD_RGBA};
-  AcImage{lS}().InitRaw(aIdentifier, aAsset, aWidth, aHeight, aBits))
+  AcImage{lS}().InitRaw(aName(), aAsset, aWidth, aHeight, aBits))
 /* ========================================================================= */
 // $ Image.WaitAsync
 // ? Halts main-thread execution until all async image events have completed
@@ -258,7 +258,7 @@ LLRSEND                                // Image.* namespace functions end
 // < Codes:table=The table of key/value pairs of available flags.
 // ? Returns the flags that are sent to the loader functions to manipulate the
 // ? the image. The flags that get activated are in the 'FlagsPost'
-// ? array. These values are used with the 'GetFlags()' function.
+// ? array. These values are used with the 'Flags()' function.
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(FlagsPre)                  // Beginning of image loader flags codes
   LLRSKTITEM(IL_,NONE),    LLRSKTITEM(IL_,TOGPU),    LLRSKTITEM(IL_,TO24BPP),
@@ -271,7 +271,7 @@ LLRSKTEND                              // End of image loader flags codes
 // @ Image.FlagsPost
 // < Codes:table=The table of key/value pairs of available flags.
 // ? Returns the flags that were activated after manipulation functions
-// ? were completed. These values are used with the 'GetFlags()' function.
+// ? were completed. These values are used with the 'Flags()' function.
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(FlagsPost)               // Beginning of image active flags codes
   LLRSKTITEM(IL_,NONE),    LLRSKTITEM(IA_,TOGPU),    LLRSKTITEM(IA_,TO24BPP),
@@ -282,7 +282,7 @@ LLRSKTEND                              // End of image flags active codes
 // @ Image.FlagsImage
 // < Codes:table=The table of key/value pairs of available flags.
 // ? Returns the flags that define the original image before
-// ? manipulation. These values are used with the 'GetFlags()' function.
+// ? manipulation. These values are used with the 'Flags()' function.
 /* ------------------------------------------------------------------------- */
 LLRSKTBEGIN(FlagsImage)                // Beginning of image orig flags codes
   LLRSKTITEM(IL_,NONE),       LLRSKTITEM(IF_,MIPMAPS),

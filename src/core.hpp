@@ -30,17 +30,18 @@ using namespace IDir::P;               using namespace IDisplay::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IEvtWin::P;            using namespace IFbo::P;
 using namespace IFboCore::P;           using namespace IFile::P;
-using namespace IFont::P;              using namespace IFreeType::P;
-using namespace IFtf::P;               using namespace IGlFW::P;
-using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace IInput::P;
-using namespace IInterval::P;          using namespace IJson::P;
-using namespace ILog::P;               using namespace ILua::P;
-using namespace ILuaCode::P;           using namespace ILuaCommand::P;
-using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
-using namespace ILuaVariable::P;       using namespace IMask::P;
-using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IFont::P;              using namespace IFrame::P;
+using namespace IFreeType::P;          using namespace IFtf::P;
+using namespace IGlFW::P;              using namespace IGlFWMonitor::P;
+using namespace IGlFWUtil::P;          using namespace IImage::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace IInput::P;             using namespace IInterval::P;
+using namespace IJson::P;              using namespace ILog::P;
+using namespace ILua::P;               using namespace ILuaCode::P;
+using namespace ILuaCommand::P;        using namespace ILuaFunc::P;
+using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
+using namespace IMask::P;              using namespace IMemory::P;
+using namespace IMixer::P;             using namespace IMutex::P;
 using namespace IOal::P;               using namespace IOgl::P;
 using namespace IPSplit::P;            using namespace IPalette::P;
 using namespace IPcm::P;               using namespace IPcmLib::P;
@@ -48,15 +49,15 @@ using namespace ISShot::P;             using namespace ISample::P;
 using namespace IShader::P;            using namespace IShaders::P;
 using namespace ISocket::P;            using namespace ISource::P;
 using namespace ISql::P;               using namespace IStat::P;
-using namespace IStd::P;               using namespace IStream::P;
-using namespace IString::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace ISystem::P;
-using namespace ITexture::P;           using namespace IThread::P;
-using namespace ITimer::P;             using namespace IToken::P;
-using namespace IUrl::P;               using namespace IUtf::P;
-using namespace IUtil::P;              using namespace IVideo::P;
-using namespace Lib::OS::GlFW::Types;  using namespace Lib::OpenAL::Types;
-using namespace Lib::Sqlite::Types;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISysMod::P;            using namespace ISysUtil::P;
+using namespace ISystem::P;            using namespace ITexture::P;
+using namespace IThread::P;            using namespace ITime::P;
+using namespace IToken::P;             using namespace IUrl::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IVideo::P;             using namespace Lib::OS::GlFW::Types;
+using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -67,23 +68,24 @@ class Core final :                     // Members initially private
   private Stats,      private Threads,            private EvtMain,
   private System,     private LuaFuncs,           private Archives,
   private Assets,     private Crypt,              private Urls,
-  private Timer,      private Sqls,               private Sql,
+  private Frame,      private Sqls,               private Sql,
   private Jsons,      private CVarItemStaticList, private CVars,
   private Sockets,    private ConCmdStaticList,   private Console,
   private GlFW,       private Credits,            private FreeType,
   private Ftfs,       private Files,              private Masks,
   private Bins,       private Oal,                private PcmLibs,
   private CodecWAV,   private CodecCAF,           private CodecOGG,
-  private Pcms,       private Audio,              private Sources,
-  private Samples,    private Streams,            private EvtWin,
-  private Ogl,        private ImageLibs,          private CodecPNG,
-  private CodecJPG,   private CodecGIF,           private CodecDDS,
-  private Images,     private Shaders,            private Clips,
-  private Display,    private Input,              private ShaderCore,
-  private Fbos,       private FboCore,            private SShots,
-  private Textures,   private Palettes,           private Atlases,
-  private Fonts,      private Videos,             private ConGfx,
-  private Variables,  private Commands,           private Lua
+  private Pcms,       private Mixer,              private Audio,
+  private Sources,    private Samples,            private Streams,
+  private EvtWin,     private Ogl,                private ImageLibs,
+  private CodecPNG,   private CodecJPG,           private CodecGIF,
+  private CodecDDS,   private Images,             private Shaders,
+  private Clips,      private Display,            private Input,
+  private ShaderCore, private Fbos,               private FboCore,
+  private SShots,     private Textures,           private Palettes,
+  private Atlases,    private Fonts,              private Videos,
+  private ConGfx,     private Variables,          private Commands,
+  private Lua
 { /* -- Private typedefs to run a function when scope exits ---------------- */
   template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
     explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}
@@ -100,8 +102,8 @@ class Core final :                     // Members initially private
     CER_MAX,                           // [4] Maximum # of options supported
   } cerMode;                           // Lua error mode behaviour setting
   const CbThFunc   cbtMain;            // Bound main thread function
-  unsigned int     uiErrorCount,       // Number of errors occured
-                   uiErrorLimit;       // Number of errors allowed
+  unsigned         uErrorCount,        // Number of errors occured
+                   uErrorLimit;        // Number of errors allowed
   Interval         ivForceFrame;       // Force draw frame after this time
   /* -- Reset environment function ----------------------------------------- */
   void CoreResetEnvironment(const bool bLeaving)
@@ -132,19 +134,19 @@ class Core final :                     // Members initially private
       { // Enable and show console, and set full-screen
         ConGfxLeaveResetEnvironment();
         // Force a 1ms suspend lock to not hog the cpu
-        TimerReset(true);
+        FrameReset(true);
       } // If entering?
       else
       { // Disable and hide console, and restore size
         ConGfxEnterResetEnvironment();
         // Remove the 1ms FPS limit lock on the engine
-        TimerReset(false);
+        FrameReset(false);
       }
     } // Not graphical? Set or remove the 1ms FPS limit lock on the engine
-    else TimerReset(bLeaving);
+    else FrameReset(bLeaving);
     // Reset unique ids. Remember some classes aren't registered in the
     // collector, such as the console and main FBO.
-#define RSCEX(x,y,v) y::CLHelperBase::CtrReset(y::CollectorCount() + v)
+#define RSCEX(x,y,v) y::CLHelperBase::SerialReset(y::CollectorCount() + v)
 #define RSCX(x,v) RSCEX(ICHelper ## x, x ## s, v)
 #define RSC(x) RSCX(x, 0)
     RSC(Archive); RSC(Asset);    RSC(Atlase); RSC(Bin);     RSC(Clip);
@@ -164,8 +166,8 @@ class Core final :                     // Members initially private
     // don't reach the 'EvtMain::ManageSafe()' function we're fine.
     EvtMain::Flush();
     // Reset tick count and catchup
-    TimerCatchup();
-    TimerResetTicks();
+    FrameCatchup();
+    FrameResetTicks();
     // Log that we've reset the environment
     cLog->LogDebugExSafe("Core environment $.",
       bLeaving ? "reset" : "prepared");
@@ -173,7 +175,7 @@ class Core final :                     // Members initially private
   /* -- Graphical core window thread tick without frame limiter ------------ */
   void CoreTickNoFrameLimiter()
   { // Update timer
-    TimerUpdateBot();
+    FrameUpdateBot();
     // Render the console FBO (if update requested)
     ConGfxRender();
     // Render video textures (if any)
@@ -186,7 +188,11 @@ class Core final :                     // Members initially private
     LuaExecuteMain();
     // Render the console FBO to the main FBO
     ConGfxRenderToMain();
-    // Finish rendering the main FBO
+    // Return if we cannot draw
+    if(FboCoreCannotDraw()) return;
+    // Clear the draw flag
+    FboCoreClearDraw();
+    // Copy the main fbo to back buffer
     FboCoreGetMain().FboFinishAndRender();
     // Render all FBO's and copy the main FBO to screen
     FboCoreRender();
@@ -194,7 +200,7 @@ class Core final :                     // Members initially private
   /* -- Graphical core window thread tick with frame limiter --------------- */
   void CoreTickFrameLimiter()
   { // Return if it is not time to execute a game tick
-    if(TimerShouldNotTick()) return;
+    if(FrameShouldNotTick()) return;
     // Render the console FBO (if update requested)
     ConGfxRender();
     // Render video textures (if any)
@@ -210,7 +216,7 @@ class Core final :                     // Members initially private
     { // Must render everything?
       case DS_FULL:
         // We're behind and not running too slow?
-        if(TimerShouldTick() && ivForceFrame.CIIsNotTrigger())
+        if(FrameShouldTick() && ivForceFrame.CIIsNotTrigger())
         { // Clear redraw flag but we still need to copy main to back buffer
           FboCoreClearDrawPartial();
           // Render the console FBO to the main FBO
@@ -236,15 +242,15 @@ class Core final :                     // Members initially private
         // Finish what we can behind the scenes for now
         OglPostRender();
         // Try to catchup if we are behind
-        if(TimerShouldTick()) goto Catchup;
+        if(FrameShouldTick()) goto Catchup;
         // Timer system can wait a little to not waste CPU cycles
-        TimerForceWait();
+        FrameForceWait();
         // Done
         break;
       // Only copy main to back buffer? Caused by being behind and DS_FULL
       case DS_PARTIAL:
         // If we are behind?
-        if(TimerShouldTick() && ivForceFrame.CIIsNotTrigger())
+        if(FrameShouldTick() && ivForceFrame.CIIsNotTrigger())
         { // Finish what we can behind the scenes for now
           OglPostRender();
           // Try to catchup
@@ -274,7 +280,7 @@ class Core final :                     // Members initially private
           // Setup lua default environment (libraries, config, etc.)
           LuaSetupEnvironment();
           // Force timer delay to 1ms to prevent 100% thread use on Main*
-          TimerSetDelayIfZero();
+          FrameSetDelayIfZero();
           // Exceptions from here on are recoverable
           SetExitReason(EMC_LUA_ERROR);
           // Done
@@ -333,7 +339,7 @@ class Core final :                     // Members initially private
         } // Terminal mode only so loop until thread says we should break loop.
         else while(EvtMain::HandleSafe())
         { // Calculate time elapsed in this tick
-          TimerUpdateBot();
+          FrameUpdateBot();
           // Execute the main tick
           LuaExecuteMain();
           // Process bot console
@@ -350,7 +356,7 @@ class Core final :                     // Members initially private
       } // No mode set
       else while(EvtMain::HandleSafe())
       { // Calculate time elapsed in this tick
-        TimerUpdateBot();
+        FrameUpdateBot();
         // Execute the main tick
         LuaExecuteMain();
         // Process bot console
@@ -496,36 +502,36 @@ class Core final :                     // Members initially private
       LuaEnterSandbox<CoreThreadSandboxStatic>(this);
     } // ...and if exception occured?
     catch(const StdException &eReason)
-    { // Show error in console
-      ConsoleAddLine(COLOUR_LRED, eReason.what());
-      // Disable garbage collector so no shenangians while we reset.
+    { // Disable garbage collector so no shenangians while we reset.
       LuaStopGC();
       // Reset glfw errorlevel
       GlFWResetErrorLevel();
+      // Show error in console
+      ConsoleAddLine(COLOUR_LRED, eReason.what());
       // Check event code that was set?
       switch(GetExitReason())
       { // Run-time error?
         case EMC_LUA_ERROR:
           // If we are not in the exit script?
-          if(!LuaExiting())
+          if(LuaIsNotExiting())
           { // Compare error mode behaviour
             switch(cerMode)
             { // Ignore errors and try to continue? Execute again
               case CER_IGNORE:
                 // Write ignore exception to log and pause if at the limit.
-                if(uiErrorCount >= uiErrorLimit) goto Pause;
+                if(uErrorCount >= uErrorLimit) goto Pause;
                 cLog->LogErrorExSafe(
                   "Core sandbox ignored #$/$ run-time exception: $",
-                  ++uiErrorCount, uiErrorLimit, eReason);
+                  ++uErrorCount, uErrorLimit, eReason);
                 // Go back into the sandbox.
                 goto SandBox;
               // Automatically reset on error?
               case CER_RESET:
                 // Write ignore exception to log and pause if at the limit.
-                if(uiErrorCount >= uiErrorLimit) goto Pause;
+                if(uErrorCount >= uErrorLimit) goto Pause;
                 cLog->LogErrorExSafe(
                   "Core sandbox reset #$/$ with run-time exception: $",
-                  ++uiErrorCount, uiErrorLimit, eReason);
+                  ++uErrorCount, uErrorLimit, eReason);
                 // Flush events and restart the guest
                 LuaReInit();
                 // Go back into the sandbox
@@ -731,8 +737,7 @@ class Core final :                     // Members initially private
   }
   /* -- Main function ------------------------------------------------------ */
   int CoreMain()
-  { // Register default cvars and pass over the current gui mode by ref. All
-    // the core parts of the engine are initialised from cvar callbacks.
+  { // Register built-in cvars table
     CVarsInit();
     // Text mode requested?
     if(SysIsTextMode())
@@ -748,8 +753,8 @@ class Core final :                     // Members initially private
       }) };
       // Initialise terminal
       SysConInit(SysGetGuestTitle().data(),
-        CVarsGetInternal<unsigned int>(CON_TMCCOLS),
-        CVarsGetInternal<unsigned int>(CON_TMCROWS),
+        CVarsGetInternal<unsigned>(CON_TMCCOLS),
+        CVarsGetInternal<unsigned>(CON_TMCROWS),
         CVarsGetInternal<bool>(CON_TMCNOCLOSE));
       // There is no GLFW window so maybe the system can get it instead?
       WindowInitialised(nullptr);
@@ -804,8 +809,7 @@ class Core final :                     // Members initially private
         // Now Windows can exit anytime it wants
         SysConCanCloseNow();
       }
-    }
-    // Compare engine exit code...
+    } // Compare engine exit code...
     switch(GetExitReason())
     { // If we're to restart process with parameters? Set to do so
       case EMC_QUIT_RESTART:
@@ -847,8 +851,8 @@ class Core final :                     // Members initially private
     Console{ static_cast<ConCmdStaticList&>(*this) },
     cerMode{ CER_CRITICAL },           // Init lua error mode behaviour
     cbtMain{ bind(&Core::CoreThreadMain, this, _1) },
-    uiErrorCount(0),                   // Init number of errors occured
-    uiErrorLimit(0),                   // Init number of errors allowed
+    uErrorCount(0),                    // Init number of errors occured
+    uErrorLimit(0),                    // Init number of errors allowed
     ivForceFrame{ cd1S }               // Force render frame after 1 second
     /* -- Set global pointer to static classes ----------------------------- */
     { cSql = this; cCore = this; }
@@ -899,8 +903,8 @@ class Core final :                     // Members initially private
     return ACCEPT_HANDLED;
   }
   /* -- Set error limit ---------------------------------------------------- */
-  CVarReturn CoreSetResetLimit(const unsigned int uiLimit)
-    { return CVarSimpleSetInt(uiErrorLimit, uiLimit); }
+  CVarReturn CoreSetResetLimit(const unsigned uLimit)
+    { return CVarSimpleSetInt(uErrorLimit, uLimit); }
   /* -- Parses the command-line -------------------------------------------- */
   CVarReturn CoreParseCmdLine(const StdString&, StdString &strV)
   { // Get command line parameters and if we have parameters?
@@ -919,16 +923,17 @@ class Core final :                     // Members initially private
         // Not empty argument? Tokenise the argument into a key/value pair. We
         // only want a maximum of two tokens, the seperator is allowed on the
         // second token and if succeeded?
-        else if(const Token tKeyVal{ strArg, cCommon->CommonEquals(), 2 })
+        else if(const TokenStrView tsvKeyVal{
+          strArg, cCommon->CommonEqualsV(), 2 })
         { // Set the variable from command line with full permission because we
           // should allow any variable to be overridden from the command line.
           // Also show an error if the variable could not be set.
-          if(CVarsSetVarOrInitial(tKeyVal.front(), tKeyVal.size() > 1 ?
-            tKeyVal.back() : cCommon->CommonBlank(),
+          if(CVarsSetVarOrInitial(tsvKeyVal.front(), tsvKeyVal.size() > 1 ?
+            tsvKeyVal.back() : cCommon->CommonBlank(),
             SCMDLINE|PCMDLINE, CCF_NOTHING))
           { // Append argument to accepted command line and add a space
             strV.append(strArg);
-            strV.append(cCommon->CommonSpace());
+            strV.append(cCommon->CommonSpaceV());
             // Good variable
             ++stGood;
           } // Failure? Log the failure

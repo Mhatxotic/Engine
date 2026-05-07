@@ -13,12 +13,13 @@ namespace IJson {                      // Start of private module namespace
 using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
-using namespace IFStream::P;           using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::RapidJson;
+using namespace IFStream::P;           using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace Lib::RapidJson;
 /* ------------------------------------------------------------------------- */
 using Lib::RapidJson::Value;
 /* ------------------------------------------------------------------------- */
@@ -116,11 +117,11 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     // Parse the text and if there is a parse error? Break execution
     if(ParseStream(cswStream).HasParseError())
       XC(GetParseError_En(GetParseError()),
-        "Identifier", fmData.IdentGet(), "Line", cswStream.GetLine(),
+        "Name", fmData.NameGet(), "Line", cswStream.GetLine(),
         "Column", cswStream.GetColumn());
     // Write that we parsed this stream
     cLog->LogDebugExSafe("Json parsed $ bytes from '$' successfully.",
-      fmData.MemSize(), fmData.IdentGet());
+      fmData.MemSize(), fmData.NameGet());
   }
   /* -- Convert LUA table to rapidjson::Value ------------------------------ */
   Value ParseTable(lua_State*const lS, const int iId, const int iObjId)
@@ -243,7 +244,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
       case kObjectType: ToTableObject(lS, rjvVal); break;
       // Unacceptable
       default: XC("Not array or object!",
-        "Identifier", IdentGet(), "Type", rjvVal.GetType());
+        "Name", NameGet(), "Type", rjvVal.GetType());
     }
   }
   /* -- Start sorting the entire array ------------------------------------- */
@@ -274,7 +275,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
                                       SortObject<SortAscending>(rjvVal); break;
       // Unacceptable
       default: XC("Not an array or object!",
-        "Identifier", IdentGet(), "Type", rjvVal.GetType());
+        "Name", NameGet(), "Type", rjvVal.GetType());
     }
   }
   /* ----------------------------------------------------------------------- */
@@ -282,7 +283,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   { // Check to see if the member exists
     const Value::ConstMemberIterator vcmiIt{ FindMember(cpKey) };
     if(vcmiIt == MemberEnd())
-      XC("Member not found!", "Identifier", IdentGet(), "Key", cpKey);
+      XC("Member not found!", "Name", NameGet(), "Key", cpKey);
     // Return the value
     return vcmiIt->value;
   }
@@ -291,16 +292,16 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   { // Get and check the value
     const Value &rjvValue = GetValue(cpKey);
     if(!rjvValue.IsNumber())
-      XC("Invalid integer type!", "Identifier", IdentGet(), "Key", cpKey);
+      XC("Invalid integer type!", "Name", NameGet(), "Key", cpKey);
     // Return the integer
     return rjvValue.GetDouble();
   }
   /* ----------------------------------------------------------------------- */
-  const StdString GetString(const char*const cpKey) const
+  StdString GetString(const char*const cpKey) const
   { // Get and check the value
     const Value &rjvValue = GetValue(cpKey);
     if(!rjvValue.IsString())
-      XC("Invalid string type!", "Identifier", IdentGet(), "Key", cpKey);
+      XC("Invalid string type!", "Name", NameGet(), "Key", cpKey);
     // Return the integer
     return rjvValue.GetString();
   }
@@ -309,22 +310,22 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   { // Get and check the value
     const Value &rjvValue = GetValue(cpKey);
     if(!rjvValue.IsBool())
-      XC("Invalid boolean type!", "Identifier", IdentGet(), "Key", cpKey);
+      XC("Invalid boolean type!", "Name", NameGet(), "Key", cpKey);
     // Return the integer
     return rjvValue.GetBool();
   }
   /* ----------------------------------------------------------------------- */
-  unsigned int GetInteger(const char*const cpKey) const
+  unsigned GetInteger(const char*const cpKey) const
   { // Get and check the value
     const Value &rjvValue = GetValue(cpKey);
     if(!rjvValue.IsUint())
-      XC("Invalid number type!", "Identifier", IdentGet(), "Key", cpKey);
+      XC("Invalid number type!", "Name", NameGet(), "Key", cpKey);
     // Return the integer
     return rjvValue.GetUint();
   }
   /* ----------------------------------------------------------------------- */
-  typedef Writer<StringBuffer, UTF8<>, UTF8<>> RJCompactWriter;
-  typedef PrettyWriter<StringBuffer, UTF8<>, UTF8<>> RJPrettyWriter;
+  using RJCompactWriter = Writer<StringBuffer, UTF8<>, UTF8<>>;
+  using RJPrettyWriter = PrettyWriter<StringBuffer, UTF8<>, UTF8<>>;
   /* ----------------------------------------------------------------------- */
   template<typename WriterType>const StdString ToString() const
   { // Output buffer
@@ -334,24 +335,24 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     return { rsbOut.GetString(), rsbOut.GetSize() };
   }
   /* ----------------------------------------------------------------------- */
-  template<typename T>int ToFile(const StdString &strFile) const
-    { return FStream{ strFile, FM_W_T }.
-        FStreamWriteStringSafe(ToString<T>()) ? 0 : StdGetError(); }
+  template<typename WriterType>int ToFile(const StdStringView &strvFile) const
+    { return FStream{ strvFile, FM_W_T }.
+        FStreamWriteStringSafe(ToString<WriterType>()) ? 0 : StdGetError(); }
   /* -- Default constructor ------------------------------------------------ */
   Json() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperJson{ cJsons },            // Initialise collector
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     AsyncLoaderJson{ this,             // Initialise async loader with this
       EMC_MP_JSON }                    // ...and the event id
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor from a filename ---------------------------------------- */
-  explicit Json(const StdString &strFile) :
+  explicit Json(const StdStringView &strvFile) :
     /* -- Initialisers ----------------------------------------------------- */
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */
-    { SyncInitFileSafe(strFile); }
+    { SyncInitFileSafe(strvFile); }
   /* -- Destructor that tries to recover on exception ---------------------- */
   DTORHELPER(~Json, AsyncCancel())
 };/* -- End ---------------------------------------------------------------- */

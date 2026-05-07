@@ -17,7 +17,7 @@ using namespace Lib::OS::ZLib;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-enum EncMode : unsigned int            // Encoding flags (DONT REORDER!!!)
+enum EncMode : unsigned                // Encoding flags (DONT REORDER!!!)
 { /* ----------------------------------------------------------------------- */
   ENCMODE_RAW,                         // Raw format (Copy)
   ENCMODE_AES,                         // Encrypted with AES (openssl)
@@ -58,7 +58,7 @@ class EncData                          // Encoded data returned by callback
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Magic block header data -------------------------------------------- */
-enum Header : unsigned long            // Buffer header integer location flags
+enum Header : unsigned                 // Buffer header integer location flags
 { /* ----------------------------------------------------------------------- */
   ENCHDR_MAGIC           = 0x1A43444D, // Magic (MDC[esc])
   ENCHDR_VERSION         =          1, // Structure version
@@ -76,8 +76,8 @@ static EncData CodecEncodeAES(const MemConst &mcSrc, Memory &mDest,
   const size_t, const Crypt::QPKey &qaKey, const Crypt::QIVKey &qaIV,
   const size_t stPos)
 { // Unique ptr type to free the cipher context
-  typedef StdUniquePtr<EVP_CIPHER_CTX,
-    function<decltype(EVP_CIPHER_CTX_free)>> EvpPtr;
+  using EvpPtr = StdUniquePtr<EVP_CIPHER_CTX,
+    function<decltype(EVP_CIPHER_CTX_free)>>;
   // Encryption context. Return failed if it coulnd't be created
   if(const EvpPtr ecCTX{ EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free })
   { // IV keys typecast as unsigned char
@@ -125,8 +125,8 @@ static void CodecDecodeAES(const MemConst &mcSrc, Memory &mDest,
 { // Create output
   mDest.MemResize(stOut + CodecGetAES256CBCSize());
   // Unique ptr type to free the cipher context
-  typedef StdUniquePtr<EVP_CIPHER_CTX,
-    function<decltype(EVP_CIPHER_CTX_free)>> EvpPtr;
+  using EvpPtr = StdUniquePtr<EVP_CIPHER_CTX,
+    function<decltype(EVP_CIPHER_CTX_free)>>;
   // Init encryption context and if succeeded
   if(const EvpPtr ecCTX{ EVP_CIPHER_CTX_new(), EVP_CIPHER_CTX_free })
   { // IV keys typecast as unsigned char
@@ -458,17 +458,17 @@ class CoDecoder :                      // Magic decoder derivative class
     if(stSizeActual < stSizeExpect)
       XC("Invalid size!", "Expect", stSizeExpect, "Actual", stSizeActual);
     // Check magic, version and input size
-    const unsigned int uiMagicExpect = ENCHDR_MAGIC,
-      uiMagicActual = mcSrc.ReadIntLE<uint32_t>(ENCHDR_POS_MAGIC);
-    if(uiMagicActual != uiMagicExpect)
-      XC("Invalid header!", "Expect", uiMagicExpect, "Actual", uiMagicActual);
+    const unsigned uMagicExpect = ENCHDR_MAGIC,
+      uMagicActual = mcSrc.ReadIntLE<uint32_t>(ENCHDR_POS_MAGIC);
+    if(uMagicActual != uMagicExpect)
+      XC("Invalid header!", "Expect", uMagicExpect, "Actual", uMagicActual);
     // Compare version
-    switch(const unsigned int uiVersionActual =
+    switch(const unsigned uVersionActual =
       mcSrc.ReadIntLE<uint32_t>(ENCHDR_POS_VERSION))
     { // Version 1
       case 1: DecodeV1(mcSrc); break;
       // Unknown version
-      default: XC("Invalid version!", "Version", uiVersionActual);
+      default: XC("Invalid version!", "Version", uVersionActual);
     }
   }
 };/* == Encoder base class ================================================= */

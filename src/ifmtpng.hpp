@@ -26,7 +26,7 @@ class CodecPNG :                       // PNG codec object
   /* -- Base classes ------------------------------------------------------- */
   protected ImageLib                   // Image format helper class
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef StdVector<png_bytep> PngPtrVec; // Png pointer vector
+  using PngPtrVec = StdVector<png_bytep>; // Png pointer vector
   /* -- PNG callbacks ------------------------------------------------------ */
   static void PngError[[noreturn]](png_structp, png_const_charp pccString)
     { throw StdRunTimeError{ pccString }; }
@@ -89,16 +89,16 @@ class CodecPNG :                       // PNG codec object
       void Meta(const char*const cpK, const char*cpV)
         { Meta(cpK, cpV, strlen(cpV)); }
       void Meta(const char*const cpK, const StdString &strV)
-        { Meta(cpK, strV.data(), strV.length()); }
+        { Meta(cpK, strV.data(), strV.size()); }
       void Meta(const char*const cpK, const StdStringView &strvV)
-        { Meta(cpK, strvV.data(), strvV.length()); }
+        { Meta(cpK, strvV.data(), strvV.size()); }
       // Constructor
       explicit PngWriter(const FStream &fsC) :
         // Initialisers
         psData(png_create_write_struct(  // Create a write struct
           PNG_LIBPNG_VER_STRING,         // Set version string
           StdToNonConstCast<png_voidp>(  // Send user parameter
-            fsC.IdentGetData()),         // Set filename as user parameter
+            fsC.NameGetData()),         // Set filename as user parameter
           PngError,                      // Set error callback function
           PngWarning)),                  // Set warning callback function
         piData(                          // We'll handle the info struct here
@@ -144,7 +144,7 @@ class CodecPNG :                       // PNG codec object
           PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
         // Set location of each scanline from the bottom
         for(size_t stScanIndex = ppvList.size() - 1,
-                   stStride = isData.DimGetWidth() / 8;
+                   stStride = (idData.DimGetWidth<size_t>() + 7) / 8;
                    stScanIndex != StdMaxSizeT;
                  --stScanIndex)
           ppvList[stScanIndex] =
@@ -197,7 +197,7 @@ class CodecPNG :                       // PNG codec object
         psData(png_create_read_struct(   // Create a read struct
           PNG_LIBPNG_VER_STRING,         // Set version string
           StdToNonConstCast<png_voidp>(  // Send user parameter
-            fmC.IdentGetData()),         // Set filename as user parameter
+            fmC.NameGetData()),         // Set filename as user parameter
           PngError,                      // Set error callback function
           PngWarning)),                  // Set warning callback function
         piData(                          // We'll handle the info struct here
@@ -216,14 +216,14 @@ class CodecPNG :                       // PNG codec object
     prC{ fmData };
     // Get pointers to created addresses
     png_structp psData = prC.psData;
-    png_infop   piData = prC.piData;
+    png_infop piData = prC.piData;
     // The palette if needed and the number of colours it has
     png_colorp palData = nullptr;
     int iPalette = 0;
     // Do we have alpha?
     const bool bAlpha = !!png_get_valid(psData, piData, PNG_INFO_tRNS);
     // Get and check bits-per-CHANNEL (may change)
-    switch(const unsigned int uiBPC = png_get_bit_depth(psData, piData))
+    switch(const unsigned uBPC = png_get_bit_depth(psData, piData))
     { // 1 bits-per-CHANNEL? (binary image)
       case 1:
         // Expand if requested or there is an alpha channel
@@ -241,18 +241,15 @@ class CodecPNG :                       // PNG codec object
           idData.SetPixelType(TT_NONE);
           // Set image dimensions
           idData.DimSet(png_get_image_width(psData, piData),
-                     png_get_image_height(psData, piData));
+                        png_get_image_height(psData, piData));
           // Initialise memory
-          Memory mPixels{ UtilMaximum(idData.TotalPixels() / 8,
-            static_cast<size_t>(1)) };
+          Memory mPixels{ static_cast<size_t>(idData.TotalPixels() + 7) / 8 };
           // Create vector array to hold scanline pointers and size it
           PngPtrVec ppvList{ idData.DimGetHeight<size_t>() };
           // For each scanline
           for(size_t stHeight = idData.DimGetHeight<size_t>(),
                      stHeightM1 = stHeight - 1,
-                     stStride = UtilMaximum(
-                       idData.DimGetWidth<size_t>() / 8,
-                         static_cast<size_t>(1)),
+                     stStride = (idData.DimGetWidth<size_t>() + 7) / 8,
                      stRow = 0;
                      stRow < stHeight;
                    ++stRow)
@@ -275,11 +272,11 @@ class CodecPNG :                       // PNG codec object
       // 16bpc needs compressing to 8bpc
       case 16: png_set_strip_16(psData); break;
       // Unsupported bpc
-      default: XC("Unsupported bits-per-channel!", "Bits", uiBPC);
+      default: XC("Unsupported bits-per-channel!", "Bits", uBPC);
     } // Number of palette entries and the palette memory
     Memory mPalette;
     // Compare colour type
-    switch(const unsigned int uiCT = png_get_color_type(psData, piData))
+    switch(const unsigned uCT = png_get_color_type(psData, piData))
     { // 8-bits per channel (Palleted texture)
       case PNG_COLOR_TYPE_PALETTE:
         // If conversion to RGBA or RGB is required?
@@ -303,13 +300,11 @@ class CodecPNG :                       // PNG codec object
           // Read palette and show error if failed
           if(!png_get_PLTE(psData, piData, &palData, &iPalette))
             XC("Failed to read palette!");
-          // Quantise to RGB palette if needed
-          png_uint_16p saHist = nullptr;
-          if(png_get_hIST(psData, piData, &saHist))
-            png_set_quantize(psData, palData, iPalette, 256, saHist, 0);
+          if(!iPalette)
+            XC("Read zero palette entries!");
           // Initialise palette data
-          mPalette.MemInitData(static_cast<size_t>(iPalette)*BY_RGB,
-                            static_cast<void*>(palData));
+          mPalette.MemInitData(static_cast<size_t>(iPalette) * BY_RGB,
+                               static_cast<void*>(palData));
         } // Done
         break;
       // 8-bits per channel (Luminance / Gray)?
@@ -331,7 +326,7 @@ class CodecPNG :                       // PNG codec object
         // If convert to RGBA requested and no alpha set?
         if(idData.IsConvertRGBA() && !bAlpha)
         { // Add an alpha channel if no alpha
-          png_set_add_alpha(psData, 0, PNG_FILLER_AFTER);
+          png_set_add_alpha(psData, 0xFF, PNG_FILLER_AFTER);
           // We converted to RGBA here
           idData.SetActiveRGBA();
         } // If alpha is set in image? expand tRNS to alpha
@@ -353,10 +348,10 @@ class CodecPNG :                       // PNG codec object
         } // Done
         break;
       // Unsupported colour type
-      default: XC("Unsupported colour type!", "Type", uiCT);
+      default: XC("Unsupported colour type!", "Type", uCT);
     } // Prevents warning (https://sourceforge.net/p/libpng/bugs/165/)
     png_set_interlace_handling(psData);
-    // Transfomrations complete so update
+    // Transformations complete so update
     png_read_update_info(psData, piData);
     // All pixels should be 8bpc so set bytes and bits per pixel
     idData.SetBytesAndBitsPerPixelCast(png_get_channels(psData, piData));
@@ -381,11 +376,10 @@ class CodecPNG :                       // PNG codec object
     Memory mPixels{ idData.TotalPixels() * idData.GetBytesPerPixel() };
     // Create vector array to hold scanline pointers and size it
     PngPtrVec ppvList{ idData.DimGetHeight<size_t>() };
-    // For each scanline
-    // Set the pointer to the data pointer + i times the uiRow stride.
-    // Notice that the uiRow order is reversed with q.
-    // This is how at least OpenGL expects it,
-    // and how many other image loaders present the data.
+    // For each scanline. Set the pointer to the data pointer + i times the
+    // uRow stride. Notice that the uRow order is reversed with q. This is how
+    // at least OpenGL expects it, and how many other image loaders present the
+    // data.
     for(size_t stHeight = idData.DimGetHeight<size_t>(),
                stHeightM1 = stHeight - 1,
                stStride = idData.DimGetWidth<size_t>() *
@@ -402,7 +396,7 @@ class CodecPNG :                       // PNG codec object
     idData.AddSlot(mPixels);
     // Add palette data if it is there
     if(iPalette)
-      idData.AddSlot(mPalette, static_cast<unsigned int>(iPalette), BY_RGB);
+      idData.AddSlot(mPalette, static_cast<unsigned>(iPalette), BY_RGB);
     // We are done!
     return true;
   }

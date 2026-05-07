@@ -21,7 +21,8 @@ using namespace Lib::OS::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
-template<int iFailCode>static int CryptHex2Char(unsigned char ucChar)
+template<int iFailCode>
+  static int CryptHex2Char(unsigned char ucChar)
 { // Is a digit?
   if(ucChar >= '0' && ucChar <= '9') return ucChar - '0';
   // Is a upper-case letter?
@@ -43,29 +44,39 @@ static void CryptHexDecodePtr(const char* const cpSrc, const size_t stSrcLen,
       (CryptHex2Char<0>(static_cast<unsigned char>(cpSrc[stInPos])) << 4) +
        CryptHex2Char<0>(static_cast<unsigned char>(cpSrc[stInPos + 1])));
 }
-/* -- Convert the specified hexadecimanl string to 8-bit array ------------- */
-static Memory CryptHexDecodeA(const StdString &strSrc)
+/* -- Convert the specified hexadecimanl string to 8-bit array (thick) ----- */
+static Memory CryptHexDecodeASafe(const char*const cpPtr, const size_t stSize)
 { // Must not be empty and a multiple of two to comply
-  if(strSrc.empty() || strSrc.size() % 2) return {};
+  if(!stSize || stSize % 2) return {};
   // The memory to output. We know what size will be
-  Memory mbDst{ strSrc.size() / 2 };
+  Memory mbDst{ stSize / 2 };
   // Build 8-bit value from two ASCII characters
-  CryptHexDecodePtr(strSrc.data(), strSrc.length(), mbDst.MemPtr<char>());
+  CryptHexDecodePtr(cpPtr, stSize, mbDst.MemPtr<char>());
   // Return memory
   return mbDst;
 }
-/* -- Convert the specified hexadecimanl string to string ------------------ */
-static StdString CryptHexDecodeStr(const StdString &strSrc)
+/* -- Convert the specified hex string to 8-bit array (thin) --------------- */
+template<class StrType>
+  requires StdIsString<StrType>
+static Memory CryptHexDecodeA(StrType &&strStr)
+  { return CryptHexDecodeASafe(strStr.data(), strStr.size()); }
+/* -- Convert the specified hexadecimanl string to string (thick) ---------- */
+static StdString CryptHexDecodeStrSafe(const char*const cpPtr,
+  const size_t stSize)
 { // Must not be empty and a multiple of two to comply
-  if(strSrc.empty() || strSrc.size() % 2) return {};
+  if(!stSize || stSize % 2) return {};
   // The memory to output. We know what size will be
-  StdResized<StdString> strDst{ strSrc.size() / 2 };
+  StdResized<StdString> strDst{ stSize / 2 };
   // Build 8-bit value from two ASCII characters
-  CryptHexDecodePtr(strSrc.data(), strSrc.length(),
-    StdToNonConstCast<char*>(strDst.data()));
-  // Return memory
+  CryptHexDecodePtr(cpPtr, stSize, StdToNonConstCast<char*>(strDst.data()));
+  // Return string
   return strDst;
 }
+/* -- Convert the specified hex string to string (thin) -------------------- */
+template<class StrType>
+  requires StdIsString<StrType>
+static StdString CryptHexDecodeStr(StrType &&strStr)
+  { return CryptHexDecodeStrSafe(strStr.data(), strStr.size()); }
 /* -- Convert the specified 8-bit char to a uppercase hex string ----------- */
 static void CryptChar2HexU(const uint8_t ucChar, char*const cpPtr)
 { // Hex lookup table
@@ -114,12 +125,14 @@ static StdString CryptBin2HexL(const MemConst &mcSrc)
 static void CryptAddEntropyPtr(const void*const vpPtr, const size_t stSize)
   { RAND_add(vpPtr, UtilIntOrMax<int>(stSize), static_cast<double>(stSize)); }
 /* ------------------------------------------------------------------------- */
-template<typename IntType>static void CryptAddEntropyInt(const IntType itValue)
-  { CryptAddEntropyPtr(&itValue, sizeof(itValue)); }
+template<typename IntType>
+  static void CryptAddEntropyInt(const IntType itValue)
+    { CryptAddEntropyPtr(&itValue, sizeof(itValue)); }
 /* ------------------------------------------------------------------------- */
-template<typename StrType>
-  static void CryptAddEntropyStr(const StrType &strValue)
-    { CryptAddEntropyPtr(strValue.data(), strValue.capacity()); }
+template<class StrType>
+  requires StdIsString<StrType>
+static void CryptAddEntropyStr(StrType &&strStr)
+  { CryptAddEntropyPtr(strStr.data(), strStr.capacity()); }
 /* ------------------------------------------------------------------------- */
 static void CryptAddEntropy()
 { // Grab some data from the system
@@ -139,28 +152,35 @@ static void CryptRandomPtr(void*const vpDst, const size_t stSize)
   CryptAddEntropy();
   // Fill data with random data
   RAND_bytes(reinterpret_cast<unsigned char*>(vpDst),
-             static_cast<int>(stSize));
+    static_cast<int>(stSize));
 }
 /* ------------------------------------------------------------------------- */
-template<typename AnyType>static AnyType CryptRandom()
+template<typename AnyType>
+  static AnyType CryptRandom()
 { // Do the randomisation into the requested type and return it
   AnyType atData;
   CryptRandomPtr(&atData, sizeof(atData));
   return atData;
 }
 /* -- URL encode the specified c-string ------------------------------------ */
-static StdString CryptURLEncode(const StdString &strS)
-{ // Bail if passed string is empty
-  if(strS.empty()) return {};
+template<class StrType>
+  static StdString CryptURLEncode(StrType &&strStr)
+{ // Normalise to StringView if not a string
+  using StdNormString = StdNormalisedString<StrType>;
+  StdNormString snsStr{ StdForward<StrType>(strStr) };
+  using StdNormStringConstIt =
+    typename StdDecay<StdNormString>::const_iterator;
+  // Bail if passed string is empty
+  if(snsStr.empty()) return {};
   // Movable pointer to input string
-  const char *cpPtr = strS.data();
+  StdNormStringConstIt snsciIt{ snsStr.cbegin() };
   // Preallocate string to avoid multiple reallocations. Worst case: every char
   // needs encoding.
-  StdReserved<StdString> strURL{ strS.size() * 3 };
+  StdReserved<StdString> strURL{ snsStr.size() * 3 };
   // Perform these actions for each character...
   do
   { // Get character
-    const uint8_t ucC = static_cast<uint8_t>(*cpPtr);
+    const uint8_t ucC = static_cast<uint8_t>(*snsciIt);
     // Normal character? Append to string
     if(StdIsAlnum(ucC) || ucC == '-' || ucC == '.' || ucC == '_' || ucC == '~')
       strURL += static_cast<char>(ucC);
@@ -172,27 +192,11 @@ static StdString CryptURLEncode(const StdString &strS)
       strURL += '%';
       strURL.append(cpBuf, sizeof(cpBuf));
     } // Repeat until end of string
-  } while(*(++cpPtr));
+  } while(++snsciIt != snsStr.cend());
   // Compact the URL
   strURL.shrink_to_fit();
   // End of string so return it
   return strURL;
-}
-/* ------------------------------------------------------------------------- */
-template<class MapType>
-  static StdString CryptImplodeMapAndEncode[[maybe_unused]]
-    (const MapType &mtRef, const StdString &strSep)
-{ // The vector to return
-  StrVector svRet;
-  // Make pair type from passed map type
-  typedef typename MapType::value_type PairType;
-  // Iterate through each key pair and insert into vector whilst encoding
-  StdTransformNXP(mtRef.cbegin(), mtRef.cend(), StdBackInserter(svRet),
-    [](const PairType &ptRef)
-      { return StdMove(StrAppend(CryptURLEncode(ptRef.first), '=',
-          CryptURLEncode(ptRef.second))); });
-  // Return vector
-  return StrImplode(svRet, 0, strSep);
 }
 /* -- Get error reason ----------------------------------------------------- */
 static StdString CryptGetErrorReason(const unsigned long ulErr)
@@ -218,23 +222,23 @@ static int CryptGetError(StdString &strError)
   { // Set error number and string
     iError = static_cast<int>(ulErr);
     // Some statics
-    constexpr static const unsigned int
+    constexpr static const unsigned
       // Replacement for ERR_SYSTEM_MASK which causes warnings
-      uiSystemMask = StdLimits<int>::max(),
+      uSystemMask = StdLimits<int>::max(),
       // Replacement for ERR_SYSTEM_FLAG which causes warnings
-      uiSystemFlag = uiSystemMask + 1;
+      uSystemFlag = uSystemMask + 1;
     // Is a system error?
-    const bool bSysErr = ulErr & uiSystemFlag;
+    const bool bSysErr = ulErr & uSystemFlag;
     // Get library and reason...
-    const unsigned int
+    const unsigned
       // Replacement for ERR_GET_LIB in err.h which causes warnings
-      uiLib = bSysErr ?
+      uLib = bSysErr ?
         ERR_LIB_SYS : ((ulErr >> ERR_LIB_OFFSET) & ERR_LIB_MASK),
       // Replacement for ERR_GET_REASON in err.h which causes warning
-      uiReason = bSysErr ?
-        (ulErr & uiSystemFlag) : (ulErr & ERR_REASON_MASK);
+      uReason = bSysErr ?
+        (ulErr & uSystemFlag) : (ulErr & ERR_REASON_MASK);
     // If the operating system has the reason?
-    if(uiLib == ERR_LIB_SYS || uiReason == ERR_R_SYS_LIB)
+    if(uLib == ERR_LIB_SYS || uReason == ERR_R_SYS_LIB)
     { // Get system error and if no error set? Store what OpenSSL actually sent
       iError = cSystem->LastSocketOrSysError();
       strError = SysError();
@@ -281,10 +285,10 @@ static int CryptBIOGetSSL(BIO*const bBio, SSL**const sslDest)
       reinterpret_cast<void*>(sslDest))); }
 /* -- Replacement for SSL_CTX_set_tlsext_status_cb which causes warnings --- */
 static int CryptSSLCtxSetTlsExtStatusCb(SSL_CTX*const sslCtx,
-  int(*fCB)(SSL*,void*))
+  int(*const ftCb)(SSL*,void*))
 { return static_cast<int>(SSL_CTX_callback_ctrl(sslCtx,
     SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB,
-      reinterpret_cast<void(*)()>(fCB))); }
+    reinterpret_cast<void(*)(void)>(reinterpret_cast<void*>(ftCb)))); }
 /* -- Replacement for SSL_set_tlsext_host_name which causes warnings ------- */
 static int CryptSSLSetTlsExtHostName(SSL*const sSSL, const char*const cpName)
   { return static_cast<int>(SSL_ctrl(sSSL, SSL_CTRL_SET_TLSEXT_HOSTNAME,
@@ -297,7 +301,7 @@ static int CryptSSLCtxSet1VerifyCertStore(SSL_CTX*const sslCtx,
 /* ------------------------------------------------------------------------- */
 static StdString CryptPTRtoB64(const void*const vpIn, const size_t stIn)
 { // To clean up when leaving scope unexpectedliy
-  typedef StdUniquePtr<BIO, function<decltype(BIO_free_all)>> BioPtr;
+  using BioPtr = StdUniquePtr<BIO, function<decltype(BIO_free_all)>>;
   // Create base 64 filter and if succeeded?
   if(BioPtr bB64{ BIO_new(BIO_f_base64()), BIO_free_all })
   { // Disable new line
@@ -339,7 +343,7 @@ static StdString CryptPTRtoB64(const void*const vpIn, const size_t stIn)
 static size_t CryptB64toPTR(void*const vpIn, const size_t stIn,
   void*const vpOut, const size_t stOut)
 { // To clean up when leaving scope unexpectedliy
-  typedef StdUniquePtr<BIO, function<decltype(BIO_free_all)>> BioPtr;
+  using BioPtr = StdUniquePtr<BIO, function<decltype(BIO_free_all)>>;
   // Create base 64 filter, clean up if succeeded?
   if(BioPtr bB64{ BIO_new(BIO_f_base64()), BIO_free_all })
   { // Create RAM based buffer filter and clean up if succeeded?
@@ -371,41 +375,60 @@ static size_t CryptB64toPTR(void*const vpIn, const size_t stIn,
 static StdString CryptMBtoB64(const MemConst &mcSrc)
   { return CryptPTRtoB64(mcSrc.MemPtr<void>(), mcSrc.MemSize()); }
 /* ------------------------------------------------------------------------- */
-static StdString CryptStoB64(const StdString &strIn)
-  { return CryptPTRtoB64(StdToNonConstCast<void*>(strIn.data()),
-      strIn.length()); }
+template<class StrType>
+  requires StdIsString<StrType>
+static StdString CryptStoB64(StrType &&strStr)
+  { return CryptPTRtoB64(StdToNonConstCast<void*>(strStr.data()),
+      strStr.size()); }
 /* ------------------------------------------------------------------------- */
-static Memory CryptB64toMB(const StdString &strIn)
+template<class StrType>
+  requires StdIsString<StrType>
+static Memory CryptB64toMB(StrType &&strStr)
 { // Output buffer
-  Memory mData{ strIn.length() };
+  Memory mData{ strStr.size() };
   // Do conversion and resize string after
-  mData.MemResize(CryptB64toPTR(StdToNonConstCast<void*>(strIn.data()),
-    strIn.length(), mData.MemPtr(), mData.MemSize()));
+  mData.MemResize(CryptB64toPTR(StdToNonConstCast<void*>(strStr.data()),
+    strStr.size(), mData.MemPtr(), mData.MemSize()));
   // Return data
   return mData;
 }
 /* ------------------------------------------------------------------------- */
-static StdString CryptB64toS(const StdString &strIn)
+template<class StrType>
+  requires StdIsString<StrType>
+static StdString CryptB64toS(StrType &&strStr)
 { // Create output buffer with enough size for output
-  StdResized<StdString> strOut{ strIn.length() };
+  StdResized<StdString> strOut{ strStr.size() };
   // Do conversion and resize string after
-  strOut.resize(CryptB64toPTR(StdToNonConstCast<void*>(strIn.data()),
-    strIn.length(), StdToNonConstCast<void*>(strOut.data()),
-    strOut.length()));
+  strOut.resize(CryptB64toPTR(StdToNonConstCast<void*>(strStr.data()),
+    strStr.size(), StdToNonConstCast<void*>(strOut.data()),
+    strOut.size()));
   // Return string
   return strOut;
 }
-/* -- Encode XML/HTML entities into string (crude but effective) ----------- */
-static StdString CryptEntEncode(const StdString &strS)
+/* ------------------------------------------------------------------------- */
+template<class StrType>
+  requires StdIsString<StrType>
+static StdString CryptStoHEX(StrType &&strStr)
+  { return CryptBin2Hex(reinterpret_cast<const uint8_t*>(strStr.data()),
+      strStr.size()); }
+/* ------------------------------------------------------------------------- */
+template<class StrType>
+  requires StdIsString<StrType>
+static StdString CryptStoHEXL(StrType &&strStr)
+  { return CryptBin2HexL(reinterpret_cast<const uint8_t*>(strStr.data()),
+      strStr.size()); }
+/* -- Encode XML/HTML entities into string (thick) ------------------------- */
+static StdString CryptEntEncodePtr(const char*const cpPtr, const size_t stSize)
 { // Done if empty
-  if(strS.empty()) return {};
+  if(!stSize) return {};
   // Create sting to return and reserve memory. We will use a ostringstream
   // because we do not know what the size is going to be and we can make
   // use of hex which will work with our utf8 decoder.
   StdOStringStream osS; osS << StdIOSHex;
   // For each entity. Find it in the string
   // Until null character. Which control token?
-  for(UtfDecoder udSrc{ strS }; Codepoint cChar = udSrc.UtfNext();)
+  for(UtfDecoder udSrc{ cpPtr, stSize };
+      const Codepoint cChar = udSrc.UtfNext();)
   { // If characters with special meaning in HTML that must be escaped in text
     // contexts? (ampersand, less-than, greater-than, quotation marks
     // (depending on context))?
@@ -428,20 +451,63 @@ static StdString CryptEntEncode(const StdString &strS)
        // Any code point where low 16 bits are 0xFFFE or 0xFFFF?
        (cChar & 0xffff) >= 0xfffe)
       // Write the hexedecimal notation for the character instead
-      osS << cCommon->CommonEnt() << cChar << ';';
+      osS << cCommon->CommonEntV() << cChar << ';';
     // Character is usable as is
     else osS << static_cast<char>(cChar);
   } // Return string
   return osS.str();
 }
-/* ------------------------------------------------------------------------- */
-static StdString CryptStoHEX(const StdString &strIn)
-  { return CryptBin2Hex(reinterpret_cast<const uint8_t*>(strIn.data()),
-      strIn.length()); }
-/* ------------------------------------------------------------------------- */
-static StdString CryptStoHEXL(const StdString &strIn)
-  { return CryptBin2HexL(reinterpret_cast<const uint8_t*>(strIn.data()),
-      strIn.length()); }
+/* -- Encode XML/HTML entities into string (thin) -------------------------- */
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static StdString CryptEntEncode(StrType &&strStr)
+  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+      [](auto &aStr){ return CryptEntEncodePtr(aStr.data(), aStr.size()); }); }
+/* -- URL decode the specified normalised string (thick) ------------------- */
+template<class StrType>
+  static StdString CryptURLDecodeNormalisedString(StrType &&strStr)
+{ // Bail if passed string is invalid
+  if(strStr.empty()) return {};
+  // Preallocate string to avoid multiple reallocations
+  StdReserved<StdString> strURL{ strStr.size() };
+  // Movable pointer to input string and perform actions for each character...
+  using StrTypeConstIt = StdDecay<StrType>::const_iterator;
+  for(StrTypeConstIt stciIt{ strStr.cbegin() };
+                     stciIt != strStr.cend();)
+  { // Get the character and if it denotes a encoded value?
+    unsigned char ucC = static_cast<unsigned char>(*stciIt);
+    if(ucC == '%')
+    { // Convert hex to number and if not at end of string?
+      if(const unsigned char uc1 = static_cast<unsigned char>(*(++stciIt)))
+      { // Get the hexadecimal value and goto next character if not valid
+        const int iVal1 = CryptHex2Char<-1>(uc1);
+        if(iVal1 == -1) continue;
+        // Get second hex character and if not at end of string?
+        if(const unsigned char uc2 = static_cast<unsigned char>(*(++stciIt)))
+        { // Get the hexadecimal value and goto next character if not valid
+          const int iVal2 = CryptHex2Char<-1>(uc2);
+          if(iVal2 == -1) continue;
+          // Set new character
+          ucC = static_cast<unsigned char>(16 * iVal1 + iVal2);
+        } // End of string
+        else break;
+      } // End of string
+      else break;
+    } // Normal character? Append to string
+    strURL += static_cast<char>(ucC);
+    ++stciIt;
+  } // Compact the URL
+  strURL.shrink_to_fit();
+  // Return the url
+  return strURL;
+}
+/* -- URL decode the specified string (thin) ------------------------------- */
+template<class StrType>
+  static StdString CryptURLDecode(StrType &&strStr)
+{ using StdNormString = StdNormalisedString<StrType>;
+  StdNormString snsStr{ StdForward<StrType>(strStr) };
+  return CryptURLDecodeNormalisedString<StdNormString>
+           (StdForward<StdNormString>(snsStr)); }
 /* -- Helper for mutliple hashing types from OpenSSL ----------------------- */
 static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
   const size_t stSaltSize, const unsigned char*const cpSrc,
@@ -456,18 +522,18 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
   // Create output for HMAC-SHA hash
   Memory mData{ EVP_MAX_MD_SIZE };
   // For storage of size. We really need to know the output size.
-  unsigned int uiLen = 0;
+  unsigned uLen = 0;
   // Get hash. Remember that HMAC returns as binary as we need to send the
   // whole buffer to Base64 and NOT a null-terminated string.
   if(!HMAC(fFunc, vpSalt, static_cast<int>(stSaltSize), cpSrc, stSrcSize,
-    mData.MemPtr<unsigned char>(), &uiLen))
+    mData.MemPtr<unsigned char>(), &uLen))
       XC("Failed to perform salted-hash on source data!",
         "Function",    fFunc != nullptr,
         "SaltAddress", vpSalt != nullptr, "SaltSize", stSaltSize,
         "SrcAddress",  cpSrc != nullptr,  "SrcSize", stSrcSize,
-        "OutLength",   uiLen);
+        "OutLength",   uLen);
   // Resize string
-  mData.MemResize(uiLen);
+  mData.MemResize(uLen);
   // Return memory block
   return mData;
 }
@@ -487,13 +553,17 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
       const size_t stLen) \
         { return CryptBin2HexL(StdMove(HMR(ucpIn, stLen))); } \
     /* -- Hash string data and return string hash ------------------------- */\
-    static StdString HSS(const StdString &strIn) \
-      { return HSR(reinterpret_cast<const unsigned char*>(strIn.data()), \
-          strIn.length()); } \
+    template<class StrType> \
+      requires StdIsString<StrType> \
+    static StdString HSS(StrType &&strStr) \
+      { return HSR(reinterpret_cast<const unsigned char*>(strStr.data()), \
+          strStr.size()); } \
     /* -- Hash string data and return raw hash ---------------------------- */\
-    static Memory HMS(const StdString &strIn) \
-      { return HMR(reinterpret_cast<const unsigned char*>(strIn.data()), \
-          strIn.length()); } \
+    template<class StrType> \
+      requires StdIsString<StrType> \
+    static Memory HMS(StrType &&strStr) \
+      { return HMR(reinterpret_cast<const unsigned char*>(strStr.data()), \
+          strStr.size()); } \
     /* -- Hash raw data and return string hash ---------------------------- */\
     static StdString HSM(const MemConst &mcData) \
       { return HSR(mcData.MemPtr<unsigned char>(), mcData.MemSize()); } \
@@ -502,37 +572,49 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
       const unsigned char*const cpDest, const size_t stDestSize) \
         { return CryptHMACCall(f(), vpSalt, stSaltSize, cpDest, stDestSize); }\
     /* -- Hash string key, string data and return raw hash ---------------- */\
-    static Memory HMSS(const StdString &strSalt, const StdString &strIn) \
-      { return HMRR(reinterpret_cast<const void*>(strSalt.data()), \
-                    strSalt.size(), \
-                    reinterpret_cast<const unsigned char*>(strIn.data()), \
-                    strIn.size()); } \
+    template<class StrSaltType, class StrValType> \
+      requires StdIsString<StrSaltType> && StdIsString<StrValType> \
+    static Memory HMSS(StrSaltType &&sstSalt, StrValType &&svtStr) \
+    { return HMRR( \
+        reinterpret_cast<const void*>(sstSalt.data()), sstSalt.size(), \
+        reinterpret_cast<const unsigned char*>(svtStr.data()), \
+          svtStr.size()); } \
     /* -- Hash string key, string data and return string hash ------------- */\
-    static StdString HSSS(const StdString &strSalt, const StdString &strIn) \
-      { return CryptBin2HexL(StdMove(HMSS(strSalt, strIn))); } \
+    template<class StrSaltType, class StrValType> \
+      requires StdIsString<StrSaltType> && StdIsString<StrValType> \
+    static StdString HSSS(StrSaltType &&sstSalt, StrValType &&svtStr) \
+      { return CryptBin2HexL(StdMove(HMSS(sstSalt, svtStr))); } \
     /* -- Hash raw key, raw data and return raw hash ---------------------- */\
     static Memory HMMM(const MemConst &mcSalt, const MemConst &mcData) \
       { return HMRR(mcSalt.MemPtr<const void>(), mcSalt.MemSize(), \
                     mcData.MemPtr<unsigned char>(), mcData.MemSize()); } \
     /* -- Hash raw key, string data and return raw hash ------------------- */\
-    static Memory HMMS(const MemConst &mcSalt, const StdString &strData) \
-      { return HMRR(mcSalt.MemPtr<const void*>(), \
+    template<class StrValType> \
+      requires StdIsString<StrValType> \
+    static Memory HMMS(const MemConst &mcSalt, StrValType &&svtStr) \
+      { return HMRR(mcSalt.MemPtr<const void>(), \
                     mcSalt.MemSize(), \
-                    reinterpret_cast<const unsigned char*>(strData.data()), \
-                    strData.size()); } \
+                    reinterpret_cast<const unsigned char*>(svtStr.data()), \
+                    svtStr.size()); } \
     /* -- Hash string key, raw data and return raw hash ------------------- */\
-    static Memory HMSM(const StdString &strSalt, const MemConst &mcData) \
-      { return HMRR(reinterpret_cast<const void*>(strSalt.data()), \
-          strSalt.size(), mcData.MemPtr<unsigned char>(), mcData.MemSize()); }\
+    template<class StrSaltType> \
+      requires StdIsString<StrSaltType> \
+    static Memory HMSM(StrSaltType &&sstSalt, const MemConst &mcData) \
+      { return HMRR(reinterpret_cast<const void*>(sstSalt.data()), \
+          sstSalt.size(), mcData.MemPtr<unsigned char>(), mcData.MemSize());}\
     /* -- Hash string key, string data and return string hash ------------- */\
     static StdString HSMM(const MemConst &mcSalt, const MemConst &mcData) \
       { return CryptBin2HexL(StdMove(HMMM(mcSalt, mcData))); } \
     /* -- Hash string key, raw data and return string hash ---------------- */\
-    static StdString HSMS(const MemConst &mcSalt, const StdString &strData) \
-      { return CryptBin2HexL(StdMove(HMMS(mcSalt, strData))); } \
+    template<class StrValType> \
+      requires StdIsString<StrValType> \
+    static StdString HSMS(const MemConst &mcSalt, StrValType &&svtStr) \
+      { return CryptBin2HexL(StdMove(HMMS(mcSalt, svtStr))); } \
     /* -- Hash raw key, string data and return string hash ---------------- */\
-    static StdString HSSM(const StdString &strSalt, const MemConst &mcData) \
-      { return CryptBin2HexL(StdMove(HMSM(strSalt, mcData))); } \
+    template<class StrSaltType> \
+      requires StdIsString<StrSaltType> \
+    static StdString HSSM(StrSaltType &sstSalt, const MemConst &mcData) \
+      { return CryptBin2HexL(StdMove(HMSM(sstSalt, mcData))); } \
   };/* --------------------------------------------------------------------- */
 DEFINE_HASH_FUNCS(SHA1,   SHA_DIGEST_LENGTH,    EVP_sha1);   // Insecure
 DEFINE_HASH_FUNCS(SHA224, SHA224_DIGEST_LENGTH, EVP_sha224); // Maybe secure
@@ -541,103 +623,19 @@ DEFINE_HASH_FUNCS(SHA384, SHA384_DIGEST_LENGTH, EVP_sha384); // Very secure
 DEFINE_HASH_FUNCS(SHA512, SHA512_DIGEST_LENGTH, EVP_sha512); // Really secure
 #undef DEFINE_HASH_FUNCS
 /* -- Create CRC32 hash of specified string using LZMA API ----------------- */
-static unsigned int CryptToCRC32(const StdString &strIn)
-  { return CrcCalc(strIn.data(), strIn.length()); }
+template<class StrType>
+  requires StdIsString<StrType>
+static unsigned CryptStrToCRC32(StrType &&strStr)
+  { return CrcCalc(strStr.data(), strStr.size()); }
 /* -- Create CRC32 hash of specified memory block using LZMA API ----------- */
-static unsigned int CryptToCRC32(const MemConst &mcSrc)
+static unsigned CryptMemToCRC32(const MemConst &mcSrc)
   { return CrcCalc(mcSrc.MemPtr<void>(), mcSrc.MemSize()); }
-/* -- URL decode the specified c-string ------------------------------------ */
-static StdString CryptURLDecode(const StdString &strS)
-{ // Bail if passed string is invalid
-  if(strS.empty()) return {};
-  // Preallocate string to avoid multiple reallocations
-  StdReserved<StdString> strURL{ strS.size() };
-  // Movable pointer to input string and perform actions for each character...
-  for(const char *cpPtr = strS.data(); *cpPtr;)
-  { // Get the character and if it denotes a encoded value?
-    unsigned char ucC = static_cast<unsigned char>(*cpPtr);
-    if(ucC == '%')
-    { // Convert hex to number and if not at end of string?
-      if(const unsigned char uc1 = static_cast<unsigned char>(*(++cpPtr)))
-      { // Get the hexadecimal value and goto next character if not valid
-        const int iVal1 = CryptHex2Char<-1>(uc1);
-        if(iVal1 == -1) continue;
-        // Get second hex character and if not at end of string?
-        if(const unsigned char uc2 = static_cast<unsigned char>(*(++cpPtr)))
-        { // Get the hexadecimal value and goto next character if not valid
-          const int iVal2 = CryptHex2Char<-1>(uc2);
-          if(iVal2 == -1) continue;
-          // Set new character
-          ucC = static_cast<unsigned char>(16 * iVal1 + iVal2);
-        } // End of string
-        else break;
-      } // End of string
-      else break;
-    } // Normal character? Append to string
-    strURL += static_cast<char>(ucC);
-    cpPtr++;
-  } // Compact the URL
-  strURL.shrink_to_fit();
-  // Return the url
-  return strURL;
-}
 /* ------------------------------------------------------------------------- */
 static Memory CryptRandomBlock(const size_t stSize)
-{ // Memory to hold data
+{ // Allocate memory, fill it with random data and return it
   Memory mData{ stSize };
-  // Fill data with random data
   CryptRandomPtr(mData.MemPtr(), mData.MemSize());
-  // Return array
   return mData;
-}
-/* -- Sanitise a string removing excessive letters and words --------------- */
-static StdString CryptSanitise(const StdString &strMessage)
-{ // Create output string and pre-allocate memory
-  StdReserved<StdString> strPruned{ strMessage.capacity() };
-  // Last character processed and count
-  char cLastChar = '\0';
-  size_t stCount = 0;
-  // Enumerate through the string
-  for(char cChar : strMessage)
-  { // Character is different
-    if(cChar != cLastChar)
-    { // Set new character found and reset times found
-      cLastChar = cChar;
-      stCount = 0;
-      // Add character
-      strPruned.push_back(cChar);
-      // Next character
-      continue;
-    } // Increase repetition count and continue if over 2 repetitions
-    if(++stCount > 1) continue;
-    // Add character
-    strPruned.push_back(cChar);
-  } // Return if string is empty
-  if(strPruned.empty()) return {};
-  // Repeated words
-  StdString strWord, strLastWord;
-  // Output string
-  StdReserved<StdString> strOutput{ strPruned.size() };
-  // Put pruned string into a string stream
-  StdIStringStream isS{ strPruned };
-  // For each word
-  while(isS >> strWord)
-  { // Character is different?
-    if(strWord != strLastWord)
-    { // Set last word
-      strLastWord = strWord;
-      // Reset repetitions
-      stCount = 0;
-    } // Ignore repetitive uses of the word
-    else if(++stCount >= 2) continue;
-    // Set new character found and reset times found
-    if(!strOutput.empty()) strOutput += ' ';
-    // Add word
-    strOutput += strWord;
-  } // Trim string
-  strOutput.shrink_to_fit();
-  // Implode words and return output
-  return strOutput;
 }
 /* -- Crypt manager class -------------------------------------------------- */
 class Crypt;                           // Class prototype
@@ -645,8 +643,11 @@ static Crypt *cCrypt = nullptr;        // Address of global class
 class Crypt :                          // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public InitHelper                    // The crypto manager class
-{ /* ----------------------------------------------------------------------- */
+{ /* -- Private typedefs --------------------------------------------------- */
+  MAPPACK_BUILD(CpCp, const Codepoint, const Codepoint)
+  /* -- private variables -------------------------------------------------- */
   const StrVStrVMap svsvmEnt;          // Html entity decoding lookup table
+  const CpCpMap    ccmLookalikeCodex;  // Homoglyph to ASCII char codex
   /* -- De-Initialise cryptographic systems -------------------------------- */
   void CryptDeInit()
   { // Ignore if not initialised
@@ -696,9 +697,9 @@ class Crypt :                          // Actual class body
     stPkIvCount    = 2,                // Number of quads in iv key (128bits)
     stPkTotalCount = (stPkKeyCount + stPkIvCount);
   /* ----------------------------------------------------------------------- */
-  typedef StdArray<uint64_t, stPkKeyCount>   QPKey;
-  typedef StdArray<uint64_t, stPkIvCount>    QIVKey;
-  typedef StdArray<uint64_t, stPkTotalCount> QKeys;
+  using QPKey  = StdArray<uint64_t, stPkKeyCount>;
+  using QIVKey = StdArray<uint64_t, stPkIvCount>;
+  using QKeys  = StdArray<uint64_t, stPkTotalCount>;
   /* ----------------------------------------------------------------------- */
   union PrivateKey                     // Private key data
   { // --------------------------------------------------------------------- */
@@ -723,168 +724,99 @@ class Crypt :                          // Actual class body
   /* -- Read part of the private key --------------------------------------- */
   uint64_t CryptReadPrivateKey(const size_t stId)
     { return pkKey.qkData[stId]; }
-  /* -- Decode XML/HTML entities from a string ----------------------------- */
-  const StdString CryptEntDecode(StdString strS)
-  { // Done if empty
-    if(strS.empty()) return strS;
+  /* -- Decode XML/HTML entities from a string (thick) --------------------- */
+  StdString &CryptEntDecodeRef(StdString &strOut)
+  { // Return original string if empty
+    if(strOut.empty()) return strOut;
     // Loop until we don't find anymore entities to decode
-    for(size_t stAPos = strS.find('&');
+    for(size_t stAPos = strOut.find('&');
                stAPos != StdNPos;
-               stAPos = strS.find('&', stAPos))
+               stAPos = strOut.find('&', stAPos))
     { // Get semi-colon position, break if not found
-      const size_t stSPos = strS.find(';', stAPos + 1);
+      const size_t stSPos = strOut.find(';', stAPos + 1);
       if(stSPos == StdNPos) break;
       // Copy out the entity
-      const StdString strT{ strS.substr(stAPos + 1, stSPos - stAPos - 1) };
+      const StdString strEnt{ strOut.substr(stAPos + 1, stSPos - stAPos - 1) };
       // Cut out the entity
-      strS.erase(stAPos, stSPos - stAPos + 1);
+      strOut.erase(stAPos, stSPos - stAPos + 1);
       // Is a unicode number?
-      if(strT.front() == '#')
+      if(strEnt.front() == '#')
       { // Don't have at least two characters? Ignore, goto next entity
-        if(strT.length() <= 1) continue;
+        if(strEnt.size() <= 1) continue;
         // Value to convert
         Codepoint cVal;
         // Have more than 2 characters and hex character specified?
-        if(strT.length() > 2 && (strT[1] == 'x' || strT[1] == 'X'))
-          cVal = StrHexToInt<unsigned int>(strT.substr(2, StdNPos));
+        if(strEnt.size() > 2 && (strEnt[1] == 'x' || strEnt[1] == 'X'))
+          cVal = StrHexToInt<unsigned>(strEnt.substr(2, StdNPos));
         // Not hex but is a number? Normal number
-        else if(StdIsDigit(strT[1]))
-          cVal = StrToNum<unsigned int>(strT.substr(1, StdNPos));
+        else if(StdIsDigit(strEnt[1]))
+          cVal = StrToNum<unsigned>(strEnt.substr(1, StdNPos));
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
         // Encoder character
         const UtfEncoderEx ueeCode{ UtfEncodeEx(cVal) };
         // Insert utf-8 string
-        strS.insert(stAPos, ueeCode.u.c);
+        strOut.insert(stAPos, ueeCode.u.c);
         // Go forward the number of unicode bytes written
         stAPos += ueeCode.l;
         // Find another entity
         continue;
       } // Find string to decode, ignore further insertation if no match
-      const StrVStrVMapConstIt svsvmciIt{ svsvmEnt.find(strT) };
+      const StrVStrVMapConstIt svsvmciIt{ svsvmEnt.find(strEnt) };
       if(svsvmciIt == svsvmEnt.cend()) continue;
       // Insert result
-      strS.insert(stAPos, svsvmciIt->second);
+      strOut.insert(stAPos, svsvmciIt->second);
       // Go forward
-      stAPos += svsvmciIt->second.length();
+      stAPos += svsvmciIt->second.size();
     } // Return string
-    return strS;
+    return strOut;
   }
+  /* -- Decode XML/HTML entities from a string (thin) ---------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  StdString CryptEntDecode(StrType &&strStr)
+    { StdString strOut{ strStr }; return CryptEntDecodeRef(strOut); }
+  /* -- Sanitise a string removing excessive letters and words (thick) ----- */
+  StdString CryptSanitiseStr(UtfDecoder &udStr) const
+  { // Reserve memory for new output string
+    StdReserved<StdString> strOut{ udStr.UtfSize() };
+    // Last codepoint detected
+    Codepoint coLast = 0;
+    // Number of repeating codepoints detect
+    unsigned uCount = 0;
+    // Walk the string
+    while(const Codepoint coChar = udStr.UtfNext())
+    { // Find character in codex
+      const CpCpMapConstIt ccmciIt{ ccmLookalikeCodex.find(coChar) };
+      // If the character was found in the codex then use the codex value
+      const Codepoint coNew =
+        ccmciIt == ccmLookalikeCodex.cend() ? coChar : ccmciIt->second;
+      // If this is not repeated character?
+      if(coLast != coNew)
+      { // Set new last character
+        coLast = coNew;
+        // Reset counter
+        uCount = 0;
+        // Append character
+        UtfAppend(coNew, strOut);
+      } // Increment repeat counter. Only two of the same character can exist
+      else if(++uCount <= 2) UtfAppend(coNew, strOut);
+    } // Trim string
+    strOut.shrink_to_fit();
+    // Implode words and return output
+    return strOut;
+  }
+  /* -- Sanitise a string (thin) ------------------------------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  StdString CryptSanitise(StrType &&strStr) const
+    { UtfDecoder udStr{ strStr }; return CryptSanitiseStr(udStr); }
   /* -- Default constructor ------------------------------------- */ protected:
   Crypt() :                            // No arguments
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Initialise init helper
-    svsvmEnt{                          // Define HTML entities
-      { "AElig", "\xC3\x86" }, { "Aacute", "\xC3\x81" },
-      { "Acirc", "\xC3\x82" }, { "Agrave", "\xC3\x80" },
-      { "Aring", "\xC3\x85" }, { "Atilde", "\xC3\x83" },
-      { "Auml", "\xC3\x84" }, { "Ccedil", "\xC3\x87" },
-      { "Dagger", "\xE2\x80\xA1" }, { "ETH", "\xC3\x90" },
-      { "Eacute", "\xC3\x89" }, { "Ecirc", "\xC3\x8A" },
-      { "Egrave", "\xC3\x88" }, { "Euml", "\xC3\x8B" },
-      { "Iacute", "\xC3\x8D" }, { "Icirc", "\xC3\x8E" },
-      { "Igrave", "\xC3\x8C" }, { "Iuml", "\xC3\x8F" },
-      { "Ntilde", "\xC3\x91" }, { "OElig", "\xC5\x92" },
-      { "Oacute", "\xC3\x93" }, { "Ocirc", "\xC3\x94" },
-      { "Ograve", "\xC3\x92" }, { "Oslash", "\xC3\x98" },
-      { "Otilde", "\xC3\x95" }, { "Ouml", "\xC3\x96" },
-      { "Prime", "\xE2\x80\xB3" }, { "Scaron", "\xC5\xA0" },
-      { "THORN", "\xC3\x9E" }, { "Uacute", "\xC3\x9A" },
-      { "Ucirc", "\xC3\x9B" }, { "Ugrave", "\xC3\x99" },
-      { "Uuml", "\xC3\x9C" }, { "Yacute", "\xC3\x9D" }, { "Yuml", "\xC5\xB8" },
-      { "aacute", "\xC3\xA1" }, { "acirc", "\xC3\xA2" },
-      { "acute", "\xC2\xB4" }, { "aelig", "\xC3\xA6" },
-      { "agrave", "\xC3\xA0" }, { "alefsym", "\xE2\x84\xB5" },
-      { "alpha", "\xCE\xB1" }, { "amp", "&" }, { "and", "\xE2\x88\xA7" },
-      { "ang", "\xE2\x88\xA0" }, { "apos", "'" }, { "aring", "\xC3\xA5" },
-      { "asymp", "\xE2\x89\x88" }, { "atilde", "\xC3\xA3" },
-      { "auml", "\xC3\xA4" }, { "bdquo", "\xE2\x80\x9E" },
-      { "beta", "\xCE\xB2" }, { "brvbar", "\xC2\xA6" },
-      { "bull", "\xE2\x80\xA2" }, { "cap", "\xE2\x88\xA9" },
-      { "ccedil", "\xC3\xA7" }, { "cedil", "\xC2\xB8" },
-      { "cent", "\xC2\xA2" }, { "chi", "\xCF\x87" }, { "circ", "\xCB\x86" },
-      { "clubs", "\xE2\x99\xA3" }, { "cong", "\xE2\x89\xA5" },
-      { "copy", "\xC2\xA9" }, { "crarr", "\xE2\x86\xB5" },
-      { "cup", "\xE2\x88\xAA" }, { "curren", "\xC2\xA4" },
-      { "dArr", "\xE2\x87\x93" }, { "dagger", "\xE2\x80\xA0" },
-      { "darr", "\xE2\x86\x93" }, { "deg", "\xC2\xB0" },
-      { "delta", "\xCE\xB4" }, { "diams", "\xE2\x99\xA6" },
-      { "divide", "\xC3\xB7" }, { "eacute", "\xC3\xA9" },
-      { "ecirc", "\xC3\xAA" }, { "egrave", "\xC3\xA8" },
-      { "empty", "\xE2\x88\x85" }, { "emsp", "\xE2\x80\x83" },
-      { "ensp", "\xE2\x80\x82" }, { "epsilon", "\xCE\xB5" },
-      { "equiv", "\xE2\x89\xA1" }, { "eta", "\xCE\xB7" },
-      { "eth", "\xC3\xB0" }, { "euml", "\xC3\xAB" },
-      { "euro", "\xE2\x82\xAC" }, { "exist", "\xE2\x88\x83" },
-      { "fnof", "\xC6\x92" }, { "forall", "\xE2\x88\x80" },
-      { "frac12", "\xC2\xBD" }, { "frac14", "\xC2\xBC" },
-      { "frac34", "\xC2\xBE" }, { "frasl", "\xE2\x81\x84" },
-      { "gamma", "\xCE\xB3" }, { "ge", "\xE2\x89\xA5" }, { "gt", ">" },
-      { "hArr", "\xE2\x87\x94" }, { "hairsp", "\xE2\x80\x8A" },
-      { "harr", "\xE2\x86\x94" }, { "hearts", "\xE2\x99\xA5" },
-      { "hellip", "\xE2\x80\xA6" }, { "iacute", "\xC3\xAD" },
-      { "icirc", "\xC3\xAE" }, { "iexcl", "\xC2\xA1" },
-      { "igrave", "\xC3\xAC" }, { "image", "\xE2\x84\x91" },
-      { "infin", "\xE2\x88\x9E" }, { "int", "\xE2\x88\xAB" },
-      { "iota", "\xCE\xB9" }, { "iquest", "\xC2\xBF" },
-      { "isin", "\xE2\x88\x88" }, { "iuml", "\xC3\xAF" },
-      { "kappa", "\xCE\xBA" }, { "lArr", "\xE2\x87\x90" },
-      { "lambda", "\xCE\xBB" }, { "lang", "\xE2\x8C\xA9" },
-      { "laquo", "\xC2\xAB" }, { "larr", "\xE2\x86\x90" },
-      { "lceil", "\xE2\x8C\x88" }, { "ldquo", "\xE2\x80\x9C" },
-      { "le", "\xE2\x89\xA4" }, { "lfloor", "\xE2\x8C\x8A" },
-      { "lowast", "\xE2\x88\x97" }, { "loz", "\xE2\x97\x8A" },
-      { "lrm", "\xE2\x80\x8E" }, { "lsaquo", "\xE2\x80\xB9" },
-      { "lsquo", "\xE2\x80\x98" }, { "lt", "<" }, { "macr", "\xC2\xAF" },
-      { "mdash", "\xE2\x80\x94" }, { "micro", "\xC2\xB5" },
-      { "middot", "\xC2\xB7" }, { "minus", "\xE2\x88\x92" },
-      { "mu", "\xCE\xBC" }, { "nabla", "\xE2\x88\x87" },
-      { "nbsp", "\xC2\xA0" }, { "nbspace", "\xC2\xA0" },
-      { "ndash", "\xE2\x80\x93" }, { "ne", "\xE2\x89\xA0" },
-      { "ni", "\xE2\x88\x8B" }, { "not", "\xC2\xAC" },
-      { "notin", "\xE2\x88\x89" }, { "nsub", "\xE2\x8A\x84" },
-      { "ntilde", "\xC3\xB1" }, { "nu", "\xCE\xBD" }, { "oacute", "\xC3\xB3" },
-      { "ocirc", "\xC3\xB4" }, { "oelig", "\xC5\x93" },
-      { "ograve", "\xC3\xB2" }, { "oline", "\xE2\x80\xBE" },
-      { "omega", "\xCF\x89" }, { "omicron", "\xCE\xBF" },
-      { "oplus", "\xE2\x8A\x95" }, { "or", "\xE2\x88\xA8" },
-      { "ordf", "\xC2\xAA" }, { "ordm", "\xC2\xBA" }, { "oslash", "\xC3\xB8" },
-      { "otilde", "\xC3\xB5" }, { "otimes", "\xE2\x8A\x97" },
-      { "ouml", "\xC3\xB6" }, { "para", "\xC2\xB6" },
-      { "part", "\xE2\x88\x82" }, { "permil", "\xE2\x80\xB0" },
-      { "perp", "\xE2\x8A\xA5" }, { "phi", "\xCF\x86" }, { "pi", "\xCF\x80" },
-      { "piv", "\xCF\xB6" }, { "plusmn", "\xC2\xB1" }, { "pound", "\xC2\xA3" },
-      { "prime", "\xE2\x80\xB2" }, { "prod", "\xE2\x88\x8F" },
-      { "prop", "\xE2\x88\x9D" }, { "psi", "\xCF\x88" }, { "quot", "\"" },
-      { "rArr", "\xE2\x87\x92" }, { "radic", "\xE2\x88\x9A" },
-      { "rang", "\xE2\x8C\xAA" }, { "raquo", "\xC2\xBB" },
-      { "rarr", "\xE2\x86\x92" }, { "rceil", "\xE2\x8C\x89" },
-      { "rdquo", "\xE2\x80\x9D" }, { "real", "\xE2\x84\x9C" },
-      { "reg", "\xC2\xAE" }, { "rfloor", "\xE2\x8C\x8B" },
-      { "rho", "\xCF\x81" }, { "rlm", "\xE2\x80\x8F" },
-      { "rsaquo", "\xE2\x80\xBA" }, { "rsquo", "\xE2\x80\x99" },
-      { "sbquo", "\xE2\x80\x9A" }, { "scaron", "\xC5\xA1" },
-      { "sdot", "\xE2\x8B\x85" }, { "sect", "\xC2\xA7" },
-      { "shy", "\xC2\xAD" }, { "sigma", "\xCF\x83" }, { "sigmaf", "\xCF\x82" },
-      { "sim", "\xE2\x88\xBC" }, { "spades", "\xE2\x99\xA0" },
-      { "sub", "\xE2\x8A\x82" }, { "sube", "\xE2\x8A\x86" },
-      { "sum", "\xE2\x88\x91" }, { "sup", "\xE2\x8A\x83" },
-      { "sup1", "\xC2\xB9" }, { "sup2", "\xC2\xB2" }, { "sup3", "\xC2\xB3" },
-      { "supe", "\xE2\x8A\x87" }, { "szlig", "\xC3\x9F" },
-      { "tau", "\xCF\x84" }, { "there4", "\xE2\x88\xB4" },
-      { "theta", "\xCE\xB8" }, { "thetasym","\xCF\xB1" },
-      { "thinsp", "\xE2\x80\x89" }, { "thorn", "\xC3\xBE" },
-      { "tilde", "\xCB\x9C" }, { "times", "\xC3\x97" },
-      { "trade", "\xE2\x84\xA2" }, { "uArr", "\xE2\x87\x91" },
-      { "uacute", "\xC3\xBA" }, { "uarr", "\xE2\x86\x91" },
-      { "ucirc", "\xC3\xBB" }, { "ugrave", "\xC3\xB9" },
-      { "uml", "\xC2\xA8" }, { "upsih", "\xCF\xB2" },
-      { "upsilon", "\xCF\x85" }, { "uuml", "\xC3\xBC" },
-      { "weierp", "\xE2\x84\x98" }, { "xi", "\xCE\xBE" },
-      { "yacute", "\xC3\xBD" }, { "yen", "\xC2\xA5" }, { "yuml", "\xC3\xBF" },
-      { "zeta", "\xCE\xB6" }, { "zwj", "\xE2\x80\x8D" },
-      { "zwnj", "\xE2\x80\x8C" }, { "zwsp", "\xE2\x80\x8B" },
-    },
+#include "cryptent.hpp"                // HTML entities codex
+#include "cryptlac.hpp"                // UTF8 homoglyphs codex
     pkDKey{{{ 0x9F7C1E39CA3935CA,      // Default private key (1/4) 256-bits
               0x71F2A9630EF11A98,      // Default private key (2/4)
               0xA2AB924A293A01FB,      // Default private key (3/4)

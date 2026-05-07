@@ -12,7 +12,8 @@ namespace IColour {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;               using namespace IUtil::P;
 using Lib::OS::GlFW::GLfloat;
-typedef StdArray<GLfloat,4> Components; // Array of RGBA floats
+/* ------------------------------------------------------------------------- */
+using Components = StdArray<GLfloat, 4>; // Array of RGBA floats
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Colour class ========================================================= */
@@ -34,21 +35,21 @@ class Colour                           // Members initially private
   void ColourSetBlue(const GLfloat fB) { ColourGet()[2] = fB; }
   void ColourSetAlpha(const GLfloat fA) { ColourGet()[3] = fA; }
   /* -- Set individual colours as integers (0-255) ------------------------- */
-  void ColourSetRedInt(const unsigned int uiR)
-    { ColourSetRed(UtilNormaliseEx<GLfloat>(uiR)); }
-  void ColourSetGreenInt(const unsigned int uiG)
-    { ColourSetGreen(UtilNormaliseEx<GLfloat>(uiG)); }
-  void ColourSetBlueInt(const unsigned int uiB)
-    { ColourSetBlue(UtilNormaliseEx<GLfloat>(uiB)); }
-  void ColourSetAlphaInt(const unsigned int uiA)
-    { ColourSetAlpha(UtilNormaliseEx<GLfloat>(uiA)); }
+  void ColourSetRedInt(const unsigned uR)
+    { ColourSetRed(UtilNormaliseEx<GLfloat>(uR)); }
+  void ColourSetGreenInt(const unsigned uG)
+    { ColourSetGreen(UtilNormaliseEx<GLfloat>(uG)); }
+  void ColourSetBlueInt(const unsigned uB)
+    { ColourSetBlue(UtilNormaliseEx<GLfloat>(uB)); }
+  void ColourSetAlphaInt(const unsigned uA)
+    { ColourSetAlpha(UtilNormaliseEx<GLfloat>(uA)); }
   /* -- Set colours by packed colours integer ------------------------------ */
-  void ColourSetInt(const unsigned int uiValue)
+  void ColourSetInt(const unsigned uValue)
   { // Strip bits and normalise proper clear colour from 0.0 to 1.0
-    ColourSetRed(UtilNormaliseEx<GLfloat,16>(uiValue));   // 8-bits 16 to 24
-    ColourSetGreen(UtilNormaliseEx<GLfloat,8>(uiValue));  // 8-bits 08 to 16
-    ColourSetBlue(UtilNormaliseEx<GLfloat>(uiValue));     // 8-bits 00 to 08
-    ColourSetAlpha(UtilNormaliseEx<GLfloat,24>(uiValue)); // 8-bits 24 to 32
+    ColourSetRed(UtilNormaliseEx<GLfloat,16>(uValue));   // 8-bits 16 to 24
+    ColourSetGreen(UtilNormaliseEx<GLfloat,8>(uValue));  // 8-bits 08 to 16
+    ColourSetBlue(UtilNormaliseEx<GLfloat>(uValue));     // 8-bits 00 to 08
+    ColourSetAlpha(UtilNormaliseEx<GLfloat,24>(uValue)); // 8-bits 24 to 32
   }
   /* -- Set colours from another colour structure -------------------------- */
   void ColourSetRed(const Colour &cRef) { ColourSetRed(cRef.ColourGetRed()); }
@@ -109,22 +110,21 @@ class Colour                           // Members initially private
     return true;
   }
   /* -- Init constructor with RGBA ints ------------------------------------ */
-  Colour(const unsigned int uiR, const unsigned int uiG,
-         const unsigned int uiB, const unsigned int uiA) :
+  Colour(const unsigned uR, const unsigned uG, const unsigned uB,
+    const unsigned uA) :
     /* -- Initialisers ----------------------------------------------------- */
-    cComponents{UtilNormaliseEx<GLfloat>(uiR), // Init red component
-                UtilNormaliseEx<GLfloat>(uiG), // Init green component
-                UtilNormaliseEx<GLfloat>(uiB), // Init blue component
-                UtilNormaliseEx<GLfloat>(uiA)} // Init alpha component
+    cComponents{UtilNormaliseEx<GLfloat>(uR), // Init red component
+                UtilNormaliseEx<GLfloat>(uG), // Init green component
+                UtilNormaliseEx<GLfloat>(uB), // Init blue component
+                UtilNormaliseEx<GLfloat>(uA)} // Init alpha component
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Init constructor with RGB ints ------------------------------------- */
-  Colour(const unsigned int uiR, const unsigned int uiG,
-         const unsigned int uiB) :
+  Colour(const unsigned uR, const unsigned uG, const unsigned uB) :
     /* -- Initialisers ----------------------------------------------------- */
-    cComponents{UtilNormaliseEx<GLfloat>(uiR), // Init red component
-                UtilNormaliseEx<GLfloat>(uiG), // Init green component
-                UtilNormaliseEx<GLfloat>(uiB), // init blue component
+    cComponents{UtilNormaliseEx<GLfloat>(uR), // Init red component
+                UtilNormaliseEx<GLfloat>(uG), // Init green component
+                UtilNormaliseEx<GLfloat>(uB), // init blue component
                 1.0f}                          // Opaque alpha
     /* -- No code ---------------------------------------------------------- */
     {}

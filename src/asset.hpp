@@ -14,12 +14,12 @@ using namespace IArchive::P;           using namespace IASync::P;
 using namespace ICodec::P;             using namespace ICommon::P;
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IDir::P;               using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IIdent::P;
-using namespace IFlags::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace IEvtMain::P;           using namespace IFlags::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -57,67 +57,67 @@ FSOverrideType     fsotOverride;       // Allow load of external files
 AtomicSizeT        astPipeBufSize;     // Pipe buffer size for execute
 ); /* ---------------------------------------------------------------------- */
 /* -- Function to load a file locally -------------------------------------- */
-static FileMap AssetLoadFromDisk(const StdString &strFile)
+static FileMap AssetLoadFromDisk(const StdStringView &strvFile)
 { // Open it and sending full-load flag and if succeeded?
-  if(FileMap fmFile{ strFile })
+  if(FileMap fmFile{ strvFile })
   { // Put in the log that we loaded the file successfully
-    cLog->LogDebugExSafe("Assets mapped resource '$'[$]!",
-      strFile, fmFile.MemSize());
+    cLog->LogDebugExSafe("Assets mapped resource '$'[$].",
+      strvFile, fmFile.MemSize());
     // Return file class to caller
     return fmFile;
   } // Failed so throw exception
-  XCL("Failed to open local resource!", "File",  strFile, "Path", DirGetCWD());
+  XCL("Failed to open local resource!", "File", strvFile, "Path", DirGetCWD());
 }
 /* -- Function to search local directory then archives for a file ---------- */
-static FileMap AssetExtract(const StdString &strFile)
+static FileMap AssetExtract(const StdStringView &strvFile)
 { // Check the order in which we load
   switch(cAssets->fsotOverride)
   { // Internal files from archives only?
     case FO_INTONLY:
       // If no archives just error out
       if(cArchives->CollectorEmpty())
-        XC("Failed to find resource in archives!", "File", strFile);
+        XC("Failed to find resource in archives!", "File", strvFile);
       // Load the file from archives
-      if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
+      if(FileMap fmFile{ ArchiveExtract(strvFile) }) return fmFile;
       XCL("Failed to find resource in archives!",
-        "File",     strFile,
+        "File",     strvFile,
         "Archives", ArchiveGetNames(),
         "Count",    cArchives->CollectorCount());
     // On disk files and then internal files from archives?
     case FO_EXTINT:
       // Load the file from disk if it exists try to load it
-      if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+      if(DirLocalFileExists(strvFile)) return AssetLoadFromDisk(strvFile);
       // If no archives just error out
       if(cArchives->CollectorEmpty())
-        XCL("Failed to find resource on disk or archives!", "File", strFile);
+        XCL("Failed to find resource on disk or archives!", "File", strvFile);
       // Load the file from archives
-      if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
+      if(FileMap fmFile{ ArchiveExtract(strvFile) }) return fmFile;
       XCL("Failed to load resource on disk or archives!",
-        "File",     strFile,           "Directory", DirGetCWD(),
-        "Archives", ArchiveGetNames(), "Count", cArchives->CollectorCount());
+        "File",     strvFile,          "Directory", DirGetCWD(),
+        "Archives", ArchiveGetNames(), "Count",   cArchives->CollectorCount());
     // Internal files from archives and then on disk files?
     case FO_INTEXT:
       // If we have archives?
       if(cArchives->CollectorNotEmpty())
       { // Load the file from archives
-        if(FileMap fmFile{ ArchiveExtract(strFile) }) return fmFile;
+        if(FileMap fmFile{ ArchiveExtract(strvFile) }) return fmFile;
         // Load the file from disk if it exists try to load it
-        if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+        if(DirLocalFileExists(strvFile)) return AssetLoadFromDisk(strvFile);
         XC("Failed to find resource in archives or on disk!",
-          "File", strFile, "Directory", DirGetCWD());
+          "File", strvFile, "Directory", DirGetCWD());
       } // Load the file from disk if it exists try to load it
-      if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+      if(DirLocalFileExists(strvFile)) return AssetLoadFromDisk(strvFile);
       XCL("Failed to load resource in archives or on disk!",
-        "File",     strFile,           "Directory", DirGetCWD(),
+        "File",     strvFile,          "Directory", DirGetCWD(),
         "Archives", ArchiveGetNames(), "Count", cArchives->CollectorCount());
     // On disk files only?
     case FO_EXTONLY:
       // Load the file from disk if it exists else throw and exception
-      if(DirLocalFileExists(strFile)) return AssetLoadFromDisk(strFile);
+      if(DirLocalFileExists(strvFile)) return AssetLoadFromDisk(strvFile);
       XC("Failed to find resource on disk!",
-        "File", strFile, "Directory", DirGetCWD());
+        "File", strvFile, "Directory", DirGetCWD());
     // Anything else is a failure
-    default: XC("No route to resource!", "File", strFile);
+    default: XC("No route to resource!", "File", strvFile);
   }
 }
 /* == Asset object class =================================================== */
@@ -170,64 +170,66 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     else MemSwap(fmData.FileMapDecouple());
   }
   /* -- Load asset from asset asynchronously ------------------------------- */
-  void AssetInitAsyncAsset(lua_State*const lS, const StdString &strName,
+  void AssetInitAsyncAsset(lua_State*const lS, const StdStringView &strvName,
     const AssetFlagsConst &afcFlags, Asset &aCref)
   { // Prepare user flags
     FlagSet(afcFlags);
     // Dispatch the event
-    AsyncInitArray(lS, strName, "assetdata", aCref);
+    AsyncInitArray(lS, strvName, "assetdata", aCref);
   }
   /* -- Load asset from file asynchronously -------------------------------- */
-  void AssetInitAsyncFile(lua_State*const lS, const StdString &strFile,
+  void AssetInitAsyncFile(lua_State*const lS, const StdStringView &strvFile,
     const AssetFlagsConst &afcFlags)
   { // Prepare user flags
     FlagSet(afcFlags);
     // Load asset from file asynchronously
-    AsyncInitFile(lS, strFile, "assetfile");
+    AsyncInitFile(lS, strvFile, "assetfile");
   }
   /* -- Load asset from command-line --------------------------------------- */
-  void AssetInitAsyncCmdLine(lua_State*const lS, const StdString &strCmdLine,
-    const AssetFlagsConst &afcFlags)
+  void AssetInitAsyncCmdLine(lua_State*const lS,
+    const StdStringView &strvCmdLine, const AssetFlagsConst &afcFlags)
   { // Prepare user flags
     FlagSet(afcFlags);
     // Nothing to send to 'stdin'
     Memory mbBlank;
     // Dispatch the request asynchronously
-    AsyncInitCmdLine(lS, strCmdLine, "assetexec", mbBlank);
+    AsyncInitCmdLine(lS, strvCmdLine, "assetexec", mbBlank);
   }
   /* -- Load asset from command-line --------------------------------------- */
-  void AssetInitAsyncCmdLineEx(lua_State*const lS, const StdString &strCmdLine,
-    const AssetFlagsConst &afcFlags, Asset &aStdIn)
+  void AssetInitAsyncCmdLineEx(lua_State*const lS,
+    const StdStringView &strvCmdLine, const AssetFlagsConst &afcFlags,
+    Asset &aStdIn)
   { // Prepare user flags
     FlagSet(afcFlags);
     // Load asset from file asynchronously
-    AsyncInitCmdLine(lS, strCmdLine, "assetexecex", aStdIn);
+    AsyncInitCmdLine(lS, strvCmdLine, "assetexecex", aStdIn);
   }
   /* -- Init from file ----------------------------------------------------- */
-  void AssetInitFile(const StdString &strFile, const AssetFlagsConst &afcFlags)
+  void AssetInitFile(const StdStringView &strvFile,
+    const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
     // Load file normally
-    SyncInitFileSafe(strFile);
+    SyncInitFileSafe(strvFile);
   }
   /* -- Init from file ----------------------------------------------------- */
-  void AssetInitPtr(const StdString &strName, const AssetFlagsConst &afcFlags,
-    size_t stNSize, const char*const cpNPtr)
+  void AssetInitPtr(const StdStringView &strvName,
+    const AssetFlagsConst &afcFlags, size_t stNSize, const char*const cpNPtr)
   { // Prepare flags
     FlagSet(afcFlags);
     // Copy the memory
     Memory mData{ stNSize, cpNPtr };
     // Do the initialisation
-    SyncInitArray(strName, mData);
+    SyncInitArray(strvName, mData);
   }
   /* -- Init from asset ---------------------------------------------------- */
-  void AssetInitAsset(const StdString &strName,
+  void AssetInitAsset(const StdStringView &strvName,
     const AssetFlagsConst &afcFlags, const Asset &aData)
-  { AssetInitPtr(strName, afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
+  { AssetInitPtr(strvName, afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
   /* -- Init duplicate asset ----------------------------------------------- */
   void AssetInitDuplicate(const Asset &aCref)
   { // Copy name of asset
-    IdentSet(aCref.IdentGet());
+    NameSet(aCref.NameGet());
     // Copy flags
     FlagSet(aCref.FlagGet());
     // Then copy the memory over
@@ -236,21 +238,21 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     CollectorRegister();
   }
   /* -- Init blank asset --------------------------------------------------- */
-  void AssetInitBlank(const StdString &strName, const size_t stBytes)
+  void AssetInitBlank(const StdStringView &strvName, const size_t stBytes)
   { // Set name of memory
-    IdentSet(StdMove(strName));
+    NameSet(strvName);
     // Allocate the memory and fill it
     MemInitSafe(stBytes);
     // Register the object in asset collector list
     CollectorRegister();
   }
   /* -- Init from string --------------------------------------------------- */
-  void AssetInitArray(const StdString &strName, Asset &aRef,
+  void AssetInitArray(const StdStringView &strvName, Asset &aRef,
     const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
     // Set filename and flags
-    SyncInitArray(strName, aRef);
+    SyncInitArray(strvName, aRef);
   }
   /* -- Move assignment ---------------------------------------------------- */
   Asset& operator=(Asset &&aOther) { AssetSwap(aOther); return *this; }
@@ -260,7 +262,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   Asset() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperAsset{ cAssets },          // Initially unregistered
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     AsyncLoaderAsset{ this,            // Initialise async class with this
       EMC_MP_ASSET },                  // ...and the event id for it.
     AssetFlags{ CD_NONE }              // Np asset load flags initially
@@ -279,24 +281,24 @@ struct AssetList :
   /* -- Cast down to StrSet ------------------------------------------------ */
   StrSet &ToStrSet() { return *this; }
   /* -- Return files in directories ---------------------------------------- */
-  AssetList(const StdString &strDir, const bool bOnlyDirs) :
+  AssetList(const StdString &strvDir, const bool bOnlyDirs) :
     /* -- Initialisers ----------------------------------------------------- */
-    StrSet{ bOnlyDirs ? StdMove(Dir{ strDir }.DirsToSet()) :
-                        StdMove(Dir{ strDir }.FilesToSet()) }
+    StrSet{ bOnlyDirs ? StdMove(Dir{ strvDir }.DirsToSet()) :
+                        StdMove(Dir{ strvDir }.FilesToSet()) }
     /* -- Add archive files to list ---------------------------------------- */
-    { ArchiveEnumerate(strDir, cCommon->CommonBlank(), bOnlyDirs, *this); }
+    { ArchiveEnumerate(strvDir, cCommon->CommonBlank(), bOnlyDirs, *this); }
   /* -- Return files in directories with extension matching ---------------- */
-  AssetList(const StdString &strDir, const StdString &strExt,
+  AssetList(const StdStringView &strvDir, const StdStringView &strvExt,
     const bool bOnlyDirs) :
     /* -- Initialisers ----------------------------------------------------- */
-    StrSet{ bOnlyDirs ? StdMove(Dir{ strDir, strExt }.DirsToSet()) :
-                        StdMove(Dir{ strDir, strExt }.FilesToSet()) }
+    StrSet{ bOnlyDirs ? StdMove(Dir{ strvDir, strvExt }.DirsToSet()) :
+                        StdMove(Dir{ strvDir, strvExt }.FilesToSet()) }
     /* -- Add archive files to list ---------------------------------------- */
-    { ArchiveEnumerate(strDir, strExt, bOnlyDirs, *this); }
+    { ArchiveEnumerate(strvDir, strvExt, bOnlyDirs, *this); }
 };/* ----------------------------------------------------------------------- */
 /* -- Look if a file exists ------------------------------------------------ */
-static bool AssetExists(const StdString &strFile)
-  { return DirLocalFileExists(strFile) || ArchiveFileExists(strFile); }
+static bool AssetExists(const StdStringView &strvFile)
+  { return DirLocalFileExists(strvFile) || ArchiveFileExists(strvFile); }
 /* -- Allow external file access ------------------------------------------- */
 static CVarReturn AssetSetFSOverride(const FSOverrideType fsState)
   { return CVarSimpleSetInt(cAssets->fsotOverride, fsState); }

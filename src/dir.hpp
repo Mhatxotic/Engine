@@ -8,15 +8,16 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IDir {                       // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICVarDef::P;
-using namespace IError::P;             using namespace IIdent::P;
-using namespace IPSplit::P;            using namespace IStd::P;
+using namespace IError::P;             using namespace ILookupArray::P;
+using namespace IPSplit::P;            using namespace ISerial::P;
+using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-enum ValidResult : unsigned int        // Return values for ValidName()
+enum ValidResult : unsigned            // Return values for ValidName()
 { /* ----------------------------------------------------------------------- */
   VR_OK,                               // [00] The filename is valid!
   VR_EMPTY,                            // [01] The filename is empty!
@@ -35,7 +36,7 @@ enum ValidResult : unsigned int        // Return values for ValidName()
   /* ----------------------------------------------------------------------- */
   VR_MAX                               // [14] Maximum number of errors
 };/* ----------------------------------------------------------------------- */
-enum ValidType : unsigned int          // Types for ValidName()
+enum ValidType : unsigned              // Types for ValidName()
 { /* ----------------------------------------------------------------------- */
   VT_NOTHING,                          // [0] Absolutely no safety whatsoever
   VT_TRUSTED,                          // [1] Trusted caller
@@ -47,7 +48,7 @@ class DirBase;                         // Prototype to class
 static DirBase *cDirBase = nullptr;    // Pointer to global class
 class DirBase                          // Members initially private
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef IdList<VR_MAX> VRList;       // List of ValidName strings typedef
+  using VRList = LookupArray<VR_MAX>;  // List of ValidName strings typedef
   /* -- Private variables -------------------------------------------------- */
   const VRList     vrlStrings;         // " container
   const StrVUSet   svusReserved;       // Reserved names
@@ -56,8 +57,8 @@ class DirBase                          // Members initially private
   const StdStringView &DirBaseVNRtoStr(const ValidResult vrId) const
     { return vrlStrings.Get(vrId); }
   /* -- Return if a name is reserved --------------------------------------- */
-  bool DirBaseIsReservedName(const StdString &strName) const
-    { return svusReserved.contains(strName); }
+  bool DirBaseIsReservedName(const StdStringView &strvName) const
+    { return svusReserved.contains(strvName); }
   /* -- Return safety mode ------------------------------------------------- */
   ValidType DirBaseGetSafetyMode() const { return vtMode; }
   /* -- Default constructor ------------------------------------- */ protected:
@@ -127,127 +128,128 @@ static bool DirIsValidPathPartCharacter(const char cChar)
 /* -- Check that path part characters are valid ---------------------------- */
 static bool DirIsValidPathPartCharactersCallback(const char cChar)
   { return !DirIsValidPathPartCharacter(cChar); }
-static bool DirIsValidPathPartCharacters(const StdString &strPart,
+static bool DirIsValidPathPartCharacters(const StdStringView &strvPart,
   const size_t stPos)
-    { return !StdAnyOf(StdNext(strPart.cbegin(), static_cast<ssize_t>(stPos)),
-        strPart.cend(), DirIsValidPathPartCharactersCallback); }
-static bool DirIsValidPathPartCharacters(const StdString &strPart)
-  { return !StdAnyOf(strPart.cbegin(), strPart.cend(),
+    { return !StdAnyOf(StdNext(strvPart.cbegin(), static_cast<ssize_t>(stPos)),
+        strvPart.cend(), DirIsValidPathPartCharactersCallback); }
+static bool DirIsValidPathPartCharacters(const StdStringView &strvPart)
+  { return !StdAnyOf(strvPart.cbegin(), strvPart.cend(),
       DirIsValidPathPartCharactersCallback); }
 /* -- Valid Windows drive letter ------------------------------------------- */
 static bool DirIsValidDrive(const char cFirst)
   { return (cFirst >= 'A' && cFirst <= 'Z') ||
            (cFirst >= 'a' && cFirst <= 'z'); }
 /* -- Check that filename doesn't leave the exe directory ------------------ */
-static ValidResult DirValidName(const StdString &strName, const ValidType vtId)
+static ValidResult DirValidName(const StdStringView &strvName,
+  const ValidType vtId)
 { // Failed if empty string
-  if(strName.empty()) return VR_EMPTY;
+  if(strvName.empty()) return VR_EMPTY;
   // Failed if the length is longer than the maximum allowed path.
-  if(strName.length() > _MAX_PATH) return VR_TOOLONG;
+  if(strvName.size() > _MAX_PATH) return VR_TOOLONG;
   // If using windows? Replace backslashes with forward slashes.
-  const StdString &strChosen =
+  const StdString &strChosen{
 #if defined(WINDOWS)
-    PSplitBackToForwardSlashes(strName);
+    PSplitBackToForwardSlashes(strvName)
 #else
-    strName;
+    StdString{ strvName }
 #endif
-  // Which type
+  }; // Which type
   switch(vtId)
   { // Full sandbox. Do not leave .exe directory.
     case VT_UNTRUSTED:
     { // Failed if the first or last character is a space
-      if(strName.front() <= ' ') return VR_NOLEADWS;
-      if(strName.back() <= ' ') return VR_NOTRAILWS;
+      if(strvName.front() <= ' ') return VR_NOLEADWS;
+      if(strvName.back() <= ' ') return VR_NOTRAILWS;
       // Root directory not allowed.
       if(strChosen.front() == '/') return VR_NOROOT;
       // Path length is one byte?
-      if(strChosen.length() == 1)
+      if(strChosen.size() == 1)
       { // Disallow current directory if it is a dot.
         if(strChosen.front() == '.') return VR_CURRENT;
       } // Disallow Windows drive.
       else if(strChosen[1] == ':')
         return DirIsValidDrive(strChosen.front()) ? VR_NODRIVE : VR_INVDRIVE;
       // Get parts from pathname and compare size
-      const Token tParts{ strChosen, cCommon->CommonFSlash() };
-      switch(tParts.size())
+      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlashV() };
+      switch(tsvParts.size())
       { // Tokeniser failed (should be impossible)
         case 0: return VR_EXPLODE;
         // Two parts or more? (fall through to case 1 underneath)
         default:
         { // Skip trailing forward-slash if needed
-          StrVectorConstIt svciPart{ tParts.cend() -
-            (tParts.rbegin()->empty() ? 2 : 1) };
+          TokenStrViewConstIt tsvciPart
+            { tsvParts.cend() - (tsvParts.rbegin()->empty() ? 2 : 1) };
           // Enumerate parts from chosen end to start plus one.
-          while(svciPart != tParts.cbegin())
+          while(tsvciPart != tsvParts.cbegin())
           { // Get part string
-            const StdString &strPart = *svciPart;
+            const StdStringView &strvPart = *tsvciPart;
             // Test the length of the first path part
-            switch(strPart.length())
+            switch(strvPart.size())
             { // No length? Return empty
               case 0: return VR_EMPTY;
               // One character. No dot allowed.
-              case 1: if(strPart.front() == '.') return VR_CSUBDIR; break;
+              case 1: if(strvPart.front() == '.') return VR_CSUBDIR; break;
               // Two or three characters or more? Checks are fine
               default: break;
             } // Failed first character is an invalid character.
-            if(!DirIsValidPathPartCharacters(strPart)) return VR_INVCHAR;
+            if(!DirIsValidPathPartCharacters(strvPart)) return VR_INVCHAR;
             // Check for reserved names.
-            if(cDirBase->DirBaseIsReservedName(strPart)) return VR_RESERVED;
+            if(cDirBase->DirBaseIsReservedName(strvPart)) return VR_RESERVED;
             // Go backwards
-            --svciPart;
+            --tsvciPart;
           } // Fall through to check first string.
           [[fallthrough]];
         } // One part?
         case 1:
         { // Get first string
-          const StdString &strFirst = tParts.front();
+          const StdStringView &strvFirst = tsvParts.front();
           // Test all the characters in the first string
-          if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
+          if(!DirIsValidPathPartCharacters(strvFirst)) return VR_INVCHAR;
           // Check for reserved names. Only Windows has reserved names but
           // we'll prevent them on MacOS and Linux too to prevent problems
           // being passed over to Windows.
-          if(cDirBase->DirBaseIsReservedName(strFirst)) return VR_RESERVED;
+          if(cDirBase->DirBaseIsReservedName(strvFirst)) return VR_RESERVED;
           // Success if the first entry in the path isn't a dot
-          return strFirst.length() != 1 ||
-                 strFirst.front() != '.' ? VR_OK : VR_CURRENT;
+          return strvFirst.size() != 1 ||
+                 strvFirst.front() != '.' ? VR_OK : VR_CURRENT;
         }
       }
     } // Trusted filename?
     case VT_TRUSTED:
     { // Get parts from pathname and compare size
-      const Token tParts{ strChosen, cCommon->CommonFSlash() };
-      switch(tParts.size())
+      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlashV() };
+      switch(tsvParts.size())
       { // Tokeniser failed (should be impossible)
         case 0: return VR_EXPLODE;
         // Two parts or more? (fall through to case 1 underneath)
         default:
         { // Skip trailing forward-slash if needed
-          StrVectorConstIt svciPart{ tParts.cend() -
-            (tParts.rbegin()->empty() ? 2 : 1) };
+          TokenStrViewConstIt tsvciPart{ tsvParts.cend() -
+            (tsvParts.rbegin()->empty() ? 2 : 1) };
           // Enumerate parts from chosen end to start plus one.
-          while(svciPart != tParts.cbegin())
+          while(tsvciPart != tsvParts.cbegin())
           { // Get part string
-            const StdString &strPart = *svciPart;
+            const StdStringView &strvPart = *tsvciPart;
             // Not allowed to be empty or parent directory
-            if(strPart.empty()) return VR_EMPTY;
+            if(strvPart.empty()) return VR_EMPTY;
             // Failed first character is an invalid character.
-            if(!DirIsValidPathPartCharacters(strPart)) return VR_INVCHAR;
+            if(!DirIsValidPathPartCharacters(strvPart)) return VR_INVCHAR;
             // Go backwards
-            --svciPart;
+            --tsvciPart;
           } // Fall through to check first string.
           [[fallthrough]];
         } // One part?
         case 1:
         { // Get first string
-          const StdString &strFirst = tParts.front();
+          const StdStringView &strvFirst = tsvParts.front();
           // Check drive letter is valid
-          if(strFirst.length() > 1 && strFirst[1] == ':')
+          if(strvFirst.size() > 1 && strvFirst[1] == ':')
           { // Get first character and make sure the drive letter is valid
-            if(!DirIsValidDrive(strFirst.front())) return VR_INVDRIVE;
+            if(!DirIsValidDrive(strvFirst.front())) return VR_INVDRIVE;
             // Test rest of characters from the second character
-            if(!DirIsValidPathPartCharacters(strFirst, 2)) return VR_INVCHAR;
+            if(!DirIsValidPathPartCharacters(strvFirst, 2)) return VR_INVCHAR;
           } // Test all of the characters
-          else if(!DirIsValidPathPartCharacters(strFirst)) return VR_INVCHAR;
+          else if(!DirIsValidPathPartCharacters(strvFirst)) return VR_INVCHAR;
         } // Success
         return VR_OK;
       }
@@ -258,7 +260,7 @@ static ValidResult DirValidName(const StdString &strName, const ValidType vtId)
   }
 }
 /* -- Check that filename doesn't leave the exe directory ------------------ */
-static ValidResult DirValidName(const StdString &strName)
+static ValidResult DirValidName(const StdStringView &strName)
   { return DirValidName(strName, cDirBase->DirBaseGetSafetyMode()); }
 /* -- Public typedefs ------------------------------------------------------ */
 class DirItem                          // File information structure
@@ -266,19 +268,22 @@ class DirItem                          // File information structure
   StdTimeT         tCreate,            // File creation time
                    tAccess,            // File access time
                    tWrite;             // File modification time
-  uint64_t         ullSize,            // File size
+  uint64_t         ullId,              // File order number
+                   ullSize,            // File size
                    ullFlags;           // Attributes (OS specific)
   /* -- Set members --------------------------------------------- */ protected:
   void Set(const StdTimeT tNCreate, const StdTimeT tNAccess,
-    const StdTimeT tNWrite, const uint64_t ullNSize, const uint64_t ullNFlags)
-      { tCreate = tNCreate; tAccess = tNAccess; tWrite = tNWrite;
-          ullSize = ullNSize; ullFlags = ullNFlags; }
+    const StdTimeT tNWrite, const uint64_t ullNId, const uint64_t ullNSize,
+    const uint64_t ullNFlags)
+  { tCreate = tNCreate; tAccess = tNAccess; tWrite = tNWrite;
+    ullId = ullNId; ullSize = ullNSize; ullFlags = ullNFlags; }
   /* -- Clear members ------------------------------------------------------ */
   void Clear() { tCreate = tAccess = tWrite = 0; ullSize = ullFlags = 0; }
   /* -- Get members ------------------------------------------------ */ public:
   StdTimeT Created() const { return tCreate; }
   StdTimeT Accessed() const { return tAccess; }
   StdTimeT Written() const { return tWrite; }
+  uint64_t Id() const { return ullId; }
   uint64_t Size() const { return ullSize; }
   uint64_t Attributes() const { return ullFlags; }
   /* -- Default constructor ------------------------------------------------ */
@@ -287,6 +292,7 @@ class DirItem                          // File information structure
     tCreate(0),                        // Clear file creation time
     tAccess(0),                        // Clear file access time
     tWrite(0),                         // Clear file modification time
+    ullId(0),                          // Clear file id
     ullSize(0),                        // Clear file size
     ullFlags(0)                        // Clear file attributes
     /* -- No code ---------------------------------------------------------- */
@@ -295,7 +301,7 @@ class DirItem                          // File information structure
   DirItem(const DirItem &diOther) :
     /* -- Initialisers ----------------------------------------------------- */
     DirItem{ diOther.Created(), diOther.Accessed(), diOther.Written(),
-             diOther.Size(), diOther.Attributes() }
+             diOther.Id(), diOther.Size(), diOther.Attributes() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Assignment operator ------------------------------------------------ */
@@ -304,12 +310,13 @@ class DirItem                          // File information structure
       { return diRHS; }                // Thinks 'ullSize' is not initialised
   /* ----------------------------------------------------------------------- */
   DirItem(const StdTimeT tNCreate, const StdTimeT tNAccess,
-    const StdTimeT tNWrite, const uint64_t ullNSize,
+    const StdTimeT tNWrite, const uint64_t ullNId, const uint64_t ullNSize,
     const uint64_t ullNFlags) :
     /* -- Initialisers ----------------------------------------------------- */
     tCreate(tNCreate),                 // Initialise file creation time
     tAccess(tNAccess),                 // Initialise file access time
     tWrite(tNWrite),                   // Initialise file modification time
+    ullId(ullNId),                     // Initialise file size
     ullSize(ullNSize),                 // Initialise file size
     ullFlags(ullNFlags)                // Initialise file attributes
     /* -- No code ---------------------------------------------------------- */
@@ -329,16 +336,16 @@ class DirFile                          // Files container class
     return ssFiles;
   }
   /* -- Convert to set --------------------------------------------- */ public:
-  const StrSet DirsToSet() const { return Export(demDirs); }
-  const StrSet FilesToSet() const { return Export(demFiles); }
+  StrSet DirsToSet() const { return Export(demDirs); }
+  StrSet FilesToSet() const { return Export(demFiles); }
   /* -- Get lists ---------------------------------------------------------- */
   const DirEntMap &GetDirs() const { return demDirs; }
   const DirEntMap &GetFiles() const { return demFiles; }
   /* -- Get lists iterators ------------------------------------------------ */
-  const DirEntMapConstIt GetDirsBegin() const { return GetDirs().cbegin(); }
-  const DirEntMapConstIt GetFilesBegin() const { return GetFiles().cbegin(); }
-  const DirEntMapConstIt GetDirsEnd() const { return GetDirs().cend(); }
-  const DirEntMapConstIt GetFilesEnd() const { return GetFiles().cend(); }
+  DirEntMapConstIt GetDirsBegin() const { return GetDirs().cbegin(); }
+  DirEntMapConstIt GetFilesBegin() const { return GetFiles().cbegin(); }
+  DirEntMapConstIt GetDirsEnd() const { return GetDirs().cend(); }
+  DirEntMapConstIt GetFilesEnd() const { return GetFiles().cend(); }
   /* -- Get elements in lists ---------------------------------------------- */
   size_t GetDirsSize() const { return GetDirs().size(); }
   size_t GetFilesSize() const { return GetFiles().size(); }
@@ -366,6 +373,7 @@ class DirFile                          // Files container class
 };/* -- DirCore class ------------------------------------------------------ */
 class DirCore :                        // System specific implementation
   /* -- Base classes ------------------------------------------------------- */
+  public SerialMaster<>,               // Unique serial number counter
   public DirItem                       // Current item information
 { /* -- Variables -------------------------------------------------- */ public:
   StdString        strFile;            // Name of next file
@@ -384,7 +392,7 @@ class DirCore :                        // System specific implementation
     strFile = S16toUTF(wfData.name);
     // Set file information
     Set(wfData.time_create, wfData.time_access, wfData.time_write,
-      static_cast<uint64_t>(wfData.size), wfData.attrib);
+      this->Serial(), static_cast<uint64_t>(wfData.size), wfData.attrib);
     // Get next item
     bMore = _wfindnext64(iHandle, &wfData) != -1;
   }
@@ -400,11 +408,11 @@ class DirCore :                        // System specific implementation
     return true;
   }
   /* -- Constructor for WIN32 system --------------------------------------- */
-  explicit DirCore(const StdString &strDir) :
+  explicit DirCore(const StdStringView &strvDir) :
     /* -- Initialisers ----------------------------------------------------- */
-    iHandle(_wfindfirst64(UTFtoS16(strDir.empty() ?
+    iHandle(_wfindfirst64(UTFtoS16(strvDir.empty() ?
       cCommon->CommonAsterisk() :
-        StrAppend(StrTrimSuffix(strDir, '/'), '/',
+        StrAppend(StrTrimSuffix(strvDir, '/'), '/',
           cCommon->CommonAsterisk())).data(),
       &wfData)),
     bMore(iHandle != -1)
@@ -420,9 +428,9 @@ class DirCore :                        // System specific implementation
   // closedir() function has attributes so this is the workaround.
   struct CloseDirFtor
     { void operator()(DIR*const dPtr) const { closedir(dPtr); } };
-  typedef StdUniquePtr<DIR, CloseDirFtor> DirUPtr;
+  using DirUPtr = StdUniquePtr<DIR, CloseDirFtor>;
   /* -- Private variables -------------------------------------------------- */
-  const StdString    strPrefix;           // Prefix for filenames with stat()
+  const StdString strPrefix;           // Prefix for filenames with stat()
   DirUPtr         dupHandle;           // Context for opendir()
   /* -- Return if directory was opened on POSIX system ------------- */ public:
   bool IsOpened() const { return !!dupHandle; }
@@ -446,20 +454,21 @@ class DirCore :                        // System specific implementation
         bIsDir = S_ISDIR(sfssData.st_mode);
         // Set data
         Set(sfssData.st_ctime, sfssData.st_atime, sfssData.st_mtime,
-          static_cast<uint64_t>(sfssData.st_size), sfssData.st_mode);
+          this->Serial(), static_cast<uint64_t>(sfssData.st_size),
+          sfssData.st_mode);
       } // Success
       return true;
     } // Failed
     return false;
   }
   /* -- Constructor for POSIX system --------------------------------------- */
-  explicit DirCore(const StdString &strDir) :
+  explicit DirCore(const StdStringView &strDir) :
     /* -- Initialisers ----------------------------------------------------- */
     strPrefix{ StrAppend(              // Initialise string prefix
       strDir.empty() ?                 // If requested directory is empty?
         cCommon->CommonPeriod() :      // Set to scan current directory
         StrTrimSuffix(strDir, '/'),    // Trim forward-slash trailing slashes
-      cCommon->CommonFSlash()) },      // Add our own slash at the end
+      cCommon->CommonFSlashV()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
       opendir(strPrefix.data()) }     // Open the directory and store handle
     /* -- Unload and clear the dir handle if init and no first file -------- */
@@ -483,11 +492,11 @@ class Dir :                            // Directory information class
     RemoveEntry(dfemMap, cCommon->CommonTwoPeriod());
   }
   /* -- Scan with no match checking ---------------------------------------- */
-  static DirFile ScanDir(const StdString &strDir=cCommon->CommonBlank())
+  static DirFile ScanDir(const StdStringView &strvDir = cCommon->CommonBlank())
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
-    DirCore dcInterface{ strDir };
+    DirCore dcInterface{ strvDir };
     if(dcInterface.IsOpened())
     { // Repeat...
       do
@@ -504,11 +513,12 @@ class Dir :                            // Directory information class
     return { StdMove(demNDirs), StdMove(demNFiles) };
   }
   /* -- Scan with match checking ------------------------------------------- */
-  static DirFile ScanDirExt(const StdString &strDir, const StdString &strExt)
+  static DirFile ScanDirExt(const StdStringView &strvDir,
+    const StdStringView &strExt)
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
-    DirCore dcInterface{ strDir };
+    DirCore dcInterface{ strvDir };
     if(dcInterface.IsOpened())
     { // Repeat...
       do
@@ -531,10 +541,10 @@ class Dir :                            // Directory information class
   /* -- Constructor of current directory --------------------------- */ public:
   Dir() : DirFile{ ScanDir() } {}
   /* -- Constructor of specified directory --------------------------------- */
-  explicit Dir(const StdString &strDir) : DirFile{ ScanDir(strDir) } {}
+  explicit Dir(const StdStringView &strvDir) : DirFile{ ScanDir(strvDir) } {}
   /* -- Scan specified directory for files with specified extension -------- */
-  Dir(const StdString &strDir, const StdString &strExt) :
-    DirFile{ ScanDirExt(strDir, strExt) } {}
+  Dir(const StdStringView &strvDir, const StdStringView &strExt) :
+    DirFile{ ScanDirExt(strvDir, strExt) } {}
 };/* ----------------------------------------------------------------------- */
 /* -- Get current directory ------------------------------------------------ */
 static StdString DirGetCWD()
@@ -545,7 +555,6 @@ static StdString DirGetCWD()
   // Get current directory and store it in string, throw exception if error
   if(!_wgetcwd(const_cast<wchar_t*>(wstrDir.data()), _MAX_PATH))
     throw StdRunTimeError{ "getcwd() failed!" };
-  // Resize and recover memory
   wstrDir.resize(wcslen(wstrDir.data()));
   // Return directory replacing backslashes for forward slashes
   return PSplitBackToForwardSlashes(WS16toUTF(wstrDir));
@@ -557,44 +566,42 @@ static StdString DirGetCWD()
     throw StdRunTimeError{ "getcwd() failed!" };
   // Resize and recover memory
   strDir.resize(strlen(strDir.data()));
+  strDir.shrink_to_fit();
   // Return directory
   return strDir;
 #endif
 }
 /* == Set current directory ================================================ */
-static bool DirSetCWD(const StdString &strDirectory)
+static bool DirSetCWD(const StdStringView &strvDirectory)
 { // Ignore if empty
-  if(strDirectory.empty()) return false;
+  if(strvDirectory.empty()) return false;
   // Process is different on win32 with having drive letters
 #if defined(WINDOWS)
-  // Get first character because it needs casting
-  const unsigned char &ucD = strDirectory.front();
   // Set drive first if specified
-  if(strDirectory.length() >= 3 &&
-     strDirectory[1] == ':' &&
-     (strDirectory[2] == '\\' ||
-      strDirectory[2] != '/') &&
-       _chdrive((StdToUpper(ucD) - 'A') + 1) < 0) return false;
+  if(strvDirectory.size() >= 3 && strvDirectory[1] == ':' &&
+     (strvDirectory[2] == '\\' || strvDirectory[2] != '/') &&
+     _chdrive((StdToUpper(strvDirectory.front()) - 'A') + 1) < 0)
+    return false;
 #endif
   // Set current directory and return false if there is a problem
-  return !StdChDir(strDirectory);
+  return !StdChDir(strvDirectory);
 }
 /* -- Make a directory ----------------------------------------------------- */
-static bool DirMkDir(const StdString &strDir) { return !StdMkDir(strDir); }
+static bool DirMkDir(const StdStringView &strDir) { return !StdMkDir(strDir); }
 /* -- Remove a directory --------------------------------------------------- */
-static bool DirRmDir(const StdString &strDir) { return !StdRmDir(strDir); }
+static bool DirRmDir(const StdStringView &strDir) { return !StdRmDir(strDir); }
 /* -- Make a directory and all it's interim components --------------------- */
-static bool DirMkDirEx(const StdString &strDir)
+static bool DirMkDirEx(const StdStringView &strDir)
 { // Break apart directory parts
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
-  if(const Token tParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->CommonFSlash() })
+  if(const TokenStr tsParts{ StrAppend(psParts.strDir, psParts.strFileExt),
+    cCommon->CommonFSlashV() })
   { // This will be the string that wile sent to mkdir multiple times
     // gradually.
     StdOStringStream osS; osS << psParts.strDrive;
     // Get the first item and if it is not empty?
-    const StdString &strFirst = tParts.front();
+    const StdString &strFirst = tsParts.front();
     if(!strFirst.empty())
     { // Make the directory if isn't the drive and return failure if the
       // directory doesn't already exist
@@ -602,13 +609,13 @@ static bool DirMkDirEx(const StdString &strDir)
       // Move first item. It will be empty if directory started with a slash
       osS << strFirst;
     } // If there are more directories?
-    if(tParts.size() >= 2)
+    if(tsParts.size() >= 2)
     { // Create all the other directories
-      for(StrVectorConstIt svI{ StdNext(tParts.cbegin()) };
-                           svI != tParts.cend();
-                         ++svI)
+      for(StrVectorConstIt svciI{ StdNext(tsParts.cbegin()) };
+                           svciI != tsParts.cend();
+                         ++svciI)
       { // Append next directory
-        osS << '/' << *svI;
+        osS << '/' << *svciI;
         // Make the directory and if failed and it doesn't exist return error
         if(!DirMkDir(osS.str()) && StdIsNotError(EEXIST)) return false;
       }
@@ -618,44 +625,44 @@ static bool DirMkDirEx(const StdString &strDir)
   return false;
 }
 /* -- Remove a directory and all it's interim components ------------------- */
-static bool DirRmDirEx(const StdString &strDir)
+static bool DirRmDirEx(const StdStringView &strDir)
 { // Break apart directory parts
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
-  Token tParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->CommonFSlash() };
+  TokenStr tsParts{ StrAppend(psParts.strDir, psParts.strFileExt),
+    cCommon->CommonFSlashV() };
   // Get the first item and if it is not empty?
-  while(!tParts.empty())
+  while(!tsParts.empty())
   { // This will be the string that wile sent to mkdir multiple times
     // gradually. Do not try to construct the oss with the drive string because
     // it won't work and thats not how the constructor works it seems!
     StdOStringStream osS; osS << psParts.strDrive;
     // Get the first item and if it is not empty?
-    const StdString &strFirst = tParts.front();
+    const StdString &strFirst = tsParts.front();
     if(!strFirst.empty()) osS << strFirst;
     // If there are more directories? Build directory structure
-    if(tParts.size() >= 2)
-      StdForEach(seq, StdNext(tParts.cbegin()), tParts.cend(),
+    if(tsParts.size() >= 2)
+      StdForEach(seq, StdNext(tsParts.cbegin()), tsParts.cend(),
         [&osS](const StdString &strPart) { osS << '/' << strPart; });
     // Make the directory and if failed and it doesn't exist return error
     if(!DirRmDir(osS.str()) && StdIsNotError(EEXIST)) return false;
     // Remove the last item
-    tParts.pop_back();
+    tsParts.pop_back();
   } // Success
   return true;
 }
 /* -- Delete a file -------------------------------------------------------- */
-static bool DirFileUnlink(const StdString &strFile)
-  { return !StdUnlink(strFile); }
+static bool DirFileUnlink(const StdStringView &strvFile)
+  { return !StdUnlink(strvFile); }
 /* -- Get file size - ------------------------------------------------------ */
-static int DirFileSize(const StdString &strFile, StdFStatStruct &sfssData)
-  { return StdFStat(strFile, &sfssData) ? StdGetError() : 0; }
+static int DirFileSize(const StdStringView &strvFile, StdFStatStruct &sfssData)
+  { return StdFStat(strvFile, &sfssData) ? StdGetError() : 0; }
 /* -- True if specified file has the specified mode ------------------------ */
-static bool DirFileHasMode(const StdString &strFile, const int iMode,
+static bool DirFileHasMode(const StdStringView &strvFile, const int iMode,
   const int iNegate)
 { // Get file information and and if succeeded?
   StdFStatStruct sfssData;
-  if(!DirFileSize(strFile, sfssData))
+  if(!DirFileSize(strvFile, sfssData))
   { // If file attributes have specified mode then success
     if((sfssData.st_mode ^ iNegate) & iMode) return true;
     // Set error number
@@ -664,45 +671,46 @@ static bool DirFileHasMode(const StdString &strFile, const int iMode,
   return false;
 }
 /* -- True if specified file is actually a directory ----------------------- */
-static bool DirLocalDirExists(const StdString &strFile)
-  { return DirFileHasMode(strFile, _S_IFDIR, 0); }
+static bool DirLocalDirExists(const StdStringView &strvFile)
+  { return DirFileHasMode(strvFile, _S_IFDIR, 0); }
 /* -- True if specified file is actually a file ---------------------------- */
-static bool DirLocalFileExists(const StdString &strFile)
-  { return DirFileHasMode(strFile, _S_IFDIR, -1); }
+static bool DirLocalFileExists(const StdStringView &strvFile)
+  { return DirFileHasMode(strvFile, _S_IFDIR, -1); }
 /* -- Readable or writable? ------- Check if file is readable or writable -- */
-static bool DirCheckFileAccess(const StdString &strFile, const int iFlag)
-  { return !StdAccess(strFile, iFlag); }
+static bool DirCheckFileAccess(const StdStringView &strvFile, const int iFlag)
+  { return !StdAccess(strvFile, iFlag); }
 /* -- True if specified file exists and is readable ------------------------ */
-static bool DirIsFileReadable(const StdString &strFile)
-  { return DirCheckFileAccess(strFile, R_OK); }
+static bool DirIsFileReadable(const StdStringView &strvFile)
+  { return DirCheckFileAccess(strvFile, R_OK); }
 /* -- True if specified file exists and is readable and writable ----------- */
-static bool DirIsFileReadWriteable(const StdString &strFile)
-  { return DirCheckFileAccess(strFile, R_OK|W_OK); }
+static bool DirIsFileReadWriteable(const StdStringView &strvFile)
+  { return DirCheckFileAccess(strvFile, R_OK|W_OK); }
 /* -- True if specified file exists and is writable ------------------------ */
-static bool DirIsFileWritable(const StdString &strFile)
-  { return DirCheckFileAccess(strFile, W_OK); }
+static bool DirIsFileWritable(const StdStringView &strvFile)
+  { return DirCheckFileAccess(strvFile, W_OK); }
 /* -- True if specified file exists and is executable ---------------------- */
-static bool DirIsFileExecutable(const StdString &strFile)
-  { return DirCheckFileAccess(strFile, X_OK); }
+static bool DirIsFileExecutable(const StdStringView &strvFile)
+  { return DirCheckFileAccess(strvFile, X_OK); }
 /* -- True if specified file or directory exists --------------------------- */
-static bool DirLocalResourceExists(const StdString &strFile)
-   { return DirCheckFileAccess(strFile, F_OK); }
+static bool DirLocalResourceExists(const StdStringView &strvFile)
+  { return DirCheckFileAccess(strvFile, F_OK); }
 /* -- Rename file ---------------------------------------------------------- */
-static bool DirFileRename(const StdString &strFrom, const StdString &strTo)
-  { return !StdRename(strFrom, strTo); }
+static bool DirFileRename(const StdStringView &strFrom,
+  const StdStringView &strTo)
+{ return !StdRename(strFrom, strTo); }
 /* -- Check that filename is valid and throw on error ---------------------- */
-static void DirVerifyFileNameIsValid(const StdString &strFile)
+static void DirVerifyFileNameIsValid(const StdStringView &strvFile)
 { // Throw error if invalid name
-  if(const ValidResult vrId = DirValidName(strFile))
+  if(const ValidResult vrId = DirValidName(strvFile))
     XC("Filename is invalid!",
-      "File",     strFile,
+      "File",     strvFile,
       "Reason",   cDirBase->DirBaseVNRtoStr(vrId),
       "ReasonId", vrId);
 }
 /* -- Directory saver/restorer class --------------------------------------- */
 class DirSaver
 { /* -- Private variables -------------------------------------------------- */
-  const StdString strCWD;                 // Saved current directory
+  const StdString strCWD;              // Saved current directory
   /* -- Constructor to set directory ------------------------------- */ public:
   explicit DirSaver(const StdString &strNWD) :
     /* -- Initialisers ----------------------------------------------------- */

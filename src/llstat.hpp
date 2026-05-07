@@ -138,6 +138,16 @@ LLFUNC(Finish, 1,
   const AgSizeT aGap{lS, 3};
   LuaUtilPushVar(lS, aStat().Finish(aOmitLF, aGap)))
 /* ========================================================================= */
+// $ Stat:Flush
+// ? Completely clears the table so you can start again from scratch.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Flush, 1, AgStat{lS, 1}().Flush())
+/* ========================================================================= */
+// $ Stat:FlushData
+// ? Clears only the data in the table so you can start again.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FlushData, 1, AgStat{lS, 1}().FlushData())
+/* ========================================================================= */
 // $ Stat:Header
 // > Text:string=Header string to add to the cell.
 // > Right:boolean=Header is right justified?
@@ -148,7 +158,7 @@ LLFUNC(Header, 0,
   const AgStat aStat{lS, 1};
   const AgString aText{lS, 2};
   const AgBoolean aRight{lS, 3};
-  aStat().Header(aText, aRight))
+  aStat().Header(aText(), aRight()))
 /* ========================================================================= */
 // $ Stat:HeaderDupe
 // > Count:integer=Number of times to duplicate the current headers.
@@ -166,13 +176,13 @@ LLFUNC(Headers, 1, AgStat{lS, 1}().Headers())
 // < Id:integer=The id number of the Stat object.
 // ? Returns the unique id of the Stat object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Stat:Name
 // < Id:string=The stat identifier
 // ? Returns the identifier of the Stat object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Stat:Reserve
 // > Rows:integer=Reserve memory for this many rows.
@@ -215,13 +225,14 @@ LLFUNC(SortTwo, 0,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // stat:* member functions begin
-  LLRSFUNC(Cells),      LLRSFUNC(Data),    LLRSFUNC(DataB),
-  LLRSFUNC(DataFB),     LLRSFUNC(DataFI),  LLRSFUNC(DataFN),
-  LLRSFUNC(DataI),      LLRSFUNC(DataN),   LLRSFUNC(Destroy),
-  LLRSFUNC(Destroyed),  LLRSFUNC(Finish),  LLRSFUNC(Header),
-  LLRSFUNC(HeaderDupe), LLRSFUNC(Headers), LLRSFUNC(Id),
-  LLRSFUNC(Name),       LLRSFUNC(Reserve), LLRSFUNC(Rows),
-  LLRSFUNC(Sort),       LLRSFUNC(SortTwo),
+  LLRSFUNC(Cells),     LLRSFUNC(Data),   LLRSFUNC(DataB),
+  LLRSFUNC(DataFB),    LLRSFUNC(DataFI), LLRSFUNC(DataFN),
+  LLRSFUNC(DataI),     LLRSFUNC(DataN),  LLRSFUNC(Destroy),
+  LLRSFUNC(Destroyed), LLRSFUNC(Finish), LLRSFUNC(Flush),
+  LLRSFUNC(FlushData), LLRSFUNC(Header), LLRSFUNC(HeaderDupe),
+  LLRSFUNC(Headers),   LLRSFUNC(Id),     LLRSFUNC(Name),
+  LLRSFUNC(Reserve),   LLRSFUNC(Rows),   LLRSFUNC(Sort),
+  LLRSFUNC(SortTwo),
 LLRSEND                                // Stat:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -238,7 +249,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cStats->CollectorCount()))
 // > Name:string=Name of the class
 // ? Creates an empty stat table.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Create, 1, AcStat{lS}().IdentSet(AgNeString{lS, 1}))
+LLFUNC(Create, 1, AcStat{lS}().NameSet(AgNeString{lS, 1}))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Stat:* namespace functions structure                                ## **

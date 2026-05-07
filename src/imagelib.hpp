@@ -37,10 +37,11 @@ namespace IImageLib {                  // Start of private module namespace
 using namespace ICollector::P;         using namespace IDataFormat::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFStream::P;
-using namespace IImageDef::P;          using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IImageDef::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Image libraries collector class as a vector for direct access -------- */
@@ -59,7 +60,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -73,7 +74,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     DataFormat{ ifNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -88,7 +89,7 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
@@ -97,12 +98,12 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
 CTOR_END(ImageLibs, ImageLib, IMAGELIB,
   reserve(IFMT_MAX); CollectorSetLimit(IFMT_MAX),)
 /* -- Save a image using a specific type ----------------------------------- */
-static void ImageSave(const ImageFormat ifId, const StdString &strFile,
+static void ImageSave(const ImageFormat ifId, const StdStringView &strvFile,
   const ImageData &idData, const ImageSlot &isData)
 { // Get plugin class
   const ImageLib &ilRef = *cImageLibs->at(ifId);
   // Set filename with forced extension so we can delete it if it fails
-  const StdString strFileNX{ StrAppend(strFile, '.', ilRef.GetExt()) };
+  const StdString strFileNX{ StrAppend(strvFile, '.', ilRef.GetExt()) };
   bool bCreated = false;
   // Capture exceptions
   try
@@ -129,7 +130,7 @@ static void ImageSave(const ImageFormat ifId, const StdString &strFile,
     if(bCreated) DirFileUnlink(strFileNX);
     // Throw an error with the specified reason
     XC(eReason,
-      "Identifier", strFileNX, "FormatId", ifId, "Plugin", ilRef.GetName());
+      "Name", strFileNX, "FormatId", ifId, "Plugin", ilRef.GetName());
   }
 }
 /* -- Load a image using a specific type ----------------------------------- */
@@ -142,7 +143,7 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
   { // Load the image, log and return and if succeeded
     if(ilRef.GetDecoder()(fmData, idData))
       return cLog->LogInfoExSafe("Image loaded '$' directly as $<$>! ($x$x$)",
-        fmData.IdentGet(), ilRef.GetExt(), ifId, idData.DimGetWidth(),
+        fmData.NameGet(), ilRef.GetExt(), ifId, idData.DimGetWidth(),
         idData.DimGetHeight(), idData.GetBitsPerPixel());
     // Could not detect format so throw error
     throw StdRunTimeError{ "Unable to load image!" };
@@ -150,9 +151,9 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
   catch(const StdException &eReason)
   { // Throw an error with the specified reason
     XC(eReason,
-      "Identifier", fmData.IdentGet(),    "Size",     fmData.MemSize(),
-      "Position",   fmData.FileMapTell(), "FormatId", ifId,
-      "Plugin",     ilRef.GetName());
+      "Name",     fmData.NameGet(),     "Size",     fmData.MemSize(),
+      "Position", fmData.FileMapTell(), "FormatId", ifId,
+      "Plugin",   ilRef.GetName());
   }
 }
 /* -- Load a image and automatically detect type --------------------------- */
@@ -166,20 +167,21 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
     { // Load the image, log and return if we loaded successfully
       if(ilRef.GetDecoder()(fmData, idData))
         return cLog->LogInfoExSafe("Image loaded '$' ($x$x$) as $!",
-          fmData.IdentGet(), idData.DimGetWidth(), idData.DimGetHeight(),
+          fmData.NameGet(), idData.DimGetWidth(), idData.DimGetHeight(),
           idData.GetBitsPerPixel(), ilRef.GetExt());
     } // Error occured. Error used as title
     catch(const StdException &eReason)
     { // Throw an error with the specified reason
       XC(eReason,
-        "Identifier", fmData.IdentGet(),    "Size",   fmData.MemSize(),
-        "Position",   fmData.FileMapTell(), "Plugin", ilRef.GetName());
+        "Name",     fmData.NameGet(),     "Size",   fmData.MemSize(),
+        "Position", fmData.FileMapTell(), "Plugin", ilRef.GetName());
     } // Rewind stream position
     fmData.FileMapRewind();
     // Reset other members to try next filter
     idData.ResetAllData();
   } // Could not detect so throw error
-  XC("Unable to determine image format!", "Identifier", fmData.IdentGet());
+  XC("Unable to determine image format!",
+    "Name", fmData.NameGet(), "Size", fmData.MemSize());
 }
 /* ------------------------------------------------------------------------- */
 static int ImageSwapPixels(char*const cpSrc, const size_t stSrc,

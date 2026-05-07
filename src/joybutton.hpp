@@ -17,34 +17,35 @@ namespace P {                          // Start of public module namespace
 class JoyButtonInfo
 { /* -- Private variables -------------------------------------------------- */
   const int        iId;                // Button unique identifier
-  unsigned int     uiState;            // Current buffered butn press state
+  unsigned         uState;             // Current buffered butn press state
   /* -- Get button id ---------------------------------------------- */ public:
-  int ButtonGetId() const { return iId; }
+  template<typename IntType = int>
+    IntType ButtonGetId() const { return static_cast<IntType>(iId); }
   /* -- Get buffered state (GLFW_RELEASE, GLFW_PRESS or GLFW_REPEAT) ------- */
-  unsigned int ButtonGetState() const { return uiState; }
+  unsigned ButtonGetState() const { return uState; }
   /* -- Clear button state ------------------------------------------------- */
-  void ButtonClearState() { uiState = GLFW_RELEASE; }
+  void ButtonClearState() { uState = GLFW_RELEASE; }
   /* -- Set button state --------------------------------------------------- */
-  void ButtonSetState(const unsigned char*const ucpState)
+  void ButtonSetState(const unsigned char ucValue)
   { // Save unbuffered state and compare it
-    switch(ucpState[ButtonGetId()])
+    switch(ucValue)
     { // Button is released?
       case GLFW_RELEASE:
         // Reset button state if not released (0 = released)
-        if(uiState > GLFW_RELEASE) uiState = GLFW_RELEASE;
+        if(uState > GLFW_RELEASE) uState = GLFW_RELEASE;
         // Done
         return;
       // Button is pressed? Increase button state (1=pressed and 2=held)
       case GLFW_PRESS:
         // Set GLFW_PRESSED if GLFW_RELEASED or
         //     GLFW_REPEAT if GLFW_PRESSED.
-        if(uiState < GLFW_REPEAT) ++uiState;
+        if(uState < GLFW_REPEAT) ++uState;
         // Done
         return;
       // Shouldn't get here
       default:
         // Reset to released
-        uiState = GLFW_RELEASE;
+        uState = GLFW_RELEASE;
         // Done
         return;
     }
@@ -53,7 +54,7 @@ class JoyButtonInfo
   explicit JoyButtonInfo(const int iNId) :
     /* -- Initialisers ----------------------------------------------------- */
     iId(iNId),                         // Set unique id
-    uiState(GLFW_RELEASE)              // Set default buffered state
+    uState(GLFW_RELEASE)               // Set default buffered state
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Button data list --------------------------------------------------- */
@@ -77,16 +78,22 @@ class JoyButtonList :
   /* -- Clear button data -------------------------------------------------- */
   void JoyButtonListClear()
     { StdForEach(par_unseq, this->begin(),
-        this->begin() + JoyButtonListSizeCountClamped(),
+        StdNext(this->begin(), JoyButtonListSizeCountClamped()),
           [](JoyButtonInfo& jbiRef) { jbiRef.ButtonClearState(); }); }
   /* -- Refresh button data ------------------------------------------------ */
   void JoyButtonListRefresh(const int iJId)
-  { // Get joystick buttons and if found? Refresh button data for each one
+  { // Get joystick buttons and if found?
     if(const unsigned char*const ucpData =
        GlFWGetJoystickButtons(iJId, iButtons))
+    { // Put raw data into a protective barrier
+      StdSpan<const unsigned char> ucaData
+        { ucpData, static_cast<size_t>(iButtons) };
+      // Refresh button data for each one
       StdForEach(seq, this->begin(),
-        this->begin() + JoyButtonListSizeCountClamped(),
-      [ucpData](JoyButtonInfo &jbiData){ jbiData.ButtonSetState(ucpData); });
+        StdNext(this->begin(), JoyButtonListSizeCountClamped()),
+      [&ucaData](JoyButtonInfo &jbiData)
+        { jbiData.ButtonSetState(ucaData[jbiData.ButtonGetId<size_t>()]); });
+    } // Polling buttons failed
     else iButtons = 0;
   }
   /* -- Iterators ---------------------------------------------------------- */

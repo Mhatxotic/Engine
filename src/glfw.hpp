@@ -8,7 +8,7 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IGlFW {                      // Start of module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IEvtMain::P;
 using namespace IGlFWCursor::P;        using namespace IGlFWUtil::P;
@@ -18,11 +18,11 @@ using namespace IString::P;            using namespace IToken::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
 using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
-typedef StdArray<GlFWCursor, CUR_MAX> CursorStandard;
+using CursorStandard = StdArray<GlFWCursor, CUR_MAX>;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-typedef StdVector<GLFWimage> GlFWIconVector; // Vector of GLFW image handles
+using GlFWIconVector = StdVector<GLFWimage>; // Vector of GLFW image handles
 /* ========================================================================= */
 class GlFW;                            // Class prototype
 static GlFW *cGlFW = nullptr;          // Pointer to global class
@@ -32,10 +32,10 @@ class GlFW :                           // Root engine class
   public GlFWWindow,                   // GLFW window class
   private CursorStandard               // Standard cursors list
 { /* -- Private variables and functions ------------------------------------ */
-  unsigned int     uiErrorLevel;       // Ignore further glfw errors
+  unsigned         uErrorLevel;        // Ignore further glfw errors
   const StdStringView strvIntVersion;  // Internal (headers) version number
   StdString        strExtVersion;      // External (library) version number
-  StrSet           ssFeatures;         // Features included
+  StrVSet          svsFeatures;        // Features included
   bool             bRawMouseSupported; // Is raw mouse motion supported
   /* -- Custom allocator --------------------------------------------------- */
   static void *GlFWAlloc(size_t stSize, void*const)
@@ -86,10 +86,10 @@ class GlFW :                           // Root engine class
       // Anything else?
       default:
         // Send an exception for the first infringement
-        if(!uiErrorLevel++) XC(cpDesc, "Code", iCode);
+        if(!uErrorLevel++) XC(cpDesc, "Code", iCode);
         // Put further errors in the log to prevent message box spam
         cLog->LogWarningExSafe("GlFW got API error $/$: $!",
-          uiErrorLevel, iCode, cpDesc);
+          uErrorLevel, iCode, cpDesc);
         // Done
         return;
     }
@@ -138,28 +138,27 @@ class GlFW :                           // Root engine class
     cLog->LogInfoExSafe("GlFW initialised $ standard cursors.", size());
   }
   /* -- Reset error level -------------------------------------------------- */
-  void GlFWResetErrorLevel() { uiErrorLevel = 0; }
+  void GlFWResetErrorLevel() { uErrorLevel = 0; }
   /* -- Verify the GLFW library -------------------------------------------- */
   void GlFWVerifyVersion()
-  { // Get GLFW's identity
+  { // Get GLFW's identity. This string's lifetime is infinite (static).
     if(const char*const cpIdentity = glfwGetVersionString())
     { // Parse each token (0 is always the version), rest is the features
-      if(const Token tIdentity{ cpIdentity, cCommon->CommonSpace() })
+      if(TokenStrView tsvIdentity{ cpIdentity, cCommon->CommonSpaceV() })
       { // Store library version and If first token which says the version
         // mismatches with our version? Write a log message. It's not really a
         // problem since GlFW's headers maintain compatibility across versions.
-        strExtVersion = StdMove(tIdentity.front());
-        if(strExtVersion != GlFWGetInternalVersion())
+        if(GlFWGetInternalVersion() != tsvIdentity.front())
           cLog->LogInfoExSafe("GlFW compiled with version '$' headers.",
             GlFWGetInternalVersion());
         // Parse features into a list
-        StdForEach(seq, tIdentity.cbegin()+1, tIdentity.cend(),
-          [this](const StdString &strStr)
-            { ssFeatures.emplace(StdMove(strStr)); });
+        StdForEach(seq, StdNext(tsvIdentity.begin()), tsvIdentity.end(),
+          [this](StdStringView &strvStr)
+            { svsFeatures.emplace(StdMove(strvStr)); });
         // Write the features
         cLog->LogDebugExSafe("GlFW library $ features $ ($).",
-          strExtVersion, StrExplodeEx(ssFeatures, ", ", " and "),
-          ssFeatures.size());
+          tsvIdentity.front(), StrExplodeEx(svsFeatures, ", ", " and "),
+          svsFeatures.size());
       } // Failed to parse tokens
       else cLog->LogWarningExSafe("GlFW identity parse '$' fail!", cpIdentity);
     } // Failed to get identity
@@ -229,7 +228,7 @@ class GlFW :                           // Root engine class
     /* --------------------------------------------------------------------- */
 #undef CURSOR                          // Done with this macro
     /* --------------------------------------------------------------------- */
-    uiErrorLevel(0),                   // No errors occured
+    uErrorLevel(0),                    // No errors occured
     strvIntVersion{                    // Init internal version number
       STR(GLFW_VERSION_MAJOR) "."      // (?.x.x) Major
       STR(GLFW_VERSION_MINOR) "."      // (x.?.x) Minor
@@ -246,7 +245,7 @@ void GlFW::GlFWOnHandleErrorStatic(int iCode, const char*const cpDesc)
 /* -- Process a glfw error ------------------------------------------------- */
 void GlFW::GlFWOnMonitorChangedStatic(GLFWmonitor*const mAffected,
   const int iAction)
-    { cGlFW->GlFWOnMonitorChanged(mAffected, iAction); }
+{ cGlFW->GlFWOnMonitorChanged(mAffected, iAction); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

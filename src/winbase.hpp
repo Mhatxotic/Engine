@@ -7,7 +7,18 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == We'll put all these calls in a namespace ============================= */
+/* ------------------------------------------------------------------------- */
+namespace ISysBase {                   // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace ICommon::P;            using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace IMemory::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IStat::P;              using namespace IString::P;
+using namespace ISysMod::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysBase                          // Members initially private
 { /* -- Custom exceptions -------------------------------------------------- */
   constexpr static const DWORD         // Custom exceptions
@@ -15,12 +26,12 @@ class SysBase                          // Members initially private
     EXCEPTION_ISA        = 0xF0000002, // Illegal storage access
     EXCEPTION_FPOINT     = 0xF0000003; // Floating point exception
   /* -- Private typedefs --------------------------------------------------- */
-  typedef IdMap<const DWORD> ExCoList; // List of Win32 exception strings
-  const ExCoList   eclStrings;         // Exception strings strings
+  using ExCoList = LookupMap<const DWORD>; // List of Win32 exception strings
+  const ExCoList   eclStrings;             // Exception strings strings
   /* -- Private variables -------------------------------------------------- */
   HWND             hwndWindow;         // Main window handle being used
   /* ----------------------------------------------------------------------- */
-  const UINT       uiOldErrorMode;            // Old error mode
+  const UINT       uOldErrorMode;             // Old error mode
   const _crt_signal_t fcbAbortCallback,       // Saved abort callback
                    fcbIllegalStorageAccess,   // " illegal storage access cb
                    fcbFloatingPointException; // " float point exception cb
@@ -96,15 +107,15 @@ class SysBase                          // Members initially private
   } // Shouldn't happen but just incase
   catch(const StdException &eReason) { osS << eReason.what(); }
   /* == Get executable filename ============================================ */
-  const StdWideString SEHGetExecutableFileNameWithoutExtension()
+  StdWideString SEHGetExecutableFileNameWithoutExtension()
   { // Storage for executable and crash log file name
     StdResized<StdWideString> wstrExe{ MAX_PATH };
     // Get executable file name
     wstrExe.resize(GetModuleFileName(nullptr,
       const_cast<wchar_t*>(wstrExe.data()), MAX_PATH));
     // Remove extension if we can
-    if(wstrExe.length() >= 4 && wstrExe[wstrExe.length() - 4] == '.')
-      wstrExe.resize(wstrExe.length() - 4);
+    if(wstrExe.size() >= 4 && wstrExe[wstrExe.size() - 4] == '.')
+      wstrExe.resize(wstrExe.size() - 4);
     // Return result
     return wstrExe;
   }
@@ -187,89 +198,89 @@ class SysBase                          // Members initially private
       << StdIOSSetWidth(16) << *reinterpret_cast<const uint64_t*>(&cData.x) \
       << StdIOSSetWidth(16) \
       << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
-    const StdString &strCrLf = cCommon->CommonCrLf(),
-                 &strSpc = cCommon->CommonDblSpace();
+    const StdString &strCrLf = cCommon->CommonCrLf();
+    const StdStringView &strvSpc = cCommon->CommonDblSpaceV();
     // Return registers
 #if defined(X64)
     // Write basic registers
     osS << StdIOSHex << StdIOSSetFill('0')
-      << D64("Rax", Rax, strSpc)  << D64("Rbx", Rbx, strSpc)
-      << D64("Rcx", Rcx, strCrLf) << D64("Rdx", Rdx, strSpc)
-      << D64("Rsp", Rsp, strSpc)  << D64("Rbp", Rbp, strCrLf)
-      << D64("Rip", Rip, strSpc)  << D64("Rsi", Rsi, strSpc)
+      << D64("Rax", Rax, strvSpc) << D64("Rbx", Rbx, strvSpc)
+      << D64("Rcx", Rcx, strCrLf) << D64("Rdx", Rdx, strvSpc)
+      << D64("Rsp", Rsp, strvSpc) << D64("Rbp", Rbp, strCrLf)
+      << D64("Rip", Rip, strvSpc) << D64("Rsi", Rsi, strvSpc)
       << D64("Rdi", Rdi, strCrLf) << strCrLf
-      << D16("SegCs", SegCs, strSpc) << D16("SegDs", SegDs, strSpc)
-      << D16("SegEs", SegEs, strSpc) << D16("SegFs", SegFs, strSpc)
-      << D16("SegGs", SegGs, strSpc) << D16("SegSs", SegSs, strCrLf) << strCrLf
-      << D32("CFlags", ContextFlags, strSpc) << D32("MxCsr", MxCsr, strSpc)
+      << D16("SegCs", SegCs, strvSpc) << D16("SegDs", SegDs, strvSpc)
+      << D16("SegEs", SegEs, strvSpc) << D16("SegFs", SegFs, strvSpc)
+      << D16("SegGs", SegGs, strvSpc) << D16("SegSs", SegSs, strCrLf)<< strCrLf
+      << D32("CFlags", ContextFlags, strvSpc) << D32("MxCsr", MxCsr, strvSpc)
       << D32("EFlags", EFlags, strCrLf) << strCrLf
-      << D64("P1H", P1Home, strSpc)  << D64("P2H", P2Home, strSpc)
-      << D64("P3H", P3Home, strCrLf) << D64("P4H", P4Home, strSpc)
-      << D64("P5H", P5Home, strSpc)  << D64("P6H", P6Home, strCrLf) << strCrLf
-      << D64("Dr0", Dr0, strSpc)  << D64("Dr1", Dr1, strSpc)
-      << D64("Dr2", Dr2, strCrLf) << D64("Dr3", Dr3, strSpc)
-      << D64("Dr6", Dr6, strSpc)  << D64("Dr7", Dr7, strCrLf) << strCrLf
-      << D64("R08", R8,  strSpc)  << D64("R09", R9,  strSpc)
-      << D64("R10", R10, strCrLf) << D64("R11", R11, strSpc)
-      << D64("R12", R12, strSpc)  << D64("R13", R13, strCrLf)
-      << D64("R14", R14, strSpc)  << D64("R15", R15, strCrLf) << strCrLf
-      << D64("VCon", VectorControl, strSpc)
-      << D64("DCon", DebugControl, strSpc)
+      << D64("P1H", P1Home, strvSpc) << D64("P2H", P2Home, strvSpc)
+      << D64("P3H", P3Home, strCrLf) << D64("P4H", P4Home, strvSpc)
+      << D64("P5H", P5Home, strvSpc) << D64("P6H", P6Home, strCrLf) << strCrLf
+      << D64("Dr0", Dr0, strvSpc) << D64("Dr1", Dr1, strvSpc)
+      << D64("Dr2", Dr2, strCrLf) << D64("Dr3", Dr3, strvSpc)
+      << D64("Dr6", Dr6, strvSpc) << D64("Dr7", Dr7, strCrLf) << strCrLf
+      << D64("R08", R8,  strvSpc) << D64("R09", R9,  strvSpc)
+      << D64("R10", R10, strCrLf) << D64("R11", R11, strvSpc)
+      << D64("R12", R12, strvSpc) << D64("R13", R13, strCrLf)
+      << D64("R14", R14, strvSpc) << D64("R15", R15, strCrLf) << strCrLf
+      << D64("VCon", VectorControl, strvSpc)
+      << D64("DCon", DebugControl, strvSpc)
       << D64("LBtR", LastBranchToRip, strCrLf)
-      << D64("LBfR", LastBranchFromRip, strSpc)
-      << D64("LEtR", LastExceptionToRip, strSpc)
+      << D64("LBfR", LastBranchFromRip, strvSpc)
+      << D64("LEtR", LastExceptionToRip, strvSpc)
       << D64("LEfR", LastExceptionFromRip, strCrLf) << strCrLf;
     // Write floating point header state
     for(size_t stQuad = 0; stQuad < 2; stQuad += 2)
       osS << D128X("XmmH" << StdIOSDec << stQuad << StdIOSHex <<,
-        Header[stQuad], strSpc)
+        Header[stQuad], strvSpc)
           << D128X("XmmH" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
         Header[stQuad+1], strCrLf);
     // Write floating point legacy state
     for(size_t stQuad = 0; stQuad < 8; stQuad += 2)
       osS << D128X("XmmL" << StdIOSDec << stQuad << StdIOSHex <<,
-        Legacy[stQuad], strSpc)
+        Legacy[stQuad], strvSpc)
           << D128X("XmmL" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
         Legacy[stQuad+1], strCrLf);
     // Write floating point state
 # define XMM(x,e) << \
       D128X("Xmm" << StdIOSSetWidth(2) << StdIOSDec << x << StdIOSHex <<, \
         Xmm ## x, e)
-    osS XMM( 0,strSpc)  XMM( 1,strCrLf) XMM( 2,strSpc)  XMM( 3,strCrLf)
-        XMM( 4,strSpc)  XMM( 5,strCrLf) XMM( 6,strSpc)  XMM( 7,strCrLf)
-        XMM( 8,strSpc)  XMM( 9,strCrLf) XMM(10,strSpc)  XMM(11,strCrLf)
-        XMM(12,strSpc)  XMM(13,strCrLf) XMM(14,strSpc)  XMM(15,strCrLf)
+    osS XMM( 0,strvSpc)  XMM( 1,strCrLf) XMM( 2,strvSpc)  XMM( 3,strCrLf)
+        XMM( 4,strvSpc)  XMM( 5,strCrLf) XMM( 6,strvSpc)  XMM( 7,strCrLf)
+        XMM( 8,strvSpc)  XMM( 9,strCrLf) XMM(10,strvSpc)  XMM(11,strCrLf)
+        XMM(12,strvSpc)  XMM(13,strCrLf) XMM(14,strvSpc)  XMM(15,strCrLf)
      << strCrLf;
 # undef XMM
     // Write vector state
     for(size_t stQuad = 0; stQuad < 26; stQuad += 2)
       osS << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << stQuad
-          << StdIOSHex <<, VectorRegister[stQuad], strSpc)
+          << StdIOSHex <<, VectorRegister[stQuad], strvSpc)
           << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << (stQuad+1)
           << StdIOSHex <<, VectorRegister[stQuad+1], strCrLf);
     // Using 32-bit compiler?
 #elif defined(X86)
     // Write basic registers
     osS << StdIOSHex << StdIOSSetFill('0')
-      << D32("Eax", Eax, strSpc) << D32("Ebx", Ebx, strSpc)
-      << D32("Ecx", Ecx, strSpc) << D32("Edx", Edx, strCrLf)
-      << D32("Esp", Esp, strSpc) << D32("Ebp", Ebp, strSpc)
-      << D32("Esi", Esi, strSpc) << D32("Edi", Edi, strSpc)
+      << D32("Eax", Eax, strvSpc) << D32("Ebx", Ebx, strvSpc)
+      << D32("Ecx", Ecx, strvSpc) << D32("Edx", Edx, strCrLf)
+      << D32("Esp", Esp, strvSpc) << D32("Ebp", Ebp, strvSpc)
+      << D32("Esi", Esi, strvSpc) << D32("Edi", Edi, strvSpc)
       << D32("Eip", Eip, strCrLf) << strCrLf
-      << D32("SegCs", SegCs, strSpc) << D32("SegDs", SegDs, strSpc)
-      << D32("SegEs", SegEs, strCrLf) << D32("SegFs", SegFs, strSpc)
-      << D32("SegGs", SegGs, strSpc) << D32("SegSs", SegSs, strCrLf) << strCrLf
-      << D32("CFlags", ContextFlags, strSpc)
+      << D32("SegCs", SegCs, strvSpc) << D32("SegDs", SegDs, strvSpc)
+      << D32("SegEs", SegEs, strCrLf) << D32("SegFs", SegFs, strvSpc)
+      << D32("SegGs", SegGs, strvSpc) << D32("SegSs", SegSs, strCrLf)<< strCrLf
+      << D32("CFlags", ContextFlags, strvSpc)
       << D32("EFlags", EFlags, strCrLf) << strCrLf
-      << D32("Dr0", Dr0, strSpc) << D32("Dr1", Dr1, strSpc)
-      << D32("Dr2", Dr2, strCrLf) << D32("Dr3", Dr3, strSpc)
-      << D32("Dr6", Dr6, strSpc) << D32("Dr7", Dr7, strCrLf) << strCrLf
-      << D32("FCW", FloatSave.ControlWord, strSpc)
-      << D32("FSW", FloatSave.StatusWord, strSpc)
-      << D32("FTW", FloatSave.TagWord, strSpc)
+      << D32("Dr0", Dr0, strvSpc) << D32("Dr1", Dr1, strvSpc)
+      << D32("Dr2", Dr2, strCrLf) << D32("Dr3", Dr3, strvSpc)
+      << D32("Dr6", Dr6, strvSpc) << D32("Dr7", Dr7, strCrLf) << strCrLf
+      << D32("FCW", FloatSave.ControlWord, strvSpc)
+      << D32("FSW", FloatSave.StatusWord, strvSpc)
+      << D32("FTW", FloatSave.TagWord, strvSpc)
       << D32("FES", FloatSave.ErrorSelector, strCrLf)
-      << D32("FDO", FloatSave.DataOffset, strSpc)
-      << D32("FDS", FloatSave.DataSelector, strSpc)
+      << D32("FDO", FloatSave.DataOffset, strvSpc)
+      << D32("FDS", FloatSave.DataSelector, strvSpc)
       << D32("FNS", FloatSave.Spare0, strCrLf) << strCrLf;
     // Write floating point state
     for(size_t stI = 0, stY = 0, stZ = 5 % WOW64_SIZE_OF_80387_REGISTERS;
@@ -278,7 +289,7 @@ class SysBase                          // Members initially private
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
         osS << D32X("FRA" << StdIOSSetWidth(2) << StdIOSDec << stI
             << StdIOSHex <<, FloatSave.RegisterArea[stY+(stX*sizeof(DWORD))],
-              (stX == 4 ? strCrLf : strSpc));
+              (stX == 4 ? strCrLf : strvSpc));
     osS << strCrLf;
     // Write extended registers state
     for(size_t stI = 0, stY = 0, stZ = 5 % WOW64_MAXIMUM_SUPPORTED_EXTENSION;
@@ -287,7 +298,7 @@ class SysBase                          // Members initially private
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
         osS << D32X("ER" << StdIOSSetWidth(3) << StdIOSDec << stI << StdIOSHex
             <<, ExtendedRegisters[stY+(stX*sizeof(DWORD))],
-                  (stX == 4 ? strCrLf : strSpc));
+                  (stX == 4 ? strCrLf : strvSpc));
 #endif
     // Set fill back to space
     osS << StdIOSSetFill(' ');
@@ -307,8 +318,6 @@ class SysBase                          // Members initially private
          .Header("Pri").Header("Aff").Header("Version", false)
          .Header("Description", false).Header("Vendor", false)
          .Header("Path", false).Reserve(10);
-    // Storage for filename
-    StdResized<StdWideString>{ MAX_PATH };
     // Show modules
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     // Capture exceptions so we can clean up the snapshot handle
@@ -450,8 +459,10 @@ class SysBase                          // Members initially private
       // Set register pointers
       sfData.AddrPC = { ADDR_PC, 0, AddrModeFlat };
       sfData.AddrFrame = { ADDR_FRAME, 0, AddrModeFlat };
-      // Set sym options
-      SymSetOptions((SymGetOptions() & ~SYMOPT_UNDNAME) | SYMOPT_LOAD_LINES);
+      // Set sym options. We need
+      SymSetOptions(static_cast<DWORD>(
+        static_cast<int>(SymGetOptions()) & ~SYMOPT_UNDNAME) |
+          SYMOPT_LOAD_LINES);
       // Number of functions
       size_t stFunctions = 0;
       // Walk the stack
@@ -489,11 +500,11 @@ class SysBase                          // Members initially private
         { // Get function name
           strName.resize(UnDecorateSymbolName(ihsData->Name,
             StdToNonConstCast<PSTR>(strName.data()),
-            static_cast<DWORD>(strName.length()), UNDNAME_COMPLETE));
+            static_cast<DWORD>(strName.size()), UNDNAME_COMPLETE));
           // Put in output string
           osS << strName << '@';
         } // Failed so record reason why that couldn't be obtained
-        else switch(const DWORD dwCode = SysErrorCode<DWORD>())
+        else switch(const int iCode = SysErrorCode())
         { // Invalid address
           case ERROR_INVALID_ADDRESS:
           // File not found? (This happens on Wine for some reason)
@@ -501,7 +512,7 @@ class SysBase                          // Members initially private
             osS << "0x" << StdIOSHex << sfData.AddrPC.Offset << '@';
             break;
           // Any other code
-          default: osS << "<SGSFA:" << SysError(dwCode) << ">@"; break;
+          default: osS << "<SGSFA:" << SysError(iCode) << ">@"; break;
         } // Get source file and line info and if succeded?
         IMAGEHLP_LINE ihlLine;
         ihlLine.SizeOfStruct = sizeof(ihlLine);
@@ -510,7 +521,7 @@ class SysBase                          // Members initially private
             osS << ihlLine.FileName << ':' << ihlLine.LineNumber <<
               cCommon->CommonCrLf();
         // Failed so record reason why that couldn't be obtained
-        else switch(const DWORD dwCode = SysErrorCode<DWORD>())
+        else switch(const int iCode = SysErrorCode())
         { // Invalid address
           case ERROR_INVALID_ADDRESS:
             osS << "<No Source Information>" << cCommon->CommonCrLf(); break;
@@ -519,7 +530,7 @@ class SysBase                          // Members initially private
             osS << "<Unavailable>" << cCommon->CommonCrLf(); break;
           // Any other code
           default:
-            osS << "<SGLFA:" << SysError(dwCode) << ">!" <<
+            osS << "<SGLFA:" << SysError(iCode) << ">!" <<
               cCommon->CommonCrLf(); break;
         }
       }
@@ -539,14 +550,14 @@ class SysBase                          // Members initially private
     // Write data. MS says dwOut is optional, but the app crashes if you set
     // it to nullptr. So, something odd there.
     WriteFile(hH, strS.data(),
-      static_cast<DWORD>(strS.length()), &dwW, nullptr);
+      static_cast<DWORD>(strS.size()), &dwW, nullptr);
     // Return bytes written
     return dwW;
   }
   /* == Create a subtitle for the output =================================== */
   void SEHSubTitle(StdOStringStream &osS, const StdString &strS)
   { // Build title and underline
-    osS << strS << cCommon->CommonCrLf() << StdString(strS.length(), '=') <<
+    osS << strS << cCommon->CommonCrLf() << StdString(strS.size(), '=') <<
       cCommon->CommonCrLf();
   }
   /* == Dump file information ============================================== */
@@ -584,8 +595,8 @@ class SysBase                          // Members initially private
 #undef LIFY
 #undef LIFY2
     // Open dump file and return if failed
-    const HANDLE hFile = CreateFile(wstrFile.data(), GENERIC_WRITE, 0, 0,
-      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+    const HANDLE hFile = CreateFile(wstrFile.data(), GENERIC_WRITE, 0, nullptr,
+      CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
     if(hFile == INVALID_HANDLE_VALUE) return;
     // Capture exceptions so we can close the file
     try
@@ -630,7 +641,7 @@ class SysBase                          // Members initially private
   } // Shouldn't happen but just incase
   catch(const StdException &) {}
   /* == Build summary ====================================================== */
-  const StdString SEHGetSummary(const EXCEPTION_POINTERS &epData) try
+  StdString SEHGetSummary(const EXCEPTION_POINTERS &epData) try
   { // String builder
     StdOStringStream osS;
     // Get exception record
@@ -726,14 +737,6 @@ class SysBase                          // Members initially private
   /* -- Constructor (install exception filter) ----------------------------- */
   SysBase() :
     /* -- Initialisers ----------------------------------------------------- */
-    hwndWindow(nullptr),
-    // Set no dialogues for system errors and save code
-    uiOldErrorMode(SetErrorMode(SEM_NOOPENFILEERRORBOX)),
-    // Install signal handlers and save old ones
-    fcbAbortCallback(signal(SIGABRT, SignalEvent)),
-    fcbIllegalStorageAccess(signal(SIGSEGV, SignalEvent)),
-    fcbFloatingPointException(signal(SIGFPE, SignalEvent)),
-    // Exception strings
     eclStrings{{
       IDMAPSTR(EXCEPTION_ACCESS_VIOLATION),
       IDMAPSTR(EXCEPTION_ARRAY_BOUNDS_EXCEEDED),
@@ -760,7 +763,15 @@ class SysBase                          // Members initially private
       IDMAPSTR(EXCEPTION_ABORT),
       IDMAPSTR(EXCEPTION_ISA),
       IDMAPSTR(EXCEPTION_FPOINT)
-    }}
+    }},
+    /* --------------------------------------------------------------------- */
+    hwndWindow(nullptr),
+    // Set no dialogues for system errors and save code
+    uOldErrorMode(SetErrorMode(SEM_NOOPENFILEERRORBOX)),
+    // Install signal handlers and save old ones
+    fcbAbortCallback(signal(SIGABRT, SignalEvent)),
+    fcbIllegalStorageAccess(signal(SIGSEGV, SignalEvent)),
+    fcbFloatingPointException(signal(SIGFPE, SignalEvent))
   /* -- Install unhandled exception filter --------------------------------- */
   { SetUnhandledExceptionFilter(HandleExceptionStatic); }
   /* -- Destructor --------------------------------------------------------- */
@@ -772,10 +783,15 @@ class SysBase                          // Members initially private
     // exception filter no longer valid
     SetUnhandledExceptionFilter(nullptr);
     // Restore old error mode
-    SetErrorMode(uiOldErrorMode);
+    SetErrorMode(uOldErrorMode);
   )
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
-  LONG WINAPI SysBase::HandleExceptionStatic(LPEXCEPTION_POINTERS \
-    epData) { return cSystem->HandleException(*epData); }
+  Lib::OS::LONG WINAPI ISysBase::P::SysBase::HandleExceptionStatic( \
+    Lib::OS::LPEXCEPTION_POINTERS epData) \
+  { return ISystem::P::cSystem->HandleException(*epData); }
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

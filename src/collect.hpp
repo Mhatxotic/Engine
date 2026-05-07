@@ -12,9 +12,9 @@
 namespace ICollector {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace IError::P;
-using namespace IHelper::P;            using namespace IIdent::P;
-using namespace ILog::P;               using namespace IMutex::P;
-using namespace IStd::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Static class try/catch helpers ======================================= **
@@ -35,10 +35,10 @@ namespace P {                          // Start of public module namespace
                        x,              /* Extra class body arguments (no ,) */\
                        ...)            /* Extra derivced classes            */\
   class m;                             /* Member class prototype            */\
-  typedef l<m*> ln;                    /* Create container type alias       */\
-  typedef ln::iterator in;             /* Create iterator type alias        */\
-  typedef ln::const_iterator cn;       /* Create const iterator type alias  */\
-  typedef h<m,s<m,ln,in>,ln,in> hn;    /* Create alias for collector type   */\
+  using ln = l<m*>;                    /* Create container type alias       */\
+  using in = ln::iterator;             /* Create iterator type alias        */\
+  using cn = ln::const_iterator;       /* Create const iterator type alias  */\
+  using hn = h<m,s<m,ln,in>,ln,in>;    /* Create alias for collector type   */\
   class p;                             /* Collector class prototype         */\
   static p*c ## p = nullptr;           /* Address to global collector class */\
   class p :                            /* Begin collector object class      */\
@@ -106,7 +106,7 @@ namespace P {                          // Start of public module namespace
                           s,           /* ICHelperSafe or ICHelperUnsafe    */\
                           n,           /* The completed helper type alias   */\
                           ...)         /* Extra arguments                   */\
-  typedef ICHelper<p,m,s<p,m,i>,i> n;  /* Make an alias for the locktype    */\
+  using n = ICHelper<p,m,s<p,m,i>,i>;  /* Make an alias for the locktype    */\
   class m : public n                   /* Begin the member class            */\
     __VA_ARGS__                        /* Add extra arguments if needed      */
 /* -- Start building a member class for a collector ------------------------ */
@@ -114,15 +114,15 @@ namespace P {                          // Start of public module namespace
   CTOR_MEM_BEGIN_EX(p,m,p ## It,s,ICHelper ## m,## __VA_ARGS__)
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN_CSLAVE(p,m,s) \
-  CTOR_MEM_BEGIN(p,m,s,,public IdentCSlave<>)
+  CTOR_MEM_BEGIN(p,m,s,,public SerialSlave<>)
 /* -- All in one collector and member builder ------------------------------ */
 #define CTOR_BEGIN_DUO(p,m,h,s) \
   CTOR_BEGIN_NOBB(p,m,h)               /* Start building collector class    */\
   CTOR_MEM_BEGIN_CSLAVE(p,m,s)         /* Start building member class        */
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN_ASYNC_EX(p,m,i,s,n,a,...) \
-  typedef ICHelper<p,m,s<p,m,i>,i> n;  /* Create alias for locktype class   */\
-  typedef AsyncLoader<m,n> a;          /* Create alias for loader class     */\
+  using n = ICHelper<p,m,s<p,m,i>,i>;  /* Create alias for locktype class   */\
+  using a = AsyncLoader<m,n>;          /* Create alias for loader class     */\
   class m : public n                   /* Begin the member class            */\
     __VA_ARGS__                        /* Add extra arguments if needed      */
 /* -- Start building a member class for a collector ------------------------ */
@@ -132,7 +132,7 @@ namespace P {                          // Start of public module namespace
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN_ASYNC_CSLAVE(p,m,s) \
   CTOR_MEM_BEGIN_ASYNC(p,m,s,,         /* Use expanded macro                */\
-    public IdentCSlave<>)              /* Counter id slave class             */
+    public SerialSlave<>)              /* Counter id slave class             */
 /* -- All in one async collector and async member builder ------------------ */
 #define CTOR_BEGIN_ASYNC_DUO(p,m,h,s) \
   CTOR_BEGIN_ASYNC(p,m,h,,)            /* Start building collector class    */\
@@ -146,7 +146,7 @@ namespace P {                          // Start of public module namespace
 template<class MemberType, class ListType, class IteratorType>
 class CLHelperBase :
   /* -- Base classes ------------------------------------------------------- */
-  public IdentCMaster<>,               // Counter master class
+  public SerialMaster<>,               // Counter master class
   public ListType,                     // The list of members
   public InitHelper                    // Initialisation helper
 { /* -- Private variables -------------------------------------------------- */
@@ -167,8 +167,7 @@ class CLHelperBase :
     // we will need to serialise this access.
     if(CLBaseCountUnsafe() >= stMaximum)
       XC("Collector child object threshold exceeded!",
-        "Type", IdentGet(), "Current", CLBaseCountUnsafe(),
-        "Maximum", stMaximum);
+        "Type", NameGet(), "Maximum", stMaximum);
   }
   /* -- Add/remove object to the list -------------------------------------- */
   IteratorType CLBaseAddUnsafe(MemberType*const mtObj)
@@ -181,10 +180,10 @@ class CLHelperBase :
     if(CLBaseIsEmptyUnsafe()) return;
     // Show message box to say we have items remaining
     cLog->LogWarningExSafe("$ collector unloading $ remaining objects...",
-      IdentGet(), CLBaseCountUnsafe());
+      NameGet(), CLBaseCountUnsafe());
     CLBaseDestroyUnsafe();
     cLog->LogWarningExSafe("$ collector unloaded the remaining objects!",
-      IdentGet());
+      NameGet());
   }
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelperBase(const StdStringView &strvName) :
@@ -310,7 +309,7 @@ struct ICHelperBase                    // Members initially public
   CollectorType*const cParent;         // Parent class of this object
   /* -- Gets a reference to the object contained in the iterator ----------- */
   constexpr static auto &ICHelperItAddr(const IteratorType &cIt)
-    { return *::std::addressof(*cIt); }
+    { return *StdAddressOf(*cIt); }
   /* -- Protected variables ------------------------------------- */ protected:
   IteratorType     cIterator;          // Iterator to this object in parent
   /* -- Add from collector with set parent --------------------------------- */
@@ -346,8 +345,8 @@ struct ICHelperBase                    // Members initially public
       // are already in the collector list
       if(mtObjRef.cIterator != this->cParent->CollectorGetLastItemUnsafe())
       { // Just swap iterators and pointers to the members
-        swap(cIterator, mtObjRef.cIterator);
-        swap(ICHelperItAddr(cIterator), ICHelperItAddr(mtObjRef.cIterator));
+        StdSwap(cIterator, mtObjRef.cIterator);
+        StdSwap(ICHelperItAddr(cIterator), ICHelperItAddr(mtObjRef.cIterator));
         // Done
         return;
       } // Other not registered?
@@ -477,7 +476,7 @@ template<class CollectorType, class MemberType, class LockType,
 struct ICHelper :                      // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public LockType,                     // ICHelperSafe or ICHelperUnSafe
-  public virtual Ident                 // Name of object (possibly shared)
+  public virtual NameStr               // Name of object (possibly shared)
 { /* -- Value type --------------------------------------------------------- */
   using ParentType = CollectorType;    // For some LuaUtil* functions
   /* -- Swap registration with another class ------------------------------- */
@@ -491,14 +490,14 @@ struct ICHelper :                      // Members initially public
   /* -- Constructor (move) ------------------------------------------------- */
   explicit ICHelper(ICHelper &&icOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(icOther) },         // Move other identifier
+    Name{ StdMove(icOther) },          // Move other identifier
     LockType{ StdMove(icOther) }       // Move base class members
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (manual registration) ---------------------------------- */
   explicit ICHelper(const StdString &strN, CollectorType*const ctPtr) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strN },                     // Initialise identifier
+    Name{ strN },                      // Initialise identifier
     LockType{ ctPtr }                  // Initialise with other collector
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -515,7 +514,7 @@ struct ICHelper :                      // Members initially public
     CollectorType*const ctPtr,         // Pointer to collector class
     MemberType*const mtPtr             // Pointer to member class
     ): /* -- Initialisers -------------------------------------------------- */
-    Ident{ strN },                     // Initialise identifier
+    Name{ strN },                      // Initialise identifier
     LockType{ ctPtr, mtPtr }           // Initialise lock type
     /* -- No code ---------------------------------------------------------- */
     {}

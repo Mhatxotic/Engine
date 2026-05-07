@@ -160,7 +160,7 @@ LLFUNC(Height, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().DimGetHeight()))
 // < Id:integer=The id number of the Mask object.
 // ? Returns the unique id of the Mask object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Mask:Merge
 // > SrcHandle:Mask=Source mask to merge from.
@@ -183,7 +183,7 @@ LLFUNC(Merge, 0,
 // ? If this mask was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgMask{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Mask:RayCast
 // > SrcTileId:integer=The source mask id to test
@@ -275,7 +275,7 @@ LLFUNC(Create, 1,
   AcMask{lS}().InitFromImage(aImage, aWidth, aHeight))
 /* ========================================================================= */
 // $ Mask.CreateOne
-// > Identifier:string=The identifier of the mask.
+// > Name:string=The identifier of the mask.
 // > Width:integer=The width of the new mask.
 // > Height:integer=The height of the new mask.
 // < Handle:Mask=The handle of the new mask created.
@@ -283,13 +283,13 @@ LLFUNC(Create, 1,
 // ? set to ONE.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CreateOne, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgUInt aWidth{lS, 2},
                aHeight{lS, 3};
-  AcMask{lS}().InitOne(aIdentifier, aWidth, aHeight))
+  AcMask{lS}().InitOne(aName, aWidth, aHeight))
 /* ========================================================================= */
 // $ Mask.CreateZero
-// > Identifier:string=The identifier of the mask.
+// > Name:string=The identifier of the mask.
 // > Width:integer=The width of the new mask.
 // > Height:integer=The height of the new mask.
 // < Handle:Mask=The handle of the new mask created.
@@ -297,10 +297,10 @@ LLFUNC(CreateOne, 1,
 // ? set to ZERO.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CreateZero, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgUInt aWidth{lS, 2},
                aHeight{lS, 3};
-  AcMask{lS}().InitZero(aIdentifier, aWidth, aHeight))
+  AcMask{lS}().InitZero(aName, aWidth, aHeight))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Mask.* namespace functions structure                                ## **

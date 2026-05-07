@@ -12,13 +12,13 @@
 namespace IHelper {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace IError::P;
-using namespace IIdent::P;             using namespace IString::P;
+using namespace IName::P;              using namespace ITime::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 class InitHelper :                     // The Init Helper class
   /* -- Base classes ------------------------------------------------------- */
-  public IdentConst                    // Holds the identifier
+  public NameConst                     // Holds the identifier
 { /* -- Private variables -------------------------------------------------- */
   ClkTimePoint     ctInitialised,      // Time class was initialised
                    ctDeinitialised;    // Time class was deinitialised
@@ -33,9 +33,9 @@ class InitHelper :                     // The Init Helper class
   { // Raise exception if object already initialised
     if(IHIsInitialised())
       XC("Object already initialised!",
-        "Identifier", IdentGet(),
-        "Age", StrShortFromDuration(cmHiRes.
-                 TimePointToClampedDouble(ctInitialised)));
+        "Name", NameGet(),
+        "Age",  TimeToShortDuration(cmHiRes.
+                  TimePointToClampedDouble(ctInitialised)));
     // Class now initialised
     IHSetInitialised();
   }
@@ -53,7 +53,7 @@ class InitHelper :                     // The Init Helper class
   /* -- Constructors -------------------------------------------- */ protected:
   explicit InitHelper(const StdStringView &strvName) :
     /* -- Initialisers ----------------------------------------------------- */
-    IdentConst{ strvName },            // Initialise name
+    NameConst{ strvName },             // Initialise name
     ctInitialised{ cd0 },              // Clear initialised time
     ctDeinitialised{ cmHiRes.GetTime() } // Set deinitialised time
     /* -- No code ---------------------------------------------------------- */

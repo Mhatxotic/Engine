@@ -130,7 +130,7 @@ LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetHeight()))
 // < Id:integer=The id number of the Video object.
 // ? Returns the unique id of the Video object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().CtrGet()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Video:GetLoop
 // < Count:integer=Number of loops left.
@@ -142,7 +142,7 @@ LLFUNC(GetLoop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetLoop()))
 // < Id:string=The video identifier
 // ? Returns the identifier of the video, usually the filename.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().IdentGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Video:GetPlaying
 // < Status:boolean=Playback status
@@ -232,12 +232,12 @@ LLFUNC(SetCRGBA, 0,
 LLFUNC(SetCX, 0,
   const AgVideo aVideo{lS, 1};
   const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriColData tpdData{
+  const FboBase::TriIntData tidColour{
     AgGLfloat{lS,  3}, AgGLfloat{lS,  4}, AgGLfloat{lS,  5}, AgGLfloat{lS,  6},
     AgGLfloat{lS,  7}, AgGLfloat{lS,  8}, AgGLfloat{lS,  9}, AgGLfloat{lS, 10},
     AgGLfloat{lS, 11}, AgGLfloat{lS, 12}, AgGLfloat{lS, 13}, AgGLfloat{lS, 14}
   };
-  aVideo().FboItemSetColourEx(aTriangleId, tpdData))
+  aVideo().FboItemSetColourEx(aTriangleId, tidColour))
 /* ========================================================================= */
 // $ Video:SetFDR
 // < Enabled:boolean=Video should be full dynamic range?
@@ -266,7 +266,7 @@ LLFUNC(SetKeyColour, 0,
                   aGreen{lS, 3},
                   aBlue{lS, 4},
                   aIntensity{lS, 5};
-  aVideo().fboYCbCr.FboItemSetQuadRGBA(aRed, aGreen, aBlue, aIntensity))
+  aVideo().fiYCbCr.FboItemSetQuadRGBA(aRed, aGreen, aBlue, aIntensity))
 /* ========================================================================= */
 // $ Video:SetLoop
 // > Count:integer=New playback loop count (-1 = infinity).
@@ -327,11 +327,11 @@ LLFUNC(SetTCLTWH, 0,
 LLFUNC(SetTCX, 0,
   const AgVideo aVideo{lS, 1};
   const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriCoordData tcdNew{
+  const FboBase::TriTexData ttdCoords{
     AgGLfloat{lS, 3}, AgGLfloat{lS, 4}, AgGLfloat{lS, 5},
     AgGLfloat{lS, 6}, AgGLfloat{lS, 7}, AgGLfloat{lS, 8}
   };
-  aVideo().FboItemSetTexCoordEx(aTriangleId, tcdNew))
+  aVideo().FboItemSetTexCoordEx(aTriangleId, ttdCoords))
 /* ========================================================================= */
 // $ Video:SetVolume
 // > Volume:number=New video volume (0 to 1).
@@ -449,9 +449,9 @@ LLRSEND                                // Video:* member functions end
 // ? array object.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Asset, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
-  AcVideo{lS}().SyncInitArray(aIdentifier, aAsset))
+  AcVideo{lS}().SyncInitArray(aName, aAsset))
 /* ========================================================================= */
 // $ Video.AssetAsync
 // > Id:String=The identifier of the string
@@ -465,10 +465,10 @@ LLFUNC(Asset, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(AssetAsync, 0,
   LuaUtilCheckParams(lS, 5);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcVideo{lS}().AsyncInitArray(lS, aIdentifier, "videoarray", aAsset))
+  AcVideo{lS}().AsyncInitArray(lS, aName, "videoarray", aAsset))
 /* ========================================================================= */
 // $ Video.Count
 // < Count:integer=Total number of videos created.

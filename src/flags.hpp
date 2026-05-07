@@ -10,11 +10,8 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IFlags {                     // Start of module namespace
-/* -- Private typedefs ----------------------------------------------------- */
-template<typename T>struct StdIsAtomic : ::std::false_type {};
-template<typename T>struct StdIsAtomic<StdAtomic<T>> : ::std::true_type {};
-template<typename T>
-  constexpr static bool StdIsAtomicV = StdIsAtomic<StdRemoveConst<T>>::value;
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Storage for flags ==================================================== **
@@ -22,17 +19,17 @@ namespace P {                          // Start of public module namespace
 ** ## Simple unprotected integer based flags.                             ## **
 ** ######################################################################### */
 template<typename IntType>
-  requires StdIsInteger<IntType> || StdIsAtomicV<IntType>
+  requires StdIsIntegral<IntType> || StdIsAtomicV<IntType>
 class FlagsStorageUnsafe
 { /* -- Values storage ------------------------------------------ */ protected:
   IntType          itV;                // The simple value
   /* -- Reset with specified value ----------------------------------------- */
-  template<typename AnyType> requires StdIsInteger<IntType>
+  template<typename AnyType> requires StdIsIntegral<IntType>
     constexpr void FlagSetInt(const AnyType atValue)
   { itV = static_cast<IntType>(atValue); }
   /* -- Swap values -------------------------------------------------------- */
-  constexpr void FlagSwapStorage(FlagsStorageUnsafe &fcValue)
-    { swap(itV, fcValue.itV); }
+  constexpr void FlagSwapStorage(FlagsStorageUnsafe &fcuValue)
+    { StdSwap(itV, fcuValue.itV); }
   /* -- Implicit init constructor (todo, make explicit but many errors!) --- */
   constexpr explicit FlagsStorageUnsafe(const IntType itValue) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -40,9 +37,10 @@ class FlagsStorageUnsafe
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>requires StdIsInteger<IntType>
-    constexpr AnyType FlagGet() const
-  { return static_cast<AnyType>(itV); }
+  template<typename AnyType=IntType>requires StdIsIntegral<IntType>
+    constexpr AnyType FlagGet() const { return static_cast<AnyType>(itV); }
+  /* -- Type --------------------------------------------------------------- */
+  using ValueType = IntType;
 };/* ----------------------------------------------------------------------- */
 /* == Atomic storage for flags ============================================= **
 ** ######################################################################### **
@@ -50,17 +48,18 @@ class FlagsStorageUnsafe
 ** ######################################################################### */
 template<typename IntType,
          typename SafeType = StdAtomic<IntType>>
-requires StdIsInteger<IntType> &&
+requires StdIsIntegral<IntType> &&
          StdIsAtomicV<SafeType> &&
-         StdIsInteger<typename SafeType::value_type>
+         StdIsIntegral<typename SafeType::value_type>
 class FlagsStorageSafe :
   /* -- Base classes (note that StdAtomic will never throw) ---------------- */
   private SafeType
 { /* -- Set values ---------------------------------------------- */ protected:
   template<typename AnyType>constexpr void FlagSetInt(const AnyType atValue)
     { this->store(static_cast<IntType>(atValue)); }
-  /* -- Swap values -------------------------------------------------------- */
-  constexpr void FlagSwapStorage(FlagsStorageSafe &fcValue) { swap(fcValue); }
+  /* -- Swap values (This way round to stop CppCheck warning) -------------- */
+  constexpr void FlagSwapStorage(FlagsStorageSafe &fssOther)
+    { fssOther.StdSwap(*this); }
   /* -- Implicit init constructor (todo, make explicit but many errors!) --- */
   constexpr explicit FlagsStorageSafe(const IntType itValue) :
     SafeType{ itValue } {}
@@ -74,7 +73,7 @@ class FlagsStorageSafe :
 ** ######################################################################### */
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>>
-requires StdIsInteger<IntType>
+requires StdIsIntegral<IntType>
 class FlagsConst :
   /* -- Base classes ------------------------------------------------------- */
   public StorageType
@@ -95,18 +94,24 @@ class FlagsConst :
     { return this->FlagGet() == static_cast<IntType>(0); }
   /* -- Are any flags actually set? ---------------------------------------- */
   constexpr bool FlagIsNonZero() const { return !FlagIsZero(); }
+  /* -- Return result of an & operation ------------------------------------ */
+  constexpr IntType FlagAnd(const FlagsConst &fcValue) const
+    { return (this->FlagGet() & fcValue.FlagGet()); }
+  /* -- Return result of an & operation with inverted source flags --------- */
+  constexpr IntType FlagAndInverted(const FlagsConst &fcValue) const
+    { return (~this->FlagGet() & fcValue.FlagGet()); }
   /* -- Is flag set with specified value? ---------------------------------- */
   constexpr bool FlagIsSet(const FlagsConst &fcValue) const
-    { return (this->FlagGet() & fcValue.FlagGet()) == fcValue.FlagGet(); }
+    { return FlagAnd(fcValue) == fcValue.FlagGet(); }
   /* -- Is any flag set with specified value? ------------------------------ */
   constexpr bool FlagIsAnyOfSet(const FlagsConst &fcValue) const
-    { return (this->FlagGet() & fcValue.FlagGet()) != 0; }
+    { return FlagAnd(fcValue) != 0; }
   /* -- Is bit clear of specified value? ----------------------------------- */
   constexpr bool FlagIsClear(const FlagsConst &fcValue) const
-    { return (~this->FlagGet() & fcValue.FlagGet()) == fcValue.FlagGet(); }
+    { return FlagAndInverted(fcValue) == fcValue.FlagGet(); }
   /* -- Is bit clear of specified value? ----------------------------------- */
   constexpr bool FlagIsAnyOfClear(const FlagsConst &fcValue) const
-    { return (~this->FlagGet() & fcValue.FlagGet()) != 0; }
+    { return FlagAndInverted(fcValue) != 0; }
   /* -- Is flag set with specified value and clear with another? ----------- */
   constexpr bool FlagIsSetAndClear(const FlagsConst &fcSet,
     const FlagsConst &fcClear) const
@@ -117,26 +122,19 @@ class FlagsConst :
   /* -- Flags are masked in specified other flags? ------------------------- */
   constexpr bool FlagIsInMask(const FlagsConst &fcValue) const
     { return !FlagIsNotInMask(fcValue); }
-  /* -- Is any of these flags set and cleared? ----------------------------- */
-  constexpr static bool FlagIsAnyOfSetAndClear() { return false; }
-  template<typename ...VarArgs>
-    constexpr bool FlagIsAnyOfSetAndClear(const FlagsConst &fcSet,
-      const FlagsConst &fcClear, const VarArgs ...vaArgs) const
-  { return FlagIsSetAndClear(fcSet, fcClear) ?
-      true : FlagIsAnyOfSetAndClear(vaArgs...); }
   /* -- Is bits set? ------------------------------------------------------- */
   constexpr bool FlagIsEqualToBool(const FlagsConst &fcValue,
     const bool bState) const
-      { return FlagIsSet(fcValue) == bState; }
+  { return FlagIsSet(fcValue) == bState; }
   /* -- Is bits not set? --------------------------------------------------- */
   constexpr bool FlagIsNotEqualToBool(const FlagsConst &fcValue,
     const bool bState) const
-      { return FlagIsSet(fcValue) != bState; }
+  { return FlagIsSet(fcValue) != bState; }
   /* -- Return one variable or another if set ------------------------------ */
   template<typename AnyType>
     constexpr const AnyType FlagIsSetTwo(const FlagsConst &fcValue,
       const AnyType atSet, const AnyType atClear) const
-        { return FlagIsSet(fcValue) ? atSet : atClear; }
+  { return FlagIsSet(fcValue) ? atSet : atClear; }
   /* -- Init constructors -------------------------------------------------- */
   template<typename AnyType>
     constexpr explicit FlagsConst(const AnyType atValue) :
@@ -164,7 +162,7 @@ class FlagsConst :
 template<typename IntType,
          class StorageType = FlagsStorageUnsafe<IntType>,
          class ConstType = FlagsConst<IntType, StorageType>>
-requires StdIsInteger<IntType>
+requires StdIsIntegral<IntType>
 struct Flags :
   /* -- Base classes ------------------------------------------------------- */
   public ConstType
@@ -224,7 +222,7 @@ template<typename IntType,
          class UConstType = FlagsConst<IntType, UStorageType>,
          class FlagsType = Flags<IntType, StorageType, UConstType>,
          class ConstType = FlagsConst<IntType, StorageType>>
-requires StdIsInteger<IntType>
+requires StdIsIntegral<IntType>
 class SafeFlags :
   /* -- Base classes ------------------------------------------------------- */
   public FlagsType
@@ -236,9 +234,9 @@ class SafeFlags :
 };/* ----------------------------------------------------------------------- */
 /* == Flags helper macro =================================================== */
 #define BUILD_FLAGS_EX(n, s, ...) \
-  typedef uint64_t n ## FlagsType; \
-  typedef s<n ## FlagsType> n ## Flags; \
-  typedef FlagsConst<n ## FlagsType> n ## FlagsConst; \
+  using n ## FlagsType  = uint64_t; \
+  using n ## Flags      = s<n ## FlagsType>; \
+  using n ## FlagsConst = FlagsConst<n ## FlagsType>; \
   constexpr static const n ## FlagsConst __VA_ARGS__
 #define BUILD_FLAGS(n, ...) BUILD_FLAGS_EX(n, Flags, __VA_ARGS__)
 #define BUILD_SECURE_FLAGS(n, ...) BUILD_FLAGS_EX(n, SafeFlags, __VA_ARGS__)

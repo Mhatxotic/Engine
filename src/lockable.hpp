@@ -8,6 +8,8 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace ILockable {                  // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -23,7 +25,7 @@ class Lockable                         // Lua lock class
   void LockSet() { LockSet(true); }
   void LockClear() { LockSet(false); }
   /* -- Swap lock status with another class -------------------------------- */
-  void LockSwap(Lockable &lOther) { swap(bLocked, lOther.bLocked); }
+  void LockSwap(Lockable &lOther) { StdSwap(bLocked, lOther.bLocked); }
   /* -- (Default) constructor ----------------------------------- */ protected:
   explicit Lockable(                   // Initialise with lock (def: false)
     /* -- Parameters ------------------------------------------------------- */

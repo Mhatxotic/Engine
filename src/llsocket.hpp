@@ -127,7 +127,7 @@ LLFUNC(GetError, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetError()))
 // < Id:integer=The id of the Socket object.
 // ? Returns the unique id of the Socket object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().CtrGet()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Socket:GetIPAddress
 // < Address:string=The IP address of the socket.
@@ -303,7 +303,7 @@ LLFUNC(Write, 0,
 LLFUNC(WriteString, 1,
   const AgSocket aSocket{lS, 1};
   const AgNeString aText{lS, 2};
-  aSocket().SendStringSafe(aText))
+  aSocket().SendStringSafe(aText()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Socket:* member functions structure                                 ## **
@@ -358,10 +358,10 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cSockets->CollectorCount()))
 LLFUNC(Create, 0,
   LuaUtilCheckParams(lS, 4);
   AgAddress strAddress{ lS, 1 };
-  const AgPort uiPort{ lS, 2 };
+  const AgPort uPort{ lS, 2 };
   const AgString strCipher{ lS, 3 };
   LuaUtilCheckFunc(lS, 4);
-  AcSocket{lS}().Connect(lS, strAddress, uiPort, strCipher))
+  AcSocket{lS}().Connect(lS, strAddress(), uPort, strCipher()))
 /* ========================================================================= */
 // $ Socket.CreateHTTP
 // > Cipher:string=Make SSL connection and try this cipher.
@@ -380,14 +380,14 @@ LLFUNC(CreateHTTP, 0,
   LuaUtilCheckParams(lS, 8);
   const AgString strCipher{ lS, 1 };
   AgAddress strAddress{ lS, 2 };
-  const AgPort uiPort{ lS, 3 };
+  const AgPort uPort{ lS, 3 };
   const AgNeString strRequest{ lS, 4 };
   AgMethod strMethod{ lS, 5 };
   const AgString strHeaders{ lS, 6 };
   const AgString strBody{ lS, 7 };
   LuaUtilCheckFunc(lS, 8);
-  AcSocket{lS}().HTTPRequest(lS, strCipher, strAddress, uiPort, strRequest,
-    strMethod, strHeaders, strBody))
+  AcSocket{lS}().HTTPRequest(lS, strCipher(), strAddress(), uPort,
+    strRequest(), strMethod(), strHeaders(), strBody()))
 /* ========================================================================= */
 // $ Socket.Flush
 // < Count:integer=Total number of sockets disconnected.

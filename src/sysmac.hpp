@@ -7,59 +7,47 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* -- Dependiencies -------------------------------------------------------- */
-#include "pixbase.hpp"                 // Base system class
-#include "pixcon.hpp"                  // Console emulation class
-#include "pixmod.hpp"                  // Version information class
-#include "pixmap.hpp"                  // FileMap memory mapping class
-#include "pixpip.hpp"                  // Process pipe handling
-#include "pixmutex.hpp"                // Mutex class
+/* ------------------------------------------------------------------------- */
+namespace ISysCore {                   // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IClock::P;             using namespace ICmdLine::P;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IFlags::P;             using namespace IFStream::P;
+using namespace ILog::P;               using namespace IPSplit::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISysCon::P;
+using namespace ISysInfo::P;           using namespace ISysMod::P;
+using namespace ISysMutex::P;          using namespace ISysPosix::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 #undef _XOPEN_SOURCE_EXTENDED          // Done with this macro
-/* == System intialisation helper ========================================== **
-** ######################################################################### **
-** ## Because we want to try and statically init const data as much as    ## **
-** ## possible, we need this class to derive by the System class so we    ## **
-** ## can make sure these functions are initialised first. Also making    ## **
-** ## this private prevents us from accessing these functions because     ## **
-** ## again - they are only for initialisation.                           ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 class SysProcess                       // Need this before of System init order
 { /* -- Protected variables ------------------------------------- */ protected:
-  const uint64_t   ullPageSize;        // Memory page size
   const mach_port_t mptHost, mptTask;  // Current mach host and task id
-  const pid_t      piProcessId;        // Process id
-  const pthread_t  vpThreadId;         // Thread id
-  /* -- Return process and thread id --------------------------------------- */
-  template<typename IntType=decltype(piProcessId)>IntType GetPid() const
-    { return static_cast<IntType>(piProcessId); }
-  template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
-    { return static_cast<IntType>(StdBruteCast<const size_t>(vpThreadId)); }
   /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
   SysProcess(SysProcess &) = delete;           // Even though we don't use
   SysProcess operator=(SysProcess &) = delete; // these at all
   /* -- Constructor -------------------------------------------------------- */
   SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
-    ullPageSize(static_cast<uint64_t>  // Initialise memory page size
-      (sysconf(_SC_PAGESIZE))),        // Usually 16k on M1 or 4k on Intel
     mptHost(mach_host_self()),         // Initialise host task
-    mptTask(mach_task_self()),         // Initialise self task
-    piProcessId(getpid()),             // Initialise process id number
-    vpThreadId(pthread_self())         // Initialise main thread id number
+    mptTask(mach_task_self())          // Initialise self task
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Dependency classes ------------------------------------------------- */
+  public SysCorePosix,                 // Posix function class
   public SysProcess,                   // Process information class
   public SysMutex,                     // Mutex class
   public SysCon,                       // Defined in 'pixcon.hpp'
-  public SysCommon                     // Common functions class
-{ /* -- Variables ---------------------------------------------------------- */
-  bool             bWindowInitialised; // Is window initialised?
-  /* ----------------------------------------------------------------------- */
+  public SysInfo                       // Common functions class
+{ /* ----------------------------------------------------------------------- */
   static StdString GetSysCTLInfoString(const char *cpS)
   { // Get the size and return blank string if empty
     size_t stSize = 0;
@@ -76,13 +64,13 @@ class SysCore :
     return StdMove(strOut);
   }
   /* ----------------------------------------------------------------------- */
-  template<typename T>static T GetSysCTLInfoNum(const char*const cpS)
-  { // Resize
-    T tOut;
-    // Size
-    size_t stOut = sizeof(tOut);
-    // Return the number
-    return sysctlbyname(cpS, &tOut, &stOut, nullptr, 0) < 0 ? 0 : tOut;
+  template<typename IntType>
+    requires StdIsIntegral<IntType>
+  static IntType GetSysCTLInfoNum(const char*const cpS)
+  { // Return the requested number
+    IntType itOut;
+    size_t stOut = sizeof(itOut);
+    return sysctlbyname(cpS, &itOut, &stOut, nullptr, 0) < 0 ? 0 : itOut;
   }
   /* ----------------------------------------------------------------------- */
   void InitMemorySize()
@@ -173,7 +161,8 @@ class SysCore :
     // Succeeded getting info, now set the counters
     memData.ullMUsed =
       (static_cast<uint64_t>(vmsData.active_count) +
-       static_cast<uint64_t>(vmsData.wire_count)) * ullPageSize;
+       static_cast<uint64_t>(vmsData.wire_count)) *
+       static_cast<uint64_t>(stPageSize);
     memData.ullMFree = memData.ullMTotal - memData.ullMUsed;
     // Calculate usage percentage
     memData.dMLoad = UtilMakePercentage(memData.ullMUsed, memData.ullMTotal);
@@ -186,30 +175,8 @@ class SysCore :
     { UpdateSystemCpuUsage(); UpdateProcessCpuUsage(); }
   /* -- Get uptime from clock class ---------------------------------------- */
   StdTimeT GetUptime() const { return cmHiRes.GetTimeS(); }
-  /* -- Send signal -------------------------------------------------------- */
-  static int SendSignal(const unsigned int uiPid, const int iSignal)
-    { return kill(static_cast<pid_t>(uiPid), iSignal); }
-  /* -- Terminate a process ------------------------------------------------ */
-  static bool TerminatePid(const unsigned int uiPid)
-    { return !SendSignal(uiPid, SIGTERM); }
-  /* -- Check if specified process id is running --------------------------- */
-  static bool IsPidRunning(const unsigned int uiPid)
-    { return !SendSignal(uiPid, 0); }
-  /* -- GLFW handles the icons on this ------------------------------------- */
-  static void UpdateIcons() {}
   /* ----------------------------------------------------------------------- */
-  static bool LibFree(void*const vpModule)
-    { return vpModule && !dlclose(vpModule); }
-  /* ----------------------------------------------------------------------- */
-  template<typename T>
-    static T LibGetAddr(void*const vpModule, const char *cpName)
-      { return vpModule ? reinterpret_cast<T>(dlsym(vpModule, cpName)) :
-          nullptr; }
-  /* ----------------------------------------------------------------------- */
-  static void *LibLoad(const char*const cpName)
-    { return dlopen(cpName, RTLD_LAZY | RTLD_LOCAL); }
-  /* ----------------------------------------------------------------------- */
-  const StdString LibGetName(void*const vpModule, const char *cpAltName) const
+  StdString LibGetName(void*const vpModule, const char *cpAltName) const
   { // Return nothing if no module
     if(!vpModule) return {};
     // Get information about the shared object
@@ -221,9 +188,10 @@ class SysCore :
   }
   /* -- Seek to position in specified handle ------------------------------- */
   template<typename IntType>
-    static IntType SeekFile(int iFp, const IntType itP)
-      { return static_cast<IntType>
-          (lseek(iFp, static_cast<off_t>(itP), SEEK_SET)); }
+    requires StdIsIntegral<IntType>
+  static IntType SeekFile(int iFp, const IntType itP)
+    { return static_cast<IntType>
+        (lseek(iFp, static_cast<off_t>(itP), SEEK_SET)); }
   /* -- Read command and segment data as big-endian ------------------------ */
   template<typename HdrType, class Swap32Type, class Swap64Type>
     static size_t GetExeSize(const char*const cpType, FStream &fExe)
@@ -235,14 +203,14 @@ class SysCore :
     { // We read enough bytes?
       if(stRead == sizeof(mhData))
       { // Make sure byte order is correct
-        mhData.ncmds = Swap32Type(mhData.ncmds).v;
-        mhData.sizeofcmds = Swap32Type(mhData.sizeofcmds).v;
+        mhData.ncmds = Swap32Type(mhData.ncmds).tVal;
+        mhData.sizeofcmds = Swap32Type(mhData.sizeofcmds).tVal;
         // Highest executable position
         size_t stExeSize = 0;
         // Walk through each command
-        for(unsigned int uiIndex = 0;
-                         uiIndex < mhData.ncmds && fExe.FStreamIsNotEOF();
-                       ++uiIndex)
+        for(unsigned uIndex = 0;
+                     uIndex < mhData.ncmds && fExe.FStreamIsNotEOF();
+                   ++uIndex)
         { // Save file position
           const int64_t llCmdPos = fExe.FStreamTell();
           // Create memory to store segment data
@@ -252,8 +220,8 @@ class SysCore :
           { // We read enough bytes?
             if(stReadCmd == sizeof(lcData))
             { // Format command data
-              lcData.cmd = Swap32Type(lcData.cmd).v;
-              lcData.cmdsize = Swap32Type(lcData.cmdsize).v;
+              lcData.cmd = Swap32Type(lcData.cmd).tVal;
+              lcData.cmdsize = Swap32Type(lcData.cmdsize).tVal;
               // We are only interested in segments
               switch(lcData.cmd)
               { // 64-bit segment?
@@ -267,22 +235,20 @@ class SysCore :
                   { // We read enough bytes?
                     if(stReadSeg == sizeof(scItem))
                     { // Format segment data
-                      scItem.fileoff = Swap64Type(scItem.fileoff).v;
-                      scItem.filesize = Swap64Type(scItem.filesize).v;
+                      scItem.fileoff = Swap64Type(scItem.fileoff).tVal;
+                      scItem.filesize = Swap64Type(scItem.filesize).tVal;
                       // Get highest point in exe
                       const size_t stEnd = scItem.fileoff + scItem.filesize;
                       if(stEnd > stExeSize) stExeSize = stEnd;
                     } // Failed to read enough bytes for segment
                     else XC(
                       "Failed to read enough bytes for MACH-O 64 segment!",
-                      "Requested", sizeof(scItem),
-                      "Actual",    stReadCmd,
-                      "Type",      cpType,
-                      "File",      fExe.IdentGet());
+                      "Requested", sizeof(scItem), "Actual", stReadCmd,
+                      "Type",      cpType,         "File",   fExe.NameGet());
                   } // Failed to read segment bytes
                   else XCL("Failed to read MACH-O 64 segment!",
                     "Requested", sizeof(scItem), "Type", cpType,
-                    "File",      fExe.IdentGet());
+                    "File",      fExe.NameGet());
                   // Done
                   break;
                 } // 32-bit segment?
@@ -296,22 +262,20 @@ class SysCore :
                   { // We read enough bytes?
                     if(stReadSeg == sizeof(scItem))
                     { // Format needed segment data
-                      scItem.fileoff = Swap32Type(scItem.fileoff).v;
-                      scItem.filesize = Swap32Type(scItem.filesize).v;
+                      scItem.fileoff = Swap32Type(scItem.fileoff).tVal;
+                      scItem.filesize = Swap32Type(scItem.filesize).tVal;
                       // Get highest point in exe
                       const size_t stEnd = scItem.fileoff + scItem.filesize;
                       if(stEnd > stExeSize) stExeSize = stEnd;
                     } // Failed to read enough bytes for segment
                     else XC(
                       "Failed to read enough bytes for MACH-O 32 segment!",
-                      "Requested", sizeof(scItem),
-                      "Actual",    stReadCmd,
-                      "Type",      cpType,
-                      "File",      fExe.IdentGet());
+                      "Requested", sizeof(scItem), "Actual", stReadCmd,
+                      "Type",      cpType,         "File",   fExe.NameGet());
                   } // Failed to read segment bytes
                   else XCL("Failed to read MACH-O 32 segment!",
                     "Requested", sizeof(scItem), "Type", cpType,
-                    "File",      fExe.IdentGet());
+                    "File",      fExe.NameGet());
                   // Done
                   break;
                 } // We're not supporting this command
@@ -321,21 +285,21 @@ class SysCore :
             } // Failed to read enough bytes
             else XC("Failed to read enough bytes for MACH-O command!",
               "Requested", sizeof(lcData), "Actual", stReadCmd,
-              "Type",      cpType,         "File",   fExe.IdentGet());
+              "Type",      cpType,         "File",   fExe.NameGet());
           } // Failed to read command bytes
           else XCL("Failed to read MACH-O command!",
             "Requested", sizeof(lcData), "Type", cpType,
-            "File",      fExe.IdentGet());
+            "File",      fExe.NameGet());
         } // Return executable size
         return stExeSize;
       } // Failed to read enough bytes
       else XC("Failed to read enough bytes for MACH-O header!",
         "Requested", sizeof(mhData), "Actual", stRead,
-        "Type",      cpType,         "File",   fExe.IdentGet());
+        "Type",      cpType,         "File",   fExe.NameGet());
     } // Failed to read elf ident
     else XCL("Failed to read MACH-O header!",
              "Requested", sizeof(mhData), "Type", cpType,
-             "File",      fExe.IdentGet());
+             "File",      fExe.NameGet());
   }
   /* -- Read command and segment data as big-endian ------------------------ */
   template<typename ArchHdr, class SwapType>
@@ -351,7 +315,7 @@ class SysCore :
         size_t stExeSize = 0;
         // Walk through all the executables
         for(size_t stMax =
-          static_cast<size_t>(SwapType(fhData.nfat_arch).v),
+          static_cast<size_t>(SwapType(fhData.nfat_arch).tVal),
                    stIndex = 0;
                    stIndex < stMax; ++stIndex)
         { // Read archive header
@@ -361,29 +325,29 @@ class SysCore :
           { // We read enough bytes?
             if(stReadArch == sizeof(faData))
             { // Format needed segment data
-              faData.offset = SwapType(faData.offset).v;
-              faData.size = SwapType(faData.size).v;
+              faData.offset = SwapType(faData.offset).tVal;
+              faData.size = SwapType(faData.size).tVal;
               // Get highest point in exe
               const size_t stEnd = faData.offset + faData.size;
               if(stEnd > stExeSize) stExeSize = stEnd;
             } // Failed to read enough bytes
             else XC("Failed to read enough bytes for FAT archive header!",
               "Requested", sizeof(faData), "Actual", stReadArch,
-              "Type",      cpType,         "File",   fExe.IdentGet());
+              "Type",      cpType,         "File",   fExe.NameGet());
           } // Failed to read elf ident
           else XCL("Failed to read FAT archive header!",
             "Requested", sizeof(faData), "Type", cpType,
-            "File",      fExe.IdentGet());
+            "File",      fExe.NameGet());
         } // Return executable size
         return stExeSize;
       } // Failed to read enough bytes
       else XC("Failed to read enough bytes for FAT header!",
         "Requested", sizeof(fhData), "Actual", stReadFat,
-        "Type",      cpType,         "File",   fExe.IdentGet());
+        "Type",      cpType,         "File",   fExe.NameGet());
     } // Failed to read elf ident
     else XCL("Failed to read FAT header!",
       "Requested", sizeof(fhData), "Type", cpType,
-      "File",      fExe.IdentGet());
+      "File",      fExe.NameGet());
   }
   /* -- Get executable size from header (N/A on MacOS) --------------------- */
   static size_t GetExeSize(const StdString &strFile)
@@ -402,52 +366,62 @@ class SysCore :
         MACHO_FAT_LE32 = FAT_CIGAM,    MACHO_FAT_LE64 = FAT_CIGAM_64,
         MACHO_FAT_BE32 = FAT_MAGIC,    MACHO_FAT_BE64 = FAT_MAGIC_64,
 #endif
-      } uiMagic;
+      } uMagic;
+      // Build swap class functors
+      using namespace IEndian::P;
+#define MKFUNCTOR(n,t) struct Swap ## n ## Ftor \
+  { const t tVal; explicit Swap ## n ## Ftor(const t tNVal) : \
+    tVal(EndianTo ## n(tNVal)) {} }
+      MKFUNCTOR(32LE, uint32_t); // Make force 32-bit LE functor (Swap32LEFtor)
+      MKFUNCTOR(32BE, uint32_t); // Make force 32-bit BE functor (Swap32BEFtor)
+      MKFUNCTOR(64LE, uint64_t); // Make force 64-bit LE functor (Swap64LEFtor)
+      MKFUNCTOR(64BE, uint64_t); // Make force 64-bit BE functor (Swap64BEFtor)
+#undef MKFUNCTOR
       // Load magic and compare it to possible recognised values...
       switch(const size_t stMagicBytes =
-        fExe.FStreamReadSafe(&uiMagic, sizeof(uiMagic)))
+        fExe.FStreamReadSafe(&uMagic, sizeof(uMagic)))
       { // Read enough bytes? Compare magic value
-        case sizeof(uiMagic): switch(uiMagic)
+        case sizeof(uMagic): switch(uMagic)
         { // Little-endian 32-bit format executable
           case MACHO_LE32: return GetExeSize<mach_header,
-            UtilSwap32LEFunctor, UtilSwap64LEFunctor>("32LE", fExe);
+            Swap32LEFtor, Swap64LEFtor>("32LE", fExe);
           // Little-endian 64-bit format executable
           case MACHO_LE64: return GetExeSize<mach_header_64,
-            UtilSwap32LEFunctor, UtilSwap64LEFunctor>("64LE", fExe);
+            Swap32LEFtor, Swap64LEFtor>("64LE", fExe);
           // Big-endian 32-bit format executable
           case MACHO_BE32: return GetExeSize<mach_header,
-            UtilSwap32BEFunctor, UtilSwap64BEFunctor>("32BE", fExe);
+            Swap32BEFtor, Swap64BEFtor>("32BE", fExe);
           // Big-endian 64-bit format executable
           case MACHO_BE64: return GetExeSize<mach_header_64,
-            UtilSwap32BEFunctor, UtilSwap64BEFunctor>("64BE", fExe);
+            Swap32BEFtor, Swap64BEFtor>("64BE", fExe);
           // Little-endian 32-bit format executable
           case MACHO_FAT_LE32: return GetFatExeSize<fat_arch,
-            UtilSwap32LEFunctor>("FAT32LE", fExe);
+            Swap32LEFtor>("FAT32LE", fExe);
           // Little-endian 64-bit format executable
           case MACHO_FAT_LE64: return GetFatExeSize<fat_arch_64,
-            UtilSwap64LEFunctor>("FAT64LE", fExe);
+            Swap64LEFtor>("FAT64LE", fExe);
           // Big-endian 32-bit format executable
           case MACHO_FAT_BE32: return GetFatExeSize<fat_arch,
-            UtilSwap32BEFunctor>("FAT32BE", fExe);
+            Swap32BEFtor>("FAT32BE", fExe);
           // Big-endian 64-bit format executable
           case MACHO_FAT_BE64: return GetFatExeSize<fat_arch_64,
-            UtilSwap64BEFunctor>("FAT64BE", fExe);
+            Swap64BEFtor>("FAT64BE", fExe);
           // Invalid magic
           default: XC("MACH-O magic is invalid!",
-            "Magic", uiMagic, "File", strFile);
+            "Magic", uMagic, "File", strFile);
         } // Read nothing? Throw error with reason
         case 0: XCL("Failed to read MACH-O magic!",
-          "Requested", sizeof(uiMagic), "File", fExe.IdentGet());
+          "Requested", sizeof(uMagic), "File", fExe.NameGet());
         // Failed to read enough bytes
         default: XC("Failed to read enough bytes for MACH-O executable magic!",
-          "Requested", sizeof(uiMagic), "Actual", stMagicBytes,
+          "Requested", sizeof(uMagic), "Actual", stMagicBytes,
           "File", strFile);
       }
     } // Failed to open mach executable
     XCL("Failed to open MACH-O executable!", "File", strFile);
   }
   /* -- Get executable file name ------------------------------------------- */
-  const StdString GetExeName()
+  StdString GetExeName()
   { // Setup executable pathname
     StdResized<StdString> strExe{ PROC_PIDPATHINFO_MAXSIZE };
     // Get path to executable
@@ -474,7 +448,7 @@ class SysCore :
     for(uint32_t ulIndex = 1, ulEnd = _dyld_image_count();
                  ulIndex < ulEnd; ++ulIndex)
     { // Version to use
-      unsigned int uiMajor, uiMinor, uiBuild;
+      unsigned uMajor, uMinor, uBuild;
       // Get full path name and id to use. Do not 'const' as we will be moving
       // it into the returned structure. I don't believe this will ever be
       // nullptr but we will check just incase.
@@ -499,38 +473,37 @@ class SysCore :
       // Unknown extension
       else continue;
       // Now we can get the version and if we got it?
-      unsigned int uiVer = static_cast<unsigned int>
-        (NSVersionOfLinkTimeLibrary(strPathName.data()));
+      unsigned uVer =
+        static_cast<unsigned>(NSVersionOfLinkTimeLibrary(strPathName.data()));
       // Try another function if failed
-      if(uiVer == StdMaxUInt)
-        uiVer = static_cast<unsigned int>
-          (NSVersionOfRunTimeLibrary(strPathName.data()));
+      if(uVer == StdMaxUInt)
+        uVer =
+          static_cast<unsigned>(NSVersionOfRunTimeLibrary(strPathName.data()));
       // Worked this time?
-      if(uiVer != StdMaxUInt)
+      if(uVer != StdMaxUInt)
       { // Fill in the bkanks
-        uiMajor = (uiVer & 0xFFFF0000) >> 16;
-        uiMinor = (uiVer & 0x0000FF00) >> 8;
-        uiBuild =  uiVer & 0x000000FF;
+        uMajor = (uVer & 0xFFFF0000) >> 16;
+        uMinor = (uVer & 0x0000FF00) >> 8;
+        uBuild =  uVer & 0x000000FF;
       } // No version information
-      else uiMajor = uiMinor = uiBuild = 0;
+      else uMajor = uMinor = uBuild = 0;
       // Add it to mods list
       smmMap.emplace(make_pair(static_cast<size_t>(ulIndex),
-        SysModule{ StdMove(strFullPath), uiMajor, uiMinor, uiBuild,
+        SysModule{ StdMove(strFullPath), uMajor, uMinor, uBuild,
           0, strPathName.data(), strPathName.data(),
-            StdString{ strVersion}, StdString{ StrFormat("$.$.$.0",
-            uiMajor, uiMinor, uiBuild) } }));
+            StdString{ strVersion }, StdString{ StrFormat("$.$.$.0",
+            uMajor, uMinor, uBuild) } }));
     } // Module list which includes the executable module
     return smmMap;
   }
   /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData()
   { // Get operating system name
-    const Token tVersion{ GetSysCTLInfoString("kern.osproductversion"),
+    const TokenStr tsVersion{ GetSysCTLInfoString("kern.osproductversion"),
       cCommon->CommonPeriod() };
-    unsigned int uiMajor =
-        tVersion.empty() ? 0 : StrToNum<unsigned int>(tVersion[0]),
-      uiMinor = tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
-      uiBuild = tVersion.size() < 3 ? 0 : StrToNum<unsigned int>(tVersion[2]);
+    unsigned uMajor = tsVersion.empty() ? 0 : StrToNum<unsigned>(tsVersion[0]),
+      uMinor = tsVersion.size() < 2 ? 0 : StrToNum<unsigned>(tsVersion[1]),
+      uBuild = tsVersion.size() < 3 ? 0 : StrToNum<unsigned>(tsVersion[2]);
     // Set operating system version string
     StdOStringStream osS; osS << "MacOS ";
     // Version information table
@@ -538,7 +511,7 @@ class SysCore :
     { // Label to append if verified
       const char*const cpLabel;
       // Major, minor and service pack of OS which applies to this label
-      const unsigned int uiHi, uiLo;
+      const unsigned uHi, uLo;
     };
     // List of MacOS versions and when they expire
     static const StdArray<const OSListItem,22>osList{ {
@@ -558,7 +531,7 @@ class SysCore :
     // versions above. 'Unknown' is caught if none are found.
     for(const OSListItem &osItem : osList)
     { // Ignore if this version item doesn't match
-      if(uiMajor < osItem.uiHi || uiMinor < osItem.uiLo) continue;
+      if(uMajor < osItem.uHi || uMinor < osItem.uLo) continue;
       // Set operating system version
       osS << osItem.cpLabel;
       // Skip adding version numbers
@@ -570,8 +543,8 @@ class SysCore :
     // Resize buffer for storage
     StdResized<StdString> strCode{ 32 };
     // Create autorelease storage for locale, ask OS for it and if success?
-    typedef StdUniquePtr<const void,
-      function<decltype(CFRelease)>> CFAutoRelPtr;
+    using CFAutoRelPtr =
+      StdUniquePtr<const void, function<decltype(CFRelease)>>;
     if(const CFAutoRelPtr cfLocale{ reinterpret_cast<const void*>
       (CFLocaleCopyCurrent()), CFRelease })
     { // Get reference to string
@@ -600,9 +573,9 @@ class SysCore :
     return {
       osS.str(),                       // Version string
       StdMove(strExtra),               // Extra version string
-      uiMajor,                         // Major OS version
-      uiMinor,                         // Minor OS version
-      uiBuild,                         // OS build version
+      uMajor,                          // Major OS version
+      uMinor,                          // Minor OS version
+      uBuild,                          // OS build version
       sizeof(void*)<<3,                // 32 or 64 OS arch
       StdMove(strCode),                // Get locale
       DetectElevation(),               // Elevated?
@@ -616,8 +589,8 @@ class SysCore :
     // Get engine directory
     const StdString &strLoc = ENGLoc();
     // Engine location length and Mac app signature length
-    const size_t stEngLength = strLoc.length(),
-                 stMacSigLength = strMacSig.length();
+    const size_t stEngLength = strLoc.size(),
+                 stMacSigLength = strMacSig.size();
     // If executable directory matches this
     bool bIsBundled = stEngLength > stMacSigLength &&
       strLoc.substr(stEngLength - stMacSigLength) == strMacSig;
@@ -629,10 +602,10 @@ class SysCore :
   { // Using arm cpu?
 #if defined(RISC)
     // Get family model and stepping (improvised for X-platform consistency)
-    const unsigned int
-      uiFamily = GetSysCTLInfoNum<unsigned int>("hw.cpusubfamily"),
-      uiModel = GetSysCTLInfoNum<uint32_t>("hw.cpusubtype"),
-      uiStepping = 0;
+    const unsigned
+      uFamily = GetSysCTLInfoNum<unsigned>("hw.cpusubfamily"),
+      uModel = GetSysCTLInfoNum<uint32_t>("hw.cpusubtype"),
+      uStepping = 0;
     // Get processor name
     StdString
       strProcessorName{ GetSysCTLInfoString("machdep.cpu.brand_string") },
@@ -640,7 +613,7 @@ class SysCore :
     // Remove unnecessary whitespaces
     StrCompactRef(strProcessorName);
     // Processor speeds common speeds (lowest vs highest speed).
-    typedef StdArray<const unsigned int, 2> UIntPair;
+    using UIntPair = StdArray<const unsigned, 2>;
     const UIntPair uipM1{ { 2064, 3228 } }, // Apple M1
                    uipM2{ { 2420, 3480 } }, // Apple M2
                    uipM3{ { 2748, 4056 } }, // Apple M3
@@ -648,10 +621,10 @@ class SysCore :
                    uipM5{ { 2896, 4600 } }; // Apple M5 (Est.)
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
-    typedef StdPair<const StdString, const UIntPair &> MacCpuListMapPair;
-    typedef StdMap<MacCpuListMapPair::first_type,
-      MacCpuListMapPair::second_type> MacCpuListMap;
-    typedef MacCpuListMap::const_iterator MacCpuListMapConstIt;
+    using MacCpuListMapPair = StdPair<const StdString, const UIntPair&>;
+    using MacCpuListMap = StdMap<MacCpuListMapPair::first_type,
+      MacCpuListMapPair::second_type>;
+    using MacCpuListMapConstIt = MacCpuListMap::const_iterator;
     const MacCpuListMap mclmData{
 #define CPUPACKEX(n,x) { "Apple M" STR(n) x, uipM ## n }
 #define CPUPACK(n) CPUPACKEX(n,), CPUPACKEX(n, " Pro"), \
@@ -662,32 +635,30 @@ class SysCore :
     // Find processor name to speed table and if we found it? Then copy the
     // value from the table as the actual speed.
     const MacCpuListMapConstIt mclmciIt{ mclmData.find(strProcessorName) };
-    const unsigned int uiSpeed = mclmciIt == mclmData.cend() ?
-      static_cast<unsigned int>
+    const unsigned uSpeed = mclmciIt == mclmData.cend() ?
+      static_cast<unsigned>
         (GetSysCTLInfoNum<uint64_t>("hw.tbfrequency")/10000) :
       mclmciIt->second[1];
     // Using INTEL processor?
 #elif defined(CISC)
     // Get family model and stepping
-    const unsigned int
-      uiSpeed = GetSysCTLInfoNum<uint64_t>("hw.cpufrequency")/1000000,
-      uiFamily = GetSysCTLInfoNum<uint32_t>("machdep.cpu.family"),
-      uiModel = GetSysCTLInfoNum<uint32_t>("machdep.cpu.model"),
-      uiStepping = GetSysCTLInfoNum<uint32_t>("machdep.cpu.stepping");
+    const unsigned
+      uSpeed = static_cast<unsigned>(GetSysCTLInfoNum<uint64_t>
+        ("hw.cpufrequency")/1000000),
+      uFamily = GetSysCTLInfoNum<uint32_t>("machdep.cpu.family"),
+      uModel = GetSysCTLInfoNum<uint32_t>("machdep.cpu.model"),
+      uStepping = GetSysCTLInfoNum<uint32_t>("machdep.cpu.stepping");
     // Get processor id and vendor
     StdString
       strProcessorName{ GetSysCTLInfoString("machdep.cpu.brand_string") },
       strVendorId{ GetSysCTLInfoString("machdep.cpu.vendor") };
-    // Remove unnecessary whitespaces
-    StrCompactRef(strVendorId);
-    StrCompactRef(strProcessorName);
     // Fail-safe empty strings
     if(strVendorId.empty()) strVendorId = cCommon->CommonUnspec();
 #endif
     // Check processor name is specified
     if(strProcessorName.empty()) strProcessorName = strVendorId;
     // Return default data we could not read
-    return { StdThreadMax(), uiSpeed, uiFamily, uiModel, uiStepping,
+    return { StdThreadMax(), uSpeed, uFamily, uModel, uStepping,
       StdMove(strProcessorName) };
   }
   /* ----------------------------------------------------------------------- */
@@ -708,24 +679,10 @@ class SysCore :
   /* -- Return process priority -------------------------------------------- */
   int GetPriority() const
   { // Get priority value and return if succeeded
-    const int iNice = getpriority(PRIO_PROCESS, GetPid<unsigned int>());
+    const int iNice = getpriority(PRIO_PROCESS, GetPid<unsigned>());
     if(iNice != -1) return iNice;
     XCS("Failed to acquire process priority!", "Pid", GetPid());
    }
-  /* -- Return if running as root ------------------------------------------ */
-  bool DetectElevation() const { return getuid() == 0; }
-  /* -- Return data from /dev/random --------------------------------------- */
-  Memory GetEntropy() const
-    { return FStream{ "/dev/random", FM_R_B }.FStreamReadBlockSafe(1024); }
-  /* -- Return window handle (n/a) ----------------------------------------- */
-  static void *GetWindowHandle() { return nullptr; }
-  /* -- A window was created ----------------------------------------------- */
-  void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
-    { bWindowInitialised = !!gwWindow; }
-  /* -- Window was destroyed, nullify handles ------------------------------ */
-  void SetWindowDestroyed() { bWindowInitialised = false; }
-  /* ----------------------------------------------------------------------- */
-  static int LastSocketOrSysError() { return StdGetError(); }
   /* -- Initialise global mutex -------------------------------------------- */
   bool InitGlobalMutex(const StdStringView &strvTitle)
   { // Initialise the mutex and return the result
@@ -761,11 +718,13 @@ class SysCore :
     /* -- Initialisers ----------------------------------------------------- */
     SysMutex{ piProcessId },           // Send pid to mutex vlass
     SysCon{ EnumModules(), 0 },        // Build system module dependencies
-    SysCommon{ GetExecutableData(),    // Build data about the executable
-               GetOperatingSystemData(), // Build data about the OS
-               GetProcessorData() },   // Build data about the CPU
-    bWindowInitialised(false)          // Window not initialised yet
+    SysInfo{ GetExecutableData(),      // Build data about the executable
+             GetOperatingSystemData(), // Build data about the OS
+             GetProcessorData() }      // Build data about the CPU
     /* -- Initialise total memory size ------------------------------------- */
     { InitMemorySize(); }
 };/* ----------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

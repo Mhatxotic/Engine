@@ -26,7 +26,7 @@ namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
 MAPPACK_BUILD(CVar, const StdString, CVarItem) // Build actual cvar list types
 /* ------------------------------------------------------------------------- */
-enum CVarDefaults : unsigned int       // Flags when loaded from DB
+enum CVarDefaults : unsigned           // Flags when loaded from DB
 { /* -- (Note: Don't ever change these around) ----------------------------- */
   DC_NONE,                             // Accept current configuration
   DC_OVERWRITE,                        // Overwrite core variables only
@@ -45,7 +45,7 @@ struct CVars :                         // Start of vars class
     stCVarMinLength         = 5,       // Minimum length of a cvar name
     stCVarMaxLength         = 255;     // Maximum length of a cvar name
   /* -- Private typedefs ------------------------------------------ */ private:
-  typedef StdArray<CVarMapIt, CVAR_MAX> ArrayVars;
+  using ArrayVars = StdArray<CVarMapIt, CVAR_MAX>;
   /* -- Private variables -------------------------------------------------- */
   size_t           stMaxInactiveCount; // Maximum Initial CVars allowed
   CVarMap          cvmPending,         // CVars inactive list
@@ -58,8 +58,8 @@ struct CVars :                         // Start of vars class
     CVarMap       &cvmMap;             // Reference to variable list
     const StdStringView strName;       // Name of list
   };/* --------------------------------------------------------------------- */
-  typedef StdArray<const CVarMapNameStruct,2> CVarMapNameStructArray;
-  typedef CVarMapNameStructArray::iterator CVarMapNameStructArrayIt;
+  using CVarMapNameStructArray = StdArray<const CVarMapNameStruct, 2>;
+  using CVarMapNameStructArrayIt = CVarMapNameStructArray::iterator;
   const CVarMapNameStructArray cvmnsaList; // Holds pending and active lists
   /* ----------------------------------------------------------------------- */
   const CVarItemStaticList &cvislList; // Reference to default cvars
@@ -67,105 +67,47 @@ struct CVars :                         // Start of vars class
   bool InitialVarExists(const StdString &strVar) const
     { return cvmPending.contains(strVar); }
   /* ----------------------------------------------------------------------- */
-  const CVarMapConstIt FindVariableConst(const StdString &strVar) const
+  CVarMapConstIt FindVariableConst(const StdString &strVar) const
     { return cvmActive.find(strVar); }
   /* ----------------------------------------------------------------------- */
-  CVarMapIt FindVariable(const StdString &strVar)
-    { return cvmActive.find(strVar); }
+  CVarMapIt FindVariable(const StdStringView &strvVar)
+    { return cvmActive.find(strvVar); }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums Set(const CVarMapIt &cvmiIt, const StdString &strValue,
-    const CVarFlagsConst cvfcFlags=PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
-      { return cvmiIt->second.SetValue(strValue,
-          cvfcFlags, cvcfcFlags, strCBError); }
+  CVarSetEnums Set(const CVarMapIt &cvmiIt, const StdStringView &strvValue,
+    const CVarFlagsConst cvfcFlags = PCONSOLE,
+    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
+  { return cvmiIt->second.CheckAndSetValue(StdString{ strvValue }, cvfcFlags,
+      cvcfcFlags, strCBError); }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums Set(const StdString &strVar, const StdString &strValue,
-    const CVarFlagsConst cvfcFlags=PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
+  CVarSetEnums Set(const StdStringView &strvVar,
+    const StdStringView &strvValue, const CVarFlagsConst cvfcFlags = PCONSOLE,
+    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { // Find item and if variable is found? Goto the next step
-    const CVarMapIt cvmiIt{ FindVariable(strVar) };
+    const CVarMapIt cvmiIt{ FindVariable(strvVar) };
     if(cvmiIt != cvmActive.end())
-      return Set(cvmiIt, strValue, cvfcFlags, cvcfcFlags);
+      return Set(cvmiIt, strvValue, cvfcFlags, cvcfcFlags);
     // Just return if missing else throw an error
     if(cvcfcFlags.FlagIsSet(CCF_IGNOREIFMISSING)) return CVS_NOTFOUND;
-    XC("CVar not found!", "Variable", strVar, "Value", strValue);
+    XC("CVar not found!", "Variable", strvVar, "Value", strvValue);
   }
   /* -- Check that the variable name is valid ------------------------------ */
-  bool IsValidVariableName(const StdString &strVar) const
+  bool IsValidVariableName(const StdStringView &strvVar) const
   { // Return failure if length is under minimum allowed or length is over
     // maximum allowed or first character is not valid.
-    if(strVar.length() < stCVarMinLength ||
-      strVar.length() > stCVarMaxLength ||
-      StdIsNotAlpha(strVar.front())) return false;
+    if(strvVar.size() < stCVarMinLength ||
+      strvVar.size() > stCVarMaxLength ||
+      StdIsNotAlpha(strvVar.front())) return false;
     // Find an invalid character in the string
-    const StringConstIt sciPos{
-      StdFindIf(par, StdNext(strVar.cbegin()), strVar.cend(),
+    const StringViewConstIt sciPos{
+      StdFindIf(par, StdNext(strvVar.cbegin()), strvVar.cend(),
         [](const char cC) { return StdIsNotAlnum(cC) && cC != '_'; }) };
     // Success if at end of string
-    if(sciPos == strVar.cend()) return true;
+    if(sciPos == strvVar.cend()) return true;
     // Failure if not an underscore
     if(*sciPos != '_') return false;
     // Search rest of string but underscore is no longer allowed
-    return StdFindIf(par_unseq, StdNext(sciPos), strVar.cend(),
-      [](const char cC) { return StdIsNotAlnum(cC); }) == strVar.cend();
-  }
-  /* ----------------------------------------------------------------------- */
-  bool SetInitialVar(const StdString &strVar, const StdString &strVal,
-    const CVarFlagsConst cvfcFlags=PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
-  { // Check that the variable name is valid.
-    if(!IsValidVariableName(strVar))
-    { // Throw if theres an error and return failure instead
-      if(cvcfcFlags.FlagIsSet(CCF_THROWONERROR))
-        XC("CVar name is not valid! Only alphanumeric characters "
-          "and underscores are acceptable!",
-          "Name",  strVar,              "Value",     strVal,
-          "Flags", cvfcFlags.FlagGet(), "Condition", cvcfcFlags.FlagGet());
-      return false;
-    } // Look if the initial var already exists and if we found it? Set it
-    const CVarMapIt cvmiIt{ cvmPending.find(strVar) };
-    if(cvmiIt != cvmPending.cend())
-    { // Get reference to pending cvar
-      CVarItem &cviRef = cvmiIt->second;
-      // Ignore if lesser priority source then what is allowed. For example,
-      // we won't override command-line supplied variables ever with udb loaded
-      // variables or application manifest variables.
-      if(cviRef.IsLowerPriority(cvfcFlags))
-      { // Was sourced from application manifest?
-        if(cvfcFlags & SAPPCFG)
-        { // Update the default value and flags.
-          cviRef.SetDefValue(strVal);
-          cviRef.FlagSet(cvfcFlags);
-          // Log that this action was taken
-          cLog->LogDebugExSafe("CVars overriding default of '$' with '$'!",
-            strVar, strVal);
-        } // Wasn't sourced from the manifest?
-        else
-        { // Log that this action was denied and return failure
-          cLog->LogWarningExSafe("CVars ignored overriding '$' with '$'!",
-            strVar, strVal);
-          return false;
-        }
-      } // Else do the set
-      else SetInitialVar(cviRef, strVal, cvfcFlags);
-    } // Insert into initial list
-    else
-    { // Check that we can create another variable
-      if(cvmPending.size() >= stMaxInactiveCount)
-      { // Can we throw error?
-        if(cvcfcFlags.FlagIsSet(CCF_THROWONERROR))
-          XC("Initial CVar count upper threshold reached!",
-            "Variable", strVar, "Maximum", stMaxInactiveCount);
-        // Log that this action was denied and return failure
-        cLog->LogWarningExSafe(
-          "CVars not adding '$' because upper threshold of $ reached!",
-          strVar, stMaxInactiveCount);
-        return false;
-      } // Check ok so insert
-      cvmPending.insert({ strVar,
-        CVarItem{ strVar, strVal, NoOp, cvfcFlags } });
-    } // Success
-    return true;
+    return StdFindIf(par_unseq, StdNext(sciPos), strvVar.cend(),
+      [](const char cC) { return StdIsNotAlnum(cC); }) == strvVar.cend();
   }
   /* -- Return the cvar id's value as a string ----------------------------- */
   const StdString &GetStrInternal(const CVarEnums cveId) const
@@ -182,44 +124,44 @@ struct CVars :                         // Start of vars class
     const IntType CVarsGetInternal(const CVarEnums cveId)
   { return StrToNum<IntType>(GetStrInternal(cveId)); }
   /* ----------------------------------------------------------------------- */
-  void SetInitialVar(CVarItem &cviRef, const StdString &strVal,
+  bool SetInitialVar(CVarItem &cviRef, const StdStringView &strvVal,
     const CVarFlagsConst cvfcFlags)
-  { // Ignore if same value
-    if(cviRef.GetValue() == strVal)
+  { // If same value as before?
+    if(cviRef.GetValue() == strvVal)
     { // Flags are the same too?
       if(cviRef.FlagIsSet(cvfcFlags))
       { // Log that we're not overriding
-        cLog->LogWarningExSafe("CVars initial var '$' already set to '$'/$$!",
-          cviRef.GetVar(), strVal, StdIOSHex, cvfcFlags.FlagGet());
-      } // Flags need updating
-      else
-      { // Update flags
-        cviRef.FlagSet(cvfcFlags);
-        // Log that we're overriding flags
-        cLog->LogWarningExSafe(
-          "CVars initial var '$' flags overridden to $$ from $!",
-            cviRef.GetVar(), StdIOSHex, cvfcFlags.FlagGet(), cviRef.FlagGet());
-      } // Done
-      return;
-    } // Log that we're overriding if priority
-    cLog->LogWarningExSafe(
-      "CVars initial var '$' overridden with '$'[$$] from '$'[$!]",
-        cviRef.GetVar(), strVal, StdIOSHex, cvfcFlags.FlagGet(),
-        cviRef.GetValue(),
-        cviRef.FlagGet());
-    // Now override
-    cviRef.SetValue(strVal);
-    cviRef.FlagSet(cvfcFlags);
+        cLog->LogWarningExSafe("CVars initial var '$' already set to '$'!",
+          cviRef.GetVar(), strvVal, StdIOSHex, cvfcFlags.FlagGet());
+        return false;
+      } // Flags are not the same so merge the flags and log what we did
+      const CVarFlagsConst cvfcOldFlags{ cviRef.FlagGet() };
+      cviRef.FlagSet(cvfcFlags);
+      cLog->LogDebugExSafe("CVars initial var '$' already set to '$' "
+        "with new flags from $$ to $ with $.",
+        cviRef.GetVar(), strvVal, cvfcOldFlags.FlagGet(), StdIOSHex,
+        cvfcOldFlags.FlagGet(), cviRef.FlagGet(), cvfcFlags.FlagGet());
+    } // Value is different?
+    else
+    { // Log that we're overriding the specified variable
+      cLog->LogDebugExSafe(
+        "CVars initial variable '$' value overridden to '$'.",
+        cviRef.GetVar(), strvVal);
+      // Now override
+      cviRef.SetValue(strvVal);
+      cviRef.FlagSet(cvfcFlags);
+    } // Success
+    return true;
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums Reset(const CVarMapIt &cvmiIt,
     const CVarFlagsConst cvfcFlags=PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
+    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
       { return cvmiIt->second.ResetValue(cvfcFlags, cvcfcFlags, strCBError); }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums Reset(const CVarEnums cveId,
     const CVarFlagsConst cvfcFlags=PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags=CCF_THROWONERROR)
+    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { // Get internal iterator and return value or empty string if invalid
     const CVarMapIt cvmiIt{ GetInternalListConst()[cveId] };
     return cvmiIt != cvmActive.cend() ? Reset(cvmiIt, cvfcFlags, cvcfcFlags) :
@@ -232,7 +174,7 @@ struct CVars :                         // Start of vars class
   { // Get iterator and set the value if valid except return invalid
     const CVarMapIt cvmiIt{ GetInternalListConst()[cveId] };
     return cvmiIt != cvmActive.cend() ?
-      cvmiIt->second.SetValue(strValue,
+      cvmiIt->second.CheckAndSetValue(strValue,
         cvfcFlags, cvcfcFlags, strCBError) : CVS_NOTFOUND;
   }
   /* ----------------------------------------------------------------------- */
@@ -260,8 +202,8 @@ struct CVars :                         // Start of vars class
   /* -- -------------------------------------------------------------------- */
   const ArrayVars &GetInternalListConst() const { return avInternal; }
   /* ----------------------------------------------------------------------- */
-  bool VarExists(const StdString &strVar) const
-    { return cvmActive.contains(strVar); }
+  bool VarExists(const StdStringView &strvVar) const
+    { return cvmActive.contains(strvVar); }
   /* -- Return the cvar name's value as a string --------------------------- */
   static const StdString &GetStr(const CVarMapConstIt &cvmciIt)
     { return cvmciIt->second.GetValue(); }
@@ -286,18 +228,19 @@ struct CVars :                         // Start of vars class
     cLog->LogDebugExSafe("CVars unregistered variable '$'.",  strVar);
   }
   /* -- Do register a new variable without any checks ---------------------- */
-  const CVarMapIt RegisterVar(const StdString &strVar,
-    const StdString &strValue, CbFunc cbTrigger,
+  CVarMapIt RegisterVar(const StdStringView &strvVar,
+    const StdStringView &strvValue, CbFunc cbTrigger,
     const CVarFlagsConst cvfcFlags,
-    const CVarConditionFlagsConst cvcfcFlags=CCF_NOTHING)
+    const CVarConditionFlagsConst cvcfcFlags = CCF_NOTHING)
   { // Find initial cvar in initial pending list and if not found?
-    const CVarMapIt cvmiPendIt{ cvmPending.find(strVar) };
+    const CVarMapIt cvmiPendIt{ cvmPending.find(strvVar) };
     if(cvmiPendIt == cvmPending.cend())
     { // Register cvar into cvar list and get iterator to it. Although putting
       // the default value in here does not matter since we are about to set it
       // anyway, the decryptfailquiet flag will need it if the decrypt fails.
-      const CVarMapIt cvmiIt{ cvmActive.insert({ strVar,
-        CVarItem{ strVar, strValue, cbTrigger, cvfcFlags } }).first };
+      const CVarMapIt cvmiIt{ cvmActive.insert({ StdString{ strvVar },
+        CVarItem{ StdString{ strvVar }, StdString{ strvValue }, cbTrigger,
+        cvfcFlags } }).first };
       // Capture exceptions as we need to remove the variable if the value
       // failed to set for a multitude of reasons.
       try
@@ -306,7 +249,8 @@ struct CVars :                         // Start of vars class
           cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR };
         // Use the default value. Although we already set the default value
         // when we inserted it, we need to check if it is valid too.
-        cvmiIt->second.SetValue(strValue, PANY, cvcfcSetFlags, strCBError);
+        cvmiIt->second.CheckAndSetValue(StdString{ strvValue }, PANY,
+          cvcfcSetFlags, strCBError);
       } // Exception occured?
       catch(const StdException &)
       { // Unregister the variable that was created to not cause problems when
@@ -325,8 +269,8 @@ struct CVars :                         // Start of vars class
     { // Get reference to pending cvar
       CVarItem &cviRef = cvmiIt->second;
       // If it wasn't initialised from app manifest, set requested value as
-      // the default value, otherwise the default value was overriden.
-      if(cviRef.FlagIsClear(SAPPCFG)) cviRef.SetDefValue(strValue);
+      // the default value, otherwise the default value was overridden.
+      if(cviRef.FlagIsClear(SAPPCFG)) cviRef.SetDefValue(strvValue);
       // Update the function callback
       cviRef.SetTrigger(cbTrigger);
       // Strip flags from pending cvar and XOR them with requested flags and
@@ -336,7 +280,7 @@ struct CVars :                         // Start of vars class
       // the application manifest or loaded from the database
       const StdString &strNewValue =
         cviRef.FlagIsAnyOfSet(CSAVEABLE|SAPPCFG|SCMDLINE) ?
-          cviRef.GetValue() : strValue;
+          cviRef.GetValue() : StdString{ strvValue };
       // Calculate permissions to use based on where the initial var came from
       const CVarFlagsConst cvfcPermissions{
         cviRef.FlagIsSet(SCMDLINE) ? PCMDLINE :
@@ -346,25 +290,76 @@ struct CVars :                         // Start of vars class
       const CVarConditionFlagsConst cvcfcSetFlags{
         cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR };
       // Update value and send appropriate perm based on where it came from
-      cviRef.SetValue(strNewValue, cvfcPermissions, cvcfcSetFlags, strCBError);
+      cviRef.CheckAndSetValue(strNewValue, cvfcPermissions, cvcfcSetFlags,
+        strCBError);
       // Return iterator
       return cvmiIt;
     } // exception occured so remove the added item and rethrow the exception
     catch(const StdException &) { cvmActive.erase(cvmiIt); throw; }
   }
   /* -- Try to set the variable even if it doesnt exist and return result -- */
-  bool CVarsSetVarOrInitial(const StdString &strVar, const StdString &strVal,
-    const CVarFlagsConst cvfcFlags, const CVarConditionFlagsConst cvcfcFlags)
+  bool CVarsSetVarOrInitial(const StdStringView &strvVar,
+    const StdStringView &strvVal, const CVarFlagsConst cvfcFlags,
+    const CVarConditionFlagsConst cvcfcFlags)
   { // Try to set the variable and grab the result
-    switch(Set(strVar, strVal, cvfcFlags, cvcfcFlags|CCF_IGNOREIFMISSING))
-    { // Not found? Set the variable in the initial list and return result
-      case CVS_NOTFOUND:
-        return SetInitialVar(strVar, strVal, cvfcFlags, cvcfcFlags);
+    switch(Set(strvVar, strvVal, cvfcFlags, cvcfcFlags|CCF_IGNOREIFMISSING))
+    { // Not found? We need to add it to a standby list
+      case CVS_NOTFOUND: break;
       // No error or not changed? return success!
       case CVS_OKNOTCHANGED: case CVS_OK: return true;
       // Failed status code
       default: return false;
+    } // Check that the variable name is valid.
+    if(!IsValidVariableName(strvVar))
+    { // Throw if theres an error and return failure instead
+      if(cvcfcFlags.FlagIsSet(CCF_THROWONERROR))
+        XC("CVar name is not valid! Only alphanumeric characters "
+          "and underscores are acceptable!",
+          "Name",  strvVar,             "Value",     strvVal,
+          "Flags", cvfcFlags.FlagGet(), "Condition", cvcfcFlags.FlagGet());
+      return false;
+    } // Look if the initial var already exists and if we found it? Set it
+    const CVarMapIt cvmiIt{ cvmPending.find(strvVar) };
+    if(cvmiIt != cvmPending.cend())
+    { // Get reference to pending cvar
+      CVarItem &cviRef = cvmiIt->second;
+      // Ignore if lesser priority source then what is allowed. For example,
+      // we won't override command-line supplied variables ever with udb loaded
+      // variables or application manifest variables.
+      if(cviRef.IsLowerPriority(cvfcFlags))
+      { // Was sourced from application manifest?
+        if(cvfcFlags.FlagIsSet(SAPPCFG))
+        { // Update the default value and flags.
+          cviRef.SetDefValue(strvVal);
+          cviRef.FlagSet(cvfcFlags);
+          // Log that this action was taken and return success
+          cLog->LogDebugExSafe("CVars overriding default of '$' with '$'!",
+            strvVar, strvVal);
+          return true;
+        } // Log that this action was denied and return failure
+        cLog->LogWarningExSafe("CVars ignored overriding '$' with '$'!",
+          strvVar, strvVal);
+        return false;
+      } // Else do the set and return success
+      return SetInitialVar(cviRef, strvVal, cvfcFlags);
     }
+    // Check that we can create another variable
+    if(cvmPending.size() >= stMaxInactiveCount)
+    { // Can we throw error?
+      if(cvcfcFlags.FlagIsSet(CCF_THROWONERROR))
+        XC("Initial CVar count upper threshold reached!",
+          "Variable", strvVar, "Maximum", stMaxInactiveCount);
+      // Log that this action was denied and return failure
+      cLog->LogWarningExSafe(
+        "CVars not adding '$' because upper threshold of $ reached!",
+        strvVar, stMaxInactiveCount);
+      return false;
+    } // Check ok so insert
+    cvmPending.insert({ StdString{ strvVar },
+      CVarItem{ StdString{ strvVar }, StdString{ strvVal }, NoOp,
+        cvfcFlags } });
+    // Success
+    return true;
   }
   /* ----------------------------------------------------------------------- */
   const CVarMap &GetVarList() { return cvmActive; }
@@ -373,22 +368,20 @@ struct CVars :                         // Start of vars class
   const CVarMap &GetInitialVarList() { return cvmPending; }
   /* ----------------------------------------------------------------------- */
   bool SetExistingInitialVar(const StdString &strVar, const StdString &strVal,
-    const CVarFlagsConst cvfcFlags=PCONSOLE)
+    const CVarFlagsConst cvfcFlags = PCONSOLE)
   { // Find initial item and return failure if it doesn't exist
     const CVarMapIt cvmiIt{ cvmPending.find(strVar) };
     if(cvmiIt == cvmPending.end()) return false;
-    // Set the value
-    SetInitialVar(cvmiIt->second, strVal, cvfcFlags);
-    // Success
-    return true;
+    // Set the value and return success
+    return SetInitialVar(cvmiIt->second, strVal, cvfcFlags);
   }
   /* -- Return last error from callback (also moves it) -------------------- */
-  const StdString GetCBError() { return StdMove(strCBError); }
+  StdString GetCBError() { return StdMove(strCBError); }
   /* ----------------------------------------------------------------------- */
   static const StdString GetValueSafe(const CVarMapConstIt &cvmciIt)
     { return cvmciIt->second.GetValueSafe(); }
   /* ----------------------------------------------------------------------- */
-  const StdString GetValueSafe(const StdString &strVar) const
+  StdString GetValueSafe(const StdString &strVar) const
   { // Find item and return invalid if not found
     const CVarMapConstIt cvmciIt{ FindVariableConst(strVar) };
     return cvmciIt == cvmActive.cend() ?
@@ -455,7 +448,7 @@ struct CVars :                         // Start of vars class
     return astCommitTotal + astPurgeTotal;
   }
   /* ----------------------------------------------------------------------- */
-  const StdString CVarsGetInitialVar(const StdString &strKey)
+  StdString CVarsGetInitialVar(const StdString &strKey)
   { // Find var and return empty string or the var
     const CVarMapConstIt cvmciIt{ cvmPending.find(strKey) };
     return cvmciIt != cvmPending.cend() ?
@@ -676,9 +669,8 @@ struct CVars :                         // Start of vars class
       const CVarItemStatic &cvisRef = cvislList[stIndex];
       avInternal[stIndex] =
         cSystem->SysIsCoreFlagsHave(cvisRef.cfcRequired) ?
-          RegisterVar(StdString{ cvisRef.strvVar },
-            StdString{ cvisRef.strvValue }, cvisRef.cbTrigger, cvisRef.cFlags,
-            CCF_NOTHING) : cvmActive.end();
+          RegisterVar(cvisRef.strvVar, cvisRef.strvValue, cvisRef.cbTrigger,
+            cvisRef.cFlags, CCF_NOTHING) : cvmActive.end();
     } // Finished
     cLog->LogInfoExSafe(
       "CVars registered $ of $ built-in variables for $<0x$$>.",
@@ -738,17 +730,17 @@ struct CVars :                         // Start of vars class
   { // Convert whole file data to a string
     const Json jsManifest{ StrAppend(strFile, "." JSON_EXTENSION) };
     // Check version is correct
-    const unsigned int uiVersionRequired = 1;
-    const unsigned int uiVersion = jsManifest.GetInteger("Version");
-    if(uiVersion != uiVersionRequired)
+    const unsigned uVersionRequired = 1,
+                   uVersion = jsManifest.GetInteger("Version");
+    if(uVersion != uVersionRequired)
       XC("Invalid application manifest version!",
-        "Manfiest", jsManifest.IdentGet(), "Required", uiVersionRequired,
-        "Actual",   uiVersion);
+        "Manfiest", jsManifest.NameGet(), "Required", uVersionRequired,
+        "Actual",   uVersion);
     // Look for constants and throw if there are none then report them in log
     using Lib::RapidJson::Value;
     const Value &rjvConstants = jsManifest.GetValue("Constants");
     if(!rjvConstants.IsObject())
-      XC("Constants array not valid!", "Manfiest", jsManifest.IdentGet());
+      XC("Constants array not valid!", "Manfiest", jsManifest.NameGet());
     // Total variables parsed, good vars and bad vars.
     size_t stGood = 0, stBad = 0;
     // Precompute compulsory flags
@@ -784,7 +776,7 @@ struct CVars :                         // Start of vars class
           break;
         case Lib::RapidJson::kFalseType:
           if(CVarsSetVarOrInitial(rjvKey.GetString(),
-             cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
+             cCommon->CommonZeroV(), cvfcFlags, cvcfcFlags))
             ++stGood; else ++stBad;
           break;
         // Everything else is unsupported
@@ -804,25 +796,23 @@ struct CVars :                         // Start of vars class
       const Value &rjvActiveSet = vcmiIt->value;
       if(!rjvActiveSet.IsUint())
         XC("Active set id invalid in app manifest!",
-          "Identifier", jsManifest.IdentGet());
+          "Name", jsManifest.NameGet());
       // Get the sets value and it must be an array
       const Value &rjvActiveSetArray = jsManifest.GetValue("Sets");
       if(!rjvActiveSetArray.IsArray())
         XC("Active set array invalid in app manifest!",
-          "Identifier", jsManifest.IdentGet(),
-          "Set",        rjvActiveSet.GetUint());
+          "Name", jsManifest.NameGet(), "Set", rjvActiveSet.GetUint());
       // Throw an exception if the specified value is out of range
       if(rjvActiveSet.GetUint() >= rjvActiveSetArray.Size())
         XC("Active set id out of range in app manifest!",
-          "Identifier", jsManifest.IdentGet(),
-          "Set",        rjvActiveSet.GetUint(),
-          "Maximum",    rjvActiveSetArray.Size());
+          "Name",    jsManifest.NameGet(),
+          "Set",     rjvActiveSet.GetUint(),
+          "Maximum", rjvActiveSetArray.Size());
       // Throw an exception if the specified value is not an object
       const Value &rjvObject = rjvActiveSetArray[rjvActiveSet.GetUint()];
       if(!rjvObject.IsObject())
         XC("Active set id not a valid object!",
-          "Identifier", jsManifest.IdentGet(),
-          "Set",        rjvActiveSet.GetUint());
+          "Name", jsManifest.NameGet(), "Set", rjvActiveSet.GetUint());
       // Add the characters the manifest file cares about
       StdForEach(par_unseq, rjvObject.MemberBegin(),
                             rjvObject.MemberEnd(),
@@ -853,7 +843,7 @@ struct CVars :                         // Start of vars class
             break;
           case Lib::RapidJson::kFalseType:
             if(CVarsSetVarOrInitial(rjvKey.GetString(),
-               cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
+               cCommon->CommonZeroV(), cvfcFlags, cvcfcFlags))
               ++stGood; else ++stBad;
             break;
           // Everything else is unsupported
@@ -871,7 +861,7 @@ struct CVars :                         // Start of vars class
     else cLog->LogInfoExSafe("CVars parsed $ of $ ($ bad) constant variables.",
       stGood, stGood + stBad, stBad);
     // We are manually updating the value with the correct filename
-    strVal = StdMove(jsManifest.IdentGet());
+    strVal = StdMove(jsManifest.NameGet());
     // Carry on parsing cvars
     return ACCEPT_HANDLED;
   }

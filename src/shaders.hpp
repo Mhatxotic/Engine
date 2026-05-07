@@ -38,7 +38,7 @@ struct ShaderCore                      // Actual body
                   &sh2D8Pal,           // 2D LUMPAL-3D transformation shader
                   &sh2D16;             // 2D LUMAL-3D transformation shader
   /* -------------------------------------------------------------- */ private:
-  typedef StdArray<const StdString,5> RoundList;
+  using RoundList = StdArray<const StdString, 5> ;
   const RoundList  rList;              // Rounding method list
   StdString        strSPRMethod;       // Rounding method string
   /* -- Add vertex shader with template and extra code --------------------- */
@@ -103,8 +103,8 @@ struct ShaderCore                      // Actual body
     const char*const cpCode)
   { // Add vertex shader program
     AddVertexShaderWith3DTemplate(shS, strName, StrFormat("$"
-      "v.x=-1.0+(((matrix.x+$(v.x))/matrix.z)*2.0);"  // X-coord
-      "v.y=-1.0+(((matrix.y+$(v.y))/matrix.w)*2.0);", // Y-coord
+      "v.x=-1.0+((($(matrix.x+v.x))/matrix.z)*2.0);"  // X-coord
+      "v.y=-1.0+((($(matrix.y+v.y))/matrix.w)*2.0);", // Y-coord
         cpCode, strSPRMethod, strSPRMethod).data());
   }
   /* -- Add vertex shader with template ------------------------------------ */

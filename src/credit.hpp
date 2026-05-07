@@ -74,8 +74,8 @@ enum CreditEnums : size_t              // Credit ids
   /* ----------------------------------------------------------------------- */
   CL_MAX                               // Item count. Don't remove
 };/* ----------------------------------------------------------------------- */
-typedef StdArray<const CreditLib,CL_MAX> CreditLibList; // Library list typedef
-typedef CreditLibList::const_iterator CreditLibListConstIt; // Iterator
+using CreditLibList        = StdArray<const CreditLib, CL_MAX>; // Library list
+using CreditLibListConstIt = CreditLibList::const_iterator;     // " Iterator
 /* ------------------------------------------------------------------------- */
 class Credits;                         // Class prototype
 static Credits *cCredits = nullptr;    // Pointer to global class
@@ -110,7 +110,7 @@ class Credits                          // Members initially private
       "Length", libItem.MemSize());
   }
   /* -- Decompress a credit ------------------------------------------------ */
-  const StdString CreditGetItemText(const CreditEnums ceIndex) const
+  StdString CreditGetItemText(const CreditEnums ceIndex) const
     { return CreditGetItemText(CreditGetItem(ceIndex)); }
   /* -- Dump credits to log ------------------------------------------------ */
   void CreditDumpList() const

@@ -11,13 +11,13 @@ namespace IMask {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBit::P;               using namespace ICollector::P;
 using namespace IDim::P;               using namespace IDir::P;
-using namespace IError::P;             using namespace IIdent::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtil::P;
+using namespace IError::P;             using namespace IImage::P;
+using namespace IImageDef::P;          using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IName::P ;             using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Mask collector and member class ====================================== */
@@ -45,8 +45,9 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Bail if out of bounds
     if(iXMax <= iXMin || iYMax <= iYMin) return false;
     // Get bitmask surfaces for both masks
-    const unsigned char*const cpS = at(stSourceId).MemPtr<unsigned char>(),
-                       *const cpD = mCdest[stDestId].MemPtr<unsigned char>();
+    const unsigned char
+      *const cpS = at(stSourceId).MemPtr<unsigned char>(),
+      *const cpD = mCdest[stDestId].MemPtr<unsigned char>();
     // Walk through the pixels of the intersection and check the bits and
     // return if we found a match, else try next pixel
     for(int iY = iYMin; iY < iYMax; ++iY)
@@ -133,8 +134,8 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Bail if out of bounds
     if(iXMax <= iXMin || iYMax <= iYMin) return;
     // Get bitmask surfaces for both masks
-          unsigned char*const cpD = at(0).MemPtr<unsigned char>();
     const unsigned char*const cpS = mCsrc[stSourceId].MemPtr<unsigned char>();
+          unsigned char*const cpD = front().MemPtr<unsigned char>();
     // Walk through the Y-axis of the intersection
     for(int iY = iYMin; iY < iYMax; ++iY)
     { // Pre-calculate Y-axis positions
@@ -171,7 +172,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Bail if out of bounds
     if(iXMax <= iXMin || iYMax <= iYMin) return;
     // Get bitmask surfaces for both masks
-    unsigned char*const cpD = at(0).MemPtr<unsigned char>();
+    unsigned char*const cpD = front().MemPtr<unsigned char>();
     // Walk through the pixels of the intersection and set each bit
     for(int iY = iYMin; iY < iYMax; ++iY)
     { // Calculate destination position
@@ -192,7 +193,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Bail if out of bounds
     if(iXMax <= iXMin || iYMax <= iYMin) return;
     // Get bitmask surfaces for both masks
-    unsigned char*const cpD = at(0).MemPtr<unsigned char>();
+    unsigned char*const cpD = front().MemPtr<unsigned char>();
     // Walk through the pixels of the intersection and set each bit
     for(int iY = iYMin; iY < iYMax; ++iY)
     { // Calculate destination position
@@ -203,40 +204,40 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Init --------------------------------------------------------------- */
-  void InitBlank(const StdString &strName, const unsigned int uiWidth,
-    const unsigned int uiHeight)
+  void InitBlank(const StdStringView &strvName, const unsigned uWidth,
+    const unsigned uHeight)
   { // Check dimension parameters
-    if(!uiWidth || !uiHeight ||
-       UtilIntWillOverflow<int>(uiWidth) || UtilIntWillOverflow<int>(uiHeight))
+    if(!uWidth || !uHeight ||
+       UtilIntWillOverflow<int>(uWidth) || UtilIntWillOverflow<int>(uHeight))
       XC("Mask dimensions are invalid!",
-        "Identifier", strName, "Width", uiWidth, "Height", uiHeight);
+        "Name", strvName, "Width", uWidth, "Height", uHeight);
     // Calculate space required, push it into mask list and increment size
-    const size_t stLen = (uiWidth * uiHeight) / 8;
+    const size_t stLen = (uWidth * uHeight) / 8;
     emplace_back(Memory{ stLen });
     stAlloc += stLen;
     // Set name of mask
-    IdentSet(StdMove(strName));
+    NameSet(StdMove(strvName));
     // Set width and height
-    DimSet(static_cast<int>(uiWidth), static_cast<int>(uiHeight));
+    DimSet(static_cast<int>(uWidth), static_cast<int>(uHeight));
   }
   /* -- Init filled mask --------------------------------------------------- */
-  void InitOne(const StdString &strName, const unsigned int uiWidth,
-    const unsigned int uiHeight)
+  void InitOne(const StdStringView &strvName, const unsigned uWidth,
+    const unsigned uHeight)
   { // Initialise new mask memory
-    InitBlank(strName, uiWidth, uiHeight);
+    InitBlank(strvName, uWidth, uHeight);
     // Now fill it with 1's
     back().MemFill<uint64_t>(0xFFFFFFFFFFFFFFFF);
   }
   /* -- Init cleared mask -------------------------------------------------- */
-  void InitZero(const StdString &strName, const unsigned int uiWidth,
-    const unsigned int uiHeight)
+  void InitZero(const StdStringView &strvName, const unsigned uWidth,
+    const unsigned uHeight)
   { // Initialise new mask memory
-    InitBlank(strName, uiWidth, uiHeight);
+    InitBlank(strvName, uWidth, uHeight);
     // Now fill it with zero's
     back().MemFill();
   }
   /* -- Dump a tile to disk ------------------------------------------------ */
-  void Dump(const size_t stId, const StdString &strFile) const
+  void Dump(const size_t stId, const StdStringView &strvFile) const
   { // Get source slot
     const MemConst &mcSrc = (*this)[stId];
     // Copy the slot because the image init moves it
@@ -244,69 +245,66 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Byte swap it
     mDst.MemByteSwap8();
     // Setup raw image
-    const Image imOut{ strFile, StdMove(mDst), DimGetWidth<unsigned int>(),
-      DimGetHeight<unsigned int>(), BD_BINARY };
+    const Image imOut{ strvFile, StdMove(mDst), DimGetWidth<unsigned>(),
+      DimGetHeight<unsigned>(), BD_BINARY };
     // Capture exceptions
     try
     { // Save bitmap to PNG
-      imOut.SaveFile(imOut.IdentGet(), 0, IFMT_PNG);
+      imOut.SaveFile(imOut.NameGet(), 0, IFMT_PNG);
     } // exception occured?
     catch(const StdException &)
     { // Close the file and delete it
-      DirFileUnlink(imOut.IdentGet());
+      DirFileUnlink(imOut.NameGet());
       // Throw original error
       throw;
     }
   }
   /* -- Initialise from an Image class ------------------------------------- */
-  void InitFromImage(Image &imC, const unsigned int uiTileWidth,
-    const unsigned int uiTileHeight)
+  void InitFromImage(Image &imC, const unsigned uTileWidth,
+    const unsigned uTileHeight)
   { // Set texture name
-    IdentSet(imC);
+    NameSet(imC.NameGet());
     // Must have slots
     if(imC.IsNoSlots())
-      XC("No data in image object!", "Identifier", IdentGet());
+      XC("No data in image object!", "Name", NameGet());
     // Check dimensions. We're also working with ints for sizes so we have
     // to limit the size to signed int range so check for that too.
-    if(!uiTileWidth || !uiTileHeight ||
-      UtilIntWillOverflow<int>(uiTileWidth) ||
-      UtilIntWillOverflow<int>(uiTileHeight))
+    if(!uTileWidth || !uTileHeight ||
+      UtilIntWillOverflow<int>(uTileWidth) ||
+      UtilIntWillOverflow<int>(uTileHeight))
         XC("Invalid tile dimensions!",
-          "Identifier", IdentGet(), "Width", uiTileWidth,
-          "Height",     uiTileHeight);
+          "Name", NameGet(), "Width", uTileWidth, "Height", uTileHeight);
     // Get first image slot and show error as we are not reversing this.
     ImageSlot &bData = imC.GetSlots().front();
     // Check bit depth
     if(imC.GetBitsPerPixel() != 1)
       XC("Image is not monochrome!",
-        "Identifier",   IdentGet(),
-        "Width",        bData.DimGetWidth(),
-        "Height",       bData.DimGetHeight(),
-        "BitsPerPixel", imC.GetBitsPerPixel());
+        "Name",   NameGet(),            "Width",        bData.DimGetWidth(),
+        "Height", bData.DimGetHeight(), "BitsPerPixel", imC.GetBitsPerPixel());
     // Check image dimensions too. Again we're dealing with ints!
     if(!bData.DimIsSet() ||
       UtilIntWillOverflow<int>(bData.DimGetWidth()) ||
       UtilIntWillOverflow<int>(bData.DimGetHeight()))
         XC("Invalid image dimensions!",
-          "Identifier", IdentGet(), "Width", bData.DimGetWidth(),
-          "Height",     bData.DimGetHeight());
+          "Name",   NameGet(), "Width", bData.DimGetWidth(),
+          "Height", bData.DimGetHeight());
     // Image is divisible by 8?
     if(!UtilIsDivisible(bData.DimGetWidth<double>() / 8) ||
        !UtilIsDivisible(bData.DimGetHeight<double>() / 8))
       XC("Image dimensions are not divisible by eight!",
-        "Identifier", IdentGet(), "Width", bData.DimGetWidth(),
-        "Height",     bData.DimGetHeight());
+        "Name",   NameGet(), "Width", bData.DimGetWidth(),
+        "Height", bData.DimGetHeight());
     // Get reference to the image memory and if no tiling needed?
-    if(bData.DimGetWidth() == uiTileWidth &&
-       bData.DimGetHeight() == uiTileHeight)
+    if(bData.DimGetWidth() == uTileWidth &&
+       bData.DimGetHeight() == uTileHeight)
     { // We can just add the full size texture.
       emplace_back(StdMove(bData));
       return;
     } // We're dealing with memory now so we need everything as size_t
     const size_t
       // Tile dimensions
-      stTWidth = static_cast<size_t>(uiTileWidth),
-      stTHeight = static_cast<size_t>(uiTileHeight),
+      stTWidth = static_cast<size_t>(uTileWidth),
+      stTHeight = static_cast<size_t>(uTileHeight),
       // Bitmap dimensions
       stWidth = bData.DimGetWidth<size_t>(),
       stHeight = bData.DimGetHeight<size_t>(),
@@ -355,8 +353,8 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
       for(size_t stX = 0; stX < stTotalXWhole; stX += stTWidth)
       { // Create cleared mask buffer, insert it into list and get ptr to
         // the memory.
-        unsigned char*const ucpD = emplace(cend(),
-          Memory{ stBytes, true })->MemPtr<unsigned char>();
+        unsigned char*const ucpD =
+          emplace(cend(), Memory{ stBytes, true })->MemPtr<unsigned char>();
         // Copy source to buffer
         for(size_t stTY = 0; stTY < stTHeight; ++stTY)
         { // Pre-calculate Y position
@@ -373,7 +371,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // The mask passed in the arguments is usually still allocated by LUA and
     // will still be registered, sp lets put a note in the mask to show that
     // this function has nicked the mask.
-    imC.IdentSetEx("!MAS!$!", imC.IdentGet());
+    imC.NameSetEx("!MAS!$!", imC.NameGet());
     // Tell log what we did
     cLog->LogInfoExSafe("Mask created $ ($x$) tiles from a $x$ $ bitmask.",
       size(), stTWidth, stTHeight, stWidth, stHeight,
@@ -387,7 +385,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
   Mask() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperMask{ cMasks, this },      // Register this object in collector
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     stAlloc(0)                         // Uninitialised allocated size
     /* -- No code ---------------------------------------------------------- */
     {}

@@ -9,7 +9,17 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Includes ============================================================= **
+/* ------------------------------------------------------------------------- */
+namespace ISysCon {                    // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IConDef::P;            using namespace ICoord::P;
+using namespace IDimCoord::P;          using namespace IDim::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFormat::P;            using namespace IHelper::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace ISysBase::P;           using namespace ISysMod::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+/* -- Includes ------------------------------------------------------------- **
 ** Because ncurses shares function names with STL, we need to put it all the **
 ** Curses API in it's own namespace to prevent ambiguity problems.           **
 ** ------------------------------------------------------------------------- */
@@ -20,6 +30,8 @@ namespace ICurses {                    // Start of Curses interface
 # include <ncurses.h>                  // Using Curses for fancy term effects
 #endif                                 // End of POSIX OS detection
 }                                      // End of Curses interface
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
 /* == Console Class ======================================================== */
 class SysCon :                         // All members initially private
   /* -- Base classes ------------------------------------------------------- */
@@ -28,29 +40,28 @@ class SysCon :                         // All members initially private
   private InitHelper,                  // Allow access to windows console
   private DimCoInt                     // Console drawing position & dimensions
 {  /* -- Aliases ----------------------------------------------------------- */
-  typedef ICurses::attr_t attr_t;      // NCurses alias
-  constexpr static auto &StdIOSOct = ::std::oct; // Octal number rendering mode
+  using attr_t = ICurses::attr_t ;     // NCurses alias
   /* -- Console data ------------------------------------------------------- */
-  attr_t           aColour;            // Current colour
-  attr_t           aColourSaved;       // Saved colour
+  attr_t           aColour,            // Current colour
+                   aColourSaved;       // Saved colour
   /* -- Co-ordinates and limits -------------------------------------------- */
-  size_t           stPalette;          // Palette colours count
-  size_t           stPairs;            // Pairs count
+  size_t           stPalette,          // Palette colours count
+                   stPairs;            // Pairs count
   CoordInt         ciCursor;           // Cursor position
   DimInt           diSizeM1, diSizeM2; // Console bounds minus 1 and 2
   int              iCursor;            // Current cursor setting
   /* -- Storing original palette ------------------------------------------- */
-  typedef StdArray<short,3>             ShortTri;
-  typedef StdArray<ShortTri,COLOUR_MAX> ColourTable;
-  typedef StdArray<short,2>             ShortPair;
-  typedef StdVector<ShortPair>          PairTable;
+  using ShortTri    = StdArray<short, 3>;
+  using ColourTable = StdArray<ShortTri,COLOUR_MAX>;
+  using ShortPair   = StdArray<short, 2>;
+  using PairTable   = StdVector<ShortPair>;
   ColourTable      ctPalette;          // Saved colour palette
   PairTable        ptPairs;            // Saved colour pairs
   /* -- Do set a character at the current position ------------------------- */
-  void DoSetChar(const Codepoint cChar)
+  void DoSetChar(const Codepoint coChar)
   { // Include curses namespace
     using namespace ICurses;
-    const cchar_t ccChar{ aColour, { static_cast<wchar_t>(cChar) }, 0 };
+    const cchar_t ccChar{ aColour, { static_cast<wchar_t>(coChar) }, 0 };
     // Print character and get result
     switch(const int iResult = add_wch(&ccChar))
     { // If failed?
@@ -62,7 +73,7 @@ class SysCon :                         // All members initially private
            CoordGetY() != diSizeM1.DimGetHeight())
           cLog->LogWarningExSafe(
             "SysCon set character failed! (C:$<$$>;A:$$<$$>;P:$$x$;R:$)",
-            cChar, StdIOSHex, cChar, StdIOSDec, aColour, StdIOSHex, aColour,
+            coChar, StdIOSHex, coChar, StdIOSDec, aColour, StdIOSHex, aColour,
             StdIOSDec, CoordGetX(), CoordGetY(), iResult);
         // Fall through to break
         [[fallthrough]];
@@ -132,6 +143,8 @@ class SysCon :                         // All members initially private
         switch(wChar)
         { // Home key pressed? (Not mapped by default)
           case 1: iMods = 0; iKey = GLFW_KEY_HOME; break;
+          // Break key pressed? Send exit signal to engine
+          case 3: if(bBreakEnabled) cEvtMain->RequestQuit(); break;
           // End key pressed? (Not mapped by default)
           case 5: iMods = 0; iKey = GLFW_KEY_END; break;
           // Escape key pressed?
@@ -257,32 +270,32 @@ class SysCon :                         // All members initially private
     CommitScreen();
   }
   /* -- Set a character at the current position ---------------------------- */
-  void SetChar(const Codepoint cChar=' ')
+  void SetChar(const Codepoint coChar=' ')
   { // Include curses namespace
     using namespace ICurses;
     switch(const int iResult = move(CoordGetY(), CoordGetX()))
     { // If successful?
       case OK:
-        // If size of unsigned int isn't equal to wchar_t? We will need to
+        // If size of unsigned isn't equal to wchar_t? We will need to
         // check for overflow and print a '?' if so.
-        if constexpr(sizeof(cChar) != sizeof(wchar_t))
-          DoSetChar(cChar > StdLimits<wchar_t>::max() ? '?' : cChar);
+        if constexpr(sizeof(coChar) != sizeof(wchar_t))
+          DoSetChar(coChar > StdLimits<wchar_t>::max() ? '?' : coChar);
         // Size is equal to wchar_t?
-        else DoSetChar(cChar);
+        else DoSetChar(coChar);
         // Done
         break;
       // Failed so write error to log
       default: cLog->LogWarningExSafe(
         "SysCon move cursor failed! (C:$<$$>;A:$$<$$>;P:$$x$;R:$)",
-          cChar, StdIOSHex, cChar, StdIOSDec, aColour, StdIOSHex, aColour,
+          coChar, StdIOSHex, coChar, StdIOSDec, aColour, StdIOSHex, aColour,
           StdIOSDec, CoordGetX(), CoordGetY(), iResult);
         // Done
         break;
     }
   }
   /* -- Set a character at the specified screen buffer position ------------ */
-  void SetCharPos(const int iNX, const int iNY, const unsigned int uiC=' ')
-    { SetCursor(iNX, iNY); SetChar(uiC); }
+  void SetCharPos(const int iNX, const int iNY, const unsigned uC=' ')
+    { SetCursor(iNX, iNY); SetChar(uC); }
   /* -- Do set characters until we reach the maximum ----------------------- */
   void ClearLine(const int iMax)
     { for(; CoordGetX() < iMax; CoordIncX()) SetChar(); }
@@ -291,98 +304,70 @@ class SysCon :                         // All members initially private
   void PushColour() { aColourSaved = aColour; }
   void PopColour() { aColour = aColourSaved; }
   /* -- Distance ----------------------------------------------------------- */
-  static unsigned int Distance(const unsigned int uiD1,
-    const unsigned int uiD2)
+  static unsigned Distance(const unsigned uD1, const unsigned uD2)
   { // Calculate deltas of components
-    const unsigned int
-      uiDeltaR = ((uiD1 & 0x00FF0000) >> 16) - ((uiD2 & 0x00FF0000) >> 16),
-      uiDeltaG = ((uiD1 & 0x0000FF00) >>  8) - ((uiD2 & 0x0000FF00) >>  8),
-      uiDeltaB =  (uiD1 & 0x000000FF)        -  (uiD2 & 0x000000FF);
+    const unsigned
+      uDeltaR = ((uD1 & 0x00FF0000) >> 16) - ((uD2 & 0x00FF0000) >> 16),
+      uDeltaG = ((uD1 & 0x0000FF00) >>  8) - ((uD2 & 0x0000FF00) >>  8),
+      uDeltaB =  (uD1 & 0x000000FF)        -  (uD2 & 0x000000FF);
     // Return distance
-    return uiDeltaR * uiDeltaR + uiDeltaG * uiDeltaG + uiDeltaB * uiDeltaB;
+    return uDeltaR * uDeltaR + uDeltaG * uDeltaG + uDeltaB * uDeltaB;
   }
   /* -- Set colour as integer helper function ------------------------------ */
-  void SetColourInteger(const unsigned int uiColour, const size_t stShift,
+  void SetColourInteger(const unsigned uColour, const size_t stShift,
     const size_t stXOR)
   { // Minimum distance between colour and closest colour
-    unsigned int uiMinDist = Distance(uiColour, ConColourToRGB(COLOUR_BLACK));
+    unsigned uMinDist = Distance(uColour, ConColourToRGB(COLOUR_BLACK));
     // Prepare first colour
     size_t stChosen = 0;
     // Walk through available colours
     for(size_t stIndex = 1; stIndex < stPalette; ++stIndex)
     { // Get current distance between specified colour and colour in pallette
-      unsigned int uiCurDist =
-        Distance(uiColour, ConColourToRGB(static_cast<ConColour>(stIndex)));
+      unsigned uCurDist =
+        Distance(uColour, ConColourToRGB(static_cast<ConColour>(stIndex)));
       // Ignore the entry if is not near the minimum
-      if(uiCurDist >= uiMinDist) continue;
+      if(uCurDist >= uMinDist) continue;
       // Update new selected colour and chosen index
-      uiMinDist = uiCurDist;
+      uMinDist = uCurDist;
       stChosen = stIndex;
-    } // Set chosen colour
+    } // Set chosen colour and return set
     SetColour((stChosen << stShift) + stXOR);
   }
-  /* -- Set foreground colour as int --------------------------------------- */
-  void SetForegroundInteger(const unsigned int uiColour)
-    { SetColourInteger(uiColour, 0, 0); }
-  /* -- Set background colour as int --------------------------------------- */
-  void SetBackgroundInteger(const unsigned int uiColour)
-    { SetColourInteger(uiColour, 7, 128); }
   /* -- Handle print control character ------------------------------------- */
   void HandlePrintControl(UtfDecoder &udStr, const bool bSimulation)
-  { // Get next character
-    switch(udStr.UtfNext())
-    { // Colour selection
-      case 'c':
-      { // Scan for the hexadecimal value and if we found it? Set Tint if not
-        // simulation and we read 8 bytes
-        unsigned int uiCol;
-        if(udStr.UtfScanValue(uiCol) == 8 && !bSimulation)
-          SetForegroundInteger(uiCol);
-        // Done
-        break;
-      } // Outline colour selection
-      case 'o':
-      { // Scan for the hexadecimal value and if we found it? Set Tint if not
-        // simulation and we read 8 bytes
-        unsigned int uiCol;
-        if(udStr.UtfScanValue(uiCol) == 8 && !bSimulation)
-          SetBackgroundInteger(uiCol);
-        // Done
-        break;
-      } // Reset colour
-      case 'r': if(!bSimulation) PopColour(); break;
-      // Print glyph? Ignore texture and skip the next value and break
-      case 't': udStr.UtfSkipValue(); break;
-      // Invalid control character.
-      default: break;
-    }
+  { // Handle the control character
+    FormatPrintControl(udStr, bSimulation,
+      [this](const unsigned uCol) { SetColourInteger(uCol, 0, 0); },
+      [this]() { PushColour(); },
+      [this]() { PopColour(); },
+      [this](const unsigned uCol) { SetColourInteger(uCol, 7, 128);},
+      []() { /* No push background yet */ },
+      []() { /* No pop background yet */ },
+      [](const unsigned) { });
   }
   /* -- Locate a supported character while checking if word can be printed - */
   bool PrintGetWord(UtfDecoder &udStr, int iXp, const int iWi)
   { // Save position because we're not drawing anything
-    const unsigned char *ucpPtr = udStr.UtfGetCPtr();
+    const StringViewConstIt svciPtr{ udStr.UtfGetPos() };
     // Until null character. Which control token?
-    while(const Codepoint cChar = udStr.UtfNext()) switch(cChar)
-    { // Carriage return or space char? Restore position and return no wrap
-      case '\n': case ' ': udStr.UtfSetCPtr(ucpPtr); return false;
+    NextCharacter: switch(udStr.UtfNext())
+    { // End of string, return or space char? Restore pos and return no wrap
+      case '\0': case '\n': case ' ': udStr.UtfSetPos(svciPtr); return false;
       // Other control character? Handle print control characters
       case '\r': HandlePrintControl(udStr, true); break;
       // Normal character
       default:
         // Printing next character would exceed wrap width?
         if(1 + iXp >= iWi)
-        { // Restore position
-          udStr.UtfSetCPtr(ucpPtr);
-          // Wrap to next position
+        { // Restore position and wrap to next position
+          udStr.UtfSetPos(svciPtr);
           return true;
         } // Move X along
         ++iXp;
         // Done
         break;
-    } // Restore position
-    udStr.UtfSetCPtr(ucpPtr);
-    // No wrap occured and caller should not Y adjust
-    return false;
+    } // Enumerate to next character again if we can
+    goto NextCharacter;
   }
   /* -- Handle return on print --------------------------------------------- */
   static void HandleReturnSimulated(UtfDecoder &udStr, int &iXp, int &iYp,
@@ -408,25 +393,28 @@ class SysCon :                         // All members initially private
     // Discard further spaces and return string minus one space
     udStr.UtfIgnore(' ');
   }
+  /* -- Clean-up drawing flags and colour ---------------------------------- */
+  void CleanupProcessing()
+    { FormatHandleFinish([this](){ PopColour(); }, [](){}); }
   /* -- Write data upwards and wrapping (same as what Char::* does) -------- */
   int WriteLineWU(UtfDecoder &&udStr)
   { // Check the string is valid
     if(!udStr.UtfValid()) return 1;
-    // Save current colour
-    PushColour();
     // Indent
     const int iIndent = 1;
     // Simulated cursor position
     int iXp = 0, iYp = 1;
     // Until null character, which character?
-    while(const Codepoint cChar = udStr.UtfNext()) switch(cChar)
-    { // Carriage return?
+    NextCharacter1: switch(udStr.UtfNext())
+    { // End of string? Goto next stage
+      case '\0': goto Done1;
+      // Carriage return?
       case '\n': HandleReturnSimulated(udStr, iXp, iYp, iIndent); break;
       // Other control character? Handle print control characters
       case '\r': HandlePrintControl(udStr, true); break;
       // Whitespace character?
       case ' ':
-      { // Move X position along and ignore if the space character processed
+        // Move X position along and ignore if the space character processed
         // went over the limit OR Check if the draw length of the next word
         // would go off the limit and if either did? Handle the return!
         if(++iXp + 1 > DimGetWidth() ||
@@ -434,18 +422,19 @@ class SysCon :                         // All members initially private
           HandleReturnSimulated(udStr, iXp, iYp, iIndent);
         // Done
         break;
-      } // Normal character
+      // Normal character
       default:
-      { // Printing next character would exceed wrap width? Wrap and indent
+        // Printing next character would exceed wrap width? Wrap and indent
         if(iXp + 1 > DimGetWidth())
           HandleReturnSimulated(udStr, iXp, iYp, iIndent);
         // No exceed, move X position forward
         iXp += 1;
         // Done
         break;
-      }
-    } // Restore previous colour incase it was changed
-    PopColour();
+    } // Enumerate to next character again if we can
+    goto NextCharacter1;
+    // Restore previous colour incase it was changed
+    Done1: CleanupProcessing();
     // Reset the iterator on the utf string.
     udStr.UtfReset();
     // Set actual cursor position
@@ -453,15 +442,23 @@ class SysCon :                         // All members initially private
     // Record original X and Y position
     const int iXO = CoordGetX() + iIndent;
     // Until null character, which character?
-    while(const Codepoint cChar = udStr.UtfNext()) switch(cChar)
-    { // Carriage return?
+    NextCharacter2: switch(const Codepoint coChar = udStr.UtfNext())
+    { // End of string?
+      case '\0':
+        // Clear the rest of the line
+        if(ValidY(CoordGetY())) ClearLine();
+        // Restore colour
+        CleanupProcessing();
+        // Return height of printed text
+        return iYp;
+      // Carriage return?
       case '\n': HandleReturn(udStr, iXO); break;
       // Other control character? Handle print control characters
       case '\r': HandlePrintControl(udStr, false); break;
       // Whitespace character?
       case ' ':
-      { // Do the print if we can
-        if(ValidY(CoordGetY())) SetChar(cChar);
+        // Do the print if we can
+        if(ValidY(CoordGetY())) SetChar(coChar);
         // Move the next X position
         CoordIncX();
         // Ignore if the space character processed went over the limit OR
@@ -472,44 +469,41 @@ class SysCon :                         // All members initially private
           HandleReturn(udStr, iXO);
         // Done
         break;
-      } // Normal character
+      // Normal character
       default:
-      { // Printing next character would exceed wrap width?
+        // Printing next character would exceed wrap width?
         if(CoordGetX() + 1 > DimGetWidth())
         { // Handle the wrapping
           HandleReturn(udStr, iXO);
           // If we can print the character? Print the character
-          if(ValidY(CoordGetY())) SetChar(cChar);
+          if(ValidY(CoordGetY())) SetChar(coChar);
         } // Wouldn't wrap so if we can print the character? Print the char
-        else if(ValidY(CoordGetY())) SetChar(cChar);
+        else if(ValidY(CoordGetY())) SetChar(coChar);
         // Move along the X position
         CoordIncX();
         // Done
         break;
-      }
-    } // Clear the rest of the line
-    if(ValidY(CoordGetY())) ClearLine();
-    // Restore colour
-    PopColour();
-    // Return height of printed text
-    return iYp;
+    } // Enumerate to next character again if we can
+    goto NextCharacter2;
   }
   /* -- Write data --------------------------------------------------------- */
   void WriteLine(UtfDecoder &udStr, const int iMax, const bool bClrEOL)
   { // For each character index in the buffer
-    while(const Codepoint cChar = udStr.UtfNext())
-    { // Compare character
-      switch(cChar)
-      { // Carriage return? (impossible).
-        case '\n': break;
-        // Is a control character?
-        case '\r': HandlePrintControl(udStr, false); break;
-        // Get pointer to character ata
-        default : SetChar(cChar); CoordIncX(); break;
-      } // Increase position in screen buffer and break if at end of string/buf
-      if(CoordGetX() >= iMax) break;
-    } // Now we need to clear old characters up to the end of line
-    if(bClrEOL) ClearLine();
+    NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+    { // End of string?
+      case '\0': goto Done;
+      // Carriage return? (impossible).
+      case '\n': break;
+      // Is a control character?
+      case '\r': HandlePrintControl(udStr, false); break;
+      // Get pointer to character ata
+      default: SetChar(coChar); CoordIncX(); break;
+    } // Increase position in screen buffer and finish if at end of string/buf
+    if(CoordGetX() >= iMax) goto Done;
+    // Enumerate to next character again if we can
+    goto NextCharacter;
+    // End of string or maximum column? Clear rest of line
+    Done: if(bClrEOL) ClearLine();
   }
   /* -- Redraw status input text ------------------------------------------- */
   void RedrawInputBar(const StdString &strIL, const StdString &strIR)
@@ -530,7 +524,7 @@ class SysCon :                         // All members initially private
       // Set length
       iLen = static_cast<int>(udStr.UtfLength());
       // Reset at scrolled position
-      udStr.UtfReset(strIL.data());
+      udStr.UtfReset(strIL);
       // Skip characters to the point we're scrolled at
       udStr.UtfSkip(static_cast<size_t>(
         UtilMaximum(iLen - diSizeM2.DimGetWidth(), 0)));
@@ -637,7 +631,7 @@ class SysCon :                         // All members initially private
                          ++clcriIt)
     { // Get structure
       const ConLine &clLine = *clcriIt;
-      // Convert RGB colour to Win32 console id colour
+      // Set guest specified line colour
       SetColour(clLine.ccColour);
       // Put text in a utf container and write the data. Note: Although
       // CoordGetY() could go effectively negative and we're not using a signed
@@ -647,6 +641,15 @@ class SysCon :                         // All members initially private
       CoordDecY(WriteLineWU(UtfDecoder{ clLine.strLine }) - 1);
     } // Clear extra lines we didn't draw too
     while(CoordGetY() > 1) { CoordSetX(0); CoordDecY(); ClearLine(); }
+  }
+  /* -- Redraw ------------------------------------------------------------- */
+  void ForceRedrawTerminal()
+  { // Running some NCurses calls
+    using namespace ICurses;
+    // Clear the screen
+    clear();
+    // Refresh it
+    refresh();
   }
   /* -- DeInitialise ------------------------------------------------------- */
   void SysConDeInit()
@@ -744,14 +747,14 @@ class SysCon :                         // All members initially private
           &stEntry[0], &stEntry[1], &stEntry[2]) == ERR)
             stEntry[0] = stEntry[1] = stEntry[2] = -1;
         // Grab the colour required by the engine
-        unsigned int uiRGB = ConColourToRGB(static_cast<ConColour>(stPalette));
+        unsigned uRGB = ConColourToRGB(static_cast<ConColour>(stPalette));
         // Calculate new value based on our required colour.
         const short sR = static_cast<short>(static_cast<double>
-            (((uiRGB & 0xFF0000) >> 16)) / 0xFF * 1000),
+            (((uRGB & 0xFF0000) >> 16)) / 0xFF * 1000),
                     sG = static_cast<short>(static_cast<double>
-            (((uiRGB & 0x00FF00) >>  8)) / 0xFF * 1000),
+            (((uRGB & 0x00FF00) >>  8)) / 0xFF * 1000),
                     sB = static_cast<short>(static_cast<double>
-            ( (uiRGB & 0x0000FF)       ) / 0xFF * 1000);
+            ( (uRGB & 0x0000FF)       ) / 0xFF * 1000);
         // Feed the RGB to set the palette colours and if failed just break
         // because we don't really know how many colours the terminal supports.
         if(init_color(sPalette, sR, sG, sB) == ERR) continue;
@@ -814,7 +817,7 @@ class SysCon :                         // All members initially private
     SysBase{ StdMove(smmMap), stI },   // Initialise base with module info
     InitHelper{ __FUNCTION__ },        // Initialise init helper
     aColour(0),                        // Black colour
-    aColourSaved(0),                   // Black saved colour
+    aColourSaved(0),                   // Saved colour
     stPalette(0),                      // No palette colours
     stPairs(0),                        // No colour pairs
     diSizeM1{ -1, -1 },                // Init screen dimensions minus 1
@@ -837,5 +840,9 @@ class SysCon :                         // All members initially private
     return ACCEPT;
   }
 };/* ----------------------------------------------------------------------- */
-#define ENGINE_SYSCON_CALLBACKS()    // Not required
+#define ENGINE_SYSCON_CALLBACKS()      // Not required
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

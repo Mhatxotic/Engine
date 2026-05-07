@@ -11,24 +11,24 @@
 namespace IBin {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IDim::P;
-using namespace IDimCoord::P;          using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace IUtil::P;
+using namespace IDimCoord::P;          using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntType=int,         // Unsigned type not allowed!
-         typename Int=make_signed_t<IntType>,
-         typename UInt=make_unsigned_t<IntType>,
-         class DimClass=Dimensions<Int>>
-requires StdIsSame<IntType, Int>
+template<typename IntType = int,
+         typename UIntType = StdMakeUnsigned<IntType>,
+         class DimClass = Dimensions<IntType>>
+  requires StdIsSigned<IntType>
 class Pack :
   /* -- Initialisers ------------------------------------------------------- */
   public DimClass                      // Dimensions of bin in pixels
 { /* --------------------------------------------------------------- */ public:
-  typedef DimCoords<Int> Rect;         // Rectangle of signed ints
-  typedef StdVector<Rect> RectList;    // list of rectangles
+  using Rect     = DimCoords<IntType>; // Rectangle of signed ints
+  using RectList = StdVector<Rect>;    // list of rectangles
   constexpr static double dIdle = -0.0;// Uninitialised value
   /* -------------------------------------------------------------- */ private:
   RectList         rlUsed, rlFree;     // Used and free data
@@ -36,55 +36,58 @@ class Pack :
   void PruneFreeRect(const size_t stIndex)
     { rlFree.erase(StdNext(rlFree.cbegin(), static_cast<ssize_t>(stIndex))); }
   /* -- Add a rect (note this can cause a realloc) ------------------------- */
-  void AddFreeRect(const Int iX, const Int iY, const Int iW, const int iH)
-    { rlFree.push_back({ iX, iY, iW, iH }); }
+  void AddFreeRect(const IntType itX, const IntType itY, const IntType itW,
+    const int itH) { rlFree.push_back({ itX, itY, itW, itH }); }
   /* ----------------------------------------------------------------------- */
-  const Rect FindPositionForNewNodeBestShortSideFit(const Int iW,
-    const Int iH, Int &iBestShortSideFit, Int &iBestLongSideFit) const
+  const Rect FindPositionForNewNodeBestShortSideFit(const IntType itW,
+    const IntType itH, IntType &itBestShortSideFit, IntType &itBestLongSideFit)
+      const
   { // The best node that will be returned
-    iBestShortSideFit = iBestLongSideFit = StdLimits<Int>::max();
+    itBestShortSideFit = itBestLongSideFit = StdLimits<IntType>::max();
     Rect rFound;
     for(const Rect &rNode : rlFree)
     { // Try to place the rectangle in upright (non-flipped) orientation.
-      if(rNode.DimGetWidth() < iW || rNode.DimGetHeight() < iH) continue;
-      const Int iLeftOverHoriz = abs(rNode.DimGetWidth() - iW),
-                iLeftOverVert = abs(rNode.DimGetHeight() - iH),
-                iShortSideFit = UtilMinimum(iLeftOverHoriz, iLeftOverVert),
-                iLongSideFit = UtilMaximum(iLeftOverHoriz, iLeftOverVert);
-      if(iShortSideFit < iBestShortSideFit ||
-        (iShortSideFit == iBestShortSideFit &&
-         iLongSideFit < iBestLongSideFit))
+      if(rNode.DimGetWidth() < itW || rNode.DimGetHeight() < itH) continue;
+      const IntType
+        itLeftOverHoriz = abs(rNode.DimGetWidth() - itW),
+        itLeftOverVert = abs(rNode.DimGetHeight() - itH),
+        iShortSideFit = UtilMinimum(itLeftOverHoriz, itLeftOverVert),
+        iLongSideFit = UtilMaximum(itLeftOverHoriz, itLeftOverVert);
+      if(iShortSideFit < itBestShortSideFit ||
+        (iShortSideFit == itBestShortSideFit &&
+         iLongSideFit < itBestLongSideFit))
       {
-        iBestShortSideFit = iShortSideFit;
-        iBestLongSideFit = iLongSideFit;
-        rFound.DimCoSet(rNode.CoordGetX(), rNode.CoordGetY(), iW, iH);
+        itBestShortSideFit = iShortSideFit;
+        itBestLongSideFit = iLongSideFit;
+        rFound.DimCoSet(rNode.CoordGetX(), rNode.CoordGetY(), itW, itH);
       }
     } // Return what we found if we did
     return rFound;
   }
   /* -- Do try to split a free node and ------------------------------------ */
   void SplitFreeNodeUnsafe(const Rect &rFree, const Rect &rUsed,
-    const Int iFreeH, const Int iUsedH, const Int iFreeV, const Int iUsedV)
+    const IntType itFreeH, const IntType itUsedH, const IntType itFreeV,
+    const IntType itUsedV)
   { // Check horizontal bounds
-    if(rUsed.CoordGetX() < iFreeH && iUsedH > rFree.CoordGetX())
+    if(rUsed.CoordGetX() < itFreeH && itUsedH > rFree.CoordGetX())
     { // New node at the top side of the used node.
-      if(rUsed.CoordGetY() > rFree.CoordGetY() && rUsed.CoordGetY() < iFreeV)
+      if(rUsed.CoordGetY() > rFree.CoordGetY() && rUsed.CoordGetY() < itFreeV)
         AddFreeRect(rFree.CoordGetX(), rFree.CoordGetY(),
           rFree.DimGetWidth(), rUsed.CoordGetY() - rFree.CoordGetY());
       // New node at the bottom side of the used node.
-      if(iUsedV < iFreeV)
-        AddFreeRect(rFree.CoordGetX(), iUsedV,
-          rFree.DimGetWidth(), iFreeV - iUsedV);
+      if(itUsedV < itFreeV)
+        AddFreeRect(rFree.CoordGetX(), itUsedV,
+          rFree.DimGetWidth(), itFreeV - itUsedV);
     } // Check vertical bounds
-    if(rUsed.CoordGetY() < iFreeV && iUsedV > rFree.CoordGetY())
+    if(rUsed.CoordGetY() < itFreeV && itUsedV > rFree.CoordGetY())
     { // New node at the left side of the used node.
-      if(rUsed.CoordGetX() > rFree.CoordGetX() && rUsed.CoordGetX() < iFreeH)
+      if(rUsed.CoordGetX() > rFree.CoordGetX() && rUsed.CoordGetX() < itFreeH)
         AddFreeRect(rFree.CoordGetX(), rFree.CoordGetY(),
           rUsed.CoordGetX() - rFree.CoordGetX(), rFree.DimGetHeight());
       // New node at the right side of the used node.
-      if(iUsedH < iFreeH)
-        AddFreeRect(iUsedH, rFree.CoordGetY(),
-          iFreeH - iUsedH, rFree.DimGetHeight());
+      if(itUsedH < itFreeH)
+        AddFreeRect(itUsedH, rFree.CoordGetY(),
+          itFreeH - itUsedH, rFree.DimGetHeight());
     }
   }
   /* -- Try to split a free node and return true if succeeded -------------- */
@@ -92,13 +95,13 @@ class Pack :
   { // Get reference to free node
     const Rect &rFree = rlFree[stIndex];
     // Calculate maximum bounds of the free and used rslRects.
-    const Int iFreeH = rFree.CoordGetX() + rFree.DimGetWidth(),
-              iUsedH = rUsed.CoordGetX() + rUsed.DimGetWidth(),
-              iFreeV = rFree.CoordGetY() + rFree.DimGetHeight(),
-              iUsedV = rUsed.CoordGetY() + rUsed.DimGetHeight();
+    const IntType itFreeH = rFree.CoordGetX() + rFree.DimGetWidth(),
+              itUsedH = rUsed.CoordGetX() + rUsed.DimGetWidth(),
+              itFreeV = rFree.CoordGetY() + rFree.DimGetHeight(),
+              itUsedV = rUsed.CoordGetY() + rUsed.DimGetHeight();
     // Test with SAT if the rectangles even intersect.
-    if(rUsed.CoordGetX() >= iFreeH || iUsedH <= rFree.CoordGetX() ||
-       rUsed.CoordGetY() >= iFreeV || iUsedV <= rFree.CoordGetY())
+    if(rUsed.CoordGetX() >= itFreeH || itUsedH <= rFree.CoordGetX() ||
+       rUsed.CoordGetY() >= itFreeV || itUsedV <= rFree.CoordGetY())
       return false;
     // DANGER! There must be at least four reserved vector nodes or a
     // push_back() could trigger a realloc() being a STL vector and &rFree
@@ -111,9 +114,9 @@ class Pack :
       // Do the split with a NEW evaluation of rlFree[stIndex] as again, the
       // address of rlFree[stIndex] may have changed!
       SplitFreeNodeUnsafe(rlFree[stIndex], rUsed,
-        iFreeH, iUsedH, iFreeV, iUsedV);
+        itFreeH, itUsedH, itFreeV, itUsedV);
     } // Enough room so we can just continue with the existing reference.
-    else SplitFreeNodeUnsafe(rFree, rUsed, iFreeH, iUsedH, iFreeV, iUsedV);
+    else SplitFreeNodeUnsafe(rFree, rUsed, itFreeH, itUsedH, itFreeV, itUsedV);
     // Success!
     return true;
   }
@@ -161,9 +164,10 @@ class Pack :
     rlFree.swap(pOther.rlFree);
   }
   /* -- (Re)initialise bin to empty state -------------------------- */ public:
-  void Init(const UInt iNWidth, const UInt iNHeight)
-  { // Init iW and iH
-    this->DimSet(static_cast<Int>(iNWidth), static_cast<Int>(iNHeight));
+  void Init(const UIntType uitNWidth, const UIntType uitNHeight)
+  { // Init itW and itH
+    this->DimSet(static_cast<IntType>(uitNWidth),
+      static_cast<IntType>(uitNHeight));
     // Clear current usage
     rlUsed.clear();
     rlFree.clear();
@@ -174,24 +178,24 @@ class Pack :
   void Reserve(const size_t stUsedReserve, const size_t stFreeReserve)
     { rlUsed.reserve(stUsedReserve); rlFree.reserve(stFreeReserve); }
   /* -- (Re)initialise bin to empty state ---------------------------------- */
-  void Init(const UInt uiNWidth, const UInt uiNHeight,
+  void Init(const UIntType uitNWidth, const UIntType uitNHeight,
      const size_t stUsedReserve, const size_t stFreeReserve)
   { // Initialise rect
-    Init(uiNWidth, uiNHeight);
+    Init(uitNWidth, uitNHeight);
     // Reserve memory
     Reserve(stUsedReserve, stFreeReserve);
   }
   /* -- Englarge the bin --------------------------------------------------- */
-  bool Resize(const UInt uiNWidth, const UInt uiNHeight)
+  bool Resize(const UIntType uitNWidth, const UIntType uitNHeight)
   { // If there is nothing in the bin?
     if(rlUsed.empty())
     { // Just reinitialise it
-      Init(uiNWidth, uiNHeight);
+      Init(uitNWidth, uitNHeight);
       // Success
       return true;
     } // Convert values to int
-    const int iNHeight = static_cast<Int>(uiNHeight);
-    const int iNWidth = static_cast<Int>(uiNWidth);
+    const int iNHeight = static_cast<IntType>(uitNHeight);
+    const int iNWidth = static_cast<IntType>(uitNWidth);
     // New width same as old?
     if(iNWidth <= this->DimGetWidth())
     { // Return if new height same as old
@@ -212,20 +216,21 @@ class Pack :
     return true;
   }
   /* -- Test insert a single rectangle into the bin ------------------------ */
-  const Rect Test(const UInt iW, const UInt iH) const
+  const Rect Test(const UIntType uitW, const UIntType uitH) const
   { // Initialise two score values and init to maximum supported int value
-    Int iScore1 = StdLimits<Int>::max(), iScore2 = iScore1;
+    IntType itScore1 = StdLimits<IntType>::max(), itScore2 = itScore1;
     // Find position for new node and return if the size will fit
-    return FindPositionForNewNodeBestShortSideFit(static_cast<Int>(iW),
-      static_cast<Int>(iH), iScore1, iScore2);
+    return FindPositionForNewNodeBestShortSideFit(static_cast<IntType>(uitW),
+      static_cast<IntType>(uitH), itScore1, itScore2);
   }
   /* -- Inserts a single rectangle into the bin ---------------------------- */
-  const Rect Insert(const UInt uiW, const UInt uiH)
+  const Rect Insert(const UIntType uitW, const UIntType uitH)
   { // Initialise two score values and init to maximum supported int value
-    Int iScore1 = StdLimits<Int>::max(), iScore2 = iScore1;
+    IntType itScore1 = StdLimits<IntType>::max(), itScore2 = itScore1;
     // Find position for new node and return zero (rNew={0,0}) if failed
     const Rect rNew{ FindPositionForNewNodeBestShortSideFit(
-      static_cast<Int>(uiW), static_cast<Int>(uiH), iScore1, iScore2) };
+      static_cast<IntType>(uitW), static_cast<IntType>(uitH),
+      itScore1, itScore2) };
     if(rNew.DimGetHeight() == 0) return rNew;
     // Get number of free rectangles and enumerate through them
     size_t stRectanglesToProcess = rlFree.size();
@@ -263,20 +268,20 @@ class Pack :
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Instantiates a bin of the given size with pre-reserved memory ------ */
-  Pack(const UInt   uiNWidth,          // Set width of new pack
-       const UInt   uiNHeight,         // Set height of new pack
+  Pack(const UIntType uitNWidth,         // Set width of new pack
+       const UIntType uitNHeight,        // Set height of new pack
        const size_t stUsedReserve,     // Used list initial size
        const size_t stFreeReserve) :   // Free list initial size
     /* -- Initialisers ----------------------------------------------------- */
-    Pack{ uiNWidth, uiNHeight }        // Initialise pack
+    Pack{ uitNWidth, uitNHeight }          // Initialise pack
     /* -- Reserve list sizes ----------------------------------------------- */
     { Reserve(stUsedReserve, stFreeReserve); }
   /* -- Instantiates a bin of the given size ------------------------------- */
-  Pack(const UInt uiNWidth,            // Width of new pack
-       const UInt uiNHeight) :         // Height of new pack
+  Pack(const UIntType uitNWidth,         // Width of new pack
+       const UIntType uitNHeight) :      // Height of new pack
     /* -- Initialisers ----------------------------------------------------- */
-    DimClass{ static_cast<Int>(uiNWidth),    // Set width of new pack
-              static_cast<Int>(uiNHeight) }, // Set height of new pack
+    DimClass{ static_cast<IntType>(uitNWidth),    // Set width of new pack
+              static_cast<IntType>(uitNHeight) }, // Set height of new pack
     rlFree{{ 0, 0,                     // Initialise co-ordinates
       this->DimGetWidth(),             // Initialise specified width
       this->DimGetHeight() }}          // Initialise specified height
@@ -292,7 +297,7 @@ CTOR_BEGIN_DUO(Bins, Bin, CLHelperUnsafe, ICHelperUnsafe),
   Bin() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperBin{ cBins, this },        // Register the object in collector
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

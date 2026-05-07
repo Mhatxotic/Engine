@@ -22,7 +22,7 @@ namespace P {                          // Start of public module namespace
 // We need to collect the event ids of the events we dispatch so we can
 // remove these events when the class is destroyed, or events that reference
 // derived classes which have been destroyed will crash the engine.
-typedef StdDeque<EvtMain::QueueConstIt> LuaEvtsList;
+using LuaEvtsList = StdDeque<EvtMain::QueueConstIt> ;
 /* == Class type for storing an event iterator and removing it ============= */
 class LuaEvts :
   /* -- Initialisers ------------------------------------------------------- */
@@ -92,7 +92,8 @@ class LuaEvts :
   DTORHELPER(~LuaEvts, LuaEvtsDeInit())
 };/* ----------------------------------------------------------------------- */
 /* == Class type for master class (send parameters on event trigger) ======= */
-template<class MemberType>struct LuaEvtTypeParam
+template<class MemberType>
+  struct LuaEvtTypeParam
 { /* -- Send event to thiscall with no parameters -------------------------- */
   static void OnEvent(const EvtMainEvent &emeEvent)
   { // Get reference to parameters and if there are no parameters?
@@ -155,7 +156,7 @@ class LuaEvtMaster :
   DTORHELPER(~LuaEvtMaster, cEvtMain->Unregister(emcCmd))
 };/* == Routines for a collectors child class ============================== */
 template<class MemberType,             // Member object type
-         size_t stRefs=1>              // Number of references to store
+         size_t stRefs = 1>            // Number of references to store
 class LuaEvtSlave :
   /* -- Base classes ------------------------------------------------------- */
   public LuaEvts,                      // Events handler
@@ -164,47 +165,46 @@ class LuaEvtSlave :
   EvtMainCmd       emcCmd;             // Event associated with this
   MemberType*const mtPtr;              // Parent of this class
   /* -- Event dispatch --------------------------------------------- */ public:
-  template<typename ...VarArgs>void LuaEvtDispatch(const VarArgs ...vaArgs)
-  { // Return if no callback is set. No point firing an event!
-    if(!this->LuaRefIsSet()) return;
-    // Insert a new event. We need to store the id of the iterator too so we
-    // can remove it when we process the event in LuaEvtCallbackParam().
-    LuaEvtsDispatch(emcCmd, reinterpret_cast<void*>(mtPtr), vaArgs...);
+  void LuaEvtDispatch(auto &&...aArgs)
+  { // If no callback is set then insert a new event. We need to store the id
+    // of the iterator too so we can remove it when we process the event in
+    // LuaEvtCallbackParam().
+    if(this->LuaRefIsSet())
+      LuaEvtsDispatch(emcCmd, reinterpret_cast<void*>(mtPtr),
+        StdForward<decltype(aArgs)>(aArgs)...);
   }
   /* -- Event callback on main thread -------------------------------------- */
   void LuaEvtCallbackParam(const EvtMainEvent &emeEvent) try
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
-    // Sanity check get number of mandatory parameters
-    const size_t stMandatory = 2;
-    // Get number of parameters and make sure we have enough parameters
+     // Get number of parameters and make sure we have enough parameters
+    constexpr const size_t stMandatory = 2;
     if(emaArgs.size() < stMandatory)
       XC("Not enough parameters to generic Lua event callback!",
-        "Identifier", mtPtr->IdentGet(), "Event",   emeEvent.cCmd,
-        "Count",      emaArgs.size(),    "Maximum", stMandatory);
+        "Name",  mtPtr->NameGet(), "Event",   emeEvent.cCmd,
+        "Count", emaArgs.size(),   "Maximum", stMandatory);
     // Remove iterator from our events dispatched list
     LuaEvtsRemoveIterator(static_cast<size_t>(emaArgs[1].UInt()));
     // Lua is paused?
-    if(uiLuaPaused)
-    { // Show error in log
+    if(uLuaPaused)
+    { // Show error in log and return
       cLog->LogWarningExSafe(
         "LuaEvt for generic event $ for '$' ignored because lua is paused!",
-        emeEvent.cCmd,  mtPtr->IdentGet(), this->LuaRefStateIsSet(),
+        emeEvent.cCmd, mtPtr->NameGet(), this->LuaRefStateIsSet(),
         this->LuaRefGetId(), emaArgs.size());
-      // Just return
       return;
     } // Check to see if we can write the function and it's parameters, if not?
     if(!LuaUtilIsStackAvail(this->LuaRefGetState(), emaArgs.size() - 1))
       XC("Not enough stack space or memory, or param count overflowed!",
-        "Identifier", mtPtr->IdentGet(),        "Event", emeEvent.cCmd,
-        "HaveState",  this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
-        "Params",     emaArgs.size());
+        "Name",      mtPtr->NameGet(),         "Event", emeEvent.cCmd,
+        "HaveState", this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
+        "Params",    emaArgs.size());
     // Not have function?
     if(!this->LuaRefGetFunc())
       XC("Could not get callback function!",
-        "Identifier", mtPtr->IdentGet(),        "Event", emeEvent.cCmd,
-        "HaveState",  this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
-        "Params",     emaArgs.size());
+        "Name", mtPtr->NameGet(),        "Event", emeEvent.cCmd,
+        "HaveState", this->LuaRefStateIsSet(), "Ref", this->LuaRefGetId(),
+        "Params",    emaArgs.size());
     // Enumerate add the rest of the parameters
     for(size_t stIndex = 2; stIndex < emaArgs.size(); ++stIndex)
     { // Using event core namespace
@@ -259,20 +259,13 @@ class LuaEvtSlave :
       static_cast<int>(emaArgs.size() - stMandatory));
   } // Exception occured? Disable lua callback and rethrow
   catch(const StdException &) { this->LuaRefDeInit(); throw; }
-  /* ----------------------------------------------------------------------- */
-  void LuaEvtDeInit()
-  { // De-initialise reference state
-    this->LuaRefDeInit();
-    // De-init event store
-    LuaEvtsDeInit();
-  }
-  /* -- Initialise new variables ------------------------------------------- */
+  /* -- De-initialise reference state and event store ---------------------- */
+  void LuaEvtDeInit() { this->LuaRefDeInit(); LuaEvtsDeInit(); }
+  /* -- Initialise new reference ------------------------------------------- */
   void LuaEvtInitEx(lua_State*const lS)
-  { // Initialise reference and if failed
-    if(!this->LuaRefInit(lS))
-      XC("Failed to reference variables!",
-        "Identifier", mtPtr->IdentGet(), "Count", stRefs);
-  }
+    { if(!this->LuaRefInit(lS))
+        XC("Failed to reference variables!",
+          "Name", mtPtr->NameGet(), "Count", stRefs); }
   /* -- Initialise new variables ------------------------------------------- */
   void LuaEvtInitEx(lua_State*const lS, const size_t stId)
   { // Check that the sent state is the same one we have stored
@@ -281,19 +274,18 @@ class LuaEvtSlave :
         "stored as the internal storage only supports storing one state "
         "for multiple references!",
         "StoredState", this->LuaRefStateIsSet(), "SentState", lS != nullptr,
-        "Identifier",  mtPtr->IdentGet(),        "Reference", stId,
+        "Name",        mtPtr->NameGet(),         "Reference", stId,
         "Count",       stRefs);
     // Initialise reference and if failed
     if(!this->LuaRefInitEx(stId))
       XC("Failed to reference new variable!",
-        "Identifier", mtPtr->IdentGet(), "Reference", stId, "Count", stRefs);
+        "Name", mtPtr->NameGet(), "Reference", stId, "Count", stRefs);
   }
   /* -- Initialise with empty function ------------------------------------- */
   void LuaEvtInit(lua_State*const lS)
-  { // Need 2 parameters and a function
+  { // Check for 2 parameters and 1 function before going further
     LuaUtilCheckParams(lS, 2);
     LuaUtilCheckFunc(lS, 2);
-    // Done
     LuaEvtInitEx(lS);
   }
   /* -- Standby constructor ------------------------------------------------ */

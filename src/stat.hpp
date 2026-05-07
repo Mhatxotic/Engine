@@ -12,19 +12,19 @@
 namespace IStat {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICommon::P;
-using namespace IError::P;             using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-/* -- Aliases -------------------------------------------------------------- */
-using StdIOSBase = ::std::ios_base;
+using namespace IError::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ITime::P;              using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Statistic class ------------------------------------------------------ */
 class Statistic
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef StdIOSBase &(*JCCallback)(StdIOSBase&);
+  using JCCallback = StdIOSBase &(*)(StdIOSBase&);
   /* ----------------------------------------------------------------------- */
   struct Head                          // Column data
   { /* --------------------------------------------------------------------- */
@@ -32,7 +32,7 @@ class Statistic
     JCCallback     jccFunc;            // Justification callback function
     int            iMaxLen;            // Maximum header length
   };/* --------------------------------------------------------------------- */
-  typedef StdDeque<Head> HeadDeque;    // Column header data list
+  using HeadDeque = StdDeque<Head>;    // Column header data list
   /* -- Private variables -------------------------------------------------- */
   HeadDeque        hdHeaders;          // Headers dataz
   StrVector        svValues;           // Values list
@@ -77,9 +77,11 @@ class Statistic
   size_t Cells() const { return svValues.size(); }
   size_t Headers() const { return hdHeaders.size(); }
   size_t Rows() const { return Cells() / Headers(); }
+  Statistic &FlushData() { svValues.clear(); return *this; }
+  Statistic &Flush() { FlushData().hdHeaders.clear(); return *this; }
   /* -- Finish with existing string stream --------------------------------- */
-  void Finish(StdOStringStream &osS, const bool bAddLF=true,
-    const size_t stGap=1)
+  void Finish(StdOStringStream &osS, const bool bAddLF = true,
+    const size_t stGap = 1)
   { // Check that there are headers
     CheckHeaderCount();
     // Get headers size minus one
@@ -133,7 +135,7 @@ class Statistic
     hdHeaders.clear();
   }
   /* -- Finish with new string stream -------------------------------------- */
-  const StdString Finish(const bool bAddLF=true, const size_t stGap=1)
+  StdString Finish(const bool bAddLF = true, const size_t stGap = 1)
   { // Output stream
     StdOStringStream osS;
     // Do the format
@@ -143,29 +145,58 @@ class Statistic
   }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
-    Statistic &DataFN(const IntType tNum, const int iP=0)
-      { return Data(StdMove(StrReadableFromNum<IntType>(tNum, iP))); }
+    requires StdIsArithmatic<IntType>
+  Statistic &DataFN(const IntType itNum, const int iP = 0)
+    { return Data(StdMove(StrReadableFromNum<IntType>(itNum, iP))); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
-    Statistic &DataFB(const IntType tNum, const int iP=0)
-      { return Data(StrToReadableBytes
-          (static_cast<uint64_t>(tNum), iP)); }
+    requires StdIsIntegral<IntType>
+  Statistic &DataT(const IntType itNum, const char*const cpFormat)
+    { return Data(TimeLocalTTtoStr(static_cast<StdTimeT>(itNum), cpFormat)); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
-    Statistic &DataN(const IntType tNum, const int iP=0)
-      { return Data(StdMove(StrFromNum<IntType>(tNum, 0, iP))); }
+    requires StdIsIntegral<IntType>
+  Statistic &DataPM(const IntType itNum, const int iP = 0)
+    { return Data(StrPrefixPosNeg(static_cast<uint64_t>(itNum), iP)); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
-    Statistic &DataB(const IntType tNum, const int iP=0)
-      { return Data(StrToBytes(static_cast<uint64_t>(tNum), iP)); }
+    requires StdIsIntegral<IntType>
+  Statistic &DataFB(const IntType itNum, const int iP = 0)
+    { return Data(StrToReadableBytes(static_cast<uint64_t>(itNum), iP)); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
-    Statistic &DataH(const IntType tNum, const int iP=0)
-      { return Data(StdMove(StrHexFromInt<IntType>(tNum, iP))); }
+    requires StdIsIntegral<IntType>
+  Statistic &DataSD(const IntType itNum, const unsigned uP = 0)
+    { return Data(durShort.Parse(static_cast<StdTimeT>(itNum), uP)); }
   /* ----------------------------------------------------------------------- */
-  template<typename StrType>
-    Statistic &DataOR(const StrType &strValue, const StrType &strAlt)
-      { return Data(StrIsBlank<StrType>(strValue, strAlt)); }
+  template<typename IntType>
+    requires StdIsIntegral<IntType>
+  Statistic &DataLD(const IntType itNum, const unsigned uP = 0)
+    { return Data(durLong.Parse(static_cast<StdTimeT>(itNum), uP)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename IntType>
+    requires StdIsArithmatic<IntType> || StdIsEnum<IntType>
+  Statistic &DataN(const IntType itNum, const int iP = 0)
+    { return Data(StdMove(StrFromNum<IntType>(itNum, 0, iP))); }
+  /* ----------------------------------------------------------------------- */
+  template<typename IntType>
+    requires StdIsIntegral<IntType>
+  Statistic &DataB(const IntType itNum, const int iP = 0)
+    { return Data(StrToBytes(static_cast<uint64_t>(itNum), iP)); }
+  /* ----------------------------------------------------------------------- */
+  template<typename IntType>
+    requires StdIsIntegral<IntType> || StdIsEnum<IntType>
+  Statistic &DataH(const IntType itNum, const int iP = 0)
+    { return Data(StdMove(StrHexFromInt<IntType>(itNum, iP))); }
+  /* ----------------------------------------------------------------------- */
+  template<class StrValType, class StrAltType>
+    requires StdIsStrOrCStr<StrValType> && StdIsStrOrCStr<StrAltType>
+  Statistic &DataOR(StrValType &&strValue, StrAltType &&strAlt)
+    { return Data(StrIsBlank(StdForward<StrValType>(strValue),
+                             StdForward<StrAltType>(strAlt))); }
+  /* -- Evaluate tokens ---------------------------------------------------- */
+  Statistic &DataE(const BoolCharPairVector &bcpvList)
+    { return Data(StrFromEvalTokens(bcpvList)); }
   /* -- Data by character -------------------------------------------------- */
   Statistic &DataC(const char cCharacter = '?')
   { // Return if there are no headers
@@ -216,11 +247,12 @@ class Statistic
   template<typename ...VarArgs>Statistic &DataA(VarArgs &&...vaArgs)
     { return Data(StrAppend(StdForward<VarArgs>(vaArgs)...)); }
   /* -- Formatted data ----------------------------------------------------- */
-  template<typename ...VarArgs>Statistic &DataF(const char*const cpFormat,
-    VarArgs &&...vaArgs)
-  { return Data(StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...)); }
+  template<typename StrType, typename ...VarArgs>
+  Statistic &DataF(StrType &&strFormat, VarArgs &&...vaArgs)
+    { return Data(StrFormat(StdForward<StrType>(strFormat),
+                            StdForward<VarArgs>(vaArgs)...)); }
   /* -- Data by read-only lvalue string copy ------------------------------- */
-  Statistic &Data(const StdString &strVal=cCommon->CommonBlank())
+  Statistic &Data(const StdString &strVal = cCommon->CommonBlank())
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
@@ -255,10 +287,10 @@ class Statistic
     return *this;
   }
   /* -- Data by read-only lvalue widestring copy --------------------------- */
-  Statistic &DataW(const StdWideString &wstrVal={})
-    { return Data(UtfFromWide(wstrVal.data())); }
+  Statistic &DataW(const StdWideString &wstrVal = {})
+    { return Data(UtfFromWide(wstrVal)); }
   /* -- Duplicate current headers ------------------------------------------ */
-  Statistic &DupeHeader(const size_t stCount=1)
+  Statistic &DupeHeader(const size_t stCount = 1)
   { // Have headers? Duplicate the headers the specified number of times
     if(!hdHeaders.empty())
       for(size_t stIndex = 0, stHdrCount = Headers();
@@ -271,7 +303,7 @@ class Statistic
   }
   /* -- Sort a table by specified primary or secondary column -------------- */
   void SortTwo(const ssize_t sstColPri, const ssize_t sstColSec,
-    const bool bDescending=false)
+    const bool bDescending = false)
   { // Check that there are headers
     CheckHeaderCount();
     // Check that both sort columns aren't the same
@@ -280,7 +312,7 @@ class Statistic
     CheckRowNotFinished();
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColPri, sviColSec; };
-    typedef StdVector<StrRef> StrRefVec;
+    using StrRefVec = StdVector<StrRef>;
     StdReserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
@@ -326,14 +358,14 @@ class Statistic
     svValues.swap(svValuesNew);
   }
   /* -- Sort a table by specified primary column --------------------------- */
-  void Sort(const ssize_t sstColumn, const bool bDescending=false)
+  void Sort(const ssize_t sstColumn, const bool bDescending = false)
   { // Check that there are headers
     CheckHeaderCount();
     // Check that the row has been finished
     CheckRowNotFinished();
     // Sorting list
     struct StrRef { StrVectorIt sviRowIt, sviColIt; };
-    typedef StdVector<StrRef> StrRefVec;
+    using StrRefVec = StdVector<StrRef> ;
     StdReserved<StrRefVec> srvList{ Rows() };
     // Get headers as ssize_t (prevents signed casting warning).
     const ssize_t sstHeaders = UtilIntOrMax<ssize_t>(Headers());
@@ -360,19 +392,20 @@ class Statistic
     svValues.swap(svValuesNew);
   }
   /* -- Add a header and return self --------------------------------------- */
-  Statistic &Header(const StdString &strH, const bool bRJ, const size_t stL=0)
+  Statistic &Header(const StdStringView &strvH, const bool bRJ,
+    const size_t stL = 0)
   { // Push the header item if there are values as this will mess everything
     // up. Make sure the first column is always left justified.
     if(svValues.empty())
-      hdHeaders.push_back({ strH, bRJ ? StdIOSRight : StdIOSLeft,
-        UtilIntOrMax<int>(UtilMaximum(stL, strH.length())) });
+      hdHeaders.push_back({ StdString{ strvH }, bRJ ? StdIOSRight : StdIOSLeft,
+        UtilIntOrMax<int>(UtilMaximum(stL, strvH.size())) });
     // Return self so we can daisy chain
     return *this;
   }
   /* -- Add an empty header ------------------------------------------------ */
-  Statistic &Header(const StdString &strH=cCommon->CommonBlank(),
-    const size_t stL=0)
-      { return Header(strH, !hdHeaders.empty(), stL); }
+  Statistic &Header(const StdStringView &strvH = cCommon->CommonBlankV(),
+    const size_t stL = 0)
+  { return Header(strvH, !hdHeaders.empty(), stL); }
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */
@@ -387,7 +420,7 @@ CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
   Stat() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperStat{ cStats, this },      // Automatic (de)registration
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

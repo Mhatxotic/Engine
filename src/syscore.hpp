@@ -9,401 +9,46 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
+/* -- Includes ------------------------------------------------------------- */
+#if defined(WINDOWS)                   // Using windows?
+# include "winmod.hpp"                 // Module information class
+# include "winreg.hpp"                 // Registry class
+# include "winmap.hpp"                 // File mapping class
+# include "winpipe.hpp"                // Process output piping class
+# include "winbase.hpp"                // Base system class
+# include "wincon.hpp"                 // Console terminal window class
+# include "syswin.hpp"                 // Include windows system core
+#else                                  // Linux or MacOS (POSIX)?
+# include "pixredir.hpp"               // Output to logger redirector
+# include "pixbase.hpp"                // Base system class
+# include "pixcon.hpp"                 // Console terminal window class
+# include "pixmod.hpp"                 // Module information class
+# include "pixmap.hpp"                 // File mapping class
+# include "pixpipe.hpp"                // Process output piping class
+# include "pixmutex.hpp"               // Mutex class
+# include "syspix.hpp"                 // Common POSIX core
+# if defined(MACOS)                    // Using mac?
+#  include "sysmac.hpp"                // Include MacOS system core
+# elif defined(LINUX)                  // Using linux?
+#  include "sysnix.hpp"                // Common POSIX core
+# endif                                // MacOS or Linux?
+#endif                                 // Done checking OS
 /* ------------------------------------------------------------------------- */
 namespace ISystem {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IArgs::P;              using namespace IClock::P;
-using namespace ICmdLine::P;           using namespace ICommon::P;
-using namespace IConDef::P;            using namespace ICoord::P;
-using namespace ICVarDef::P;           using namespace IDim::P;
-using namespace IDimCoord::P;          using namespace IDir::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags::P;             using namespace IFStream::P;
-using namespace IHelper::P;            using namespace IIdent::P;
+using namespace IClock::P;             using namespace ICmdLine::P;
+using namespace ICommon::P;            using namespace ICVarDef::P;
+using namespace IDir::P;               using namespace IError::P;
 using namespace IInterval::P;          using namespace ILog::P;
-using namespace IMemory::P;            using namespace IMutex::P;
-using namespace IParser::P;            using namespace IPSplit::P;
-using namespace IStat::P;              using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IThread::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
+using namespace ILookupArray::P;       using namespace IMemory::P;
+using namespace IPSplit::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISysCore::P;           using namespace ISysUtil::P;
+using namespace ITime::P;              using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 using ::std::terminate_handler;        using ::std::set_terminate;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == System module data =================================================== **
-** ######################################################################### **
-** ## Information about a module.                                         ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-class SysModuleData :                  // Members initially private
-  /* -- Base classes ------------------------------------------------------- */
-  private PathSplit                    // Path parts to mod name
-{ /* -- Variables ---------------------------------------------------------- */
-  const unsigned int uiMajor, uiMinor, // Major and minor version of module
-                  uiBuild, uiRevision; // Build and revision version of module
-  const StdString  strVendor,          // Vendor of module
-                   strDesc,            // Description of module
-                   strComments,        // Comments of module
-                   strVersion;         // Version as string
-  /* --------------------------------------------------------------- */ public:
-  const StdString &GetDrive() const { return strDrive; }
-  const StdString &GetDir() const { return strDir; }
-  const StdString &GetFile() const { return strFile; }
-  const StdString &GetExt() const { return strExt; }
-  const StdString &GetFileExt() const { return strFileExt; }
-  const StdString &GetFull() const { return strFull; }
-  const StdString &GetLoc() const { return strLoc; }
-  unsigned int GetMajor() const { return uiMajor; }
-  unsigned int GetMinor() const { return uiMinor; }
-  unsigned int GetBuild() const { return uiBuild; }
-  unsigned int GetRevision() const { return uiRevision; }
-  const StdString &GetVendor() const { return strVendor; }
-  const StdString &GetDesc() const { return strDesc; }
-  const StdString &GetComments() const { return strComments; }
-  const StdString &GetVersion() const { return strVersion; }
-  /* -- Move constructor --------------------------------------------------- */
-  SysModuleData(SysModuleData &&smdO) :
-    /* -- Initialisers ----------------------------------------------------- */
-    PathSplit{ StdMove(smdO) },                 // Copy filename
-    uiMajor(smdO.GetMajor()),                   // Copy major version
-    uiMinor(smdO.GetMinor()),                   // Copy minor version
-    uiBuild(smdO.GetBuild()),                   // Copy build version
-    uiRevision(smdO.GetRevision()),             // Copy revision version
-    strVendor{ StdMove(smdO.GetVendor()) },     // Move vendor string
-    strDesc{ StdMove(smdO.GetDesc()) },         // Move description string
-    strComments{ StdMove(smdO.GetComments()) }, // Move comments string
-    strVersion{ StdMove(smdO.GetVersion()) }    // Move version string
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Initialise all members contructor ---------------------------------- */
-  explicit SysModuleData(const StdString &strF, const unsigned int uiMa,
-    const unsigned int uiMi, const unsigned int uiBu, const unsigned int uiRe,
-    StdString &&strVen, StdString &&strDe, StdString &&strCo,
-    StdString &&strVer) :
-    /* -- Initialisers ----------------------------------------------------- */
-    PathSplit{ strF },                 // Copy filename
-    uiMajor(uiMa),                     // Copy major version
-    uiMinor(uiMi),                     // Copy minor version
-    uiBuild(uiBu),                     // Copy build version
-    uiRevision(uiRe),                  // Copy revision version
-    strVendor{ StdMove(strVen) },      // Move vendor string
-    strDesc{ StdMove(strDe) },         // Move description string
-    strComments{ StdMove(strCo) },     // Move comments string
-    strVersion{ StdMove(strVer) }      // Move version string
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Initialise filename only constructor ------------------------------- */
-  explicit SysModuleData(const StdString &strF) :
-    /* -- Initialisers ----------------------------------------------------- */
-    PathSplit{ strF },                 // Initialise path parts
-    uiMajor(0),                        // Major version not initialised yet
-    uiMinor(0),                        // Minor version not initialised yet
-    uiBuild(0),                        // Build version not initialised yet
-    uiRevision(0)                      // Revision not initialised yet
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* ----------------------------------------------------------------------- */
-/* == System modules ======================================================= **
-** ######################################################################### **
-** ## Storage for all the modules loaded to this executable.              ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-MAPPACK_BUILD(SysMod, const size_t,const SysModuleData)
-/* ------------------------------------------------------------------------- */
-struct SysModules :
-  /* -- Base classes ------------------------------------------------------- */
-  public SysModMap                     // System module list
-{ /* -- Move constructor ---------------------------------------- */ protected:
-  SysModules(SysModules &&smOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    SysModMap{ StdMove(smOther) }
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Init from SysModMap ----------------------------------------------- */
-  explicit SysModules(SysModMap &&smlOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    SysModMap{ StdMove(smlOther) }
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Dump module list ------------------------------------------- */ public:
-  CVarReturn DumpModuleList(const unsigned int uiShow)
-  { // No modules? Return okay
-    if(!uiShow || empty()) return ACCEPT;
-    // Print how many modules we are enumerating
-    cLog->LogNLCInfoExSafe("System enumerating $ modules...", size());
-    // For each shared module, print the data for it to log
-    for(const SysModMapPair &smmpPair : *this)
-    { // Get mod data and pathsplit data
-      const SysModuleData &smdData = smmpPair.second;
-      // Log the module data
-      cLog->LogNLCInfoExSafe("- $ <$> '$' by '$' from '$'.",
-        smdData.GetFileExt(), smdData.GetVersion(),
-        smdData.GetDesc().empty() ?
-          cCommon->CommonUnspec() : smdData.GetDesc(),
-        smdData.GetVendor().empty() ?
-          cCommon->CommonUnspec() : smdData.GetVendor(),
-        smdData.GetLoc());
-    } // Done
-    return ACCEPT;
-  }
-};/* ----------------------------------------------------------------------- */
-/* == System version ======================================================= **
-** ######################################################################### **
-** ## Information about the engine executable and modules loaded.         ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-class SysVersion :
-  /* -- Base classes ------------------------------------------------------- */
-  public SysModules                    // System modules
-{ /* ----------------------------------------------------------------------- */
-  const SysModuleData &smdEng;         // Engine executable information
-  /* ----------------------------------------------------------------------- */
-  const StdStringView strvBuildType,   // Build type
-                      strvCompVer,     // Compiler version
-                      strvCompiled,    // Compilation date
-                      strvCompiler,    // Compiler name
-                      strvBuildTarget; // Target architechture
-  /* -- Access to engine version data ------------------------------ */ public:
-  const StdStringView &ENGBuildType() const { return strvBuildType; }
-  const StdStringView &ENGCompVer() const { return strvCompVer; }
-  const StdStringView &ENGCompiled() const { return strvCompiled; }
-  const StdStringView &ENGCompiler() const { return strvCompiler; }
-  const StdStringView &ENGTarget() const { return strvBuildTarget; }
-  const StdString &ENGAuthor() const { return smdEng.GetVendor(); }
-  const StdString &ENGComments() const { return smdEng.GetComments(); }
-  const StdString &ENGDir() const { return smdEng.GetDir(); }
-  const StdString &ENGDrive() const { return smdEng.GetDrive(); }
-  const StdString &ENGExt() const { return smdEng.GetExt(); }
-  const StdString &ENGFile() const { return smdEng.GetFile(); }
-  const StdString &ENGFileExt() const { return smdEng.GetFileExt(); }
-  const StdString &ENGFull() const { return smdEng.GetFull(); }
-  const StdString &ENGLoc() const { return smdEng.GetLoc(); }
-  const StdString &ENGName() const { return smdEng.GetDesc(); }
-  const StdString &ENGVersion() const { return smdEng.GetVersion(); }
-  unsigned int ENGBits() const { return sizeof(void*)<<3; }
-  unsigned int ENGBuild() const { return smdEng.GetBuild(); }
-  unsigned int ENGMajor() const { return smdEng.GetMajor(); }
-  unsigned int ENGMinor() const { return smdEng.GetMinor(); }
-  unsigned int ENGRevision() const { return smdEng.GetRevision(); }
-  /* -- Find executable module info and return reference to it -- */ protected:
-  const SysModuleData &FindBaseModuleInfo(const size_t stId) const
-  { // Find the module, we stored it as a zero, if not found?
-    const SysModMap &smmMap = *this;
-    const SysModMapConstIt smmciIt{ smmMap.find(stId) };
-    if(smmciIt == smmMap.cend())
-      XC("Failed to locate executable information!",
-        "Length", smmMap.size(), "Instance", stId);
-    // Return version data
-    return smmciIt->second;
-  }
-  /* -- Init from SysModMap ----------------------------------------------- */
-  SysVersion(SysModMap &&smlOther, const size_t stI) :
-    /* -- Initialisers ----------------------------------------------------- */
-    SysModules{ StdMove(smlOther) },   // Move system modules list
-    smdEng{ FindBaseModuleInfo(stI) }, // Move engine executable info
-    strvBuildType{ BUILD_TYPE_LABEL }, // Build type
-    strvCompVer{ COMPILER_VERSION },   // Compiler version
-    strvCompiled{ VER_DATE },          // Compilation date
-    strvCompiler{ COMPILER_NAME },     // Compiler name
-    strvBuildTarget{ BUILD_TARGET }    // Target architechture
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* ----------------------------------------------------------------------- */
-/* == System common ======================================================== **
-** ######################################################################### **
-** ## The operating specific modules populate their data inside this      ## **
-** ## class to maintain a common access for operating system information. ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-class SysCommon                        // Common system structs and funcs
-{ /* -- Typedefs ------------------------------------------------ */ protected:
-  const struct ExeData                 // Executable data
-  { /* --------------------------------------------------------------------- */
-    const unsigned int ulHeaderSum,    // Executable checksum in header
-                       ulCheckSum;     // Executable actual checksum
-    const bool         bExeIsModified, // True if executable is modified
-                       bExeIsBundled;  // True if executable is bundled
-  } /* --------------------------------------------------------------------- */
-  exeData;                             // Physical executable data
-  /* ----------------------------------------------------------------------- */
-  const struct OSData                  // Operating system data
-  { /* --------------------------------------------------------------------- */
-    const StdString    strName,        // Os name (e.g. Windows)
-                       strNameEx;      // Os host (e.g. Wine)
-    const unsigned int uiMajor,        // Os major version
-                       uiMinor,        // Os minor version
-                       uiBuild,        // Os build number
-                       uiBits;         // Os bit version
-    const StdString    strLocale;      // Os locale
-    const bool         bIsAdmin,       // Os user has elevated privileges
-                       bIsAdminDef;    // Os uses admin accounts by default
-  } /* --------------------------------------------------------------------- */
-  osData;                              // Operating system data
-  /* ----------------------------------------------------------------------- */
-  const struct CPUData                 // Processor data
-  { /* --------------------------------------------------------------------- */
-    const size_t       stCpuCount;     // Cpu count
-    const unsigned int ulSpeed,        // ~MHz
-                       ulFamily,       // Family
-                       ulModel,        // Model
-                       ulStepping;     // Stepping
-    const StdString    sProcessorName; // CPU id or vendor
-  } /* --------------------------------------------------------------------- */
-  cpuData;                             // System processor data
-  /* ----------------------------------------------------------------------- */
-  struct CPUUseData                    // Processor usage data
-  { /* --------------------------------------------------------------------- */
-    double         dProcess,           // Process cpu usage
-                   dSystem;            // System cpu usage
-    /* -- Default constructor ---------------------------------------------- */
-    CPUUseData() :
-      /* -- Initialisers --------------------------------------------------- */
-      dProcess(0.0),                   // Zero process cpu usage
-      dSystem(0.0)                     // Zero system cpu usage
-      /* -- No code -------------------------------------------------------- */
-      {}
-  } /* --------------------------------------------------------------------- */
-  cpuUData;                            // Processor usage data
-  /* ----------------------------------------------------------------------- */
-  struct MemData                       // Processor data
-  { /* --------------------------------------------------------------------- */
-    uint64_t       ullMTotal,          // 64-bit memory total
-                   ullMFree,           // 64-bit memory free
-                   ullMUsed;           // 64-bit memory used
-    double         dMLoad;             // Ram use in %
-    size_t         stMFree,            // 32-bit memory free
-                   stMProcUse,         // Process memory usage
-                   stMProcPeak;        // Peak process memory usage
-    /* -- Default constructor ---------------------------------------------- */
-    MemData() :
-      /* -- Initialisers --------------------------------------------------- */
-      ullMTotal(0),                    // Zero total memory
-      ullMFree(0),                     // Zero free memory
-      ullMUsed(0),                     // Zero used memory
-      dMLoad(0.0),                     // Zero memory usage percentage
-      stMFree(0),                      // Zero 32-bit free memory
-      stMProcUse(0),                   // Zero process usage
-      stMProcPeak(0)                   // Zero process peak usage
-      /* -- No code -------------------------------------------------------- */
-      {}
-  } /* --------------------------------------------------------------------- */
-  memData;                             // Memory data
-  /* --------------------------------------------------------------- */ public:
-  bool EXEModified() const { return exeData.bExeIsModified; }
-  unsigned int EXEHeaderSum() const { return exeData.ulHeaderSum; }
-  unsigned int EXECheckSum() const { return exeData.ulCheckSum; }
-  bool EXEBundled() const { return exeData.bExeIsBundled; }
-  /* ----------------------------------------------------------------------- */
-  const StdString &OSName() const { return osData.strName; }
-  const StdString &OSNameEx() const { return osData.strNameEx; }
-  bool IsOSNameExSet() const { return !OSNameEx().empty(); }
-  unsigned int OSMajor() const { return osData.uiMajor; }
-  unsigned int OSMinor() const { return osData.uiMinor; }
-  unsigned int OSBuild() const { return osData.uiBuild; }
-  unsigned int OSBits() const { return osData.uiBits; }
-  const StdString &OSLocale() const { return osData.strLocale; }
-  bool OSIsAdmin() const { return osData.bIsAdmin; }
-  bool OSIsAdminDefault() const { return osData.bIsAdminDef; }
-  /* ----------------------------------------------------------------------- */
-  size_t CPUCount() const { return cpuData.stCpuCount; }
-  unsigned int CPUSpeed() const { return cpuData.ulSpeed; }
-  unsigned int CPUFamily() const { return cpuData.ulFamily; }
-  unsigned int CPUModel() const { return cpuData.ulModel; }
-  unsigned int CPUStepping() const { return cpuData.ulStepping; }
-  const StdString &CPUName() const { return cpuData.sProcessorName; }
-  double CPUUsage() const { return cpuUData.dProcess; }
-  double CPUUsageSystem() const { return cpuUData.dSystem; }
-  /* ----------------------------------------------------------------------- */
-  uint64_t RAMTotal() const { return memData.ullMTotal; }
-  double RAMTotalMegs() const
-    { return static_cast<double>(RAMTotal()) / 1048576; }
-  uint64_t RAMFree() const { return memData.ullMFree; }
-  double RAMFreeMegs() const
-    { return static_cast<double>(RAMFree()) / 1048576; }
-  uint64_t RAMUsed() const { return memData.ullMUsed; }
-  size_t RAMFree32() const { return memData.stMFree; }
-  double RAMFree32Megs() const
-    { return static_cast<double>(RAMFree32()) / 1048576; }
-  double RAMLoad() const { return memData.dMLoad; }
-  size_t RAMProcUse() const { return memData.stMProcUse; }
-  double RAMProcUseMegs() const
-    { return static_cast<double>(RAMProcUse()) / 1048576; }
-  size_t RAMProcPeak() const { return memData.stMProcPeak; }
-  /* -- Constructor --------------------------------------------- */ protected:
-  SysCommon(ExeData &&edExe, OSData &&osdOS, CPUData &&cpudCPU) :
-    /* -- Initialisers ----------------------------------------------------- */
-    exeData{ StdMove(edExe) },         // Move executable data
-    osData{ StdMove(osdOS) },          // Move operating system data
-    cpuData{ StdMove(cpudCPU) }        // Move processor data
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* ----------------------------------------------------------------------- */
-/* == SysPipeBase class ==================================================== **
-** ######################################################################### **
-** ## Base class for SysPipe                                              ## **
-** ######################################################################### **
-** == System pipe base class =============================================== */
-class SysPipeBase :
-  /* -- Base classes ------------------------------------------------------- */
-  public Ident                         // Name of the pipe
-{ /* ----------------------------------------------------------------------- */
-  int64_t          llExitCode;         // Process exit code
-  /* -- Set status code ----------------------------------------- */ protected:
-  void SysPipeBaseSetStatus(const int64_t llNewCode)
-    { llExitCode = llNewCode; }
-  /* -- Return status code ----------------------------------------- */ public:
-  int64_t SysPipeBaseGetStatus() const { return llExitCode; }
-  /* -- Constructor with init ---------------------------------------------- */
-  SysPipeBase() :
-    /* -- Initialisers ----------------------------------------------------- */
-    llExitCode(127)                    // Standard exit code
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* -- End ---------------------------------------------------------------- */
-/* == SysConBase class ===================================================== **
-** ######################################################################### **
-** ## Base class for SysCon                                               ## **
-** ######################################################################### **
-** -- Typedefs ------------------------------------------------------------- */
-BUILD_FLAGS(SysCon,                    // Console flags classes
-  /* ----------------------------------------------------------------------- */
-  SCO_NONE                  {Flag(0)}, // No settings?
-  SCO_CURVISIBLE            {Flag(1)}, // Cursor is visible?
-  SCO_CURINSERT             {Flag(2)}, // Cursor is in insert mode?
-  SCO_EXIT                  {Flag(3)}  // Exit requested?
-);/* ----------------------------------------------------------------------- */
-class SysConBase :
-  /* -- Base classes ------------------------------------------------------- */
-  protected SysConFlags                // Flags settings
-{ /* -- Typedefs --------------------------------------------------- */ public:
-  enum KeyType { KT_NONE, KT_KEY, KT_CHAR, KT_RESET }; // GetKey return types
-  /* -- For handling CTRL_CLOSE_EVENT --------------------------- */ protected:
-  condition_variable cvExit;           // Exit condition variable
-  /* -- Handle CTRL_CLOSE_EVENT ------------------------------------ */ public:
-  bool SysConIsClosing() const { return FlagIsSet(SCO_EXIT); }
-  bool SysConIsNotClosing() const { return !SysConIsClosing(); }
-  void SysConCanCloseNow() { cvExit.notify_one(); }
-  /* -- Constructor --------------------------------------------- */ protected:
-  SysConBase() :
-    /* -- Initialisers ----------------------------------------------------- */
-    SysConFlags{ SCO_NONE }            // Current flags
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* ----------------------------------------------------------------------- */
-/* == Includes ============================================================= **
-** ######################################################################### **
-** ## Here we include data for the specific operating system.             ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
-#if defined(WINDOWS)                   // Using windows?
-# include "syswin.hpp"                 // Include windows system core
-#elif defined(MACOS)                   // Using mac?
-# include "sysmac.hpp"                 // Include MacOS system core
-#elif defined(LINUX)                   // Using linux?
-# include "sysnix.hpp"                 // Include Linux system core
-#endif                                 // Done checking OS
 /* ------------------------------------------------------------------------- **
 ** ######################################################################### **
 ** ## The actual system class which we build using all the other classes  ## **
@@ -416,7 +61,7 @@ class System :                         // The main system class
   /* -- Base classes ------------------------------------------------------- */
   public SysCore                       // Defined in 'sys*.hpp' headers
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef IdList<16> ModeList;         // List of possible combinations
+  using ModeList = LookupArray<16>;    // List of possible combinations
   /* ----------------------------------------------------------------------- */
   const ModeList   mList;              // Modes list
   CoreFlags        cfMode;             // Requested core subsystem flags
@@ -449,10 +94,10 @@ class System :                         // The main system class
   double SysUpdateAndGetCPUUsageSystem()
     { SysUpdateCPUUsage(); return CPUUsageSystem(); }
   /* -- Show message box with window handle (thiscall) --------------------- */
-  unsigned int SysMsgEx(const StdString &strReason,
-    const StdString &strMessage, unsigned int uiFlags = MB_ICONSTOP) const
+  unsigned SysMsgEx(const StdString &strReason,
+    const StdString &strMessage, unsigned uFlags = MB_ICONSTOP) const
   { return SysMessage(GetWindowHandle(),
-      StrAppend(ENGName(), ": ", strReason), strMessage, uiFlags); }
+      StrAppend(ENGName(), ": ", strReason), strMessage, uFlags); }
   /* -- Get descriptor strings --------------------------------------------- */
   const StdStringView &SysGetGuestTitle() const { return strvTitle; }
   const StdStringView &SysGetGuestShortTitle() const { return strvShortTitle; }
@@ -577,7 +222,7 @@ class System :                         // The main system class
       OSName(), OSMajor(), OSMinor(), OSBuild(), OSBits(), OSLocale(),
         IsOSNameExSet() ? StrAppend(" via ", OSNameEx()) :
                           cCommon->CommonBlank(),
-      StrLongFromDuration(GetUptime()),
+      durLong.Parse(GetUptime()),
       cmSys.FormatTime(), cmSys.FormatTimeUTC(),
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
   }
@@ -685,13 +330,13 @@ class System :                         // The main system class
     return ACCEPT_HANDLED;
   }
   /* -- Set throw error on elevated priviliedges --------------------------- */
-  CVarReturn SysCheckAdminModified(const unsigned int uiMode)
+  CVarReturn SysCheckAdminModified(const unsigned uMode)
   { // Valid modes allowed
     enum Mode { AM_OK,                 // [0] Running as admin is okay?
                 AM_NOTOK,              // [1] Running as admin is not okay?
                 AM_NOTOKIFMODERNOS };  // [2] As above but not if OS is modern?
     // Check mode
-    switch(static_cast<Mode>(uiMode))
+    switch(static_cast<Mode>(uMode))
     { // Return if OS uses admin as default for accounts else fall through
       case AM_NOTOKIFMODERNOS: if(OSIsAdminDefault()) return ACCEPT;
                                [[fallthrough]];
@@ -717,14 +362,14 @@ void System::SysOnTerminateHandler()
   // Terminate now without destructors
   _exit(-1);
 }
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* -- Pre-defined SysBase callbacks that require access to cSystem global -- */
 ENGINE_SYSBASE_CALLBACKS();            // Parse requested SysBase callbacks
 #undef ENGINE_SYSBASE_CALLBACKS        // Done with this
 /* -- Pre-defined SysCon callbacks that require access to cSystem global --- */
 ENGINE_SYSCON_CALLBACKS();             // Parse requested SysCon callbacks
 #undef ENGINE_SYSCON_CALLBACKS         // Done with this
-/* ------------------------------------------------------------------------- */
-}                                      // End of public module namespace
-/* ------------------------------------------------------------------------- */
-}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

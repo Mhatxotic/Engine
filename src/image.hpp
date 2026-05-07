@@ -14,11 +14,12 @@ using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICollector::P;         using namespace ICommon::P;
 using namespace IDim::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
-using namespace IIdent::P;             using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IOgl::P;               using namespace IStd::P;
+using namespace IName::P;              using namespace IOgl::P;
+using namespace ISerial::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
@@ -26,7 +27,8 @@ namespace P {                          // Start of public module namespace
 /* == Image collector and member class ===================================== */
 CTOR_BEGIN_ASYNC(Images, Image, CLHelperUnsafe,
   /* ----------------------------------------------------------------------- */
-  IdMap<TextureType> idFormatModes;,   // Pixel format modes (log detail)
+  using LumTexType = LookupMap<TextureType>;      // Pixel format modes map
+  const LumTexType lttFormatModes;,    // Human readable
 );/* ----------------------------------------------------------------------- */
 template<typename IntType>             // Prototype
   static const StdStringView &ImageGetPixelFormat(const IntType);
@@ -175,16 +177,16 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
       // Quick sanity check to make sure the filters don't read/write OOB
       if(const size_t stUnpadded = isRef.MemSize() % stSrcStep)
         XC("Source image dimensions not acceptable for filter!",
-          "File",   IdentGet(),            "Width",    isRef.DimGetWidth(),
+          "File",   NameGet(),            "Width",    isRef.DimGetWidth(),
           "Height", isRef.DimGetHeight(), "Total",    stTotal,
-          "Depth",  GetBytesPerPixel(),    "Filter",   cpFilter,
-          "Step",   stSrcStep,             "Unpadded", stUnpadded);
+          "Depth",  GetBytesPerPixel(),   "Filter",   cpFilter,
+          "Step",   stSrcStep,            "Unpadded", stUnpadded);
       if(const size_t stUnpadded = mDst.MemSize() % stDstStep)
         XC("Destination image dimensions not acceptable for filter!",
-          "File",   IdentGet(),            "Width",    isRef.DimGetWidth(),
+          "File",   NameGet(),            "Width",    isRef.DimGetWidth(),
           "Height", isRef.DimGetHeight(), "Total",    stTotal,
-          "Depth",  GetBytesPerPixel(),    "Filter",   cpFilter,
-          "Step",   stDstStep,             "Unpadded", stUnpadded);
+          "Depth",  GetBytesPerPixel(),   "Filter",   cpFilter,
+          "Step",   stDstStep,            "Unpadded", stUnpadded);
       // Enumerate and filter through each pixel
       for(uint8_t *ubpSrc = isRef.MemPtr<uint8_t>(),
          *const ubpSrcEnd = isRef.MemPtrEnd<uint8_t>(),
@@ -256,17 +258,17 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     struct Filter{
       Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Get the packed eight pixels
-        const unsigned int uiPixels = *ubpSrc;
+        const unsigned uPixels = *ubpSrc;
         // Unpack eight binary pixels into eight luminance (white) pixels
         *reinterpret_cast<uint64_t*>(ubpDst) =
-          (uiPixels & 0x01 ? 0xff00000000000000 : 0) | // Bit 1/8 -> Byte 1
-          (uiPixels & 0x02 ? 0x00ff000000000000 : 0) | // Bit 2/8 -> Byte 2
-          (uiPixels & 0x04 ? 0x0000ff0000000000 : 0) | // Bit 3/8 -> Byte 3
-          (uiPixels & 0x08 ? 0x000000ff00000000 : 0) | // Bit 4/8 -> Byte 4
-          (uiPixels & 0x10 ? 0x00000000ff000000 : 0) | // Bit 5/8 -> Byte 5
-          (uiPixels & 0x20 ? 0x0000000000ff0000 : 0) | // Bit 6/8 -> Byte 6
-          (uiPixels & 0x40 ? 0x000000000000ff00 : 0) | // Bit 7/8 -> Byte 7
-          (uiPixels & 0x80 ? 0x00000000000000ff : 0);  // Bit 8/8 -> Byte 8
+          (uPixels & 0x01 ? 0xff00000000000000 : 0) | // Bit 1/8 -> Byte 1
+          (uPixels & 0x02 ? 0x00ff000000000000 : 0) | // Bit 2/8 -> Byte 2
+          (uPixels & 0x04 ? 0x0000ff0000000000 : 0) | // Bit 3/8 -> Byte 3
+          (uPixels & 0x08 ? 0x000000ff00000000 : 0) | // Bit 4/8 -> Byte 4
+          (uPixels & 0x10 ? 0x00000000ff000000 : 0) | // Bit 5/8 -> Byte 5
+          (uPixels & 0x20 ? 0x0000000000ff0000 : 0) | // Bit 6/8 -> Byte 6
+          (uPixels & 0x40 ? 0x000000000000ff00 : 0) | // Bit 7/8 -> Byte 7
+          (uPixels & 0x80 ? 0x00000000000000ff : 0);  // Bit 8/8 -> Byte 8
       }
     }; // Do the conversion of binary to luminance
     ConvertPixels<Filter, 1, 8, BD_GRAY, TT_GRAY>("BIN>LUM");
@@ -277,24 +279,24 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     struct Filter{
       Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Get the packed eight pixels
-        const unsigned int uiPixels = *ubpSrc;
+        const unsigned uPixels = *ubpSrc;
         // Unpack eight BINARY (1-bit) pixels into eight RGB (24-bit) pixels.
         *reinterpret_cast<uint64_t*>(ubpDst) =         // Pixels 1 to 3A
           // Pixel order       RRGGBBRRGGBBRRGG (R=RED, G=GREEN, B=BLUE)
-          (uiPixels & 0x80 ? 0xffffff0000000000 : 0) | // * Bit 8/8 -> Byte 1-3
-          (uiPixels & 0x40 ? 0x000000ffffff0000 : 0) | // * Bit 7/8 -> Byte 4-6
-          (uiPixels & 0x20 ? 0x000000000000ffff : 0);  // * Bit 6/8 -> Byte 7-8
-        *(reinterpret_cast<uint64_t*>(ubpDst)+1) =     // Pixels 3B to 6A
+          (uPixels & 0x80 ? 0xffffff0000000000 : 0) | // * Bit 8/8 -> Byte 1-3
+          (uPixels & 0x40 ? 0x000000ffffff0000 : 0) | // * Bit 7/8 -> Byte 4-6
+          (uPixels & 0x20 ? 0x000000000000ffff : 0);  // * Bit 6/8 -> Byte 7-8
+        *(reinterpret_cast<uint64_t*>(ubpDst) + 1) =  // Pixels 3B to 6A
           // Pixel order       BBRRGGBBRRGGBBRR (R=RED, G=GREEN, B=BLUE)
-          (uiPixels & 0x20 ? 0xff00000000000000 : 0) | // * Bit 6/8 -> Byte 9
-          (uiPixels & 0x10 ? 0x00ffffff00000000 : 0) | // * Bit 5/8 -> By 10-12
-          (uiPixels & 0x08 ? 0x00000000ffffff00 : 0) | // * Bit 4/8 -> By 13-15
-          (uiPixels & 0x04 ? 0x00000000000000ff : 0);  // * Bit 3/8 -> Byte 16
-        *(reinterpret_cast<uint64_t*>(ubpDst)+2) =     // Pixels 6B to 8
+          (uPixels & 0x20 ? 0xff00000000000000 : 0) | // * Bit 6/8 -> Byte 9
+          (uPixels & 0x10 ? 0x00ffffff00000000 : 0) | // * Bit 5/8 -> By 10-12
+          (uPixels & 0x08 ? 0x00000000ffffff00 : 0) | // * Bit 4/8 -> By 13-15
+          (uPixels & 0x04 ? 0x00000000000000ff : 0);  // * Bit 3/8 -> Byte 16
+        *(reinterpret_cast<uint64_t*>(ubpDst) + 2) =  // Pixels 6B to 8
           // Pixel order       GGBBRRGGBBRRGGBB (R=RED, G=GREEN, B=BLUE)
-          (uiPixels & 0x04 ? 0xffff000000000000 : 0) | // * Bit 3/8 -> By 17-18
-          (uiPixels & 0x02 ? 0x0000ffffff000000 : 0) | // * Bit 2/8 -> By 19-21
-          (uiPixels & 0x01 ? 0x0000000000ffffff : 0);  // * Bit 1/8 -> By 22-24
+          (uPixels & 0x04 ? 0xffff000000000000 : 0) | // * Bit 3/8 -> By 17-18
+          (uPixels & 0x02 ? 0x0000ffffff000000 : 0) | // * Bit 2/8 -> By 19-21
+          (uPixels & 0x01 ? 0x0000000000ffffff : 0);  // * Bit 1/8 -> By 22-24
       }
     }; // Do the conversion of binary to RGBA
     ConvertPixels<Filter, 1, 24, BD_RGB, TT_RGB>("BIN>RGB");
@@ -305,24 +307,24 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     struct Filter{
       Filter(const uint8_t*const ubpSrc, uint8_t*const ubpDst)
       { // Get the packed eight pixels
-        const unsigned int uiPixels = *ubpSrc;
+        const unsigned uPixels = *ubpSrc;
         // Unpack eight BINARY pixels into eight RGBA (32-bit) pixels
-        *reinterpret_cast<uint64_t*>(ubpDst) =         // Pixel 1-2
+        *reinterpret_cast<uint64_t*>(ubpDst) =        // Pixel 1-2
           // Pixel order       RRGGBBAARRGGBBAA (R=RED,G=GREEN,B=BLUE,A=ALPHA)
-          (uiPixels & 0x80 ? 0xffffffff00000000 : 0) | // * Bit 8/8 -> DWord 1
-          (uiPixels & 0x40 ? 0x00000000ffffffff : 0);  // * Bit 7/8 -> DWord 2
-        *(reinterpret_cast<uint64_t*>(ubpDst)+1) =     // Pixel 3-4
+          (uPixels & 0x80 ? 0xffffffff00000000 : 0) | // * Bit 8/8 -> DWord 1
+          (uPixels & 0x40 ? 0x00000000ffffffff : 0);  // * Bit 7/8 -> DWord 2
+        *(reinterpret_cast<uint64_t*>(ubpDst) + 1) =  // Pixel 3-4
           // Pixel order       RRGGBBAARRGGBBAA (R=RED,G=GREEN,B=BLUE,A=ALPHA)
-          (uiPixels & 0x20 ? 0xffffffff00000000 : 0) | // * Bit 6/8 -> DWord 3
-          (uiPixels & 0x10 ? 0x00000000ffffffff : 0);  // * Bit 5/8 -> DWord 4
-        *(reinterpret_cast<uint64_t*>(ubpDst)+2) =     // Pixel 5-6
+          (uPixels & 0x20 ? 0xffffffff00000000 : 0) | // * Bit 6/8 -> DWord 3
+          (uPixels & 0x10 ? 0x00000000ffffffff : 0);  // * Bit 5/8 -> DWord 4
+        *(reinterpret_cast<uint64_t*>(ubpDst) + 2) =  // Pixel 5-6
           // Pixel order       RRGGBBAARRGGBBAA (R=RED,G=GREEN,B=BLUE,A=ALPHA)
-          (uiPixels & 0x08 ? 0xffffffff00000000 : 0) | // * Bit 4/8 -> DWord 5
-          (uiPixels & 0x04 ? 0x00000000ffffffff : 0);  // * Bit 3/8 -> DWord 6
-        *(reinterpret_cast<uint64_t*>(ubpDst)+3) =     // Pixel 7-8
+          (uPixels & 0x08 ? 0xffffffff00000000 : 0) | // * Bit 4/8 -> DWord 5
+          (uPixels & 0x04 ? 0x00000000ffffffff : 0);  // * Bit 3/8 -> DWord 6
+        *(reinterpret_cast<uint64_t*>(ubpDst) + 3) =  // Pixel 7-8
           // Pixel order       RRGGBBAARRGGBBAA (R=RED,G=GREEN,B=BLUE,A=ALPHA)
-          (uiPixels & 0x02 ? 0xffffffff00000000 : 0) | // * Bit 2/8 -> DWord 7
-          (uiPixels & 0x01 ? 0x00000000ffffffff : 0);  // * Bit 1/8 -> DWord 8
+          (uPixels & 0x02 ? 0xffffffff00000000 : 0) | // * Bit 2/8 -> DWord 7
+          (uPixels & 0x01 ? 0x00000000ffffffff : 0);  // * Bit 1/8 -> DWord 8
       }
     }; // Do the conversion of binary to RGBA
     ConvertPixels<Filter, 1, 32, BD_RGBA, TT_RGBA>("BIN>RGBA");
@@ -414,8 +416,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
       // Now off the bottom of the texture so reset Y position
       stTY = 0;
       // Add this texture as it is finished
-      AddSlot(mTexture, static_cast<unsigned int>(stTexWidth),
-                        static_cast<unsigned int>(stTexHeight));
+      AddSlot(mTexture, static_cast<unsigned>(stTexWidth),
+                        static_cast<unsigned>(stTexHeight));
       // Copy new tile sizes
       stWidth  = isRef.DimGetWidth<size_t>();
       stHeight = isRef.DimGetHeight<size_t>();
@@ -436,8 +438,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
         stTexHeight = stTX ? stTY + stHeight : stTY;
         mTexture.MemResize(stTexWidth * stTexHeight * GetBytesPerPixel());
       } // Add the slot
-      AddSlot(mTexture, static_cast<unsigned int>(stTexWidth),
-                        static_cast<unsigned int>(stTexHeight));
+      AddSlot(mTexture, static_cast<unsigned>(stTexWidth),
+                        static_cast<unsigned>(stTexHeight));
     } // Set size of first texture
     DimSet(GetSlotsConst().front());
     // Success
@@ -560,155 +562,155 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
       if(IsNotActiveGPUCompat())
       { // Log that we're running this function
         cLog->LogDebugExSafe("Image '$' safe pixel depth request...",
-          IdentGet());
+          NameGet());
         // Run the function and log success if succeeded
         if(ConvertGPUCompatible())
         { // Log the successful result
-          cLog->LogInfoExSafe("Image '$' pixel-depth now safe.", IdentGet());
+          cLog->LogInfoExSafe("Image '$' pixel-depth now safe.", NameGet());
           // Set activated flag
           SetActiveGPUCompat();
         } // Conversion did not happen so log that too
         else cLog->LogDebugExSafe("Image '$' skipped safe pixel depth!",
-          IdentGet());
+          NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' safe pixel depth by codec!",
-        IdentGet());
+        NameGet());
     } // If a request to convert to 24-bits per pixel?
     else if(IsConvertRGB())
     { // If it is not already converted by the file filter?
       if(IsNotActiveRGB())
       { // Log that we're running this function
-        cLog->LogDebugExSafe("Image '$' force 24-bit request...", IdentGet());
+        cLog->LogDebugExSafe("Image '$' force 24-bit request...", NameGet());
         // Run the function and log success if succeeded
         if(ConvertRGB())
         { // Log the successful result
-          cLog->LogInfoExSafe("Image '$' pixel depth now 24-bit.", IdentGet());
+          cLog->LogInfoExSafe("Image '$' pixel depth now 24-bit.", NameGet());
           // Set activated flag
           SetActiveRGB();
         } // Conversion did not happen so log that too
         else cLog->LogDebugExSafe("Image '$' skipped converting to 24-bit!",
-          IdentGet());
+          NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' converted to 24-bit by codec!",
-        IdentGet());
+        NameGet());
     } // If a request to convert to RGBA?
     else if(IsConvertRGBA())
     { // If it is not already converted by the file filter?
       if(IsNotActiveRGBA())
       { // Log that we're running this function
-        cLog->LogDebugExSafe("Image '$' force 32-bit request...", IdentGet());
+        cLog->LogDebugExSafe("Image '$' force 32-bit request...", NameGet());
         // Run the function and log success if succeeded
         if(ConvertRGBA())
         { // Log the successful result
-          cLog->LogInfoExSafe("Image '$' pixel depth now 32-bit.", IdentGet());
+          cLog->LogInfoExSafe("Image '$' pixel depth now 32-bit.", NameGet());
           // Set activated flag
           SetActiveRGBA();
         } // Conversion did not happen so log that too
         else cLog->LogDebugExSafe("Image '$' skipped converting to 32-bit!",
-          IdentGet());
+          NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' converted to 32-bit by codec!",
-        IdentGet());
+        NameGet());
     } // To BGR colour mode?
     if(IsConvertBGROrder())
     { // If it is not already converted by the file filter?
       if(IsNotActiveBGROrder())
       { // Log that we're running this function
         cLog->LogDebugExSafe("Image '$' re-order to BGR request...",
-          IdentGet());
+          NameGet());
         // Run the function and log success if succeeded
         if(ForcePixelOrder(TT_BGR))
         { // Log the successful result
-          cLog->LogInfoExSafe("Image '$' re-ordered to BGR.", IdentGet());
+          cLog->LogInfoExSafe("Image '$' re-ordered to BGR.", NameGet());
           // Set activated flag
           SetActiveBGROrder();
         } // Conversion did not happen so log that too
         else cLog->LogDebugExSafe("Image '$' re-order to BGR skipped!",
-          IdentGet());
+          NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' re-ordered to BGR by codec!",
-        IdentGet());
+        NameGet());
     } // To RGB colour mode
     else if(IsConvertRGBOrder())
     { // If it is not already converted by the file filter?
       if(IsNotActiveRGBOrder())
       { // Log that we're running this function
         cLog->LogDebugExSafe("Image '$' re-order to RGB request...",
-          IdentGet());
+          NameGet());
         // Run the function and log success if succeeded
         if(ForcePixelOrder(TT_RGB))
         { // Log the successful result
-          cLog->LogInfoExSafe("Image '$' re-ordered now RGB.", IdentGet());
+          cLog->LogInfoExSafe("Image '$' re-ordered now RGB.", NameGet());
           // Set activated flag
           SetActiveRGBOrder();
         } // Conversion did not happen so log that too
         else cLog->LogDebugExSafe("Image '$' re-order to RGB skipped!",
-          IdentGet());
+          NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' re-ordered to RGB by codec!",
-        IdentGet());
+        NameGet());
     } // Reverse the image pixels
     if(IsConvertReverse())
     { // If it is not already converted by the file filter?
       if(IsNotActiveReverse())
       { // Log that we're running this function
         cLog->LogDebugExSafe("Image '$' pixel reversal request...",
-          IdentGet());
+          NameGet());
         // Run the function and log success if succeeded
         if(ReversePixels())
         { // Log the successful result
-          cLog->LogInfoExSafe("Image '$' pixels reversed!", IdentGet());
+          cLog->LogInfoExSafe("Image '$' pixels reversed!", NameGet());
           // Set activated flag
           SetActiveReverse();
         } // Conversion did not happen so log that too
         else cLog->LogDebugExSafe("Image '$' skipped pixel reversal!",
-          IdentGet());
+          NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' reversal by codec!",
-        IdentGet());
+        NameGet());
     } // To binary colour mode
     if(IsConvertBinary())
     { // If it is not already converted by the file filter?
       if(IsNotActiveBinary())
       { // Log that we're running this function
         cLog->LogDebugExSafe("Image '$' downsample to binary request...",
-          IdentGet());
+          NameGet());
         // Run the function and log success if succeeded
         if(ForceBinary())
         { // Log the successful result
           cLog->LogInfoExSafe("Image '$' downsample to binary completed.",
-            IdentGet());
+            NameGet());
           // Set activated flag
           SetActiveBinary();
         } // Conversion did not happen so log that too
         else cLog->LogDebugExSafe("Image '$' downsample to binary skipped!",
-          IdentGet());
+          NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' downsampled to binary by codec!",
-        IdentGet());
+        NameGet());
     } // Compact all slides into a single texture if possible
     if(IsConvertAtlas())
     { // If it is not already converted by the file filter?
       if(IsNotActiveAtlas())
       { // Log that we're running this function
-        cLog->LogDebugExSafe("Image '$' compact request...", IdentGet());
+        cLog->LogDebugExSafe("Image '$' compact request...", NameGet());
         // Run the function and log success if succeeded
         if(MakeAtlas())
         { // Log the successful result
-          cLog->LogInfoExSafe("Image '$' compacted.", IdentGet());
+          cLog->LogInfoExSafe("Image '$' compacted.", NameGet());
           // Set activated flag
           SetActiveAtlas();
         } // Conversion did not happen so log that too
-        else cLog->LogDebugExSafe("Image '$' compact skipped!", IdentGet());
+        else cLog->LogDebugExSafe("Image '$' compact skipped!", NameGet());
       } // Conversion handled by codec
       else cLog->LogDebugExSafe("Image '$' compact handled by codec!",
-        IdentGet());
+        NameGet());
     } // Report status if we acticated anything
     if(IsActiveAtlas() || IsActiveReverse() || IsActiveRGB() ||
        IsActiveRGBA() || IsActiveBGROrder() || IsActiveBinary() ||
        IsActiveGPUCompat() || IsActiveRGBOrder())
       cLog->LogDebugExSafe("Image '$' filtering completed...$$$$$$$$$$$$$$$",
-        IdentGet(),
+        NameGet(),
         duTileOR.DimGetWidth() && duTileOR.DimGetHeight() ?
           StrFormat("\n- Tile size override: $x$.",
             duTileOR.DimGetWidth(), duTileOR.DimGetHeight()) :
@@ -770,40 +772,40 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Reload specified image --------------------------------------------- */
   void ReloadData()
   { // Load the file from disk or archive
-    FileMap fmData{ AssetExtract(IdentGet()) };
+    FileMap fmData{ AssetExtract(NameGet()) };
     // Reset memory usage to zero
     SetAlloc(0);
     // Run codecs and filters on it
     AsyncReady(fmData);
   }
   /* -- Save image using a type id ----------------------------------------- */
-  void SaveFile(const StdString &strFile, const size_t stSId,
+  void SaveFile(const StdStringView &strvFile, const size_t stSId,
     const ImageFormat ifPId)
-      const { ImageSave(ifPId, strFile, *this, GetSlotsConst()[stSId]); }
+      const { ImageSave(ifPId, strvFile, *this, GetSlotsConst()[stSId]); }
   /* -- Load image from memory asynchronously ------------------------------ */
-  void InitAsyncArray(lua_State*const lS, const StdString &strIdent,
+  void InitAsyncArray(lua_State*const lS, const StdStringView &strvIdent,
     Asset &aData, const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
     // The decoded image will be kept in memory
     SetDynamic();
     // Load image from memory asynchronously
-    AsyncInitArray(lS, strIdent, "bmparray", aData);
+    AsyncInitArray(lS, strvIdent, "bmparray", aData);
   }
   /* -- Load image from file asynchronously -------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const StdString &strFile,
+  void InitAsyncFile(lua_State*const lS, const StdStringView &strvFile,
     const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
     // Load image from file asynchronously
-    AsyncInitFile(lS, strFile, "bmpfile");
+    AsyncInitFile(lS, strvFile, "imagefile");
   }
   /* -- Create a blank image for working on -------------------------------- */
-  void InitBlank(const StdString &strIdent, const unsigned int uiBWidth,
-    const unsigned int uiBHeight, const bool bAlpha, const bool bClear)
+  void InitBlank(const StdStringView &strvIdent, const unsigned uBWidth,
+    const unsigned uBHeight, const bool bAlpha, const bool bClear)
   { // Lookup table for alpha setting
-    typedef StdPair<const BitDepth, const TextureType> BitDepthTexTypePair;
-    typedef StdArray<const BitDepthTexTypePair,2> BitDepthTexTypePairArray;
+    using BitDepthTexTypePair = StdPair<const BitDepth, const TextureType>;
+    using BitDepthTexTypePairArray = StdArray<const BitDepthTexTypePair, 2>;
     static const BitDepthTexTypePairArray
       bdttpLookup{ { { BD_RGB, TT_RGB }, { BD_RGBA, TT_RGBA } } };
     const BitDepthTexTypePair &bdttpLookupRef =
@@ -812,9 +814,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     SetBitsAndBytesPerPixel(bdttpLookupRef.first);
     SetPixelType(bdttpLookupRef.second);
     // Set other members
-    IdentSet(StdMove(strIdent));
+    NameSet(strvIdent);
     SetDynamic();
-    DimSet(uiBWidth, uiBHeight);
+    DimSet(uBWidth, uBHeight);
     // Add the raw data into a slot
     AddSlot({ TotalPixels() * GetBytesPerPixel(), bClear });
     // Load succeeded so register the block
@@ -823,32 +825,32 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Replace image from a raw image data -------------------------------- */
   void InitReplace(Memory &mSrc)
   { // Take ownership current slots list and make a blank new one.
-    if(slSlots.empty()) XC("No slots in image!", "Identifier", IdentGet());
+    if(slSlots.empty()) XC("No slots in image!", "Name", NameGet());
     // Get first image slot
     ImageSlot &isFirst = slSlots.front();
     // Simple check to make sure the sizes are same
     if(isFirst.MemSize() != mSrc.MemSize())
       XC("Pixel data buffer size mismatch!",
-        "Identifier", IdentGet(),
+        "Name", NameGet(),
         "Expected",   isFirst.MemSize(),
         "Actual",     mSrc.MemSize());
     // Now just move it over
     isFirst.MemSwap(mSrc);
   }
   /* -- Load image from a raw image data ----------------------------------- */
-  void InitRaw(const StdString &strName, Memory &mSrc,
-    const unsigned int uiBWidth, const unsigned int uiBHeight,
+  void InitRaw(const StdStringView &strvName, Memory &mSrc,
+    const unsigned uBWidth, const unsigned uBHeight,
     const BitDepth bdBitsPP)
   { // Check that the range is valid
-    const unsigned int uiMSize = 0xFFFF;
-    if(!uiBWidth || !uiBHeight || uiBWidth > uiMSize || uiBHeight > uiMSize)
+    const unsigned uMSize = 0xFFFF;
+    if(!uBWidth || !uBHeight || uBWidth > uMSize || uBHeight > uMSize)
       XC("Image dimensions are not acceptable!",
-        "File",   strName,   "Width",   uiBWidth,
-        "Height", uiBHeight, "Maximum", uiMSize);
+        "File",   strvName, "Width",   uBWidth,
+        "Height", uBHeight, "Maximum", uMSize);
     // Set bits per pixel
     SetBitsAndBytesPerPixel(bdBitsPP);
     // Set the dimensions
-    DimSet(uiBWidth, uiBHeight);
+    DimSet(uBWidth, uBHeight);
     // Expected image size
     size_t stExpect;
     // Set the pixel type and if if the type cannot be handled by the GPU?
@@ -857,25 +859,25 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     { // Only fail if not binary
       if(GetBitsPerPixel() != BD_BINARY)
         XC("Image bits per pixel not valid!",
-          "File", strName, "Depth", GetBitsPerPixel());
+          "File", strvName, "Depth", GetBitsPerPixel());
       // Total pixels must be divisible by 8
       if(const size_t stRemainder = TotalPixels() % CHAR_BIT)
         XC("Binary image pixel count must be divisible by eight!",
-          "File", strName, "Pixels", TotalPixels(), "Remainder", stRemainder);
+          "File", strvName, "Pixels", TotalPixels(), "Remainder", stRemainder);
       // Set expected number of bits for binary image
       stExpect = TotalPixels() / CHAR_BIT;
     } // Compressed textures not supported yet
     else if(GetPixelType() >= TT_DXT1 && GetPixelType() <= TT_DXT3)
       XC("Compressed images not supported yet!",
-        "File", strName, "Type", ImageGetPixelFormat(GetPixelType()));
+        "File", strvName, "Type", ImageGetPixelFormat(GetPixelType()));
     // Set expected number of bytes
     else stExpect = TotalPixels() * GetBytesPerPixel();
     // Check that the size matches
     if(stExpect != mSrc.MemSize())
       XC("Arguments are not valid for specified image data!",
-        "File", strName, "Expect", stExpect, "Actual", mSrc.MemSize());
+        "File", strvName, "Expect", stExpect, "Actual", mSrc.MemSize());
     // Everything looks OK, set rest of the members
-    IdentSet(strName);
+    NameSet(strvName);
     SetDynamic();
     // Add the raw data into a slot
     AddSlot(mSrc);
@@ -885,7 +887,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Load image from a single colour ------------------------------------ */
   void InitColour(const uint32_t ulColour)
   { // Set members
-    IdentSetA("solid/0x", StdIOSHex, ulColour);
+    NameSetA("solid/0x", StdIOSHex, ulColour);
     SetBitsAndBytesPerPixel(BD_RGBA);
     SetPixelType(TT_RGBA);
     SetDynamic();
@@ -905,27 +907,28 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     CollectorRegister();
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const StdString &strFileName, const ImageFlagsConst &ifcFlags)
+  void InitFile(const StdStringView &strvFileName,
+    const ImageFlagsConst &ifcFlags)
   { // Set the loading flags
     FlagSet(ifcFlags);
     // Load the file normally
-    SyncInitFileSafe(strFileName);
+    SyncInitFileSafe(strvFileName);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const StdString &strName, Memory &mRval,
+  void InitArray(const StdStringView &strvName, Memory &mRval,
     const ImageFlagsConst &ifcFlags)
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
     // Set the loading flags
     FlagSet(ifcFlags);
     // Load the array normally
-    SyncInitArray(strName, mRval);
+    SyncInitArray(strvName, mRval);
   }
   /* -- Default constructor ------------------------------------------------ */
   Image() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- No code ---------------------------------------------------------- */
@@ -936,7 +939,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE },                  // Initialise async event id
     ImageData{ ifcPurpose }            // Initialise purpose of image class
@@ -945,65 +948,65 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Constructor -------------------------------------------------------- */
   explicit Image(                      // Initialise a 1x1 pixel texture
     /* -- Parameters ------------------------------------------------------- */
-    const uint32_t uiColour            // 32-bit RGBA colour pixel value
+    const uint32_t ulColour            // 32-bit RGBA colour pixel value
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Code  ------------------------------------------------------------ */
-    { InitColour(uiColour); }          // Init 1x1 tex with specified colour
+    { InitColour(ulColour); }          // Init 1x1 tex with specified colour
   /* -- Constructor -------------------------------------------------------- */
-  explicit Image(                      // Initialise from RAW pixel data
+  Image(                               // Initialise from RAW pixel data
     /* -- Parameters ------------------------------------------------------- */
-    const StdString &strName,          // Name of the object
+    const StdStringView &strvName,     // Name of the object
     Memory &&mRval,                    // Source pixel data
-    const unsigned int uiWidth,        // Number of pixels in each scanline
-    const unsigned int uiHeight,       // Number of scan lines
+    const unsigned uWidth,             // Number of pixels in each scanline
+    const unsigned uHeight,            // Number of scan lines
     const BitDepth bdBits              // Bit depth of the pixel data
     ): /* -- Initialisation of members ------------------------------------- */
-    Ident{ strName },                  // Initialise identifier
+    Name{ strvName },                  // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise raw image --------------------------------------------- */
-    { InitRaw(strName, mRval, uiWidth, uiHeight, bdBits); }
+    { InitRaw(strvName, mRval, uWidth, uHeight, bdBits); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit Image(                      // Initialise from known file formats
+  Image(                               // Initialise from known file formats
     /* -- Parameters ------------------------------------------------------- */
-    const StdString &strName,          // Name of object
+    const StdStringView &strvName,     // Name of object
     Memory &&mRval,                    // Source memory block to read from
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
-    Ident{ strName },                  // Initialise identifier
+    Name{ strvName },                  // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise from array -------------------------------------------- */
-    { InitArray(strName, mRval, ifFlags); }
+    { InitArray(strvName, mRval, ifFlags); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit Image(                      // Initialise image from file
+  Image(                               // Initialise image from file
     /* -- Parameters ------------------------------------------------------- */
-    const StdString &strName,          // Name of image from assets to load
+    const StdStringView &strvName,     // Name of image from assets to load
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
-    Ident{ strName },                  // Initialise identifier
+    Name{ strvName },                  // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Code ------------------------------------------------------------- */
-    { InitFile(strName, ifFlags); }    // Initialisation from file
+    { InitFile(strvName, ifFlags); }   // Initialisation from file
   /* -- Constructor -------------------------------------------------------- */
   Image(                               // MOVE constructor to SWAP with another
     /* -- Parameters ------------------------------------------------------- */
     Image &&imOtherRval                // Other image to swap with
     ): /* -- Initialisation of members ------------------------------------- */
-    Ident{ StdMove(imOtherRval) },     // Initialise identifier
+    Name{ StdMove(imOtherRval) },      // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Code ------------------------------------------------------------- */
@@ -1011,7 +1014,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Image, AsyncCancel())    // Wait for loading thread to cancel
 };/* -- End ---------------------------------------------------------------- */
-CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, idFormatModes{{ // Pixel formats
+CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, lttFormatModes{{
   /* ----------------------------------------------------------------------- */
   IDMAPSTR(TT_NONE),                   IDMAPSTR(TT_BGR),
   IDMAPSTR(TT_BGRA),                   IDMAPSTR(TT_DXT1),
@@ -1023,9 +1026,9 @@ CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, idFormatModes{{ // Pixel formats
 /* ------------------------------------------------------------------------- */
 template<typename IntType> // Forcing any type to GLenum
   static const StdStringView &ImageGetPixelFormat(const IntType itMode)
-     { return cImages->idFormatModes.Get(static_cast<TextureType>(itMode)); }
+     { return cImages->lttFormatModes.Get(static_cast<TextureType>(itMode)); }
 /* ------------------------------------------------------------------------- */
-typedef StdVector<Image> ImageVector;  // Vector of images
+using ImageVector = StdVector<Image>;  // Vector of images
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

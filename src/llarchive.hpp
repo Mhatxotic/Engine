@@ -120,13 +120,13 @@ LLFUNC(FileList, 1,
 // < Id:integer=The id number of the Archive object.
 // ? Returns the unique id of the Archive object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Archive:Name
 // < Name:string=Name of the archive.
 // ? Returns the name of the archive which was loaded.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Archive:Size
 // > Id:integer=The zero-index unique-id of the file/dir in archive

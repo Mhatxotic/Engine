@@ -10,152 +10,36 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
+namespace ISysBase {                   // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IClock::P;             using namespace ICmdLine::P;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFStream::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IStat::P;              using namespace IString::P;
+using namespace ISysMod::P;            using namespace ISysRedirect::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IToken::P;             using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysBase :                        // Safe exception handler namespace
   /* -- Base classes ------------------------------------------------------- */
   public SysVersion                    // Version information class
-{ /* -- Class to rebuffer system generated output to log ------------------- */
+{ /* -- Private classes ---------------------------------------------------- */
 #if !defined(BUILD) && !defined(ALPHA) // Not applicable on command-line tool
-  class Redirect final :               // Linux: close() doesn't unblock read()
-    /* -- Base classes ----------------------------------------------------- */
-    private Thread,                    // Thread to monitor file descriptor
-    private Memory                     // Storage for read text data
-  { /* -- Private variables ------------------------------------------------ */
-    constexpr static int iInvalid=-1;  // Handle is invalid value
-    /* --------------------------------------------------------------------- */
-    const int      iRequested;         // Requested handle
-    /* -- Handles for pipe() function -------------------------------------- */
-    typedef StdArray<int,2> PipeHandles; // Handles struct (for pipe())
-    PipeHandles    phHandles;          // Pipe handles (for pipe())
-    /* -- Order is important ----------------------------------------------- */
-    int            iSaved,             // Saved (ahHandles[0])
-                  &iWrite,             // Write (ahHandles[1]/phHandles[1])
-                  &iRead;              // Read (ahHandles[2]/phHandles[0])
-    /* -- All handles so we can close them all together -------------------- */
-    typedef StdArray<::std::reference_wrapper<int>,3>
-      AllHandles;                      // StdArray<int&,3>
-    AllHandles    ahHandles;           // All handles (iSaved, iWrite, iRead)
-    /* -- Async off-main thread function ----------------------------------- */
-    ThreadStatus ThreadMain(Thread&)
-    { // Until thread should exit or end of file
-      while(ThreadShouldNotExit())
-      { // Read some data and if we got some? Return how much we read
-        switch(const size_t stRead = static_cast<size_t>
-          (read(iRead, MemPtr(), MemSize())))
-        { // Success?
-          default:
-          { // Report read string to log
-            cLog->LogWarningExSafe("$<$>: $",
-              IdentGet(), stRead, MemToStringViewSafe(stRead));
-            // Fallthrough to break
-            [[fallthrough]];
-          } // Handle was closed? Terminate the thread
-          case 0: break;
-          // Error?
-          case StdMaxSizeT:
-          { // Ignore it if we're quitting
-            if(ThreadShouldNotExit()) break;
-            // Else throw error and terminate thread
-            XCS("Error reading system output from pipe!",
-              "Output", IdentGet(), "Bytes", MemSize());
-          }
-        } // Don't get here
-      } // Return success to thread manager
-      return TS_OK;
-    }
-    /* --------------------------------------------------------------------- */
-    void CloseAndReset(int &iHandle) { close(iHandle); iHandle = iInvalid; }
-    /* --------------------------------------------------------------------- */
-    void Reset()
-    { // Thread is running? Signal the exit
-      if(ThreadIsJoinable()) ThreadSetExit();
-      // Restoring the original FD with dup2(iSaved, iRequested) will replace
-      // the current iRequested fd (which points at the pipe's write end) with
-      // the original saved fd. As a side-effect dup2 closes the old iRequested
-      // (the pipe writer) which allows the reader to observe EOF.
-      if(iSaved != iInvalid && dup2(iSaved, iRequested) == iInvalid)
-        cLog->LogWarningExSafe(
-          "System failed to restore dup2 oldf $ to $ for $! $",
-          iSaved, iRequested, IdentGet(), SysError());
-      // Now close the read end to ensure the reader's read() either sees EOF
-      // or gets EBADF.
-      if(iRead != iInvalid) CloseAndReset(iRead);
-      // Join the reader thread
-      ThreadJoin();
-    }
-    /* --------------------------------------------------------------------- */
-    void CloseAll()
-    { // Close all handles
-      StdForEach(seq, ahHandles.begin(), ahHandles.end(), [this](int &iHandle)
-        { if(iHandle != iInvalid) CloseAndReset(iHandle); });
-    }
-    /* -- Shut down stderr reader ---------------------------------- */ public:
-    void ResetSafe() { Reset(); CloseAll(); }
-    /* --------------------------------------------------------------------- */
-    Redirect(const int iHandle, const StdString &strNName) :
-      /* ------------------------------------------------------------------- */
-      Ident{ strNName },               // Initialise identifier
-      Thread{ STP_LOW },               // Initialise low priority thread
-      Memory{ 4096 },                  // Initialise buffer
-      iRequested(iHandle),             // Store requested handle
-      phHandles{ iInvalid, iInvalid }, // Initialise pipe handles references
-      iSaved(dup(iRequested)),         // Duplicate requested handle
-      iWrite(phHandles[1]),            // Init reference to write pipe
-      iRead(phHandles[0]),             // Init reference to read pipe
-      ahHandles{ iSaved,iWrite,iRead } // Initialise all handles references
-      /* ------------------------------------------------------------------- */
-    { // Return if handle not copied
-      if(iSaved == iInvalid)
-      { // Write warning to log
-        cLog->LogWarningExSafe("System failed to dup fd $ for $! $",
-          iRequested, IdentGet(), SysError());
-        // Do not run the reader thread
-        return;
-      } // Create pipe handles and if failed?
-      if(pipe(phHandles.data()))
-      { // Need to close saved handle
-        CloseAndReset(iSaved);
-        // Write warning to log
-        cLog->LogWarningExSafe("System pipe call failed for $! $",
-          IdentGet(), SysError());
-        // Do not run the reader thread
-        return;
-      } // Redirect requested output handle to the pipe and if failed?
-      if(dup2(iWrite, iHandle) == iInvalid)
-      { // Close and reset all handles
-        CloseAll();
-        // Write warning to log
-        cLog->LogWarningExSafe(
-          "System failed to dup2 oldfd $ to fd $ for $! $",
-          iWrite, iHandle, IdentGet(), SysError());
-        // Do not run the reader thread
-        return;
-      } // Close the original write-end returned by pipe(); the duplicate now
-      // lives at iRequested and we must not hold the original iWrite,
-      // otherwise the reader never sees EOF.
-      CloseAndReset(iWrite);
-      // Start the monitoring thread if it is open
-      ThreadInit(bind(&Redirect::ThreadMain, this, _1), this);
-    }
-    /* --------------------------------------------------------------------- */
-    ~Redirect()
-    { // Terminate the reader thread
-      Reset();
-      // Close all handles with no need to reset handle values
-      StdForEach(seq, ahHandles.cbegin(), ahHandles.cend(),
-        [](const int iHandle) { if(iHandle != iInvalid) close(iHandle); });
-    }
-    /* --------------------------------------------------------------------- */
-  } rStdErr;                           // Capture stdout and stderr
-#endif
-  /* ----------------------------------------------------------------------- */
+  SysRedirect srRedirect;              // Output redirector. Note that this
+#endif                                 // is final can't be derived!!!
+  /* -- Private typedefs --------------------------------------------------- */
   MAPPACK_BUILD(ResourceLimit, const int, struct rlimit)
   ResourceLimitMap rlmLimits;          // Resource limits database
   /* ----------------------------------------------------------------------- */
   enum ExitState { ES_SAFE, ES_UNSAFE, ES_CRITICAL }; // Signal exit types
   /* -- Signals to support ------------------------------------------------- */
 #if !defined(ALPHA)
-  typedef StdPair<const int, void(*)(int)> SignalPair;
-  typedef StdArray<SignalPair, 14> SignalList;
+  using SignalPair = StdPair<const int, void(*)(int)>;
+  using SignalList = StdArray<SignalPair, 14> ;
   SignalList       slSignals;          // Signal list
 #endif
   /* ----------------------------------------------------------------------- */
@@ -165,28 +49,28 @@ class SysBase :                        // Safe exception handler namespace
     Dl_info diData;
     // Tokenise the stack after removing duplicate whitespaces. Note that objc
     // calls will have spaces in them.
-    const Token tokData{ StrCompact(cpStack), cCommon->CommonSpace() };
+    const TokenStr tsData{ StrCompact(cpStack), cCommon->CommonSpaceV() };
     // Need some extra work on Apple
 #if defined(MACOS)
     // The last two tokens should always be a + and a number which we will
     // grab.
-    switch(tokData.size())
+    switch(tsData.size())
     { // Not enough data?
       case  0: staData.Data(cCommon->CommonUnspec())
                       .Data(cCommon->CommonUnspec());
                break;
-      case  1: staData.Data(tokData.front()).Data(cCommon->CommonUnspec());
+      case  1: staData.Data(tsData.front()).Data(cCommon->CommonUnspec());
                break;
-      case  2: staData.Data(tokData[1]).Data(cCommon->CommonUnspec());
+      case  2: staData.Data(tsData[1]).Data(cCommon->CommonUnspec());
                break;
-      case  3: staData.Data(tokData[1]).Data(tokData[2]);
+      case  3: staData.Data(tsData[1]).Data(tsData[2]);
                break;
-      case  4: staData.Data(tokData[1]).Data(tokData[3]);
+      case  4: staData.Data(tsData[1]).Data(tsData[3]);
                break;
-      case  5: staData.Data(tokData[1]).DataA(tokData[3], ' ', tokData[4]);
+      case  5: staData.Data(tsData[1]).DataA(tsData[3], ' ', tsData[4]);
                break;
       // Expected amount for a C/C++ call. Just show the + amount
-      default: staData.Data(tokData[1]).DataA(tokData[2], '+', tokData.back());
+      default: staData.Data(tsData[1]).DataA(tsData[2], '+', tsData.back());
                break;
     } // Get information about the item and if failed?
     if(!dladdr(vpStack, &diData))
@@ -198,7 +82,7 @@ class SysBase :                        // Safe exception handler namespace
     // Get information about the item and if failed?
     if(!dladdr(vpStack, &diData))
     { // Just add what the second value was and return
-      staData.Data(tokData[1]);
+      staData.Data(tsData[1]);
       return;
     }
 #endif
@@ -214,19 +98,19 @@ class SysBase :                        // Safe exception handler namespace
     // What is the return code for this call?
     else switch(iStatus)
     { // Memory error?
-      case -1: staData.DataF("<MAE:$>", tokData[1]); break;
+      case -1: staData.DataF("<MAE:$>", tsData[1]); break;
       // Not a valid name?
       case -2: staData.Data(diData.dli_sname); break;
       // Invalid argument?
-      case -3: staData.DataF("<IA:$>", tokData[1]); break;
+      case -3: staData.DataF("<IA:$>", tsData[1]); break;
       // Success (impossible) or unknown?
-      default: staData.DataF("<$:$>", iStatus, tokData[1]); break;
+      default: staData.DataF("<$:$>", iStatus, tsData[1]); break;
     }
   }
   /* ----------------------------------------------------------------------- */
   void DumpStack(StdOStringStream &osS) const
   { // Create array to hold stack pointers
-    typedef StdArray<void*, 256> StackArray;
+    using StackArray = StdArray<void*, 256> ;
     StackArray saArray;
     // Get the number of stack frames that can fit in the array and if can?
     void**const vplArPtr = saArray.data();
@@ -234,7 +118,7 @@ class SysBase :                        // Safe exception handler namespace
     if(const int iSize = backtrace(vplArPtr, stArLen))
     { // Get stack trace. For some reason, GCC on Linux doesn't like
       // decltype(free) but void(void*) works.
-      typedef StdUniquePtr<char*, function<void(void*)>> StrStack;
+      using StrStack = StdUniquePtr<char*, function<void(void*)>>;
       if(const StrStack ssStack{ backtrace_symbols(vplArPtr, iSize), free })
       { // Convert entries to size_t
         const size_t stSize = static_cast<size_t>(iSize);
@@ -306,7 +190,7 @@ class SysBase :                        // Safe exception handler namespace
  // Not building the command line too?
 #if !defined(BUILD) && !defined(ALPHA)
     // Shut down the stderr monitoring thread
-    rStdErr.ResetSafe();
+    srRedirect.ResetSafe();
 #endif
     // Print it to stderr
     fputs(osS.str().data(), stderr);
@@ -329,12 +213,12 @@ class SysBase :                        // Safe exception handler namespace
     { // Write to crash output file
       fOut.FStreamWriteString(strMsg);
       // We wrote the crash log
-      osTS << "Please submit the crash dump file at '" << fOut.IdentGet()
+      osTS << "Please submit the crash dump file at '" << fOut.NameGet()
            << "' to us so that we may investigate further and resolve the "
               "problem so it does not reoccur again.";
     } // Exit write log failure? We wrote the crash log
     else osTS << "We unfortunately could not write an error log to '"
-              << fOut.IdentGet() << "' because " << fOut.FStreamGetErrStr()
+              << fOut.NameGet() << "' because " << fOut.FStreamGetErrStr()
               << '!';
     // Finish string
     osTS << " Please press the button to terminate.";
@@ -347,22 +231,22 @@ class SysBase :                        // Safe exception handler namespace
   ExitState DebugMessage(const char*const cpSignal)
     { return DebugMessage(cpSignal, cCommon->CommonCBlank()); }
   /* ----------------------------------------------------------------------- */
-  ExitState ConditionalExit(const StdString &strName, unsigned int &uiAttempts)
+  ExitState ConditionalExit(const StdString &strName, unsigned &uAttempts)
   { // If events system is available?
     if(cEvtMain)
     { // Maximum number of attempts so repeated attempts eventually just
       // make the engine quit immediately.
-      static const unsigned int uiMaxAttempts = 5;
+      static const unsigned uMaxAttempts = 5;
       // Incrememnt attempts and if there are not too many attempts?
-      if(++uiAttempts < uiMaxAttempts)
+      if(++uAttempts < uMaxAttempts)
       { // Log that we're trying to shut down
         cLog->LogNLCErrorExSafe("System got $ signal $ of $, shutting down...",
-          strName, uiAttempts, uiMaxAttempts);
+          strName, uAttempts, uMaxAttempts);
         // Send clean shutdown event to engine
         return ES_SAFE;
       } // Log immediate shutdown because too many attempts
       cLog->LogNLCErrorExSafe("System got $ $ signals so terminating now...",
-        uiMaxAttempts, strName);
+        uMaxAttempts, strName);
     } // No attempts required so log generic exit message
     else cLog->LogNLCErrorExSafe("System got $ signal so terminating now...",
       strName);
@@ -391,9 +275,9 @@ class SysBase :                        // Safe exception handler namespace
       // systems, the "delete" character or "break" key can be used.
       case SIGINT:
       { // Number of sigint's processed
-        static unsigned int uiSigIntCount = 0;
+        static unsigned uSigIntCount = 0;
         // Perform conditional exit
-        return ConditionalExit("interrupt", uiSigIntCount);
+        return ConditionalExit("interrupt", uSigIntCount);
       } // Incorrect machine code. Apparently, this instruction can't be
       // caught but we'll include it just incase some systems can.
       case SIGILL: return DebugMessage("ILL (Illegal instruction)",
@@ -443,18 +327,18 @@ class SysBase :                        // Safe exception handler namespace
       // command ignore the signal.
       case SIGHUP:
       { // Number of sighup's processed
-        static unsigned int uiSigHangUp = 0;
+        static unsigned uSigHangUp = 0;
         // Perform conditional exit
-        return ConditionalExit("hang up", uiSigHangUp);
+        return ConditionalExit("hang up", uSigHangUp);
       } // Sent to request our termination. Unlike the SIGKILL signal, it can
       // be caught and interpreted or ignored by the process. This allows the
       // process to perform nice termination releasing resources and saving
       // state if appropriate. SIGINT is nearly identical to SIGTERM.
       case SIGTERM:
       { // Number of sighup's processed
-        static unsigned int uiSigTerm = 0;
+        static unsigned uSigTerm = 0;
         // Perform conditional exit
-        return ConditionalExit("termination", uiSigTerm);
+        return ConditionalExit("termination", uSigTerm);
       } // Sent when an exception (or trap) occurs: a condition that a debugger
       // has requested to be informed of — for example, when a particular
       // function is executed, or when a particular variable changes value.
@@ -556,7 +440,7 @@ class SysBase :                        // Safe exception handler namespace
       // Set a default locale and return
       goto Default;
     } // Replace underscore with dash to match Windows locale syntax (xx-XX).
-    StrReplace(strCode, '_', '-');
+    StrReplaceCharRef(strCode, '_', '-');
   }
   /* ----------------------------------------------------------------------- */
   SysBase(SysModMap &&smmMap, const size_t stI) :
@@ -564,7 +448,7 @@ class SysBase :                        // Safe exception handler namespace
     SysVersion{                        // Initialise version info class
       StdMove(smmMap), stI },          // Move sent mod list into ours
 #if !defined(BUILD) && !defined(ALPHA) // Not applicable on command-line tool
-    rStdErr{ STDERR_FILENO, "stderr" },// Initialise stderr redirect
+    srRedirect{ STDERR_FILENO, "stderr" }, // Initialise stderr redirect
 #endif                                 // BUILD check complete
     /* --------------------------------------------------------------------- */
     rlmLimits{{                        // Limits data
@@ -637,6 +521,10 @@ class SysBase :                        // Safe exception handler namespace
 #endif
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
-  void SysBase::HandleSignalStatic(int iSignal) \
-    { cSystem->HandleSignal(iSignal); }
+  void ISysBase::P::SysBase::HandleSignalStatic(int iSignal) \
+    { ISystem::P::cSystem->HandleSignal(iSignal); }
+/* ------------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

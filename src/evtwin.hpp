@@ -11,7 +11,7 @@
 namespace IEvtWin {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IEvtCore::P;           using namespace IGlFWUtil::P;
-using namespace IIdent::P;             using namespace ILog::P;
+using namespace ILog::P;               using namespace ILookupArray::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
@@ -64,7 +64,7 @@ class EvtWin;                          // Class prototype
 static EvtWin *cEvtWin = nullptr;      // Pointer to global class
 class EvtWin :                         // Event list for window thread
   /* -- Base classes ------------------------------------------------------- */
-  private IdList<EWC_MAX>,             // Event strings
+  private LookupArray<EWC_MAX>,        // Event strings
   public EvtCore                       // Events common class
    <EvtWinCmd,                         // The enum list of events supported
     EWC_MAX,                           // Maximum events allowed
@@ -81,7 +81,7 @@ class EvtWin :                         // Event list for window thread
   /* -- Constructor --------------------------------------------- */ protected:
   EvtWin() :
     /* -- Initialisers ----------------------------------------------------- */
-    IdList{{                           // Initialise event strings
+    LookupArray{{                      // Initialise event strings
 #define EWC(x) STR(EWC_ ## x)          // Helper to define event id strings
       EWC(NONE),            EWC(WIN_ATTENTION),   EWC(WIN_CENTRE),
       EWC(WIN_CURPOSGET),   EWC(WIN_CURRESET),    EWC(WIN_CURSET),
@@ -99,9 +99,9 @@ class EvtWin :                         // Event list for window thread
     /* -- Set global pointer to static class ------------------------------- */
     { cEvtWin = this; }
 };/* ----------------------------------------------------------------------- */
-typedef EvtWin::EvtArgs EvtWinArgs;    // Event callback arguments
-typedef EvtWin::Event   EvtWinEvent;   // Event command
-typedef EvtWin::RegAuto EvtWinRegAuto; // Event (de)registration
+using EvtWinArgs    = EvtWin::EvtArgs; // Event callback arguments
+using EvtWinEvent   = EvtWin::Event;   // Event command
+using EvtWinRegAuto = EvtWin::RegAuto; // Event (de)registration
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

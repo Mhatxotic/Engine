@@ -17,10 +17,10 @@
 namespace LLDisplay {                  // Display namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IDisplay::P;           using namespace IEvtMain::P;
-using namespace IFboCore::P;           using namespace IGlFW::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
-using namespace IInput::P;             using namespace ILua::P;
-using namespace IOgl::P;               using namespace ITimer::P;
+using namespace IFboCore::P;           using namespace IFrame::P;
+using namespace IGlFW::P;              using namespace IGlFWCursor::P;
+using namespace IGlFWMonitor::P;       using namespace IInput::P;
+using namespace ILua::P;               using namespace IOgl::P;
 using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
@@ -35,8 +35,8 @@ struct AgMonitorData : public ArClass<const GlFWMonitor> {
   explicit AgMonitorData(lua_State*const lS, const int iArg) :
     ArClass{ cDisplay->MonitorsGet(AgMonitorId{ lS, iArg }) }{} };
 /* -- Other types ---------------------------------------------------------- */
-typedef AgIntegerLGE<int> AgIntLGE;
-typedef AgIntegerLG<uint64_t> AgUInt64LG;
+using AgIntLGE   = AgIntegerLGE<int>;
+using AgUInt64LG = AgIntegerLG<uint64_t>;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Display.* namespace functions                                       ## **

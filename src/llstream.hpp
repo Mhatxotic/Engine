@@ -168,13 +168,13 @@ LLFUNC(GetLoop, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().GetLoopSafe()))
 // < Id:integer=The id number of the Stream object.
 // ? Returns the unique id of the Stream object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().CtrGet()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Stream:GetName
 // < Name:string=Filename of stream
 // ? Returns the stream indentifier or filename
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().IdentGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgStream{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Stream:GetLoopBegin
 // < Count:integer=Smaple position begin point
@@ -314,9 +314,9 @@ LLRSEND                                // Stream:* member functions end
 // ? object.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Asset, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
-  AcStream{lS}().SyncInitArray(aIdentifier, aAsset))
+  AcStream{lS}().SyncInitArray(aName, aAsset))
 /* ========================================================================= */
 // $ Stream.AssetAsync
 // > Id:String=The identifier of the string
@@ -330,10 +330,10 @@ LLFUNC(Asset, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(AssetAsync, 0,
   LuaUtilCheckParams(lS, 5);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcStream{lS}().AsyncInitArray(lS, aIdentifier, "streamarray", aAsset))
+  AcStream{lS}().AsyncInitArray(lS, aName, "streamarray", aAsset))
 /* ========================================================================= */
 // $ Stream.ClearEvents
 // ? Clear the OnEvent callback on all Stream objects. This might be useful for
@@ -406,7 +406,7 @@ LLRSKTEND                              // End of Video event flags
 LLRSKTBEGIN(States)                    // Beginning of Stream last state flags
   LLRSKTITEM(PS_,STANDBY),             LLRSKTITEM(PS_,PLAYING),
   LLRSKTITEM(PS_,PLAYING),             LLRSKTITEM(PS_,FINISHING),
-  LLRSKTITEM(PS_,WASPLAYING),          LLRSKTITEM(PS_,MAX),
+  LLRSKTITEM(PS_,WASPLAYING),
 LLRSKTEND                              // End of Stream last state flags
 /* ========================================================================= */
 // @ Stream.Reasons
@@ -417,7 +417,7 @@ LLRSKTBEGIN(Reasons)                   // Beginning of Stream stop reasons
   LLRSKTITEM(SR_,STOPNOUNQ),           LLRSKTITEM(SR_,STOPUNQ),
   LLRSKTITEM(SR_,REBUFFAIL),           LLRSKTITEM(SR_,RWREBUFFAIL),
   LLRSKTITEM(SR_,GENBUFFAIL),          LLRSKTITEM(SR_,STOPALL),
-  LLRSKTITEM(SR_,LUA),                 LLRSKTITEM(SR_,MAX),
+  LLRSKTITEM(SR_,LUA),
 LLRSKTEND                              // End of Stream stop reasons
 /* ========================================================================= **
 ** ######################################################################### **

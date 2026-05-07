@@ -9,7 +9,13 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Version information subclass ========================================= */
+/* ------------------------------------------------------------------------- */
+namespace ISysMod {                    // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace ISysBase::P;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 struct SysModule :
   /* -- Base classes ------------------------------------------------------- */
   public SysModuleData                 // System module data
@@ -26,25 +32,28 @@ struct SysModule :
     /* -- No code ---------------------------------------------------------- */
     {}
    /* -- Return data (move filename) --------------------------------------- */
-  explicit SysModule(StdString &&strModule, const unsigned int uiMa,
-    const unsigned int uiMi, const unsigned int uiBu, const unsigned int uiRe,
+  explicit SysModule(StdString &&strModule, const unsigned uMa,
+    const unsigned uMi, const unsigned uBu, const unsigned uRe,
     StdString &&strVen, StdString &&strDe, StdString &&strCo,
     StdString &&strVer) :
     /* -- Initialisers ----------------------------------------------------- */
-    SysModuleData{ StdMove(strModule), uiMa, uiMi, uiBu, uiRe,
+    SysModuleData{ StdMove(strModule), uMa, uMi, uBu, uRe,
       StdMove(strVen), StdMove(strDe), StdMove(strCo),
       StdMove(strVer) }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Return data (copy filename) ---------------------------------------- */
-  explicit SysModule(const StdString &strModule, const unsigned int uiMa,
-    const unsigned int uiMi, const unsigned int uiBu, const unsigned int uiRe,
+  explicit SysModule(const StdString &strModule, const unsigned uMa,
+    const unsigned uMi, const unsigned uBu, const unsigned uRe,
     StdString &&strVen, StdString &&strDe, StdString &&strCo,
     StdString &&strVer) :
     /* -- Initialisers ----------------------------------------------------- */
-    SysModuleData{ strModule, uiMa, uiMi, uiBu, uiRe, StdMove(strVen),
+    SysModuleData{ strModule, uMa, uMi, uBu, uRe, StdMove(strVen),
       StdMove(strDe), StdMove(strCo), StdMove(strVer) }
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- End ---------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

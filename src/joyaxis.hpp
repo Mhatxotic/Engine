@@ -8,7 +8,7 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IJoyAxis {                   // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace IFillCon::P;           using namespace IGlFWUtil::P;
 using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
@@ -22,7 +22,8 @@ class JoyAxisInfo                      // Axis class
                    fUnbuffered;        // Current unbuffered axis press state
   int              iBuffered;          // Current buffered axis press state
   /* -- Get axis identifier ---------------------------------------- */ public:
-  int AxisGetId() const { return iId; }
+  template<typename IntType = int>
+    IntType AxisGetId() const { return static_cast<IntType>(iId); }
   /* -- Get reverse deadzone value ----------------------------------------- */
   float AxisGetReverseDeadZone() const { return fDeadZoneR; }
   /* -- Get forward deadzone value ----------------------------------------- */
@@ -38,9 +39,9 @@ class JoyAxisInfo                      // Axis class
   /* -- Clear button state ------------------------------------------------- */
   void AxisClearState() { fUnbuffered = 0.0f; iBuffered = GLFW_RELEASE; }
   /* -- Set axis state ----------------------------------------------------- */
-  void AxisSetState(const float*const fpData)
-  { // Get the axis reading and if it's moving negatively?
-    fUnbuffered = fpData[AxisGetId()];
+  void AxisSetState(const float fValue)
+  { // Store value and if it's moving negatively?
+    fUnbuffered = fValue;
     if(fUnbuffered < fDeadZoneR)
     { // Released or already in reverse position?
       if(iBuffered <= GLFW_RELEASE)
@@ -95,15 +96,20 @@ class JoyAxisList :                    // Axis data list type
   /* -- Clear button data -------------------------------------------------- */
   void JoyAxisListClear()
     { StdForEach(par_unseq, this->begin(),
-        this->begin() + JoyAxisListSizeCountClamped(),
+        StdNext(this->begin(), JoyAxisListSizeCountClamped()),
           [](JoyAxisInfo& jaiRef) { jaiRef.AxisClearState(); }); }
   /* -- Refresh button data ------------------------------------------------ */
   void JoyAxisListRefresh(const int iJId)
-  { // Get joystick axes and if found? Refresh axes data for each one
+  { // Get joystick axes and if found?
     if(const float*const fpData = GlFWGetJoystickAxes(iJId, iAxes))
+    { // Put raw data into a protective barrier
+      StdSpan<const float> faData{ fpData, static_cast<size_t>(iAxes) };
+      // Refresh axes data for each one
       StdForEach(par_unseq, this->begin(),
-        this->begin() + JoyAxisListSizeCountClamped(),
-      [fpData](JoyAxisInfo &jaiData){ jaiData.AxisSetState(fpData); });
+        StdNext(this->begin(), JoyAxisListSizeCountClamped()),
+      [&faData](JoyAxisInfo &jaiData)
+        { jaiData.AxisSetState(faData[jaiData.AxisGetId<size_t>()]); });
+    }  // Polling axes failed
     else iAxes = 0;
   }
   /* -- Get axis state ----------------------------------------------------- */
@@ -121,20 +127,20 @@ class JoyAxisList :                    // Axis data list type
   /* -- Set default positive deadzone -------------------------------------- */
   void JoyAxisListSetReverseDeadZone(const float fDZ)
     { StdForEach(par_unseq, this->begin(),
-        this->end() + JoyAxisListSizeCountClamped(),
+        StdNext(this->begin(), JoyAxisListSizeCountClamped()),
           [fDZ](JoyAxisInfo &jaiItem)
             { jaiItem.AxisSetReverseDeadZone(fDZ); }); }
   /* -- Set default positive deadzone -------------------------------------- */
   void JoyAxisListSetForwardDeadZone(const float fDZ)
     { StdForEach(par_unseq, this->begin(),
-        this->end() + JoyAxisListSizeCountClamped(),
+        StdNext(this->begin(), JoyAxisListSizeCountClamped()),
           [fDZ](JoyAxisInfo &jaiItem)
             { jaiItem.AxisSetForwardDeadZone(fDZ); }); }
   /* -- Iterators ---------------------------------------------------------- */
   Iterator JoyAxisListBegin() const
     { return this->cbegin(); }
   Iterator JoyAxisListEnd() const
-    { return this->cbegin() + JoyAxisListSizeCountClamped(); }
+    { return StdNext(this->cbegin(), JoyAxisListSizeCountClamped()); }
   /* -- Default constructor ------------------------------------- */ protected:
   JoyAxisList() :
     /* -- Initialisers ----------------------------------------------------- */

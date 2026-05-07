@@ -25,12 +25,13 @@ using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFileMap::P;           using namespace IFreeType::P;
-using namespace IIdent::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;  using namespace Lib::FreeType;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace Lib::FreeType;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Ftf collector class for collector data and custom variables ========== */
@@ -56,8 +57,8 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   bool IsLoaded() const { return !!ftfFace; }
   bool IsStrokerLoaded() const { return !!ftsStroker; }
   FT_Stroker GetStroker() const { return ftsStroker; }
-  unsigned int GetDPIWidth() const { return duDPI.DimGetWidth(); }
-  unsigned int GetDPIHeight() const { return duDPI.DimGetHeight(); }
+  unsigned GetDPIWidth() const { return duDPI.DimGetWidth(); }
+  unsigned GetDPIHeight() const { return duDPI.DimGetHeight(); }
   GLfloat GetOutline() const { return fOutline; }
   bool IsOutline() const { return GetOutline() > 0.0f; }
   FT_GlyphSlot GetGlyphData() const { return ftfFace->glyph; }
@@ -74,16 +75,16 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
       static_cast<FT_F26Dot6>(DimGetHeight() * 64.0f),
       duDPI.DimGetWidth<FT_UInt>(), duDPI.DimGetHeight<FT_UInt>()),
       "Failed to set character size!",
-      "Identifier", IdentGet(),     "Width",    DimGetWidth(),
-      "Height",     DimGetHeight(), "DPIWidth", duDPI.DimGetWidth(),
-      "DPIHeight",  duDPI.DimGetHeight());
+      "Name",      NameGet(),      "Width",    DimGetWidth(),
+      "Height",    DimGetHeight(), "DPIWidth", duDPI.DimGetWidth(),
+      "DPIHeight", duDPI.DimGetHeight());
   }
   /* -- Convert character to glyph index --------------------------- */ public:
   FT_UInt CharToGlyph(const FT_ULong dwChar)
     { return FT_Get_Char_Index(ftfFace, dwChar); }
   /* -- Load a glyph ------------------------------------------------------- */
-  FT_Error LoadGlyph(const FT_UInt uiIndex)
-    { return FT_Load_Glyph(ftfFace, uiIndex,
+  FT_Error LoadGlyph(const FT_UInt uIndex)
+    { return FT_Load_Glyph(ftfFace, uIndex,
         FT_LOAD_CROP_BITMAP|FT_LOAD_NO_AUTOHINT|FT_LOAD_NO_HINTING); }
   /* -- Load ftf from memory ----------------------------------------------- */
   void AsyncReady(FileMap &fmData)
@@ -93,10 +94,10 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     cFreeType->FreeTypeCheckError(
       cFreeType->FreeTypeNewFont(static_cast<FileMap&>(*this), ftfFace),
         "Failed to create font!",
-        "Identifier", IdentGet(),
-        "Context",    cFreeType->FreeTypeIsLibraryAvailable(),
-        "Buffer",     FileMap::MemIsPtrSet(),
-        "Size",       FileMap::MemSize());
+        "Name",    NameGet(),
+        "Context", cFreeType->FreeTypeIsLibraryAvailable(),
+        "Buffer",  FileMap::MemIsPtrSet(),
+        "Size",    FileMap::MemSize());
     // Update size
     UpdateSize();
     // Outline requested?
@@ -104,64 +105,64 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     { // Create stroker handle
       cFreeType->FreeTypeCheckError(cFreeType->FreeTypeNewStroker(ftsStroker),
         "Failed to create stroker!",
-        "Identifier", IdentGet(),
-        "Context",    cFreeType->FreeTypeIsLibraryAvailable());
+        "Name",    NameGet(),
+        "Context", cFreeType->FreeTypeIsLibraryAvailable());
       // Set properties of stroker handle
       FT_Stroker_Set(ftsStroker, static_cast<FT_Fixed>(GetOutline() * 64.0f),
         FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
     } // Report loaded font
     cLog->LogInfoExSafe("Ftf loaded '$' (FF:$;FS:$;S:$$$x$;D:$x$;B:$).",
-      IdentGet(), GetFamily(), GetStyle(), StdIOSSetPrecision(0), StdIOSFixed,
+      NameGet(), GetFamily(), GetStyle(), StdIOSSetPrecision(0), StdIOSFixed,
       DimGetWidth(), DimGetHeight(), GetDPIWidth(), GetDPIHeight(),
       GetOutline());
   }
   /* -- Check and initialise supplied variables ---------------------------- */
   void InitVars(const GLfloat fWidth, const GLfloat fHeight,
-    const unsigned int uiDpiWidth, const unsigned int uiDpiHeight,
+    const unsigned uDpiWidth, const unsigned uDpiHeight,
     const GLfloat fNOutline)
   { // Set width and height
     DimSet(fWidth, fHeight);
     // Set DPI width and height
-    duDPI.DimSet(uiDpiWidth, uiDpiHeight);
+    duDPI.DimSet(uDpiWidth, uDpiHeight);
     // Set outline
     fOutline = fNOutline;
   }
   /* -- Load pcm from memory asynchronously -------------------------------- */
-  void InitAsyncArray(lua_State*const lS, const StdString &strFile,
+  void InitAsyncArray(lua_State*const lS, const StdStringView &strvFile,
     Asset &aRef, const float fWidth, const float fHeight,
-    const unsigned int uiDpiWidth, const unsigned int uiDpiHeight,
+    const unsigned uDpiWidth, const unsigned uDpiHeight,
     const GLfloat fNOutline)
   { // Set other members
-    InitVars(fWidth, fHeight, uiDpiWidth, uiDpiHeight, fNOutline);
+    InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Prepare asynchronous loading from array
-    AsyncInitArray(lS, strFile, "ftfarray", aRef);
+    AsyncInitArray(lS, strvFile, "ftfarray", aRef);
   }
   /* -- Load pcm from file asynchronously ---------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const StdString &strFile,
-    const float fWidth, const float fHeight, const unsigned int uiDpiWidth,
-    const unsigned int uiDpiHeight, const GLfloat fNOutline)
+  void InitAsyncFile(lua_State*const lS, const StdStringView &strvFile,
+    const float fWidth, const float fHeight, const unsigned uDpiWidth,
+    const unsigned uDpiHeight, const GLfloat fNOutline)
   { // Set other members
-    InitVars(fWidth, fHeight, uiDpiWidth, uiDpiHeight, fNOutline);
+    InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Prepare asynchronous loading from array
-    AsyncInitFile(lS, strFile, "ftffile");
+    AsyncInitFile(lS, strvFile, "ftffile");
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const StdString &strFile, const GLfloat fWidth,
-    const GLfloat fHeight, const unsigned int uiDpiWidth,
-    const unsigned int uiDpiHeight, const GLfloat fNOutline)
+  void InitFile(const StdStringView &strvFile, const GLfloat fWidth,
+    const GLfloat fHeight, const unsigned uDpiWidth, const unsigned uDpiHeight,
+    const GLfloat fNOutline)
   { // Set other members
-    InitVars(fWidth, fHeight, uiDpiWidth, uiDpiHeight, fNOutline);
+    InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Load file normally
-    SyncInitFileSafe(strFile);
+    SyncInitFileSafe(strvFile);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const StdString &strName, Memory &mData, const GLfloat fWidth,
-    const GLfloat fHeight, const unsigned int uiDpiWidth,
-    const unsigned int uiDpiHeight, const GLfloat fNOutline)
+  void InitArray(const StdStringView &strvName, Memory &mData,
+    const GLfloat fWidth, const GLfloat fHeight, const unsigned uDpiWidth,
+    const unsigned uDpiHeight, const GLfloat fNOutline)
   { // Set other members
-    InitVars(fWidth, fHeight, uiDpiWidth, uiDpiHeight, fNOutline);
+    InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Load file as array
-    SyncInitArray(strName, mData);
+    SyncInitArray(strvName, mData);
   }
   /* -- De-init ftf font --------------------------------------------------- */
   void DeInit() { DoDeInit(); ftsStroker = nullptr; ftfFace = nullptr; }
@@ -170,9 +171,9 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   { // Copy variables over from source class
     DimSwap(ftfOther);
     duDPI.DimSwap(ftfOther.duDPI);
-    swap(fOutline, ftfOther.fOutline);
-    swap(ftfFace, ftfOther.ftfFace);
-    swap(ftsStroker, ftfOther.ftsStroker);
+    StdSwap(fOutline, ftfOther.fOutline);
+    StdSwap(ftfFace, ftfOther.ftfFace);
+    StdSwap(ftsStroker, ftfOther.ftsStroker);
     // Swap file class
     FileMapSwap(ftfOther);
     // Swap async, lua lock data and registration
@@ -185,7 +186,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   Ftf() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFtf{ cFtfs },              // Initially unregistered
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     AsyncLoaderFtf{ this,              // Initialise async loader with class
       EMC_MP_FONT },                   // " and the event id
     fOutline(0.0f),                    // No outline size yet

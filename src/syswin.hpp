@@ -7,22 +7,22 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Win32 extras ========================================================= */
-#include "winmod.hpp"                  // Module information class
-#include "winreg.hpp"                  // Registry class
-#include "winmap.hpp"                  // File mapping class
-#include "winpip.hpp"                  // Process output piping class
-#include "winbase.hpp"                 // Base system class
-#include "wincon.hpp"                  // Console terminal window class
-/* == System intialisation helper ========================================== **
-** ######################################################################### **
-** ## Because we want to try and statically init const data as much as    ## **
-** ## possible, we need this class to derive by the System class so we    ## **
-** ## can make sure these functions are initialised first. Also making    ## **
-** ## this private prevents us from accessing these functions because     ## **
-** ## again - they are only for initialisation.                           ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+namespace ISysCore {                   // Start of private module namespace
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IClock::P;             using namespace ICmdLine::P;
+using namespace ICommon::P;            using namespace IDir::P;
+using namespace IError::P;             using namespace IFStream::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IName::P;              using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISysCon::P;            using namespace ISysInfo::P;
+using namespace ISysMod::P;            using namespace ISysReg::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtil::P;              using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
 class SysProcess                       // Need this before of System init order
 { /* ------------------------------------------------------------ */ protected:
   uint64_t         ullSKL, ullSUL,     // Kernel kernel and user time
@@ -37,19 +37,20 @@ class SysProcess                       // Need this before of System init order
   const DWORD      ulProcessId,        // Process id
                    ulThreadId;         // Thread id (WinMain())
   /* -- Mutex name --------------------------------------------------------- */
-  Ident            idMutex;            // Mutex identifier
+  NameStr          nsMutex;            // Mutex identifier
   /* ----------------------------------------------------------------------- */
   static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
   { // Get title of window and cancel if empty
-    StdWideString wstrT(GetWindowTextLength(hH), 0);
+    StdResized<StdWideString> wstrT{
+      static_cast<size_t>(GetWindowTextLength(hH)) };
     if(!GetWindowText(hH, const_cast<LPWSTR>(wstrT.data()),
       static_cast<DWORD>(wstrT.capacity())))
         return TRUE;
     // If there is not enough characters in this windows title or the title
     // and requested window title's contents do not match? Ignore this window!
     const StdWideString &wstrN = *reinterpret_cast<StdWideString*>(lP);
-    if(wstrT.length() < wstrN.length() ||
-      StdCompare(wstrN.data(), wstrT.data(), wstrN.length()*sizeof(wchar_t)))
+    if(wstrT.size() < wstrN.size() ||
+      StdCompare(wstrN.data(), wstrT.data(), wstrN.size()*sizeof(wchar_t)))
         return TRUE;
     // We found the window
     cLog->LogDebugExSafe("- Found window handle at $$.\n"
@@ -81,10 +82,13 @@ class SysProcess                       // Need this before of System init order
     return FALSE;
   }
   /* -- Return process and thread id ---------------------------- */ protected:
-  template<typename IntType=decltype(ulProcessId)>IntType GetPid() const
+  template<typename IntType = decltype(ulProcessId)>
+     requires StdIsIntegral<IntType>
+  IntType GetPid() const
     { return static_cast<IntType>(ulProcessId); }
-  template<typename IntType=decltype(ulThreadId)>IntType GetTid() const
-    { return static_cast<IntType>(ulThreadId); }
+  template<typename IntType = decltype(ulThreadId)>IntType GetTid() const
+    requires StdIsIntegral<IntType>
+  { return static_cast<IntType>(ulThreadId); }
   /* ----------------------------------------------------------------------- */
   void InitReportMemoryLeaks()
   { // Only needed if in debug mode
@@ -94,8 +98,8 @@ class SysProcess                       // Need this before of System init order
     // Get path to executable. The base module filename info struct may not be
     // available so we'll keep it simple and use the full path name to
     // the executable.
-    wstrName.resize(UtilMaximum(GetModuleFileName(nullptr,
-      const_cast<LPWSTR>(wstrName.data()), 0, MAX_PATH - 4));
+    wstrName.resize(GetModuleFileName(nullptr,
+      const_cast<LPWSTR>(wstrName.data()), UtilMaximum(0, MAX_PATH - 4)));
     wstrName.append(L".crt");
     // Create a file with the above name and just return if failed
     HANDLE hH = CreateFile(wstrName.data(), GENERIC_WRITE,
@@ -115,10 +119,10 @@ class SysProcess                       // Need this before of System init order
 #endif
   }
   /* -- Set heap information helper ---------------------------------------- */
-  template<typename Type = ULONG>static void HeapSetInfo(const HANDLE hH,
-    const HEAP_INFORMATION_CLASS hicData, const Type &tVal)
-      { HeapSetInformation(hH, hicData, StdToNonConstCast<PVOID>(&tVal),
-          sizeof(tVal)); }
+  static void HeapSetInfo(const HANDLE hH,
+    const HEAP_INFORMATION_CLASS hicData, const auto &atVal)
+  { HeapSetInformation(hH, hicData, StdToNonConstCast<PVOID>(&atVal),
+      sizeof(atVal)); }
   /* ----------------------------------------------------------------------- */
   void ReconfigureMemoryModel() const
   { // Disable paging memory to disk. RAM is cheap now, cmon ffs!
@@ -132,7 +136,7 @@ class SysProcess                       // Need this before of System init order
         SysError());
       return;
     } // Allocate memory for heaps handles, fill handles and
-    typedef StdVector<HANDLE> HandleVec;
+    using HandleVec = StdVector<HANDLE> ;
     HandleVec hvList{ dwHeaps, INVALID_HANDLE_VALUE };
     if(!GetProcessHeaps(dwHeaps, hvList.data()))
     { // Log the error and return
@@ -171,8 +175,8 @@ class SysProcess                       // Need this before of System init order
     // formatting functions and theres no need to invoke extra exe space.
     va_list vlData;
     va_start(vlData, wcpFmt);
-    wstrFmt.resize(wvsprintf(const_cast<wchar_t*>(wstrFmt.data()),
-      wcpFmt, vlData));
+    wstrFmt.resize(static_cast<size_t>(
+      wvsprintf(const_cast<wchar_t*>(wstrFmt.data()), wcpFmt, vlData)));
     va_end(vlData);
     // Throw exception (parameters are wide strings :|)
     cLog->LogErrorExSafe("RTC error $ in $::$::$: $!", iType,
@@ -181,16 +185,16 @@ class SysProcess                       // Need this before of System init order
     return 0;
   }
   /* -- Called when C std functions need to abort -------------------------- */
-  static void CException(
+  static void CException[[noreturn]](
 #if defined(ALPHA)
     const wchar_t*const wcpE, const wchar_t *const wcpFN,
-    const wchar_t*const wcpF, const unsigned int uiL, uintptr_t)
+    const wchar_t*const wcpF, const unsigned uL, uintptr_t)
       { XC("C exception!",
           "Expression", wcpE,  "File", wcpF,
-          "Function",   wcpFN, "Line", uiL); }
+          "Function",   wcpFN, "Line", uL); }
 #else
     const wchar_t*const, const wchar_t*const,
-    const wchar_t*const, const unsigned int, uintptr_t)
+    const wchar_t*const, const unsigned, uintptr_t)
       { XC("C exception!"); }
 #endif
   /* ----------------------------------------------------------------------- */
@@ -222,7 +226,7 @@ class SysProcess                       // Need this before of System init order
     //   (COINIT_MULTITHREADED|COINIT_SPEED_OVER_MEMORY)
     if(const HRESULT hrResult = CoInitialize(nullptr))
       XC("Failed to initialise COM library!",
-        "Result", static_cast<unsigned int>(hrResult));
+        "Result", static_cast<unsigned>(hrResult));
     // Prepare common controls initialisation struct
     const INITCOMMONCONTROLSEX iccData{
       sizeof(iccData),                 // DWORD dwSize (Size of struct)
@@ -233,15 +237,16 @@ class SysProcess                       // Need this before of System init order
     if(!InitCommonControlsEx(&iccData))
       XCS("Failed to initialise common controls library!");
   }
-  /* ----------------------------------------------------------------------- */
-  template<typename T>T Test(const T tParam, const char*const cpStr)
-    { if(!tParam) XCS(cpStr); return tParam; }
+  /* -- For constructor for testing if a variable was set ------------------ */
+  template<typename AnyType>
+    AnyType Test(const AnyType atParam, const char*const cpStr)
+  { if(!atParam) XCS(cpStr); return atParam; }
   /* --------------------------------------------------------------- */ public:
   bool InitGlobalMutex(const StdStringView &strvTitle)
   { // Set mutex name
-    idMutex.IdentSet(strvTitle);
+    nsMutex.NameSet(strvTitle);
     // Convert UTF title to wide string
-    const StdWideString wstrTitle{ UTFtoS16(idMutex.IdentGet()) };
+    const StdWideString wstrTitle{ UTFtoS16(nsMutex.NameGet()) };
     // Create the global mutex handle with the specified name and check error
     hMutex = CreateMutex(nullptr, FALSE, wstrTitle.data());
     switch(const DWORD dwResult = SysErrorCode<DWORD>())
@@ -267,8 +272,8 @@ class SysProcess                       // Need this before of System init order
         return false;
       // Other error
       default: XCS("Failed to create global mutex object!",
-        "Title",  idMutex.IdentGet(),
-        "Result", static_cast<unsigned int>(dwResult),
+        "Title",  nsMutex.NameGet(),
+        "Result", static_cast<unsigned>(dwResult),
         "mutex",  reinterpret_cast<void*>(hMutex));
     } // Getting here is impossible
   }
@@ -303,14 +308,14 @@ class SysProcess                       // Need this before of System init order
     // If mutex initialised? Close the handle and log if failed
     if(hMutex && !CloseHandle(hMutex))
       cLog->LogWarningExSafe("System failed to close mutex handle '$'! $.",
-        idMutex.IdentGet(), SysError());
+        nsMutex.NameGet(), SysError());
   )
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
   public SysProcess,                   // Gets system process information
   public SysVersion,                   // Gets system version information
-  public SysCommon,                    // Common system functions
+  public SysInfo,                      // Common system functions
   public SysCon                        // System console and crash handler
 { /* -- Public Variables ------------------------------------------ */ private:
   HICON            hIconLarge;         // Handle to large icon
@@ -318,8 +323,8 @@ class SysCore :
   /* -- Helper to grab default locale information -------------------------- */
   size_t GetLocaleData(const LCTYPE lcType, const void*const vpData,
     const size_t stSize, const LCID lcidLocale)
-  { return GetLocaleInfo(lcidLocale, lcType,
-      StdToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize)); }
+  { return static_cast<size_t>(GetLocaleInfo(lcidLocale, lcType,
+      StdToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize))); }
   /* ----------------------------------------------------------------------- */
   const StdWideString GetLocaleString(const LCTYPE lcType,
     const LCID lcidLocale=LOCALE_USER_DEFAULT)
@@ -330,9 +335,9 @@ class SysCore :
       XCS("No storage for locale data!",
           "Type", lcType, "Id", lcidLocale);
     // Now fill in the string and show error if failed
-    if(!GetLocaleData(lcType, wstrData.data(), wstrData.length(), lcidLocale))
+    if(!GetLocaleData(lcType, wstrData.data(), wstrData.size(), lcidLocale))
       XCS("Failed to acquire locale data!",
-          "Type", lcType, "Id", lcidLocale, "Buffer", wstrData.length());
+          "Type", lcType, "Id", lcidLocale, "Buffer", wstrData.size());
     // Return data
     return wstrData;
   }
@@ -344,20 +349,21 @@ class SysCore :
                 dwW = static_cast<DWORD>(dWTime * 1000);
     // Unix:  struct timeval tData = { 30, 0 }; // Sec / USec
     // Set socket options and get result
-    return (setsockopt(iFd,
+    return static_cast<int>(setsockopt(static_cast<SOCKET>(iFd),
       SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&dwR),
-        sizeof(dwR)) < 0 ? 1 : 0) | (setsockopt(iFd,
+        sizeof(dwR)) < 0 ? 1 : 0) |
+           static_cast<int>(setsockopt(static_cast<SOCKET>(iFd),
       SOL_SOCKET, SO_SNDTIMEO, reinterpret_cast<const char*>(&dwW),
         sizeof(dwW)) < 0 ? 2 : 0);
   }
   /* -- Get uptime from clock class ---------------------------------------- */
   StdTimeT GetUptime() const { return cmHiRes.GetTimeS(); }
   /* -- Terminate a process ------------------------------------------------ */
-  bool TerminatePid(const unsigned int uiPid) const
+  bool TerminatePid(const unsigned uPid) const
   { // Return result
     bool bResult;
     // Get parameter as DWORD (X-platform compatibility)
-    const DWORD dwPid = static_cast<DWORD>(uiPid);
+    const DWORD dwPid = static_cast<DWORD>(uPid);
     // Open the process. Failed if no pid or no access
     if(const HANDLE hPid = OpenProcess(PROCESS_TERMINATE, FALSE, dwPid)) try
     { // We should find the parent process so create a process snapshot
@@ -383,124 +389,112 @@ class SysCore :
             if(dwPid != pedData.th32ProcessID) continue;
             // Pid matches but if we don't own this pid?
             if(pedData.th32ParentProcessID != GetPid())
-            { // Failed result
+            { // Set failed result and write that process isn't owned by me
               bResult = false;
-              // Write that process isn't owned by me
               cLog->LogWarningExSafe("System process $ parent $ not $!",
                 dwPid, pedData.th32ParentProcessID, GetPid());
             } // Terminate the process and if failed?
             else if(TerminateProcess(hPid, static_cast<UINT>(-1)))
-            { // Success result
+            { // Set success and write that we terminated the process
               bResult = true;
-              // Write that we couldnt terminate processes
               cLog->LogInfoExSafe(
-                "System forcefully terminated process $!", uiPid);
+                "System forcefully terminated process $!", uPid);
             } // Success so set success result
             else
-            { // Failed result
+            { // Set failure and write that we couldn't terminate the process
               bResult = false;
-              // Write that we couldnt terminate processes
               cLog->LogWarningExSafe(
-                "System failed to terminate process $: $!", uiPid, SysError());
+                "System failed to terminate process $: $!", uPid, SysError());
             } // We're finished
             goto Finished;
             // ...until no more processes.
           } while(Process32Next(hSnapshot, &pedData));
-          // Write that we couldnt enumerate processes
+          // Set failure and write that we couldn't enumerate processes
+          bResult = false;
           cLog->LogWarningExSafe(
             "System could not find process $ to terminate: $!",
-            uiPid, SysError());
-          // Failed
-          bResult = false;
+            uPid, SysError());
           // Finished label (used in above loop)
           Finished:;
         } // Enumerate processes function call failed?
         else
-        { // Write that we couldnt enumerate processes
-          cLog->LogWarningExSafe("System failed to read first process to "
-            "terminate process $: $!", uiPid, SysError());
-          // Failed
+        { // Set failure and w rite that we couldn't enumerate processes
           bResult = false;
+          cLog->LogWarningExSafe("System failed to read first process to "
+            "terminate process $: $!", uPid, SysError());
         } // Close the snapshot handle
         CloseHandle(hSnapshot);
       } // Exeception occured while process handle opened and snapshot grabbed?
       catch(...)
-      { // Close the snapshot handle
+      { // Close the snapshot handle and throw original exception
         CloseHandle(hSnapshot);
-        // Throw original error
         throw;
       } // Enumerate processes function call failed?
       else
-      { // Write that we couldnt enumerate processes
+      { // Set failure and write that we couldn't enumerate processes
+        bResult = false;
         cLog->LogWarningExSafe(
           "System failed to snapshot to terminate process $: $!",
-          uiPid, SysError());
-        // Failed
-        bResult = false;
+          uPid, SysError());
       } // Close the opened process handle
       CloseHandle(hPid);
     } // Exeception occured while process handle opened?
     catch(...)
-    { // Close the opened process handle
+    { // Close the opened process handle and throw original exception
       CloseHandle(hPid);
-      // Throw original error
       throw;
     } // Open process handle failed?
     else
-    { // Write that we couldnt open process
-      cLog->LogWarningExSafe(
-        "System failed to open process $ to terminate: $!", uiPid, SysError());
-      // Failed
+    { // Set failure and write that we couldn't open process
       bResult = false;
+      cLog->LogWarningExSafe(
+        "System failed to open process $ to terminate: $!", uPid, SysError());
     } // Return result
     return bResult;
   }
   /* -- Check if specified process id is running --------------------------- */
-  bool IsPidRunning(const unsigned int uiPid) const
+  bool IsPidRunning(const unsigned uPid) const
   { // Return result
     bool bResult;
     // Open the process. Failed if no pid or no access
     if(const HANDLE hPid = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE,
-      static_cast<DWORD>(uiPid))) try
+      static_cast<DWORD>(uPid))) try
     { // Exit code storage
       DWORD dwXCode;
       // Get exit code and set result whether process is still active
       if(GetExitCodeProcess(hPid, &dwXCode)) bResult = dwXCode == STILL_ACTIVE;
       // Get process exit code failed
       else
-      { // Set failed
+      { // Set failed and write failure to log
         bResult = true;
-        // Write error to log
         cLog->LogWarningExSafe("System failed get process $ exit code: $!",
-          uiPid, SysError());
+          uPid, SysError());
       } // Close the open handle
       CloseHandle(hPid);
     } // Exeception occured while process handle opened?
     catch(...)
-    { // Close the opened process handle
+    { // Close the opened process handle and throw original exception
       CloseHandle(hPid);
-      // Throw original error
       throw;
     } // Failed to open process?
     else
-    { // Set failed
+    { // Set failed and write to log ONLY if the process id was found
       bResult = true;
-      // Write to log ONLY if the process id was found
       if(SysIsNotErrorCode(ERROR_INVALID_PARAMETER))
         cLog->LogWarningExSafe("System failed to open executing process $: $!",
-          uiPid, SysError());
+          uPid, SysError());
     } // Return result
     return bResult;
   }
   /* ----------------------------------------------------------------------- */
-  void UpdateIcon(const UINT uiMsg, const HICON hIcon) const
+  void UpdateIcon(const UINT uMsg, const HICON hIcon) const
   { // Ignore if icon not available
     if(!hIcon) return;
     // Do the send message
-    SendMessage(GetWindowHandle(), WM_SETICON, uiMsg,
+    SendMessage(GetWindowHandle(), WM_SETICON, uMsg,
       reinterpret_cast<LPARAM>(hIcon));
     // Log the result
-    cLog->LogDebugExSafe("System updated the window icon with type $.", uiMsg);
+    cLog->LogDebugExSafe("System updated the window icon with type $.", uMsg);
   }
   /* ----------------------------------------------------------------------- */
   void UpdateIcons() const
@@ -511,19 +505,19 @@ class SysCore :
     UpdateIcon(ICON_SMALL, hIconSmall);
   }
   /* ----------------------------------------------------------------------- */
-  void SetIcon(const StdString &strId, const char *cpType, const UINT uiT,
+  void SetIcon(const StdString &strId, const char *cpType, const UINT uT,
     HICON &hI, const size_t stWidth, const size_t stHeight,
     const size_t stBits, const MemConst &mcSrc)
   { // Check parameters
     if(!stWidth || !stHeight)
       XC("Supplied icon dimensions invalid!",
-        "Type",  cpType,  "Identifier", strId,
+        "Type",  cpType,  "Name", strId,
         "Width", stWidth, "Height",     stHeight);
     if(stBits != 24 && stBits != 32)
       XC("Must be 24/32 bpp icon!",
-        "Type", cpType, "Identifier", strId, "Bits", stBits);
+        "Type", cpType, "Name", strId, "Bits", stBits);
     if(mcSrc.MemIsEmpty())
-      XC("Invalid icon data!", "Type", cpType, "Identifier", strId);
+      XC("Invalid icon data!", "Type", cpType, "Name", strId);
     // Create the icon. CreateIcon() seems to ignore the AND bits
     // on 24/32bpp icons but /analyse complains, so send original bits to it
     // The old icon will be preserved if the api call fails
@@ -532,9 +526,9 @@ class SysCore :
       mcSrc.MemPtr<BYTE>(), mcSrc.MemPtr<BYTE>());
     if(!hNewIcon)
       XCS("Failed to create new icon!",
-          "Type",   cpType,  "Identifier", strId,
-          "Width",  stWidth, "Height",     stHeight,
-          "Bits",   stBits,  "Data",       mcSrc.MemIsNotEmpty(),
+          "Type",   cpType,  "Name",   strId,
+          "Width",  stWidth, "Height", stHeight,
+          "Bits",   stBits,  "Data",   mcSrc.MemIsNotEmpty(),
           "Window", reinterpret_cast<void*>(GetWindowHandle()));
     // Destroy old icon if created and then assign the new icon
     if(hI && !DestroyIcon(hI))
@@ -543,35 +537,38 @@ class SysCore :
     hI = hNewIcon;
     // Update window icon if we have a window
     SendMessage(GetWindowHandle(),
-      WM_SETICON, uiT, reinterpret_cast<LPARAM>(hI));
+      WM_SETICON, uT, reinterpret_cast<LPARAM>(hI));
     // Remember: We have to destroy the icons when we're done with them.
     cLog->LogDebugExSafe("System set $ ($) $x$x$ window icon from '$'.",
-      cpType, uiT, stWidth, stHeight, stBits, strId);
+      cpType, uT, stWidth, stHeight, stBits, strId);
   }
   /* -- Set small or large icon -------------------------------------------- */
   void SetLargeIcon(const StdString &strId, const size_t stWidth,
     const size_t stHeight, const size_t stBits, const MemConst &mcSrc)
-      { SetIcon(strId, "large", ICON_BIG, hIconLarge, stWidth, stHeight,
-          stBits, mcSrc); }
+  { SetIcon(strId, "large", ICON_BIG, hIconLarge, stWidth, stHeight, stBits,
+      mcSrc); }
   void SetSmallIcon(const StdString &strId, const size_t stWidth,
     const size_t stHeight, const size_t stBits, const MemConst &mcSrc)
-      { SetIcon(strId, "small", ICON_SMALL, hIconSmall, stWidth, stHeight,
-          stBits, mcSrc); }
+  { SetIcon(strId, "small", ICON_SMALL, hIconSmall, stWidth, stHeight, stBits,
+      mcSrc); }
   /* -- Free the library handle -------------------------------------------- */
   static bool LibFree(void*const vpModule)
     { return vpModule && !!FreeLibrary(reinterpret_cast<HMODULE>(vpModule)); }
   /* -- Get dll procedure address ------------------------------------------ */
-  template<typename T>
-    static T GetSharedFunc(const HMODULE hModule, const char*const cpExport)
-      { return reinterpret_cast<T>(GetProcAddress(hModule, cpExport)); }
+  template<typename PtrType>
+    requires StdIsPointer<PtrType>
+  static PtrType GetSharedFunc(const HMODULE hModule,
+    const char*const cpExport)
+  { return StdBruteCastSafe<PtrType>(GetProcAddress(hModule, cpExport)); }
   /* -- Get kernel procedure address --------------------------------------- */
-  template<typename T>const T GetKernelFunc(const char*const cpExport)
-    { return GetSharedFunc<T>(hKernel, cpExport); }
+  template<typename PtrType>
+    const PtrType GetKernelFunc(const char*const cpExport)
+  { return GetSharedFunc<PtrType>(hKernel, cpExport); }
   /* -- Get the export address --------------------------------------------- */
-  template<typename T>static T
-    LibGetAddr(void*const vpModule, const char*const cpExport)
-      { return GetSharedFunc<T>(reinterpret_cast<HMODULE>(vpModule),
-          cpExport); }
+  template<typename PtrType>
+    static PtrType LibGetAddr(void*const vpModule, const char*const cpExport)
+  { return GetSharedFunc<PtrType>
+      (reinterpret_cast<HMODULE>(vpModule), cpExport); }
   /* -- Load the specified .dll -------------------------------------------- */
   static void *LibLoad(const char*const cpFileName) { return
     reinterpret_cast<void*>(LoadLibraryEx(UTFtoS16(cpFileName).data(),
@@ -605,7 +602,8 @@ class SysCore :
     // Set system cpu usage
     cpuUData.dSystem = UtilMakePercentage(ullSKernel, ullSysTot);
     // Update last system times
-    ullSUL = ullU, ullSKL = ullK;
+    ullSUL = ullU;
+    ullSKL = ullK;
     // Get process CPU times
     if(!GetProcessTimes(hProcess, reinterpret_cast<LPFILETIME>(&ullI),
                                   reinterpret_cast<LPFILETIME>(&ullX),
@@ -619,11 +617,12 @@ class SysCore :
                    ullPTime   = ullX - ullPTL,
                    ullProcTot = ullPKernel + ullPUser;
     // Update last values
-    ullPUL = ullU, ullPKL = ullK, ullPTL = ullX;
+    ullPUL = ullU;
+    ullPKL = ullK;
+    ullPTL = ullX;
     // Set process cpu usage
-    cpuUData.dProcess =
-      UtilMakePercentage(static_cast<double>(ullProcTot) / ullPTime,
-        StdThreadMax());
+    cpuUData.dProcess = UtilMakePercentage(static_cast<double>(ullProcTot) /
+      static_cast<double>(ullPTime), StdThreadMax());
   }
   /* -- Seek to position in specified handle ------------------------------- */
   template<typename IntType>
@@ -637,7 +636,7 @@ class SysCore :
     // High-order 64-bit value will be sent and returned in this
     DWORD dwNH = UtilHighDWord(ullP);
     // Set file pointer
-    const DWORD dwNL = SetFilePointer(hH, UtilLowDWord(ullP),
+    const DWORD dwNL = SetFilePointer(hH, UtilLowDWord<LONG>(ullP),
       reinterpret_cast<PLONG>(&dwNH), FILE_BEGIN);
     // Build new 64-bit position integer
     const UINT64 ullNP = UtilMakeQWord(dwNH, dwNL);
@@ -667,8 +666,8 @@ class SysCore :
         *mExe.MemRead<IMAGE_DOS_HEADER>(0, sizeof(IMAGE_DOS_HEADER));
       // Read PE header and throw error if it is not valid MZ signature
       const IMAGE_NT_HEADERS32 &pnthData =
-        *mExe.MemRead<IMAGE_NT_HEADERS32>(pdhData.e_lfanew,
-          sizeof(IMAGE_NT_HEADERS32));
+        *mExe.MemRead<IMAGE_NT_HEADERS32>(
+          static_cast<size_t>(pdhData.e_lfanew), sizeof(IMAGE_NT_HEADERS32));
       if(pdhData.e_magic != IMAGE_DOS_SIGNATURE)
         XC("Executable does not have a valid MZ signature!",
           "File",   strFile, "Requested", IMAGE_DOS_SIGNATURE,
@@ -689,7 +688,8 @@ class SysCore :
         default: XC("Could not detect executable header size!",
           "File", strFile, "Actual", pnthData.FileHeader.Machine);
       } // Calculate beginning of headers offset
-      const size_t stHdrsOffset = pdhData.e_lfanew + stHdrSize;
+      const size_t stHdrsOffset =
+        static_cast<size_t>(pdhData.e_lfanew) + stHdrSize;
       // Maximum pointer and size of executable
       size_t stSize = 0;
       // Enumerate through each section recording header and highest position
@@ -725,14 +725,14 @@ class SysCore :
     if(!dwNeeded)
       XC("Windows gave zero size module handle list!", "Process", hProcess);
     // Allocate memory
-    typedef StdVector<HMODULE> ModuleHandleVec;
+    using ModuleHandleVec = StdVector<HMODULE> ;
     ModuleHandleVec mhvList{ dwNeeded / sizeof(HMODULE) };
     // Get modules
     if(!EnumProcessModules(hProcess, mhvList.data(), dwNeeded, &dwNeeded))
       XCS("Failed to enumerate process modules!",
           "Process",    reinterpret_cast<void*>(hProcess),
           "Allocation", mhvList.size(),
-          "Required",   static_cast<unsigned int>(dwNeeded));
+          "Required",   static_cast<unsigned>(dwNeeded));
     // For each module. Get filename then check the version info for it
     for(const HMODULE hH : mhvList)
     { // Prepare string to hold filename
@@ -762,10 +762,10 @@ class SysCore :
     return wstrP;
   }
   /* ----------------------------------------------------------------------- */
-  unsigned int DetectWindowsArchitechture()
+  unsigned DetectWindowsArchitechture()
   { // Grab appropriate kernel function. It only exists on 64-bit versions
     // of Windows XP, Vista, 7, 8, 8.1 and 10. If this succeeds?
-    typedef void (WINAPI*const LPFN_GETNATIVESYSTEMINFO)(LPSYSTEM_INFO);
+    using LPFN_GETNATIVESYSTEMINFO = void (WINAPI*const)(LPSYSTEM_INFO);
     if(const LPFN_GETNATIVESYSTEMINFO fnGetNativeSystemInfo =
       GetKernelFunc<LPFN_GETNATIVESYSTEMINFO>("GetNativeSystemInfo"))
     { // Get operating system HAL information (returns nothing).
@@ -774,7 +774,7 @@ class SysCore :
       SYSTEM_INFO siData;
       fnGetNativeSystemInfo(&siData);
       // Build architecture list
-      switch(static_cast<unsigned int>(siData.wProcessorArchitecture))
+      switch(static_cast<unsigned>(siData.wProcessorArchitecture))
       { // 64-bit architecture?
         case PROCESSOR_ARCHITECTURE_AMD64:
         case PROCESSOR_ARCHITECTURE_ARM64:
@@ -785,7 +785,7 @@ class SysCore :
         case PROCESSOR_ARCHITECTURE_UNKNOWN: return 32;
         // Unknown. We should report it
         default: break;
-      }; // Unsupported value so log it
+      } // Unsupported value so log it
       XC("Architecture id not recognised!",
         "Id", siData.wProcessorArchitecture);
     } // We can safely assume an ancient 32-bit Windows version if not found
@@ -807,7 +807,7 @@ class SysCore :
     OSVERSIONINFOEX osviData;
     osviData.dwOSVersionInfoSize = sizeof(osviData);
     // Typedef for getversionex (Supported in Win2K+)
-    typedef BOOL (WINAPI*const LPFN_GETOSVERSIONEXW)(LPOSVERSIONINFOW);
+    using LPFN_GETOSVERSIONEXW = BOOL (WINAPI*const)(LPOSVERSIONINFOW);
     const LPFN_GETOSVERSIONEXW fcbGVEW =
       GetKernelFunc<LPFN_GETOSVERSIONEXW>("GetVersionExW");
     // Now we can get version if we have the fuction
@@ -820,7 +820,7 @@ class SysCore :
     { // Label to append if verified
       const char*const cpLabel;
       // Major, minor and service pack of OS which applies to this label
-      const unsigned int uiHi, uiLo, uiBd, uiSp;
+      const unsigned uHi, uLo, uBd, uSp;
     };
     // List of recognised Windows versions
     static const StdArray<const OSListItem,41>osList{ {
@@ -850,10 +850,10 @@ class SysCore :
     // versions above. 'Unknown' is caught if none are found.
     for(const OSListItem &oslIt : osList)
     { // Ignore if this version item doesn't match
-      if(osviData.dwMajorVersion < oslIt.uiHi ||
-         osviData.dwMinorVersion < oslIt.uiLo ||
-         osviData.dwBuildNumber < oslIt.uiBd ||
-         osviData.wServicePackMajor < oslIt.uiSp) continue;
+      if(osviData.dwMajorVersion < oslIt.uHi ||
+         osviData.dwMinorVersion < oslIt.uLo ||
+         osviData.dwBuildNumber < oslIt.uBd ||
+         osviData.wServicePackMajor < oslIt.uSp) continue;
       // Set operating system version
       osS << oslIt.cpLabel;
       // Skip adding version numbers
@@ -868,10 +868,13 @@ class SysCore :
     StdString strExtra; bool bExtra;
     if(HMODULE hDLL = GetModuleHandle(L"ntdll"))
     { // Get wine version function and if succeeded?
-      typedef const char *(WINAPI*const LPWINEGETVERSION)();
+      using LPWINEGETVERSION = const char *(WINAPI*const)();
       if(LPWINEGETVERSION fcbWGV =
-        GetSharedFunc<LPWINEGETVERSION>(hDLL, "wine_get_version"))
-          strExtra = StrAppend("Wine ", fcbWGV()), bExtra = true;
+           GetSharedFunc<LPWINEGETVERSION>(hDLL, "wine_get_version"))
+      { // Call it and store the Wine version
+        strExtra = StrAppend("Wine ", fcbWGV());
+        bExtra = true;
+      } // No extra details
       else bExtra = false;
     } // Store if we have extra info because strExtra is being StdMove()'d
     else bExtra = false;
@@ -923,19 +926,19 @@ class SysCore :
         if(strName.empty()) strName = strVendor;
         if(strIdent.empty()) strIdent = cCommon->CommonUnspec();
         // Detect family model and stepping from string (A F 0 M 0 S)
-        unsigned int uiFamily, uiModel, uiStepping;
-        Token tTokens{ strIdent, cCommon->CommonSpace() };
-        if(tTokens.size() >= 7 && tTokens[1] == "Family" &&
-          tTokens[3] == "Model" && tTokens[5] == "Stepping")
+        unsigned uFamily, uModel, uStepping;
+        const TokenStrView tsvTokens{ strIdent, cCommon->CommonSpaceV() };
+        if(tsvTokens.size() >= 7 && tsvTokens[1] == "Family" &&
+          tsvTokens[3] == "Model" && tsvTokens[5] == "Stepping")
         { // Convert strings to numbers
-          uiFamily = StrToNum<unsigned int>(tTokens[2]);
-          uiModel = StrToNum<unsigned int>(tTokens[4]);
-          uiStepping= StrToNum<unsigned int>(tTokens[6]);
+          uFamily = StrToNum<unsigned>(tsvTokens[2]);
+          uModel = StrToNum<unsigned>(tsvTokens[4]);
+          uStepping= StrToNum<unsigned>(tsvTokens[6]);
         } // Invalid syntax
-        else uiFamily = uiModel = uiStepping = 0;
+        else uFamily = uModel = uStepping = 0;
         // Return data
         return { StdThreadMax(), srSub.Query<DWORD>("~MHz"),
-                 uiFamily, uiModel, uiStepping, strName };
+                 uFamily, uModel, uStepping, strName };
       } // Log that we couldn't open the subkey
       else cLog->LogWarningExSafe("System could not open registry key $ "
         "sub-key $! $", strK, strSK, SysError());
@@ -1095,12 +1098,12 @@ class SysCore :
     SysVersion{ EnumModules(),         // Enumerate modules
       reinterpret_cast<size_t>         // Stored as 'size_t' for cross-platform
         (hInstance) },                 // Send this processes instance handle
-    SysCommon{ GetExecutableData(),    // Get and store executable data
+    SysInfo{ GetExecutableData(),      // Get and store executable data
              GetOperatingSystemData(), // Get and store operating system data
-               GetProcessorData() },   // Get and store processor data
+             GetProcessorData() },     // Get and store processor data
+    SysCon { this->OSNameEx() },       // Send Wine version to console
     hIconLarge(nullptr),               // Large icon not initialised yet
-    hIconSmall(nullptr),               // Small icon not initialised yet
-    SysCon { this->OSNameEx() }        // Send Wine version to console
+    hIconSmall(nullptr)                // Small icon not initialised yet
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor (only derivable) ---------------------------------------- */
@@ -1110,4 +1113,7 @@ class SysCore :
     if(hIconSmall) DestroyIcon(hIconSmall);
   )
 }; /* ---------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

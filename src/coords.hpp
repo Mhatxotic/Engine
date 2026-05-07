@@ -14,33 +14,32 @@ using namespace ICoord::P;             using Lib::OS::GlFW::GLfloat;
 using Lib::OS::GlFW::GLuint;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Fbo coords class ===================================================== */
-template<typename IntType> requires StdIsArithmatic<IntType> class Coords
+/* ------------------------------------------------------------------------- */
+template<typename IntType>             // Custom type
+  requires StdIsArithmatic<IntType>    // Must compute
+class Coords                           // Co-ordinates class
 { /* -- Private variables -------------------------------------------------- */
-  typedef Coord<IntType> CoordType;    // Co-ordinates container type
+  using CoordType = Coord<IntType>;    // Co-ordinates container type
   CoordType        ctXY1, ctXY2;       // Top-left/right-bottom co-ordinates
   /* -- Get co-ordinate -------------------------------------------- */ public:
-  template<typename RIntType=IntType>RIntType CoordsGetLeft() const
+  template<typename RIntType = IntType>RIntType CoordsGetX1() const
     { return ctXY1.template CoordGetX<RIntType>(); }
-  template<typename RIntType=IntType>RIntType CoordsGetTop() const
+  template<typename RIntType = IntType>RIntType CoordsGetY1() const
     { return ctXY1.template CoordGetY<RIntType>(); }
-  template<typename RIntType=IntType>RIntType CoordsGetRight() const
+  template<typename RIntType = IntType>RIntType CoordsGetX2() const
     { return ctXY2.template CoordGetX<RIntType>(); }
-  template<typename RIntType=IntType>RIntType CoordsGetBottom() const
+  template<typename RIntType = IntType>RIntType CoordsGetY2() const
     { return ctXY2.template CoordGetY<RIntType>(); }
   /* -- Set co-ordinate by integral values --------------------------------- */
-  void CoordsSetLeft(const IntType itNLeft) { ctXY1.CoordSetX(itNLeft); }
-  void CoordsSetTop(const IntType itNTop) { ctXY1.CoordSetY(itNTop); }
-  void CoordsSetRight(const IntType itNRight) { ctXY2.CoordSetX(itNRight); }
-  void CoordsSetBottom(const IntType itNBottom) { ctXY2.CoordSetY(itNBottom);}
+  void CoordsSetX1(const IntType itNX1) { ctXY1.CoordSetX(itNX1); }
+  void CoordsSetY1(const IntType itNY1) { ctXY1.CoordSetY(itNY1); }
+  void CoordsSetX2(const IntType itNX2) { ctXY2.CoordSetX(itNX2); }
+  void CoordsSetY2(const IntType itNY2) { ctXY2.CoordSetY(itNY2); }
   /* -- Set co-ordinate by another struct ---------------------------------- */
-  void CoordsSetLeft(const Coords &cRef)
-    { CoordsSetLeft(cRef.CoordsGetLeft()); }
-  void CoordsSetTop(const Coords &cRef) { CoordsSetTop(cRef.CoordsGetTop()); }
-  void CoordsSetRight(const Coords &cRef)
-    { CoordsSetRight(cRef.CoordsGetRight()); }
-  void CoordsSetBottom(const Coords &cRef)
-    { CoordsSetBottom(cRef.CoordsGetBottom()); }
+  void CoordsSetX1(const Coords &cRef) { CoordsSetX1(cRef.CoordsGetX1()); }
+  void CoordsSetY1(const Coords &cRef) { CoordsSetY1(cRef.CoordsGetY1()); }
+  void CoordsSetX2(const Coords &cRef) { CoordsSetX2(cRef.CoordsGetX2()); }
+  void CoordsSetY2(const Coords &cRef) { CoordsSetY2(cRef.CoordsGetY2()); }
   /* -- Set two co-ordinates ----------------------------------------------- */
   void CoordsSetTopLeft(const IntType itX, const IntType itY)
     { ctXY1.CoordSet(itX, itY); }
@@ -53,27 +52,28 @@ template<typename IntType> requires StdIsArithmatic<IntType> class Coords
   /* -- Reset co-ordinates ------------------------------------------------- */
   void CoordsReset() { ctXY1.CoordSet(); ctXY2.CoordSet(); }
   /* -- Set all co-ordinates by integral values ---------------------------- */
-  void CoordsSet(const IntType itNLeft, const IntType itNTop,
-    const IntType itNRight, const IntType itNBottom)
-  { CoordsSetLeft(itNLeft); CoordsSetTop(itNTop); CoordsSetRight(itNRight);
-    CoordsSetBottom(itNBottom); }
+  void CoordsSet(const IntType itNX1, const IntType itNY1,
+    const IntType itNX2, const IntType itNY2)
+  { CoordsSetX1(itNX1); CoordsSetY1(itNY1);
+    CoordsSetX2(itNX2); CoordsSetY2(itNY2); }
   /* -- Set all co-ordinates by another struct ----------------------------- */
   void CoordsSet(const Coords &cRef)
-    { CoordsSet(cRef.CoordsGetLeft(), cRef.CoordsGetTop(),
-                cRef.CoordsGetRight(), cRef.CoordsGetBottom()); }
+    { CoordsSet(cRef.CoordsGetX1(), cRef.CoordsGetY1(),
+                cRef.CoordsGetX2(), cRef.CoordsGetY2()); }
   /* -- Init constructor --------------------------------------------------- */
-  Coords(const IntType itNLeft, const IntType itNTop, const IntType itNRight,
-    const IntType itNBottom) :         // X1, Y1, X2, Y2
+  Coords(const IntType itNX1,          // Left
+         const IntType itNY1,          // Top
+         const IntType itNX2,          // Right
+         const IntType itNY2) :        // Bottom
     /* -- Initialisers ----------------------------------------------------- */
-    ctXY1{ itNLeft, itNTop },          // X1 & Y1 co-ordinate
-    ctXY2{ itNRight, itNBottom }       // X2 & Y2 co-ordinate
+    ctXY1{ itNX1, itNY1 },             // X1 & Y1 co-ordinate
+    ctXY2{ itNX2, itNY2 }              // X2 & Y2 co-ordinate
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */
   Coords() = default;
 };/* ----------------------------------------------------------------------- */
-typedef Coords<GLfloat> CoordsFloat;   // GLfloat co-ordinates
-typedef Coords<GLuint>  CoordsUint;    // GLuint co-ordinates
+using CoordsGLFloat = Coords<GLfloat>; // GLfloat co-ordinates
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

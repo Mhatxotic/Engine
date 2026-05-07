@@ -26,7 +26,7 @@ enum TextureType : size_t              // OpenGL texture type
   /* ----------------------------------------------------------------------- */
   TT_MAX                               // [10] Maximum number of texture types
 };/* ----------------------------------------------------------------------- */
-enum ByteDepth : unsigned int          // Human readable byte-depths
+enum ByteDepth : unsigned              // Human readable byte-depths
 { /* ----------------------------------------------------------------------- */
   BY_NONE,                             // [0] Not initialised yet
   BY_GRAY,                             // [1] Gray channel format
@@ -38,7 +38,7 @@ enum ByteDepth : unsigned int          // Human readable byte-depths
 };/* ----------------------------------------------------------------------- */
 static TextureType ImageBYtoTexType(const ByteDepth byDepth)
 { // Lookup table to convert bytedepth value to GL texture format
-  typedef StdArray<const TextureType, BY_MAX> ByteDepthToTexTypeLookup;
+  using ByteDepthToTexTypeLookup = StdArray<const TextureType, BY_MAX>;
   static const ByteDepthToTexTypeLookup
     bdtttlLookup{ TT_NONE, TT_GRAY, TT_GRAYALPHA, TT_RGB, TT_RGBA };
   // Return clamped lookup value

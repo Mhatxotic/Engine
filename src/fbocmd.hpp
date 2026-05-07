@@ -56,45 +56,45 @@ constexpr static const size_t
   stBytesPerVertex  = stFloatsPerVertex * stSizeOfGLfloat,
   stOffsetTxcData   = 0,
   stOffsetPosData   = stCompsPerCoord * stSizeOfGLfloat,
-  stOffsetColData   = (stCompsPerCoord + stCompsPerPos) * stSizeOfGLfloat;
+  stOffsetIntData   = (stCompsPerCoord + stCompsPerPos) * stSizeOfGLfloat;
 /* -- Render command item -------------------------------------------------- */
 struct FboCmd                          // Render command structure
 { /* -- Public variables --------------------------------------------------- */
-  const GLuint       uiTUId,           // - Texture unit id
-                     uiTexId,          // - Texture id
-                     uiPrgId;          // - Shader program id
+  const GLuint       gluTUId,          // - Texture unit id
+                     gluTexId,         // - Texture id
+                     gluPrgId;         // - Shader program id
   const GLvoid*const vpTCOffset,       // - Texcoord buffer offset
               *const vpVOffset,        // - vector buffer offset
               *const vpCOffset;        // - Colour buffer offset
-  const GLsizei      siVertices;       // Total vertices to draw
+  const GLsizei      glsiVertices;     // Total vertices to draw
 };/* -- Commands ----------------------------------------------------------- */
-typedef StdVector<FboCmd>         FboCmdVec;         // Render command list
-typedef FboCmdVec::const_iterator FboCmdVecConstInt; // " const iterator
+using FboCmdVec         = StdVector<FboCmd>;         // Render command list
+using FboCmdVecConstInt = FboCmdVec::const_iterator; // " const iterator
 /* -- Single point data ---------------------------------------------------- */
-typedef StdArray<GLfloat,stCompsPerCoord>  TriCoord;  // Coord data in triangle
-typedef StdArray<GLfloat,stCompsPerPos>    TriVertex; // Position in triangle
-typedef StdArray<GLfloat,stCompsPerColour> TriColour; // Colour in triangle
+using TriCoord     = StdArray<GLfloat,stCompsPerCoord>;  // Tri TexCoord data
+using TriVertex    = StdArray<GLfloat,stCompsPerPos>;    // Tri position data
+using TriIntensity = StdArray<GLfloat,stCompsPerColour>; // Tri intensity data
 /* -- One triangle data ---------------------------------------------------- */
 struct FboVert                         // Formatted data for OpenGL
 { /* -- Public variables --------------------------------------------------- */
-  TriCoord       faCoord;              // TexCoord specific data send
-  TriVertex      faVertex;             // Vertex specific data to send
-  TriColour      faColour;             // Colour specific data to send
+  TriCoord       tcCoord;              // TexCoord specific data send
+  TriVertex      tvVertex;             // Vertex specific data to send
+  TriIntensity   tiColour;             // Colour specific data to send
 };/* ----------------------------------------------------------------------- */
-/* FboVert[0].TriCoord  =  8 bytes @ GLfloat[ 0] - Point 1 / Texcoord 1      **
-**     "     .TriVertex =  8 bytes @ GLfloat[ 8] -    "    / Vertex 1        **
-**     "     .TriColour = 16 bytes @ GLfloat[16] -    "    / Colour 1        **
-** FboVert[1].TriCoor   =  8 bytes @ GLfloat[32] - Point 2 / Texcoord 2      **
-**     "     .TriVertex =  8 bytes @ GLfloat[40] -    "    / Vertex 2        **
-**     "     .TriColour = 16 bytes @ GLfloat[48] -    "    / Colour 2        **
-** FboVert[2].TriCoord  =  8 bytes @ GLfloat[64] - Point 3 / Texcoord 3      **
-**     "     .TriVertex =  8 bytes @ GLfloat[72] -    "    / Vertex 3        **
-**     "     .TriColour = 16 bytes @ GLfloat[80] -    "    / Colour 3        **
+/* FboVert[0].TriCoord     =  8 bytes @ GLfloat[ 0] - Point 1 / Texcoord 1   **
+**     "     .TriVertex    =  8 bytes @ GLfloat[ 8] -    "    / Vertex 1     **
+**     "     .TriIntensity = 16 bytes @ GLfloat[16] -    "    / Colour 1     **
+** FboVert[1].TriCoor      =  8 bytes @ GLfloat[32] - Point 2 / Texcoord 2   **
+**     "     .TriVertex    =  8 bytes @ GLfloat[40] -    "    / Vertex 2     **
+**     "     .TriIntensity = 16 bytes @ GLfloat[48] -    "    / Colour 2     **
+** FboVert[2].TriCoord     =  8 bytes @ GLfloat[64] - Point 3 / Texcoord 3   **
+**     "     .TriVertex    =  8 bytes @ GLfloat[72] -    "    / Vertex 3     **
+**     "     .TriIntensity = 16 bytes @ GLfloat[80] -    "    / Colour 3     **
 ** +-- Single interlaced triangle --+- T(Vec2)=Texcoord(XY) -+-----+-----+-- **
 ** + TTVVCCCC | TTVVCCCC | TTVVCCCC |  V(Vec2)=Vertex(XY)    | ... | ... |   **
 ** +----------+----------+----------+- C(Vec4)=Colour(RGBA) -+-----+-----+-- */
-typedef StdArray<FboVert,stVertexPerTriangle> FboTri; // All triangles data
-typedef StdVector<FboTri>                 FboTriVec;  // Render triangles list
+using FboTri    = StdArray<FboVert, stVertexPerTriangle>; // All triangles data
+using FboTriVec = StdVector<FboTri>;                   // Render triangles list
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

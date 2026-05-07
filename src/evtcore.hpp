@@ -10,13 +10,14 @@
 namespace IEvtCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFillCon::P;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace IMutex::P;             using namespace IStd::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace ILog::P;               using namespace ILookupArray::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace IStd::P;               using namespace IUtf::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */
-enum EvtArgVarType : unsigned int      // EvtArgVar variable types
+enum EvtArgVarType : unsigned          // EvtArgVar variable types
 { /* ----------------------------------------------------------------------- */
   EAVT_BOOL,     EAVT_CSTR,    EAVT_STR, EAVT_PTR,       EAVT_FLOAT,
   EAVT_DOUBLE,   EAVT_UINT,    EAVT_INT, EAVT_ULONGLONG, EAVT_LONGLONG,
@@ -28,38 +29,40 @@ class EvtArgVar                        // Multi-type helps access event data
   /* ----------------------------------------------------------------------- */
   union                                // Variables share same memory space
   { /* -- All these use the same memory ------------------------------------ */
+    StdString         *str;            // STL-String pointer ...... (4-8 bytes)
     bool               b;              // Boolean .................... (1 byte)
     char              *cp;             // C-String pointer ........ (4-8 bytes)
     double             d;              // Double .................... (8 bytes)
     float              f;              // Float ..................... (4 bytes)
-    long signed int    lsi;            // Long Signed Integer ..... (4-8 bytes)
-    long unsigned int  lui;            // Long Unsigned Integer ... (4-8 bytes)
-    signed int         si;             // Signed Integer ............ (4 bytes)
-    signed long long   sll;            // Signed Long Long .......... (8 bytes)
+    int                i;              // Signed Integer ............ (4 bytes)
+    long               l;              // Signed Long Integer ..... (4-8 bytes)
+    long long          ll;             // Signed Long Long .......... (8 bytes)
     size_t             st;             // Size Integer ............ (4-8 bytes)
-    StdString         *str;            // STL-String pointer ...... (4-8 bytes)
-    unsigned int       ui;             // Unsigned Integer .......... (4 bytes)
+    unsigned           ui;             // Unsigned Integer .......... (4 bytes)
+    unsigned long      ul;             // Unsigned Long ........... (4-8 bytes)
     unsigned long long ull;            // Unsigned Long Long ........ (8 bytes)
     void              *vp;             // Pointer ................. (4-8 bytes)
   }; /* ------------------------------------------------------------ */ public:
   EvtArgVarType Type() const { return t; }
   /* ----------------------------------------------------------------------- */
-  template<typename AnyCast=void>AnyCast *Ptr() const
-    { return reinterpret_cast<AnyCast*>(vp); }
-  template<typename AnyCast>AnyCast &Ref() const
-    { return *Ptr<AnyCast>(vp); }
+  template<typename AnyType = void>
+    requires (!StdIsPointer<AnyType>)
+  AnyType *Ptr() const { return reinterpret_cast<AnyType*>(vp); }
+  template<typename AnyType>
+    requires StdIsPointer<AnyType>
+  AnyType &Ref() const { return *Ptr<AnyType>(vp); }
   /* ----------------------------------------------------------------------- */
   char *CStr() const { return cp; }
   bool Bool() const { return b; }
   size_t SizeT() const { return st; }
   /* ----------------------------------------------------------------------- */
-  signed int Int() const { return si; }
-  unsigned int UInt() const { return ui; }
+  int Int() const { return i; }
+  unsigned UInt() const { return ui; }
   /* ----------------------------------------------------------------------- */
-  long signed int Long() const { return lsi; }
-  long unsigned int ULong() const { return lui; }
+  long Long() const { return l; }
+  long unsigned ULong() const { return ul; }
   /* ----------------------------------------------------------------------- */
-  signed long long LongLong() const { return sll; }
+  long long LongLong() const { return ll; }
   unsigned long long ULongLong() const { return ull; }
   /* ----------------------------------------------------------------------- */
   double Double() const { return d; }
@@ -68,32 +71,32 @@ class EvtArgVar                        // Multi-type helps access event data
   StdString *StrPtr() const { return str; }
   StdString &Str() const { return *StrPtr(); }
   /* ----------------------------------------------------------------------- */
-  explicit EvtArgVar(const void*const vpP) :
-    t(EAVT_PTR), vp(const_cast<void*>(vpP)) {}
-  explicit EvtArgVar(const std::nullptr_t) :
-    t(EAVT_PTR), vp(nullptr) {}
-  explicit EvtArgVar(const char*const cpP) :
-    t(EAVT_CSTR), cp(const_cast<char*>(cpP)) {}
   explicit EvtArgVar(const StdString &strV) :
     t(EAVT_STR), str(const_cast<StdString*>(&strV)) {}
-  explicit EvtArgVar(const unsigned int uiV) :
-    t(EAVT_UINT), ui(static_cast<unsigned int>(uiV)) {}
-  explicit EvtArgVar(const signed int siV) :
-    t(EAVT_INT), si(static_cast<signed int>(siV)){}
+  explicit EvtArgVar(const bool bV):
+    t(EAVT_BOOL), b(bV) {}
+  explicit EvtArgVar(const char*const cpP) :
+    t(EAVT_CSTR), cp(const_cast<char*>(cpP)) {}
   explicit EvtArgVar(const double dV) :
     t(EAVT_DOUBLE), d(dV) {}
   explicit EvtArgVar(const float fV):
     t(EAVT_FLOAT), f(fV) {}
+  explicit EvtArgVar(const int iV) :
+    t(EAVT_INT), i(static_cast<int>(iV)){}
+  explicit EvtArgVar(const long lV) :
+    t(EAVT_LONGINT), l(lV) {}
+  explicit EvtArgVar(const long long llV) :
+    t(EAVT_LONGLONG), ll(llV) {}
+  explicit EvtArgVar(const StdNullPtr) :
+    t(EAVT_PTR), vp(nullptr) {}
   explicit EvtArgVar(const unsigned long long ullV) :
     t(EAVT_ULONGLONG), ull(ullV) {}
-  explicit EvtArgVar(const signed long long sllV) :
-    t(EAVT_LONGLONG), sll(sllV) {}
-  explicit EvtArgVar(const long unsigned int luiV) :
-    t(EAVT_LONGUINT), lui(luiV) {}
-  explicit EvtArgVar(const long signed int liV) :
-    t(EAVT_LONGINT), lsi(liV) {}
-  explicit EvtArgVar(const bool bV):
-    t(EAVT_BOOL), b(bV) {}
+  explicit EvtArgVar(const unsigned long ulV) :
+    t(EAVT_LONGUINT), ul(ulV) {}
+  explicit EvtArgVar(const unsigned uV) :
+    t(EAVT_UINT), ui(static_cast<unsigned>(uV)) {}
+  explicit EvtArgVar(const void*const vpP) :
+    t(EAVT_PTR), vp(const_cast<void*>(vpP)) {}
 };/* ----------------------------------------------------------------------- */
 /* -- Common events system (since we need to use this twice) --------------- */
 template<typename Cmd,                 // Variable type of command to use
@@ -102,24 +105,24 @@ template<typename Cmd,                 // Variable type of command to use
          Cmd      EvtNoLog>            // Id of succeeding ids to not log for
 class EvtCore :                        // Start of common event system class
   /* -- Base classes ------------------------------------------------------- */
-  public Ident,                        // Identifier of event list
+  public NameStr,                      // Identifier of event list
   public MutexLock                     // Primary events list mutex
 { /* -- Typedefs --------------------------------------------------- */ public:
-  struct Event;                           // (Prototype) Event packet info
-  typedef void (CbEcFuncT)(const Event&); // Event callback type
-  typedef function<CbEcFuncT> CbEcFunc;   // Actual event callback
+  struct Event;                          // (Prototype) Event packet info
+  using CbEcFuncT = void(const Event&);  // Event callback type
+  using CbEcFunc  = function<CbEcFuncT>; // Actual event callback
   /* ----------------------------------------------------------------------- */
-  typedef StdArray<CbEcFunc, EvtMaxEvents> Funcs;        // Reg'd events vector
-  typedef StdList<Event>                   Queue;        // Current event queue
-  typedef typename Queue::const_iterator   QueueConstIt; // Current event queue
+  using Funcs        = StdArray<CbEcFunc, EvtMaxEvents>; // Reg'd events vector
+  using Queue        = StdList<Event>;                   // Current event queue
+  using QueueConstIt = typename Queue::const_iterator;   // Current event queue
   /* ----------------------------------------------------------------------- */
-  typedef StdPair<const Cmd, const CbEcFunc> RegPair; // Event cmd and cb func
-  typedef const StdVector<RegPair>           RegVec;  // Event list
+  using RegPair = StdPair<const Cmd, const CbEcFunc>; // Event cmd and cb func
+  using RegVec  = const StdVector<RegPair>;           // Event list
   /* ----------------------------------------------------------------------- */
-  typedef StdVector<EvtArgVar> EvtArgs;   // Vector of RegPairs
+  using EvtArgs = StdVector<EvtArgVar>; // Vector of RegPairs
   /* ----------------------------------------------------------------------- */
-  typedef IdList<EvtMaxEvents> ISList; // Events as strings
-  const ISList &islEventStrings;       // Actual variable
+  using ISList = LookupArray<EvtMaxEvents>; // Events as strings
+  const ISList &islEventStrings;            // Actual variable
   /* ----------------------------------------------------------------------- */
   class RegAuto                        // Automatic event registration
   { /* -- Private variables ------------------------------------------------ */
@@ -178,7 +181,7 @@ class EvtCore :                        // Start of common event system class
   void WarningFunction(const Event &eEvent)
   { // Log the error
     cLog->LogWarningExSafe("$ ignored unregistered event $<$>.",
-      IdentGet(), IdToString(eEvent.cCmd), eEvent.cCmd);
+      NameGet(), IdToString(eEvent.cCmd), eEvent.cCmd);
   }
   /* -- Execute specified event NOW (finisher) ----------------------------- */
   void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs)
@@ -188,9 +191,10 @@ class EvtCore :                        // Start of common event system class
   }
   /* -- Execute specified event NOW (parameters) --------------------------- */
   template<typename ...VarArgs,typename AnyType>
-    requires StdIsEnum<AnyType> || StdIsInteger<AnyType> ||
+    requires StdIsEnum<AnyType> || StdIsIntegral<AnyType> ||
       StdIsPointer<AnyType> || StdIsNull<AnyType>
-  void ExecuteParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
+  void ExecuteParam(const Cmd cCmd,    // cppcheck-suppress functionStatic
+    EvtArgs &eaArgs, AnyType atArg,
     const VarArgs ...vaArgs)
   { // Insert parameter into list and add more parameters. It only accepts
     // simple integers and pointers, hence why the direct copy on ...vaArgs.
@@ -206,7 +210,8 @@ class EvtCore :                        // Start of common event system class
   }
   /* -- Add with copy parameter semantics (parameters) --------------------- */
   template<typename ...VarArgs, typename AnyType>
-    void AddParam(const Cmd cCmd, EvtArgs &eaArgs, AnyType atArg,
+    void AddParam(const Cmd cCmd,      // cppcheck-suppress functionStatic
+      EvtArgs &eaArgs, AnyType atArg,
       const VarArgs ...vaArgs)
   { // Place parameter in list and add more parameters or finish
     eaArgs.emplace_back(EvtArgVar{ atArg });
@@ -220,7 +225,7 @@ class EvtCore :                        // Start of common event system class
   /* -- Lock access to events list and return number of elements in queue -- */
   size_t SizeSafe() { return MutexCall([this](){ return qlEvents.size(); }); }
   /* -- Returns the final iterator ----------------------------------------- */
-  const QueueConstIt Last() { return qlEvents.cend(); }
+  QueueConstIt Last() { return qlEvents.cend(); }
   /* -- Manage with lock --------------------------------------------------- */
   Cmd Manage()
   { // Try to lock access to events list.
@@ -238,7 +243,7 @@ class EvtCore :                        // Start of common event system class
         // Log event if loggable
         if(epData.cCmd < EvtNoLog)
           cLog->LogDebugExSafe("$ system processing event $<$>.",
-            IdentGet(), IdToString(epData.cCmd), epData.cCmd);
+            NameGet(), IdToString(epData.cCmd), epData.cCmd);
         // No callback? Return command to loop
         if(!epData.cbfFunc) return epData.cCmd;
         // Unlock the mutex while we execute the callback. This is so more
@@ -264,7 +269,7 @@ class EvtCore :                        // Start of common event system class
       return stCount;
     })) // Write number of events cleared
       cLog->LogDebugExSafe("$ cleared $ lingering events.",
-        IdentGet(), stCleared);
+        NameGet(), stCleared);
   }
   /* -- Execute specified event NOW (starter) ------------------------------ */
   template<typename ...VarArgs>
@@ -293,8 +298,9 @@ class EvtCore :                        // Start of common event system class
   }
   /* -- Add to events and return iterator (parameters) --------------------- */
   template<typename ...VarArgs, typename AnyType>
-    void AddExParam(const Cmd cCmd, QueueConstIt &qciItem,
-      EvtArgs &eaArgs, AnyType atArg, const VarArgs ...vaArgs)
+    void AddExParam(const Cmd cCmd,    // cppcheck-suppress functionStatic
+      QueueConstIt &qciItem, EvtArgs &eaArgs, AnyType atArg,
+      const VarArgs ...vaArgs)
   { // Place parameter into parameter list and add more parameters or finish
     eaArgs.emplace_back(EvtArgVar{ atArg });
     AddExParam(cCmd, qciItem, eaArgs, vaArgs...);
@@ -321,7 +327,7 @@ class EvtCore :                        // Start of common event system class
   /* -- Event data, all empty functions ------------------------- */ protected:
   EvtCore(const StdString &strCName, const ISList &islStrings) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strCName },                 // Initialise event system name
+    Name{ strCName },                  // Initialise event system name
     islEventStrings{ islStrings },     // Initialise event id names
     cefEmpty{ bind(&EvtCore::WarningFunction, this, _1) },
     fFuncs{ FillConGeneric<Funcs>(cefEmpty) }

@@ -22,11 +22,11 @@ enum ConColour : size_t                // Try to match with SysCon colours
   COLOUR_WHITE   /* 15 */, COLOUR_MAX      /* 16 */
 };/* ----------------------------------------------------------------------- */
 /* -- Colour palette to RGB lookup ----------------------------------------- */
-static unsigned int ConColourToRGB(const ConColour ccIndex)
+static unsigned ConColourToRGB(const ConColour ccIndex)
 { // The conversion of index to colour 0x[II][RR][GG][BB]. The 'II' means that
   // if it is zero (0) then the value is perceived as normal intensity, else if
   // the value is one (1) then bright intensity.
-  typedef StdArray<unsigned int, COLOUR_MAX> ConPalette;
+  using ConPalette = StdArray<unsigned, COLOUR_MAX>;
   static const ConPalette cpaNDXtoRGB{
     0x00010101 /* 00=COLOUR_BLACK   */, 0x0000008b /* 01=COLOUR_BLUE     */,
     0x00008b00 /* 02=COLOUR_GREEN   */, 0x00a0b0b0 /* 03=COLOUR_CYAN     */,
@@ -46,10 +46,10 @@ struct ConLine                         // Console line data structure
   const ConColour  ccColour;           // Line colour index
   const StdString  strLine;            // Line data
 };/* ----------------------------------------------------------------------- */
-typedef StdList<ConLine>                 ConLines;           // Con lines data
-typedef ConLines::const_iterator         ConLinesConstIt;    // " fwd const it
-typedef ConLines::reverse_iterator       ConLinesRevIt;      // " reverse it
-typedef ConLines::const_reverse_iterator ConLinesConstRevIt; // " const
+using ConLines           = StdList<ConLine>;                 // Con lines data
+using ConLinesConstIt    = ConLines::const_iterator;         // " fwd const it
+using ConLinesRevIt      = ConLines::reverse_iterator;       // " reverse it
+using ConLinesConstRevIt = ConLines::const_reverse_iterator; // " const
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -66,26 +66,26 @@ namespace P {                          // Start of public module namespace
 ** ## BASE ENGINE COMMANDS DEFINES                                        ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-enum ConCmdEnums : unsigned int
+enum ConCmdEnums : unsigned
 { /* ----------------------------------------------------------------------- */
-  CC_ARCHIVES, CC_ARESET,    CC_ASSETS,  CC_AUDINS,    CC_AUDIO,
-  CC_AUDOUTS,  CC_BINS,      CC_CERTS,   CC_CLA,       CC_CLH,
-  CC_CLS,      CC_CMDS,      CC_CON,     CC_CONLOG,    CC_CPU,
-  CC_CRASH,    CC_CREDITS,   CC_CVARS,   CC_CVCLR,     CC_CVI,
-  CC_CVLOAD,   CC_CVNPK,     CC_CVPEND,  CC_CVSAVE,    CC_DIR,
-  CC_ENV,      CC_EVENTS,    CC_FBOS,    CC_FILES,     CC_FIND,
-  CC_FONTS,    CC_FTFS,      CC_GPU,     CC_GRESET,    CC_IMAGES,
-  CC_IMGFMTS,  CC_INPUT,     CC_JSONS,   CC_LCALC,     CC_LCMDS,
-  CC_LEND,     CC_LEXEC,     CC_LFUNCS,  CC_LG,        CC_LGC,
-  CC_LOG,      CC_LOGCLR,    CC_LPAUSE,  CC_LRESET,    CC_LRESUME,
-  CC_LSTACK,   CC_LVARS,     CC_MASKS,   CC_MEM,       CC_MLIST,
-  CC_MODS,     CC_OBJS,      CC_OGLEXT,  CC_OGLFUNC,   CC_PALETTES,
-  CC_PCMFMTS,  CC_PCMS,      CC_QUIT,    CC_RESTART,   CC_SAMPLES,
-  CC_SHADERS,  CC_SHOT,      CC_SOCKETS, CC_SOCKRESET, CC_SOURCES,
-  CC_SQLCHECK, CC_SQLDEFRAG, CC_SQLEND,  CC_SQLEXEC,   CC_SQLS,
-  CC_STATS,    CC_STOPALL,   CC_STREAMS, CC_SYSTEM,    CC_TEXTURES,
-  CC_THREADS,  CC_TIME,      CC_URLS,    CC_VERSION,   CC_VIDEOS,
-  CC_VMLIST,   CC_VRESET,    CC_WRESET,
+  CC_ARCHIVES, CC_ARESET,   CC_ASSETS,    CC_AUDINS,  CC_AUDIO,
+  CC_AUDOUTS,  CC_BINS,     CC_CERTS,     CC_CLA,     CC_CLH,
+  CC_CLS,      CC_CMDS,     CC_CON,       CC_CONLOG,  CC_CPU,
+  CC_CRASH,    CC_CREDITS,  CC_CRESET,    CC_CVARS,   CC_CVCLR,
+  CC_CVI,      CC_CVLOAD,   CC_CVNPK,     CC_CVPEND,  CC_CVSAVE,
+  CC_DIR,      CC_ENV,      CC_EVENTS,    CC_FBOS,    CC_FILES,
+  CC_FIND,     CC_FONTS,    CC_FTFS,      CC_GPU,     CC_GRESET,
+  CC_IMAGES,   CC_IMGFMTS,  CC_INPUT,     CC_JSONS,   CC_LCALC,
+  CC_LCMDS,    CC_LEND,     CC_LEXEC,     CC_LFUNCS,  CC_LG,
+  CC_LGC,      CC_LOG,      CC_LOGCLR,    CC_LPAUSE,  CC_LRESET,
+  CC_LRESUME,  CC_LSTACK,   CC_LVARS,     CC_MASKS,   CC_MEM,
+  CC_MLIST,    CC_MODS,     CC_OBJS,      CC_OGLEXT,  CC_OGLFUNC,
+  CC_PALETTES, CC_PCMFMTS,  CC_PCMS,      CC_QUIT,    CC_RESTART,
+  CC_SAMPLES,  CC_SHADERS,  CC_SHOT,      CC_SOCKETS, CC_SOCKRESET,
+  CC_SOURCES,  CC_SQLCHECK, CC_SQLDEFRAG, CC_SQLEND,  CC_SQLEXEC,
+  CC_SQLS,     CC_STATS,    CC_STOPALL,   CC_STREAMS, CC_SYSTEM,
+  CC_TEXTURES, CC_THREADS,  CC_TIME,      CC_URLS,    CC_VERSION,
+  CC_VIDEOS,   CC_VMLIST,   CC_VRESET,    CC_WRESET,
   /* ----------------------------------------------------------------------- */
   MAX_CONCMD                           // Maximum console commands
 };/* ======================================================================= */
@@ -93,25 +93,25 @@ enum ConCmdEnums : unsigned int
 ** ## BASE ENGINE COMMANDS TYPEDEFS                                       ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
-typedef void (*ConCbFunc)(const Args &); // Cmd callback
+using ConCbFunc = void(*)(const Args &); // Cmd callback
 /* ------------------------------------------------------------------------- */
 struct ConLib                          // Console library command structure
 { /* ----------------------------------------------------------------------- */
   const StdString      strName;        // Function name
-  const unsigned int   uiMinimum,      // Minimum parameters
-                       uiMaximum;      // Maximum parameters
+  const unsigned       uMinimum,       // Minimum parameters
+                       uMaximum;       // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags
   const ConCbFunc      ccfFunc;        // Callback function
 };/* ----------------------------------------------------------------------- */
 struct ConLibStatic                    // For static engine commands list
 { /* ----------------------------------------------------------------------- */
   const StdStringView  strvName;       // Function name
-  const unsigned int   uiMinimum,      // Minimum parameters
-                       uiMaximum;      // Maximum parameters
+  const unsigned       uMinimum,       // Minimum parameters
+                       uMaximum;       // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags
   const ConCbFunc      ccfFunc;        // Callback function
 };/* ----------------------------------------------------------------------- */
-typedef StdArray<const ConLibStatic, MAX_CONCMD> ConCmdStaticList;
+using ConCmdStaticList = StdArray<const ConLibStatic, MAX_CONCMD>;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

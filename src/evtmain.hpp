@@ -11,7 +11,7 @@
 namespace IEvtMain {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IEvtCore::P;           using namespace IHelper::P;
-using namespace IIdent::P;             using namespace ILog::P;
+using namespace ILog::P;               using namespace ILookupArray::P;
 using namespace IMutex::P;             using namespace IStd::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
@@ -95,7 +95,7 @@ class EvtMain;                         // Prototype class
 static EvtMain *cEvtMain = nullptr;    // Address of global class
 class EvtMain :                        // Event list for render thread
   /* -- Dependencies ------------------------------------------------------- */
-  private IdList<EMC_MAX>,             // Event strings
+  private LookupArray<EMC_MAX>,        // Event strings
   public EvtCore                       // Events common class
    <EvtMainCmd,                        // The enum list of events supported
     EMC_MAX,                           // Maximum events allowed
@@ -107,7 +107,7 @@ class EvtMain :                        // Event list for render thread
   const RegAuto    raEvents;           // Events to register
   EvtMainCmd       emcPending,         // Event fired before exit requested
                    emcExit;            // Thread exit code
-  unsigned int     uiConfirm;          // Exit confirmation progress
+  unsigned         uConfirm;           // Exit confirmation progress
   bool             bUnsuspend;         // Waiting for unsuspend signal
   Mutex            mSuspend;           // Mutex for suspending engine thread
   /* -- A suspend event is requested? -------------------------------------- */
@@ -166,13 +166,13 @@ class EvtMain :                        // Event list for render thread
       IdToString(emcReason), emcReason);
   }
   /* -- Incase of error we need to update the exit code -------------------- */
-  bool ExitRequested() const { return !!uiConfirm; }
+  bool ExitRequested() const { return !!uConfirm; }
   /* -- Incase of error we need to update the exit code -------------------- */
   void UpdateConfirmExit()
   { // Ignore if not in a confirmation request
-    if(!uiConfirm) return;
+    if(!uConfirm) return;
     // Reset confirmation
-    uiConfirm = 0;
+    uConfirm = 0;
     // Log confirmation
     cLog->LogDebugExSafe("EvtMain updated exit code to $.", emcPending);
     // Set exit code and clear stored exit code
@@ -182,7 +182,7 @@ class EvtMain :                        // Event list for render thread
   /* -- Informs LUA that the user wants to quit ---------------------------- */
   void ConfirmExit(const EvtMainCmd emcWhat)
   { // A confirmation request is currently in progress?
-    if(uiConfirm)
+    if(uConfirm)
     { // Report override
       cLog->LogDebugExSafe("EvtMain pending exit code overridden from $ to $.",
         emcPending, emcWhat);
@@ -191,7 +191,7 @@ class EvtMain :                        // Event list for render thread
       // Still waiting for confirmation
       return;
     } // Exit confirming
-    uiConfirm = 1;
+    uConfirm = 1;
     // Send request exit event to Lua class
     Execute(EMC_LUA_ASKEXIT, emcWhat);
     // Set the new exit code
@@ -219,11 +219,11 @@ class EvtMain :                        // Event list for render thread
       // Lua executing is reinitialising
       case EMC_LUA_REINIT: ConfirmExit(EMC_LUA_REINIT); goto t;
       // Lua confirmed exit is allowed now so return the code we recorded
-      case EMC_LUA_CONFIRMEXIT: if(!uiConfirm) goto t;
+      case EMC_LUA_CONFIRMEXIT: if(!uConfirm) goto t;
         // Restore original exit code, reset exit and confirmation codes
         DoSetExitReason(emcPending);
         emcPending = EMC_NONE;
-        uiConfirm = 0;
+        uConfirm = 0;
         // Log confirmation
         cLog->LogDebugExSafe("EvtMain confirmed exit code $<$>.",
           GetExitReasonStr(), GetExitReason());
@@ -253,7 +253,7 @@ class EvtMain :                        // Event list for render thread
   /* -- Constructor --------------------------------------------- */ protected:
   EvtMain() :
     /* -- Initialisers ----------------------------------------------------- */
-    IdList{{                           // Build event list
+    LookupArray{{                      // Build event list
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
       EMC(NONE),          EMC(SUSPEND),          EMC(QUIT),
       EMC(QUIT_RESTART),  EMC(QUIT_RESTARTNP),   EMC(QUIT_THREAD),
@@ -285,14 +285,14 @@ class EvtMain :                        // Event list for render thread
     } },
     emcPending(EMC_NONE),              // Not exiting yet
     emcExit(EMC_NONE),                 // Not exited yet
-    uiConfirm(0),                      // Exit not confirmed yet
+    uConfirm(0),                       // Exit not confirmed yet
     bUnsuspend(false)                  // Not suspended yet
     /* -- Set global pointer to static class and register events ----------- */
     { cEvtMain = this; }
 };/* ----------------------------------------------------------------------- */
-typedef EvtMain::EvtArgs EvtMainArgs;  // Event callback arguments
-typedef EvtMain::Event   EvtMainEvent; // Event command
-typedef EvtMain::RegAuto EvtMainRegAuto; // Event (de)registration
+using EvtMainArgs    = EvtMain::EvtArgs; // Event callback arguments
+using EvtMainEvent   = EvtMain::Event;   // Event command
+using EvtMainRegAuto = EvtMain::RegAuto; // Event (de)registration
 /* ------------------------------------------------------------------------- */
 };                                     // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -66,7 +66,7 @@ LLFUNC(GetElapsed, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetElapsed()))
 // < Id:integer=The id number of the Source object.
 // ? Returns the unique id of the Source object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().CtrGet()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Source:GetGain
 // < Gain:number=The current gain value.
@@ -150,10 +150,41 @@ LLFUNC(GetVelocity, 3,
   AgSource{lS, 1}().GetVelocity(fX, fY, fZ);
   LuaUtilPushVar(lS, fX, fY, fZ))
 /* ========================================================================= */
+// $ Source:IsPlaying
+// < Playing:boolean=Is the source playing?
+// ? Return if source is playing.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsPlaying, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().IsPlaying()))
+/* ========================================================================= */
+// $ Source:IsStopped
+// < Stopped:boolean=Is the source playing?
+// ? Return if source is stopped.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsStopped, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().IsStopped()))
+/* ========================================================================= */
+// $ Source:IsValid
+// < Valid:boolean=Is the buffer attached to the source valid?
+// ? Return if source buffer is valid. If a Sample gets unloaded, then all of
+// ? these methods are going to throw OpenAL exceptions. It is a good idea to
+// ? keep a 'Sample' class created until the 'Source' class it spawned is
+// ? destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsValid, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().IsValid()))
+/* ========================================================================= */
 // $ Source:Play
+// < Success:boolean=Is the source now playing?
 // ? Plays the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Play, 0, AgSource{lS, 1}().Play())
+LLFUNC(Play, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().Play()))
+/* ========================================================================= */
+// $ Source:PlayTwo
+// < Success:boolean=Are the sources now playing?
+// ? Plays two sources. Useful if you want to play a stereo source.
+/* ------------------------------------------------------------------------- */
+LLFUNC(PlayTwo, 0,
+  AgSource aLeft{lS, 1},
+           aRight{lS, 2};
+  LuaUtilPushVar(lS, aLeft().Play(aRight())))
 /* ========================================================================= */
 // $ Source:SetDirection
 // > X:number=The new X direction.
@@ -288,17 +319,18 @@ LLFUNC(Stop, 0, AgSource{lS, 1}().Stop())
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Source:* member functions begin
-  LLRSFUNC(Destroy),      LLRSFUNC(Destroyed),   LLRSFUNC(GetDirection),
-  LLRSFUNC(GetElapsed),   LLRSFUNC(GetGain),     LLRSFUNC(GetId),
-  LLRSFUNC(GetLooping),   LLRSFUNC(GetMaxDist),  LLRSFUNC(GetMaxGain),
-  LLRSFUNC(GetMinGain),   LLRSFUNC(GetPitch),    LLRSFUNC(GetPosition),
-  LLRSFUNC(GetRefDist),   LLRSFUNC(GetRelative), LLRSFUNC(GetRollOff),
-  LLRSFUNC(GetState),     LLRSFUNC(GetVelocity), LLRSFUNC(Play),
-  LLRSFUNC(SetDirection), LLRSFUNC(SetElapsed),  LLRSFUNC(SetGain),
-  LLRSFUNC(SetLooping),   LLRSFUNC(SetMaxDist),  LLRSFUNC(SetMaxGain),
-  LLRSFUNC(SetMinGain),   LLRSFUNC(SetPitch),    LLRSFUNC(SetPosition),
-  LLRSFUNC(SetRefDist),   LLRSFUNC(SetRelative), LLRSFUNC(SetRollOff),
-  LLRSFUNC(SetVelocity),  LLRSFUNC(Stop),
+  LLRSFUNC(Destroy),      LLRSFUNC(Destroyed),    LLRSFUNC(GetDirection),
+  LLRSFUNC(GetElapsed),   LLRSFUNC(GetGain),      LLRSFUNC(GetId),
+  LLRSFUNC(GetLooping),   LLRSFUNC(GetMaxDist),   LLRSFUNC(GetMaxGain),
+  LLRSFUNC(GetMinGain),   LLRSFUNC(GetPitch),     LLRSFUNC(GetPosition),
+  LLRSFUNC(GetRefDist),   LLRSFUNC(GetRelative),  LLRSFUNC(GetRollOff),
+  LLRSFUNC(GetState),     LLRSFUNC(GetVelocity),  LLRSFUNC(IsPlaying),
+  LLRSFUNC(IsStopped),    LLRSFUNC(IsValid),      LLRSFUNC(Play),
+  LLRSFUNC(PlayTwo),      LLRSFUNC(SetDirection), LLRSFUNC(SetElapsed),
+  LLRSFUNC(SetGain),      LLRSFUNC(SetLooping),   LLRSFUNC(SetMaxDist),
+  LLRSFUNC(SetMaxGain),   LLRSFUNC(SetMinGain),   LLRSFUNC(SetPitch),
+  LLRSFUNC(SetPosition),  LLRSFUNC(SetRefDist),   LLRSFUNC(SetRelative),
+  LLRSFUNC(SetRollOff),   LLRSFUNC(SetVelocity),  LLRSFUNC(Stop),
 LLRSEND                                // Source:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

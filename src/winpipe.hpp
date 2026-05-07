@@ -1,4 +1,4 @@
-/* == WINPIP.HPP =========================================================== **
+/* == WINPIPE.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -7,7 +7,17 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Windows Registry Class =============================================== */
+/* ------------------------------------------------------------------------- */
+namespace ISysPipe {                   // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IArgs::P;              using namespace ICmdLine::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace ISysUtil::P;           using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysPipe :                        // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public SysPipeBase                   // System pipe base class
@@ -33,30 +43,30 @@ class SysPipe :                        // Members initially private
           !TerminateProcess(hProcess, static_cast<UINT>(-1)))
             cLog->LogWarningExSafe(
               "System failed to terminate process for '$': $!",
-                IdentGet(), SysError());
+                NameGet(), SysError());
         // Set exit code
         SysPipeBaseSetStatus(static_cast<int64_t>(dwExitCode));
       } // Failed to get exit code
       else cLog->LogWarningExSafe("System failed to get exit code for '$': $!",
-        IdentGet(), SysError());
+        NameGet(), SysError());
       // Close the process handle
       if(!CloseHandle(hProcess))
         cLog->LogWarningExSafe(
           "System failed to close process handle for '$': $!",
-            IdentGet(), SysError());
+            NameGet(), SysError());
     } // Close pipe handles if open
     if(hStdinRead != INVALID_HANDLE_VALUE && !CloseHandle(hStdinRead))
       cLog->LogWarningExSafe("System failed to close process handle for '$' "
-        "stdin receive pipe: $!", IdentGet(), SysError());
+        "stdin receive pipe: $!", NameGet(), SysError());
     if(hStdinWrite != INVALID_HANDLE_VALUE && !CloseHandle(hStdinWrite))
       cLog->LogWarningExSafe("System failed to close process handle for '$' "
-        "stdin send pipe: $!", IdentGet(), SysError());
+        "stdin send pipe: $!", NameGet(), SysError());
     if(hStdoutRead != INVALID_HANDLE_VALUE && !CloseHandle(hStdoutRead))
       cLog->LogWarningExSafe("System failed to close process handle for '$' "
-        "stdout read pipe: $!", IdentGet(), SysError());
+        "stdout read pipe: $!", NameGet(), SysError());
     if(hStdoutWrite != INVALID_HANDLE_VALUE && !CloseHandle(hStdoutWrite))
       cLog->LogWarningExSafe("System failed to close process handle for '$' "
-        "stdout send pipe: $!", IdentGet(), SysError());
+        "stdout send pipe: $!", NameGet(), SysError());
   }
   /* -- Initialise arguments list ------------------------------------------ */
   void InitArgs(const StdString &strCmdLine, const Args &aList,
@@ -83,13 +93,13 @@ class SysPipe :                        // Members initially private
       XCS("Create pipe for process stdout failed!", "Executable", strApp);
     // Ensure the read handle to the pipe for STDOUT is not inherited.
     if(!SetHandleInformation(hStdoutRead, HANDLE_FLAG_INHERIT, 0))
-      XCS("Failed to remove inheritence from stdout!", "Executable", strApp);
+      XCS("Failed to remove inheritance from stdout!", "Executable", strApp);
     // Create pipe for the processes stdin
     if(!CreatePipe(&hStdinRead, &hStdinWrite, &saAttr, 0))
       XCS("Create pipe for process stdin failed!", "Executable", strApp);
     // Ensure the write handle to the pipe for STDIN is not inherited.
     if(!SetHandleInformation(hStdinWrite, HANDLE_FLAG_INHERIT, 0))
-      XCS("Failed to remove inheritence from in!", "Executable", strApp);
+      XCS("Failed to remove inheritance from in!", "Executable", strApp);
     // Process information for execution
     PROCESS_INFORMATION piProcInfo;
     // Set up members of the STARTUPINFO structure.
@@ -122,36 +132,36 @@ class SysPipe :                        // Members initially private
       nullptr, TRUE, CREATE_SUSPENDED|CREATE_NO_WINDOW, nullptr, nullptr,
       &siStartInfo, &piProcInfo)) try
     { // Store name of executable
-      IdentSet(StdMove(strApp));
+      NameSet(StdMove(strApp));
       // Close handles to the stdin and stdout pipes no longer needed by the
       // child process. If they are not explicitly closed, there is no way to
       // recognize that the child process has ended.
       if(!CloseHandle(hStdoutWrite))
-        XCS("Failed to close stdout write pipe!", "Executable", IdentGet());
+        XCS("Failed to close stdout write pipe!", "Executable", NameGet());
       hStdoutWrite = INVALID_HANDLE_VALUE;
       if(!CloseHandle(hStdinRead))
-        XCS("Failed to close stdin write pipe!", "Executable", IdentGet());
+        XCS("Failed to close stdin write pipe!", "Executable", NameGet());
       hStdinRead = INVALID_HANDLE_VALUE;
       // Set process handle and check it. There will be no reason given if
       // this is true. This may happen when Wine tries to execute a symbolic
       // link's target that is invalid.
       if(!piProcInfo.hProcess)
-        XC("No process handle was returned!", "Executable", IdentGet());
+        XC("No process handle was returned!", "Executable", NameGet());
       hProcess = piProcInfo.hProcess;
       // Set thread handle and check it
       if(!piProcInfo.hThread)
-        XC("No thread handle was returned!", "Executable", IdentGet());
+        XC("No thread handle was returned!", "Executable", NameGet());
       hThread = piProcInfo.hThread;
       // Set pid and check it
       if(!piProcInfo.dwProcessId)
-        XC("No pid number was returned!", "Executable", IdentGet());
+        XC("No pid number was returned!", "Executable", NameGet());
       dwPid = piProcInfo.dwProcessId;
       // Report pid
       cLog->LogInfoExSafe("System spawned process '$' to pid $.",
         strApp, dwPid);
       // Resume main thread
       if(!ResumeThread(hThread))
-        XCS("Failed to resume main thread!", "Executable", IdentGet());
+        XCS("Failed to resume main thread!", "Executable", NameGet());
     } // Error occured so terminate process and close handles
     catch(const StdException &)
     { // Forcibly close handles
@@ -161,9 +171,9 @@ class SysPipe :                        // Members initially private
     } // Create process failed
     else
     { // Store name of executable
-      IdentSet(StdMove(strApp));
+      NameSet(StdMove(strApp));
       // Throw error
-      XCS("Failed to execute process!", "Executable", IdentGet());
+      XCS("Failed to execute process!", "Executable", NameGet());
     }
   }
   /* -- Set socket timeout ----------------------------------------- */ public:
@@ -181,7 +191,7 @@ class SysPipe :                        // Members initially private
     // Close the pipe handle so the child process stops reading.
     if(!CloseHandle(hStdinWrite))
       XCS("Failed to close process stdin write handle!",
-          "Executable", IdentGet());
+          "Executable", NameGet());
     // The handle is no longer valid
     hStdinWrite = INVALID_HANDLE_VALUE;
   }
@@ -194,14 +204,11 @@ class SysPipe :                        // Members initially private
     // Read from the process return how many bytes we read
     DWORD dwRead;
     if(ReadFile(hStdoutRead, reinterpret_cast<LPSTR>(vpDest),
-      static_cast<DWORD>(stToRead), &dwRead, nullptr))
-    { // Log and return number of bytes read
-      cLog->LogDebugExSafe("System read $ bytes from pipe for pid $.",
-         dwRead, dwPid);
+         static_cast<DWORD>(stToRead), &dwRead, nullptr))
       return static_cast<size_t>(dwRead);
-    } // If the pipe was ended then theres no need for an error
+    // If the pipe was ended then theres no need for an error
     if(SysIsNotErrorCode(ERROR_BROKEN_PIPE))
-      XCS("Error reading from pipe!", "Executable", IdentGet());
+      XCS("Error reading from pipe!", "Executable", NameGet());
     // Nothing read
     return 0;
   }
@@ -210,7 +217,7 @@ class SysPipe :                        // Members initially private
   { // Buffer for process output
     Memory mBuffer{ stBuffer };
     // Read some data and resize the block to the amount read
-    mBuffer.MemResize(Read(mBuffer.MemPtr<char>(), mBuffer.MemSize<int>()));
+    mBuffer.MemResize(Read(mBuffer.MemPtr<char>(), mBuffer.MemSize()));
     // Return memory block
     return mBuffer;
   }
@@ -221,15 +228,12 @@ class SysPipe :                        // Members initially private
     // Write to the pipe and if failed throw exception
     DWORD dwWritten = 0;
     if(WriteFile(hStdinWrite, vpDest,
-      static_cast<DWORD>(stToWrite), &dwWritten, nullptr))
-    { // Log and return number of bytes written
-      cLog->LogDebugExSafe("System wrote $ bytes to pipe for pid $.",
-        dwWritten, dwPid);
+         static_cast<DWORD>(stToWrite), &dwWritten, nullptr))
       return static_cast<size_t>(dwWritten);
-    } // If the pipe was ended then theres no need for an error
+    // If the pipe was ended then theres no need for an error
     if(SysIsNotErrorCode(ERROR_BROKEN_PIPE))
       XCS("Error writing to process pipe!",
-          "Executable", IdentGet(), "Expect", stToWrite, "Written", dwWritten);
+          "Executable", NameGet(), "Expect", stToWrite, "Written", dwWritten);
     // Nothing written
     return 0;
   }
@@ -240,7 +244,7 @@ class SysPipe :                        // Members initially private
   void Init(const StdString &strCmdLine)
     { Init(strCmdLine, cDirBase->DirBaseGetSafetyMode()); }
   /* -- Return pid --------------------------------------------------------- */
-  unsigned int GetPid() { return static_cast<unsigned int>(dwPid); }
+  unsigned GetPid() { return static_cast<unsigned>(dwPid); }
   /* -- Constructor with init ---------------------------------------------- */
   explicit SysPipe(const StdString &strF) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -262,4 +266,7 @@ class SysPipe :                        // Members initially private
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~SysPipe, DeInit())
 };/* ----------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

@@ -52,7 +52,7 @@ LLFUNC(Destroyed, 1,
 // < Id:integer=The id of the Command object.
 // ? Returns the unique id of the Command object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgCommand{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgCommand{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Command:Name
 // < Name:string=The name of the console command.
@@ -79,7 +79,7 @@ LLRSEND                                // Command:* member functions end
 LLFUNC(Count, 1, LuaUtilPushVar(lS, cCommands->CollectorCount()))
 /* ========================================================================= */
 // $ Command.Exists
-// > Identifier:string=The console command name to lookup
+// > Name:string=The console command name to lookup
 // < Registered:boolean=True if the command is registered
 // ? Returns if the specified console command is registered which includes
 // ? the built-in engine console commands too.
@@ -88,7 +88,7 @@ LLFUNC(Exists, 1,
   LuaUtilPushVar(lS, cConsole->CommandIsRegistered(AgNeString{lS, 1})))
 /* ========================================================================= */
 // $ Command.Register
-// > Identifier:string=The console command name.
+// > Name:string=The console command name.
 // > Minimum:integer=The minimum number of parameters allowed.
 // > Maximum:integer=The maximum number of parameters allowed.
 // > Callback:function=Pointer to the function to callback.
@@ -98,12 +98,12 @@ LLFUNC(Exists, 1,
 // ? collected.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Register, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgUInt aMinimum{lS, 2},
                aMaximum{lS, 3};
   LuaUtilCheckFunc(lS, 4);
   cLua->LuaStateAssert(lS);
-  AcCommand{lS}().Init(lS, aIdentifier, aMinimum, aMaximum))
+  AcCommand{lS}().Init(lS, aName(), aMinimum, aMaximum))
 /* ========================================================================= */
 // $ Command.Valid
 // > Cmd:string=Command name to test.
@@ -114,7 +114,7 @@ LLFUNC(Register, 1,
 // ? characters in length.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Valid, 1, LuaUtilPushVar(lS,
-  cConsole->IsValidConsoleCommandName(AgString{lS, 1})))
+  cConsole->IsValidConsoleCommandName(AgString{lS, 1}())))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Command.* namespace functions structure                             ## **

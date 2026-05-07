@@ -11,7 +11,7 @@ namespace ICodecOGG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFlags::P;
-using namespace IIdent::P;             using namespace ILog::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace IMemory::P;            using namespace IPcmDef::P;
 using namespace IPcmLib::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IUtil::P;
@@ -24,7 +24,7 @@ static CodecOGG *cCodecOGG = nullptr;  // Pointer to global class
 class CodecOGG :                       // OGG codec object
   /* -- Base classes ------------------------------------------------------- */
   private PcmLib,                      // Pcm format helper class
-  private IdMap<>                      // Ogg error codes
+  private LookupMap<>                  // Ogg error codes
 { /* -- Private variables -------------------------------------------------- */
   const ov_callbacks ovcCallbacks;     // Vorbis callbacks
   /* -- Vorbis read callback --------------------------------------- */ public:
@@ -81,7 +81,7 @@ class CodecOGG :                       // OGG codec object
   }
   template<typename IntType>
     const StdStringView &GetOggErr(const IntType itCode) const
-      { return Get(static_cast<unsigned int>(itCode)); }
+      { return Get(static_cast<unsigned>(itCode)); }
   /* -- Loader for WAV files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
   { // Check magic and that the file has the OggS string header
@@ -96,21 +96,17 @@ class CodecOGG :                       // OGG codec object
       ov_open_callbacks(&fmData, &vorbisFile, nullptr, 0, GetCallbacks()))
         XC("OGG init context failed!", "Code", iR, "Reason", GetOggErr(iR));
     // Put in a unique ptr
-    typedef StdUniquePtr<OggVorbis_File, function<decltype(ov_clear)>>
-      OggFilePtr;
+    using OggFilePtr =
+      StdUniquePtr<OggVorbis_File, function<decltype(ov_clear)>>;
     const OggFilePtr ofpPtr{ &vorbisFile, ov_clear };
     // Get info from ogg
     const vorbis_info*const vorbisInfo = ov_info(&vorbisFile, -1);
     // Assign members
-    pdData.SetRate(static_cast<unsigned int>(vorbisInfo->rate));
+    pdData.SetRate(static_cast<unsigned>(vorbisInfo->rate));
     if(!pdData.SetChannelsSafe(
           static_cast<PcmChannelType>(vorbisInfo->channels)))
       XC("OGG channels not valid!", "Channels", pdData.GetChannels());
     pdData.SetBits(PBI_SHORT);
-    // Check that format is supported in OpenAL
-    if(!pdData.ParseOALFormat())
-      XC("OGG pcm data not supported by AL!",
-        "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
     // Create PCM buffer (Not sure if multiplication is correct :[)
     const ogg_int64_t llSize =
       ov_pcm_total(&vorbisFile, -1) * (vorbisInfo->channels * 2);
@@ -145,7 +141,7 @@ class CodecOGG :                       // OGG codec object
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_OGG, "Xiph.Org OGG Audio", "OGG",
       bind(&CodecOGG::Decode, this, _1, _2) },
-    IdMap{{                            // Ogg error codes
+    LookupMap{{                        // Ogg error codes
       IDMAPSTR(OV_EOF),                IDMAPSTR(OV_HOLE),
       IDMAPSTR(OV_FALSE),              IDMAPSTR(OV_EREAD),
       IDMAPSTR(OV_EFAULT),             IDMAPSTR(OV_EIMPL),

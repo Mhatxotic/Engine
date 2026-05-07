@@ -24,15 +24,17 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IPSplit {                    // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
-using namespace IString::P;
+using namespace IStdLib::P;            using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert back slashes to forward slashes ------------------------------ */
 static StdString &PSplitBackToForwardSlashes(StdString &strText)
-  { return StrReplace(strText, '\\', '/'); }
-static StdString PSplitBackToForwardSlashes(const StdString &strIn)
+  { return StrReplaceCharRef(strText, '\\', '/'); }
+template<class StrType>
+  requires StdIsString<StrType>
+static StdString PSplitBackToForwardSlashes(const StrType &strIn)
   { StdString strOut{ strIn }; return PSplitBackToForwardSlashes(strOut); }
 #if defined(WINDOWS)
 static StdString PSplitBackToForwardSlashes(const StdWideString &wstrName)
@@ -78,11 +80,11 @@ class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
   public FileParts                     // File parts
 { /* -- Constructors ---------------------------------------------- */ private:
-  FileParts Init(const StdString &strSrc, const bool bUseFullPath) const
+  FileParts Init(const StdStringView &strvSrc, const bool bUseFullPath) const
   { // Windows?
 #if defined(WINDOWS)
     // Convert UTF8 string to UNICODE string
-    StdWideString wstrSrc{ UTFtoS16(strSrc) };
+    StdWideString wstrSrc{ UTFtoS16(strvSrc) };
     // Build full path name and use requested pathname if not wanted or failed?
     StdResized<StdWideString> wstrFull{ _MAX_PATH };
     if(!bUseFullPath || !_wfullpath(const_cast<wchar_t*>(wstrFull.data()),
@@ -120,9 +122,9 @@ class PathSplit :
 #else
     // If a full path name build is re4quested? Set original string
     StdResized<StdString> strFull{ _MAX_PATH };
-    if(!bUseFullPath || !realpath(const_cast<char*>(strSrc.data()),
+    if(!bUseFullPath || !realpath(const_cast<char*>(strvSrc.data()),
       const_cast<char*>(strFull.data())))
-        strFull.assign(strSrc);
+        strFull.assign(strvSrc);
     // Succeeded? Resize the string
     else strFull.resize(strlen(strFull.data()));
     // This is the final full path string so compact it
@@ -142,8 +144,7 @@ class PathSplit :
         else strDir.resize(strlen(strDir.data()));
         // Finalise directory and append slash if there is not one to match how
         // Win32's splitpath works which is better really.
-        if(strDir.back() != '/')
-          strDir.append(cCommon->CommonFSlash());
+        if(strDir.back() != '/') strDir.append(cCommon->CommonFSlashV());
       } // We're not interested in pointlessly prepending the current dir
       else strDir.clear();
     } // Fiailed so clear the directory name
@@ -162,7 +163,7 @@ class PathSplit :
     else strFile.clear();
     // Prepare extension and save extension and if found?
     const size_t stSlashPos = strFile.find_last_of('/'),
-    stDotPos = StrFindCharBackwards(strFile, strFile.length() - 1,
+    stDotPos = StrFindCharBackwards(strFile(), strFile.size() - 1,
       stSlashPos != StdNPos ? (stSlashPos + 1) : 0, '.');
     StdResized<StdString> strExt{ _MAX_EXT };
     if(stDotPos != StdNPos)
@@ -181,9 +182,10 @@ class PathSplit :
 #endif
   }
   /* -- Constructors with initialisation --------------------------- */ public:
-  explicit PathSplit(const StdString &strSrc, const bool bUseFullPath=false) :
+  explicit PathSplit(const StdStringView &strvSrc,
+                     const bool bUseFullPath = false) :
     /* -- Initialisers ----------------------------------------------------- */
-    FileParts{ Init(strSrc, bUseFullPath) }
+    FileParts{ Init(strvSrc, bUseFullPath) }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- MOVE assign constructor on class creation -------------------------- */

@@ -70,7 +70,7 @@ LLFUNC(Host, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetHost()))
 // < Id:integer=The id number of the Url object.
 // ? Returns the unique id of the Url object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Url:Params
 // < Params:table=The parameters as a table
@@ -82,7 +82,7 @@ LLFUNC(Params, 1, LuaUtilToTableEx(lS, AgUrl{lS, 1}()))
 // > URL:string=The url to parse.
 // ? Reparses the specified address.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Parse, 0, AgUrl{lS ,1}().UrlParse(AgNeString{lS, 2}, 0))
+LLFUNC(Parse, 0, AgUrl{lS ,1}().UrlParse(AgNeString{lS, 2}(), 0))
 /* ========================================================================= */
 // $ Url:ParseEx
 // > URL:string=The url to parse.
@@ -94,7 +94,7 @@ LLFUNC(ParseEx, 0,
   const AgUrl aUrl{lS, 1};
   const AgNeString aUrlAddr{lS, 2};
   const AgUIntLG aMode{lS, 3, 0, 2};
-  aUrl().UrlParse(aUrlAddr, aMode))
+  aUrl().UrlParse(aUrlAddr(), aMode))
 /* ========================================================================= */
 // $ Url:Password
 // < Password:string=The password part of the url.
@@ -180,7 +180,7 @@ LLFUNC(IsHost, 1, LuaUtilPushVar(lS, LuaUtilValidHostname(lS, 1)))
 // < Count:Url=The parsed url class.
 // ? Return an Url class and parses the address.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Url, 1, AcUrl{lS}().UrlParse(AgNeString{lS, 1}, 0))
+LLFUNC(Url, 1, AcUrl{lS}().UrlParse(AgNeString{lS, 1}(), 0))
 /* ========================================================================= */
 // $ Url.UrlEx
 // > URL:string=The url to parse.
@@ -195,7 +195,7 @@ LLFUNC(Url, 1, AcUrl{lS}().UrlParse(AgNeString{lS, 1}, 0))
 LLFUNC(UrlEx, 1,
   const AgNeString aUrl{lS, 1};
   const AgUIntLG aEncode{lS, 2, 0, 2};
-  AcUrl{lS}().UrlParse(aUrl, aEncode))
+  AcUrl{lS}().UrlParse(aUrl(), aEncode))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Url:* namespace functions structure                                 ## **
@@ -222,7 +222,7 @@ LLRSKTBEGIN(Codes)                     // Beginning of parse result flags
   LLRSKTITEM(R_,EMPORT),             LLRSKTITEM(R_,NOSCHEME),
   LLRSKTITEM(R_,INVSCHEME),          LLRSKTITEM(R_,INVPORT),
   LLRSKTITEM(R_,UNKSCHEME),          LLRSKTITEM(R_,EMPARAMS),
-  LLRSKTITEM(R_,STANDBY),            LLRSKTITEM(R_,MAX),
+  LLRSKTITEM(R_,STANDBY),
 LLRSKTEND                              // End of parse result flags
 /* ========================================================================= **
 ** ######################################################################### **

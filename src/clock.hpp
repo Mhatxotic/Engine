@@ -3,15 +3,15 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## Defines a class that makes it easier to interact with the high      ## **
-** ## resolution and system clock.                                        ## **                                              ## **
+** ## resolution and system clock.                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IClock {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace ITime::P;              using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 using CoreClock = ::std::chrono::high_resolution_clock; // Default clock is HRC
 /* ------------------------------------------------------------------------- */
@@ -22,17 +22,18 @@ using ::std::chrono::microseconds;     using ::std::chrono::milliseconds;
 using ::std::chrono::nanoseconds;      using ::std::chrono::seconds;
 using ::std::chrono::system_clock;
 /* -- Typedefs ------------------------------------------------------------- */
-typedef CoreClock::time_point  ClkTimePoint;      // Holds a time
-typedef CoreClock::duration    ClkDuration;       // Holds a duration
-typedef StdAtomic<ClkDuration> AtomicClkDuration; // Thread safe duration
+using ClkTimePoint      = CoreClock::time_point;  // Holds a time
+using ClkDuration       = CoreClock::duration;    // Holds a duration
+using AtomicClkDuration = StdAtomic<ClkDuration>; // Thread safe duration
 /* -- Common duration values ----------------------------------------------- */
 constexpr static const ClkDuration
   cd0{ nanoseconds{ 0 } },             cd1MS{ milliseconds{ 1 } },
   cd10MS{ milliseconds{ 10 } },        cd100MS{ milliseconds{ 100 } },
   cd1S{ seconds{ 1 } },                cd60S{ seconds{ 60 } };
 /* -- Get count from a duration -------------------------------------------- */
-template<typename DT>static auto ClockGetCount(const ClkDuration &cdDuration)
-  { return duration_cast<DT>(cdDuration).count(); }
+template<typename DurationType>
+  static auto ClockGetCount(const ClkDuration &cdDuration)
+{ return duration_cast<DurationType>(cdDuration).count(); }
 /* -- Convert duration to double ------------------------------------------- */
 static double ClockDurationToDouble(const ClkDuration &cdDuration)
   { return ClockGetCount<duration<double>>(cdDuration); }
@@ -51,34 +52,36 @@ template<class ClockType>struct Clock final
   /* -- Get time since epoch ----------------------------------------------- */
   static ClkDuration GetEpochTime() { return GetTime().time_since_epoch(); }
   /* -- Get current time since epoch casted and counted -------------------- */
-  template<typename DT,typename RT>const RT GetTimeEx() const
-    { return static_cast<RT>(ClockGetCount<DT>(GetEpochTime())); }
+  template<typename DurationType, typename RIntType>
+    RIntType GetTimeEx() const
+  { return static_cast<RIntType>(
+      ClockGetCount<DurationType>(GetEpochTime())); }
   /* -- Return time as double ---------------------------------------------- */
   static double GetTimeDouble()
     { return ClockDurationToDouble(GetEpochTime()); }
   /* -- Return time since epoch count as integer --------------------------- */
-  template<typename T=StdTimeT> requires StdIsArithmatic<T>
-    const T GetTimeS() const
-  { return GetTimeEx<duration<T>,T>(); }
+  template<typename IntType = StdTimeT> requires StdIsArithmatic<IntType>
+    IntType GetTimeS() const
+  { return GetTimeEx<duration<IntType>,IntType>(); }
   /* -- Return time in microseconds ---------------------------------------- */
-  template<typename T=uint64_t> requires StdIsArithmatic<T>
-    const T GetTimeUS() const
-  { return GetTimeEx<microseconds,T>(); }
+  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
+    IntType GetTimeUS() const
+  { return GetTimeEx<microseconds,IntType>(); }
   /* -- Return time in milliseconds ---------------------------------------- */
-  template<typename T=uint64_t> requires StdIsArithmatic<T>
-    const T GetTimeMS() const
-  { return GetTimeEx<milliseconds,T>(); }
+  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
+    IntType GetTimeMS() const
+  { return GetTimeEx<milliseconds,IntType>(); }
   /* -- Return time in nanoseconds ----------------------------------------- */
-  template<typename T=uint64_t> requires StdIsArithmatic<T>
-    const T GetTimeNS() const
-  { return GetTimeEx<nanoseconds,T>(); }
+  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
+    IntType GetTimeNS() const
+  { return GetTimeEx<nanoseconds,IntType>(); }
   /* -- Get offset time ---------------------------------------------------- */
   static ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
     { return GetTime() - ctpCurrent; }
   /* -- Get timepoint count ------------------------------------------------ */
-  template<typename T>
+  template<typename IntType>
     auto GetDurationCount(const ClkTimePoint &ctpCurrent) const
-  { return ClockGetCount<T>(GetDuration(ctpCurrent)); }
+  { return ClockGetCount<IntType>(GetDuration(ctpCurrent)); }
   /* -- Convert timepoint to double ---------------------------------------- */
   static double TimePointToDouble(const ClkTimePoint &ctpTime)
     { return ClockDurationToDouble(GetDuration(ctpTime)); }
@@ -86,22 +89,21 @@ template<class ClockType>struct Clock final
   static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
     { return UtilMaximum(TimePointToDouble(ctpTime), 0.0); }
   /* -- Convert local time to string --------------------------------------- */
-  const StdString FormatTime(const char*const cpFormat = cpTimeFormat) const
-    { return StrFromTimeTT(GetTimeS(), cpFormat); }
+  StdString FormatTime(const char*const cpFormat = cpTimeFormat) const
+    { return TimeLocalTTtoStr(GetTimeS(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
-  const StdString FormatTimeUTC(const char*const cpFormat = cpTimeFormat) const
-    { return StrFromTimeTTUTC(GetTimeS(), cpFormat); }
+  StdString FormatTimeUTC(const char*const cpFormat = cpTimeFormat) const
+    { return TimeUTCTTtoStr(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
-  static StdString ToDurationString(unsigned int uiPrecision = 6)
-    { return StrShortFromDuration(GetTimeDouble(), uiPrecision); }
+  static StdString ToDurationString(unsigned uPrecision = 6)
+    { return TimeToShortDuration(GetTimeDouble(), uPrecision); }
   /* -- Convert seconds to long duration relative to current time ---------- */
-  const StdString ToDurationRel(const StdTimeT tDuration = 0,
-    unsigned int uiCompMax = StdMaxUInt) const
-  { return StrLongFromDuration(GetTimeS() - tDuration, uiCompMax); }
+  StdString ToDurationRel(const StdTimeT tDuration = 0,
+    unsigned uCompMax = StdMaxUInt) const
+  { return durLong.Parse(GetTimeS() - tDuration, uCompMax); }
   /* -- Convert time to long duration -------------------------------------- */
-  const StdString ToDurationLongString(unsigned int uiCompMax =
-    StdMaxUInt) const
-  { return ToDurationRel(0, uiCompMax); }
+  StdString ToDurationLongString(unsigned uCompMax = StdMaxUInt) const
+    { return ToDurationRel(0, uCompMax); }
   /* -- Unused constructor ------------------------------------------------- */
   Clock() = default;
 }; /* -- Clocks we make use of --------------------------------------------- */

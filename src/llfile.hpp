@@ -20,7 +20,8 @@ namespace LLFile {                     // File namespace
 using namespace IAsset::P;             using namespace IDir::P;
 using namespace IFile::P;              using namespace IFStream::P;
 using namespace IPSplit::P;            using namespace IStd::P;
-using namespace IMemory::P;            using namespace Common;
+using namespace IStdLib::P;            using namespace IMemory::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## File common helper classes                                          ## **
@@ -34,7 +35,7 @@ struct AcFile : public ArClass<File> {
   explicit AcFile(lua_State*const lS) :
     ArClass{LuaUtilClassCreateRef<File>(lS, cFiles)}{} };
 /* -- Other types ---------------------------------------------------------- */
-typedef AgInteger<int64_t> AgInt64;
+using AgInt64 = AgInteger<int64_t>;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## File:* member functions                                             ## **
@@ -94,13 +95,13 @@ LLFUNC(Flush, 1, LuaUtilPushVar(lS, AgFile{lS, 1}().FStreamFlushSafe()))
 // < Id:integer=The id number of the File object.
 // ? Returns the unique id of the File object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgFile{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgFile{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ File:Name
 // < Name:string=Name of the file.
 // ? Returns the name of the loaded file.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgFile{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgFile{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ File:Opened
 // < State:boolean=Error in stream?
@@ -230,7 +231,7 @@ LLRSEND                                // File:* member functions end
 LLFUNC(Open, 1,
   const AgFilename aFilename{lS, 1};
   const AgIntegerLGE<FStreamMode> aMode{lS, 2, FStreamMode(0), FM_MAX};
-  AcFile{lS}().FStreamOpen(aFilename, aMode))
+  AcFile{lS}().FStreamOpen(aFilename(), aMode))
 /* ========================================================================= */
 // $ File.MkDir
 // > Directory:string=Directory to create
@@ -239,7 +240,7 @@ LLFUNC(Open, 1,
 // ? executable directory.
 // * ----------------------------------------------------------------------- */
 LLFUNC(MkDir, 1,
-  LuaUtilPushVar(lS, DirMkDir(AgFilename{lS, 1}) ? 0 : StdGetError()))
+  LuaUtilPushVar(lS, DirMkDir(AgFilename{lS, 1}()) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.MkDirEx
 // > Directory:string=Directory to create
@@ -249,7 +250,7 @@ LLFUNC(MkDir, 1,
 // ? exist. If the directory already exists than the function returns success.
 // * ----------------------------------------------------------------------- */
 LLFUNC(MkDirEx, 1,
-  LuaUtilPushVar(lS, DirMkDirEx(AgFilename{lS, 1}) ? 0 : StdGetError()))
+  LuaUtilPushVar(lS, DirMkDirEx(AgFilename{lS, 1}()) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.RmDir
 // > Directory:string=Directory to create
@@ -258,7 +259,7 @@ LLFUNC(MkDirEx, 1,
 // ? executable directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(RmDir, 1,
-  LuaUtilPushVar(lS, DirRmDir(AgFilename{lS, 1}) ? 0 : StdGetError()))
+  LuaUtilPushVar(lS, DirRmDir(AgFilename{lS, 1}()) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.RmDirEx
 // > Directory:string=Directories to remove
@@ -268,7 +269,7 @@ LLFUNC(RmDir, 1,
 // ? directories that are empty.
 /* ------------------------------------------------------------------------- */
 LLFUNC(RmDirEx, 1,
-  LuaUtilPushVar(lS, DirRmDirEx(AgFilename{lS, 1}) ? 0 : StdGetError()))
+  LuaUtilPushVar(lS, DirRmDirEx(AgFilename{lS, 1}()) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.Unlink
 // > File:string=File to delete
@@ -277,7 +278,7 @@ LLFUNC(RmDirEx, 1,
 // ? executable directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Unlink, 1,
-  LuaUtilPushVar(lS, DirFileUnlink(AgFilename{lS, 1}) ? 0 : StdGetError()))
+  LuaUtilPushVar(lS, DirFileUnlink(AgFilename{lS, 1}()) ? 0 : StdGetError()))
 /* ========================================================================= */
 // $ File.Rename
 // > Source:string=Source filename
@@ -289,7 +290,7 @@ LLFUNC(Unlink, 1,
 LLFUNC(Rename, 1,
   const AgFilename aSource{lS, 1},
                    aDestination{lS, 2};
-  LuaUtilPushVar(lS, DirFileRename(aSource, aDestination)))
+  LuaUtilPushVar(lS, DirFileRename(aSource(), aDestination())))
 /* ========================================================================= */
 // $ File.DirExists
 // > Source:string=Directory
@@ -297,7 +298,7 @@ LLFUNC(Rename, 1,
 // ? Returns if the specified directory exists and is actually a directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(DirExists, 1,
-  LuaUtilPushVar(lS, DirLocalDirExists(AgFilename{lS, 1})))
+  LuaUtilPushVar(lS, DirLocalDirExists(AgFilename{lS, 1}())))
 /* ========================================================================= */
 // $ File.FileExists
 // > Source:string=Filename
@@ -305,7 +306,7 @@ LLFUNC(DirExists, 1,
 // ? Returns if the specified directory exists and is actually a directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(FileExists, 1,
-  LuaUtilPushVar(lS, DirLocalFileExists(AgFilename{lS, 1})))
+  LuaUtilPushVar(lS, DirLocalFileExists(AgFilename{lS, 1}())))
 /* ========================================================================= */
 // $ File.Executable
 // > Source:string=Filename
@@ -314,7 +315,7 @@ LLFUNC(FileExists, 1,
 // ? working executable directory. Should always return 'false' on Windows.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Executable, 1,
-  LuaUtilPushVar(lS, DirIsFileExecutable(AgFilename{lS, 1})))
+  LuaUtilPushVar(lS, DirIsFileExecutable(AgFilename{lS, 1}())))
 /* ========================================================================= */
 // $ File.Exists
 // > Source:string=File name or directory name
@@ -322,7 +323,7 @@ LLFUNC(Executable, 1,
 // ? Returns if the specified file or directory exists on disk.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Exists, 1,
-  LuaUtilPushVar(lS, DirLocalResourceExists(AgFilename{lS, 1})))
+  LuaUtilPushVar(lS, DirLocalResourceExists(AgFilename{lS, 1}())))
 /* ========================================================================= */
 // $ File.Readable
 // > Source:string=Filename
@@ -330,7 +331,8 @@ LLFUNC(Exists, 1,
 // ? Returns if the file on disk is readable. Only allowed as a child of the
 // ? working executable directory.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Readable, 1, LuaUtilPushVar(lS, DirIsFileReadable(AgFilename{lS, 1})))
+LLFUNC(Readable, 1,
+  LuaUtilPushVar(lS, DirIsFileReadable(AgFilename{lS, 1}())))
 /* ========================================================================= */
 // $ File.Writable
 // > Source:string=Filename
@@ -338,7 +340,8 @@ LLFUNC(Readable, 1, LuaUtilPushVar(lS, DirIsFileReadable(AgFilename{lS, 1})))
 // ? Returns if the file on disk is writable. Only allowed as a child of the
 // ? working executable directory.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Writable, 1, LuaUtilPushVar(lS, DirIsFileWritable(AgFilename{lS, 1})))
+LLFUNC(Writable, 1,
+  LuaUtilPushVar(lS, DirIsFileWritable(AgFilename{lS, 1}())))
 /* ========================================================================= */
 // $ File.ReadWritable
 // > Source:string=Filename
@@ -347,7 +350,7 @@ LLFUNC(Writable, 1, LuaUtilPushVar(lS, DirIsFileWritable(AgFilename{lS, 1})))
 // ? child of the working executable directory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ReadWritable, 1,
-  LuaUtilPushVar(lS, DirIsFileReadWriteable(AgFilename{lS, 1})))
+  LuaUtilPushVar(lS, DirIsFileReadWriteable(AgFilename{lS, 1}())))
 /* ========================================================================= */
 // $ File.Info
 // > Source:string=Filename
@@ -367,7 +370,7 @@ LLFUNC(ReadWritable, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Info, 12,
   StdFStatStruct stData;
-  LuaUtilPushVar(lS, DirFileSize(AgFilename{lS, 1}, stData), stData.st_size,
+  LuaUtilPushVar(lS, DirFileSize(AgFilename{lS, 1}(), stData), stData.st_size,
     stData.st_mode, stData.st_ctime, stData.st_mtime, stData.st_atime,
     stData.st_nlink, stData.st_uid, stData.st_gid, stData.st_dev,
     stData.st_rdev, stData.st_ino))
@@ -389,10 +392,19 @@ LLFUNC(Parts, 5,
 // > Source:string=Directory to enumerate
 // < Files:table=File list in a indexed table
 // < Directories:table=Directory list in a indexed table
-// ? Dumps all the files in the specified directory to two tables
+// ? Dumps all the files in the specified directory to two tables. The format
+// ? of each entry in either list is as follows...
+// ?
+// ? table[1](string)  = File name.
+// ? table[2](integer) = Unique ID number in the order of enumeration.
+// ? table[3](integer) = Length of file.
+// ? table[4](integer) = Creation time.
+// ? table[5](integer) = Last modified time.
+// ? table[6](integer) = Last access time.
+// ? table[7](integer) = Attribute bits.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Enumerate, 2,
-  const Dir dData{ AgFilename{lS, 1} };
+  const Dir dData{ AgFilename{lS, 1}() };
   LuaUtilToTable(lS, dData.GetFiles());
   LuaUtilToTable(lS, dData.GetDirs()))
 /* ========================================================================= */
@@ -402,12 +414,13 @@ LLFUNC(Enumerate, 2,
 // < Files:table=File list in a indexed table
 // < Directories:table=Directory list in a indexed table
 // ? Dumps all the files ending in the specified extension in the specified
-// ? directory to two tables.
+// ? directory to two tables. See 'File.Enumerate' description for more on the
+// ? contents of the arrays.
 /* ------------------------------------------------------------------------- */
 LLFUNC(EnumerateEx, 2,
   const AgFilename aDirectory{lS, 1},
                    aExtension{lS, 2};
-  const Dir dData{ aDirectory, aExtension };
+  const Dir dData{ aDirectory(), aExtension() };
   LuaUtilToTable(lS, dData.GetFiles());
   LuaUtilToTable(lS, dData.GetDirs()))
 /* ========================================================================= */
@@ -531,7 +544,6 @@ LLRSKTBEGIN(Flags)                     // Beginning of open mode flags
   LLRSKTITEM(FM_,R_P_T), LLRSKTITEM(FM_,W_P_T), LLRSKTITEM(FM_,A_P_T),
   LLRSKTITEM(FM_,R_B),   LLRSKTITEM(FM_,W_B),   LLRSKTITEM(FM_,A_B),
   LLRSKTITEM(FM_,R_P_B), LLRSKTITEM(FM_,W_P_B), LLRSKTITEM(FM_,A_P_B),
-  LLRSKTITEM(FM_,MAX),
 LLRSKTEND                              // End of open mode flags
 /* ========================================================================= **
 ** ######################################################################### **

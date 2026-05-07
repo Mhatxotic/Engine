@@ -17,29 +17,29 @@ struct AgLCString { size_t stB; const char *cpD;
   explicit AgLCString(lua_State*const lS, const int iArg) :
     stB(0), cpD{LuaUtilGetLStr<char>(lS, iArg, stB)}{} };
 /* -- Get string (empty allowed) ------------------------------------------- */
-struct AgString { const StdString strString;
-  const StdString &operator()() const { return strString; }
-  operator const StdString&() const { return operator()(); }
+struct AgString { const StdStringView strvString;
+  const StdStringView &operator()() const { return strvString; }
+  operator const StdStringView&() const { return operator()(); }
   explicit AgString(lua_State*const lS, const int iArg) :
-    strString{LuaUtilGetCppStr(lS, iArg)}{} };
+    strvString{LuaUtilGetCppStr<StdStringView>(lS, iArg)}{} };
 /* -- Get modifyable string ------------------------------------------------ */
-struct AgNcString { StdString strString;
-  StdString &operator()() { return strString; }
-  operator StdString&() { return operator()(); }
+struct AgNcString { StdStringView strvString;
+  StdStringView &operator()() { return strvString; }
+  operator StdStringView&() { return operator()(); }
   explicit AgNcString(lua_State*const lS, const int iArg) :
-    strString{LuaUtilGetCppStr(lS, iArg)}{} };
+    strvString{LuaUtilGetCppStr<StdStringView>(lS, iArg)}{} };
 /* -- Get non-empty string ------------------------------------------------- */
-struct AgNeString { const StdString strNeString;
-  const StdString &operator()() const { return strNeString; }
-  operator const StdString&() const { return operator()(); }
+struct AgNeString { const StdStringView strvNeString;
+  const StdStringView &operator()() const { return strvNeString; }
+  operator const StdStringView&() const { return operator()(); }
   explicit AgNeString(lua_State*const lS, const int iArg) :
-    strNeString{LuaUtilGetCppStrNE(lS, iArg)}{} };
+    strvNeString{LuaUtilGetCppStrNE<StdStringView>(lS, iArg)}{} };
 /* -- Get Valid filename --------------------------------------------------- */
-struct AgFilename { const StdString strFilename;
-  const StdString &operator()() const { return strFilename; }
-  operator const StdString&() const { return operator()(); }
+struct AgFilename { const StdStringView strvFilename;
+  const StdStringView &operator()() const { return strvFilename; }
+  operator const StdStringView&() const { return operator()(); }
   explicit AgFilename(lua_State*const lS, const int iArg) :
-    strFilename{LuaUtilGetCppFile(lS, iArg)}{} };
+    strvFilename{LuaUtilGetCppFile<StdStringView>(lS, iArg)}{} };
 /* -- Create class template ------------------------------------------------ */
 template<class ClassType>struct ArClass { ClassType &ctClassRef;
   ClassType &operator()() const { return ctClassRef; }
@@ -56,7 +56,7 @@ template<typename PtrType>struct AgCString : public AgPointer<PtrType> {
   explicit AgCString(lua_State*const lS, const int iArg) :
     AgPointer<PtrType>{LuaUtilGetStr<PtrType>(lS, iArg)}{} };
 /* -- Different types we can use ------------------------------------------- */
-typedef AgCString<char> AgCStringChar;
+using AgCStringChar = AgCString<char>;
 /* -- Storage for a standard integral value -------------------------------- */
 template<typename AnyType>struct AgIntegral { const AnyType atValue;
   AnyType operator()() const { return atValue; }
@@ -71,38 +71,38 @@ struct AgBoolean : public AgIntegral<bool> {
   explicit AgBoolean(lua_State*const lS, const int iArg) :
     AgIntegral{LuaUtilGetBool(lS, iArg)}{} };
 /* -- Read a generic number ------------------------------------------------ */
-template<typename NumType>struct AgNumber : public AgIntegral<NumType> {
+template<typename FloatType>struct AgNumber : public AgIntegral<FloatType> {
   explicit AgNumber(lua_State*const lS, const int iArg) :
-    AgIntegral<NumType>{LuaUtilGetNum<NumType>(lS, iArg)}{} };
+    AgIntegral<FloatType>{LuaUtilGetNum<FloatType>(lS, iArg)}{} };
 /* -- Read a generic number in the specified range ------------------------- */
-template<typename NumType>struct AgNumberL : public AgIntegral<NumType> {
+template<typename FloatType>struct AgNumberL : public AgIntegral<FloatType> {
   explicit AgNumberL(lua_State*const lS, const int iArg,
-    const NumType ntMin) :
-      AgIntegral<NumType>{LuaUtilGetNumL<NumType>(lS, iArg, ntMin)}{} };
+    const FloatType ntMin) :
+      AgIntegral<FloatType>{LuaUtilGetNumL<FloatType>(lS, iArg, ntMin)}{} };
 /* -- Read a generic number in the specified range ------------------------- */
-template<typename NumType>struct AgNumberLG : public AgIntegral<NumType> {
+template<typename FloatType>struct AgNumberLG : public AgIntegral<FloatType> {
   explicit AgNumberLG(lua_State*const lS, const int iArg,
-    const NumType ntMin, const NumType ntMax) :
-      AgIntegral<NumType>{
-        LuaUtilGetNumLG<NumType>(lS, iArg, ntMin, ntMax)}{} };
+    const FloatType ntMin, const FloatType ntMax) :
+      AgIntegral<FloatType>{
+        LuaUtilGetNumLG<FloatType>(lS, iArg, ntMin, ntMax)}{} };
 /* -- Read a generic number in the specified range ------------------------- */
-template<typename NumType>struct AgNumberLGE : public AgIntegral<NumType> {
+template<typename FloatType>struct AgNumberLGE : public AgIntegral<FloatType> {
   explicit AgNumberLGE(lua_State*const lS, const int iArg,
-    const NumType ntMin, const NumType ntMax) :
-      AgIntegral<NumType>{
-        LuaUtilGetNumLGE<NumType>(lS, iArg, ntMin, ntMax)}{} };
+    const FloatType ntMin, const FloatType ntMax) :
+      AgIntegral<FloatType>{
+        LuaUtilGetNumLGE<FloatType>(lS, iArg, ntMin, ntMax)}{} };
 /* -- Read a normalised generic number ------------------------------------- */
-template<typename NumType>struct AgNumberN : public AgIntegral<NumType> {
+template<typename FloatType>struct AgNumberN : public AgIntegral<FloatType> {
   explicit AgNumberN(lua_State*const lS, const int iArg) :
-      AgIntegral<NumType>{LuaUtilGetNormal<NumType>(lS, iArg)}{} };
+      AgIntegral<FloatType>{LuaUtilGetNormal<FloatType>(lS, iArg)}{} };
 /* -- Different types we can use ------------------------------------------- */
-typedef AgNumberN<GLfloat> AgAngle;
-typedef AgNumberLG<GLfloat> AgGLfloatLG;
-typedef AgNumber<lua_Number> AgLuaNumber;
-typedef AgNumber<double> AgDouble;
-typedef AgNumber<GLfloat> AgGLfloat;
-typedef AgNumberLG<ALfloat> AgALfloatLG;
-typedef AgNumber<ALfloat> AgALfloat;
+using AgAngle     = AgNumberN<GLfloat>;
+using AgGLfloatLG = AgNumberLG<GLfloat>;
+using AgLuaNumber = AgNumber<lua_Number>;
+using AgDouble    = AgNumber<double>;
+using AgGLfloat   = AgNumber<GLfloat>;
+using AgALfloatLG = AgNumberLG<ALfloat>;
+using AgALfloat   = AgNumber<ALfloat> ;
 /* -- Read a generic integer ----------------------------------------------- */
 template<typename IntType>struct AgInteger : public AgIntegral<IntType> {
   explicit AgInteger(lua_State*const lS, const int iArg) :
@@ -126,7 +126,8 @@ template<typename IntType>struct AgIntegerLEG : public AgIntegral<IntType> {
       AgIntegral<IntType>{
         LuaUtilGetIntLEG<IntType>(lS, iArg, itMin, itMax)}{} };
 /* -- Read a generic integer in the specified range ------------------------ */
-template<typename IntType>struct AgIntegerLGE : public AgIntegral<IntType> {
+template<typename IntType>
+  struct AgIntegerLGE : public AgIntegral<IntType> {
   explicit AgIntegerLGE(lua_State*const lS, const int iArg,
     const IntType itMin, const IntType itMax) :
       AgIntegral<IntType>{
@@ -136,25 +137,25 @@ template<typename IntType>struct AgIntegerL : public AgIntegral<IntType> {
   explicit AgIntegerL(lua_State*const lS, const int iArg, const IntType itMin):
     AgIntegral<IntType>{LuaUtilGetIntL<IntType>(lS, iArg, itMin)}{} };
 /* -- Different types we can use ------------------------------------------- */
-typedef AgInteger<GLuint> AgGLuint;
-typedef AgInteger<int> AgInt;
-typedef AgInteger<lua_Integer> AgLuaInteger;
-typedef AgInteger<size_t> AgSizeT;
-typedef AgInteger<uint32_t> AgUInt32;
-typedef AgInteger<uint64_t> AgUInt64;
-typedef AgInteger<uint8_t> AgUInt8;
-typedef AgInteger<unsigned int> AgUInt;
-typedef AgIntegerL<int> AgIntL;
-typedef AgIntegerL<lua_Integer> AgLuaIntegerL;
-typedef AgIntegerL<size_t> AgSizeTL;
-typedef AgIntegerLG<int> AgIntLG;
-typedef AgIntegerLG<size_t> AgSizeTLG;
-typedef AgIntegerLG<ssize_t> AgSSizeTLG;
-typedef AgIntegerLG<unsigned int> AgUIntLG;
-typedef AgIntegerLGE<int> AgIntLGE;
-typedef AgIntegerLGE<size_t> AgSizeTLGE;
-typedef AgIntegerLGE<ssize_t> AgSSizeTLGE;
-typedef AgIntegerLGE<unsigned int> AgUIntLGE;
+using AgGLuint      = AgInteger<GLuint>;
+using AgInt         = AgInteger<int>;
+using AgIntL        = AgIntegerL<int>;
+using AgIntLG       = AgIntegerLG<int>;
+using AgIntLGE      = AgIntegerLGE<int>;
+using AgLuaInteger  = AgInteger<lua_Integer>;
+using AgLuaIntegerL = AgIntegerL<lua_Integer>;
+using AgSSizeTLG    = AgIntegerLG<ssize_t>;
+using AgSSizeTLGE   = AgIntegerLGE<ssize_t>;
+using AgSizeT       = AgInteger<size_t>;
+using AgSizeTL      = AgIntegerL<size_t>;
+using AgSizeTLG     = AgIntegerLG<size_t>;
+using AgSizeTLGE    = AgIntegerLGE<size_t>;
+using AgUInt        = AgInteger<unsigned>;
+using AgUInt32      = AgInteger<uint32_t>;
+using AgUInt64      = AgInteger<uint64_t>;
+using AgUInt8       = AgInteger<uint8_t>;
+using AgUIntLG      = AgIntegerLG<unsigned>;
+using AgUIntLGE     = AgIntegerLGE<unsigned>;
 /* -- Get/Create Asset object ---------------------------------------------- */
 using IAsset::P::Asset;
 using IAsset::P::cAssets;

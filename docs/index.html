@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.4.29.1 -->
-<!-- Automatically built at Wed Apr 29 18:15:21 2026 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.4.29.1 -->
+<!-- Reference for the Mhatxotic Engine API version 26.5.28.223 -->
+<!-- Automatically built at Fri May 29 00:02:42 2026 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.5.28.223 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.4.29.1">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.5.28.223">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.4.29.1">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.5.28.223">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.4.29.1">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.5.28.223">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.4.29.1 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.5.28.223 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.4.29.1 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.5.28.223 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.4.29.1 API reference</H1>
+	<H1>Mhatxotic Engine 26.5.28.223 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 914 functions (404 members, 510 methods) and 30 consts in 31 namespaces with 88 commands and 216 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 926 functions (408 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 222 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -224,7 +224,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(24 methods)</I>
+								<B>Methods</B> <I>(25 methods)</I>
 								<OL>
 									<LI><A href="#Asset:BitClear">BitClear</A></LI>
 									<LI><A href="#Asset:BitFlip">BitFlip</A></LI>
@@ -247,6 +247,7 @@
 									<LI><A href="#Asset:Reverse">Reverse</A></LI>
 									<LI><A href="#Asset:Size">Size</A></LI>
 									<LI><A href="#Asset:Swap">Swap</A></LI>
+									<LI><A href="#Asset:SwapEx">SwapEx</A></LI>
 									<LI><A href="#Asset:ToFile">ToFile</A></LI>
 									<LI><A href="#Asset:ToString">ToString</A></LI>
 									<LI><A href="#Asset:Write">Write</A></LI>
@@ -1066,18 +1067,21 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(4 methods)</I>
+								<B>Methods</B> <I>(5 methods)</I>
 								<OL>
 									<LI><A href="#Pcm:Destroy">Destroy</A></LI>
 									<LI><A href="#Pcm:Destroyed">Destroyed</A></LI>
+									<LI><A href="#Pcm:Flags">Flags</A></LI>
 									<LI><A href="#Pcm:Id">Id</A></LI>
 									<LI><A href="#Pcm:Name">Name</A></LI>
 								</OL>
 							</LI>
 							<LI>
-								<B>Consts</B> <I>(1 const)</I>
+								<B>Consts</B> <I>(3 consts)</I>
 								<OL>
-									<LI><A href="#Pcm.Flags">Flags</A></LI>
+									<LI><A href="#Pcm.FlagsPcm">FlagsPcm</A></LI>
+									<LI><A href="#Pcm.FlagsPost">FlagsPost</A></LI>
+									<LI><A href="#Pcm.FlagsPre">FlagsPre</A></LI>
 								</OL>
 							</LI>
 							<LI><A href="#idx:Pcm">&#x25B2; Return to summary</A> / <A href="#idx.top">top</A></LI>
@@ -1229,7 +1233,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(32 methods)</I>
+								<B>Methods</B> <I>(36 methods)</I>
 								<OL>
 									<LI><A href="#Source:Destroy">Destroy</A></LI>
 									<LI><A href="#Source:Destroyed">Destroyed</A></LI>
@@ -1248,7 +1252,11 @@
 									<LI><A href="#Source:GetRollOff">GetRollOff</A></LI>
 									<LI><A href="#Source:GetState">GetState</A></LI>
 									<LI><A href="#Source:GetVelocity">GetVelocity</A></LI>
+									<LI><A href="#Source:IsPlaying">IsPlaying</A></LI>
+									<LI><A href="#Source:IsStopped">IsStopped</A></LI>
+									<LI><A href="#Source:IsValid">IsValid</A></LI>
 									<LI><A href="#Source:Play">Play</A></LI>
+									<LI><A href="#Source:PlayTwo">PlayTwo</A></LI>
 									<LI><A href="#Source:SetDirection">SetDirection</A></LI>
 									<LI><A href="#Source:SetElapsed">SetElapsed</A></LI>
 									<LI><A href="#Source:SetGain">SetGain</A></LI>
@@ -1326,7 +1334,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(20 methods)</I>
+								<B>Methods</B> <I>(22 methods)</I>
 								<OL>
 									<LI><A href="#Stat:Cells">Cells</A></LI>
 									<LI><A href="#Stat:Data">Data</A></LI>
@@ -1339,6 +1347,8 @@
 									<LI><A href="#Stat:Destroy">Destroy</A></LI>
 									<LI><A href="#Stat:Destroyed">Destroyed</A></LI>
 									<LI><A href="#Stat:Finish">Finish</A></LI>
+									<LI><A href="#Stat:Flush">Flush</A></LI>
+									<LI><A href="#Stat:FlushData">FlushData</A></LI>
 									<LI><A href="#Stat:Header">Header</A></LI>
 									<LI><A href="#Stat:HeaderDupe">HeaderDupe</A></LI>
 									<LI><A href="#Stat:Headers">Headers</A></LI>
@@ -1568,7 +1578,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(102 members)</I>
+								<B>Members</B> <I>(106 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1590,6 +1600,10 @@
 									<LI><A href="#Util.Compact">Compact</A></LI>
 									<LI><A href="#Util.CountOf">CountOf</A></LI>
 									<LI><A href="#Util.Duration">Duration</A></LI>
+									<LI><A href="#Util.DurationL">DurationL</A></LI>
+									<LI><A href="#Util.DurationLEx">DurationLEx</A></LI>
+									<LI><A href="#Util.DurationS">DurationS</A></LI>
+									<LI><A href="#Util.DurationSEx">DurationSEx</A></LI>
 									<LI><A href="#Util.EntDecode">EntDecode</A></LI>
 									<LI><A href="#Util.EntEncode">EntEncode</A></LI>
 									<LI><A href="#Util.Explode">Explode</A></LI>
@@ -1632,8 +1646,7 @@
 									<LI><A href="#Util.IsString">IsString</A></LI>
 									<LI><A href="#Util.IsTable">IsTable</A></LI>
 									<LI><A href="#Util.IsUserdata">IsUserdata</A></LI>
-									<LI><A href="#Util.LDuration">LDuration</A></LI>
-									<LI><A href="#Util.LDurationEx">LDurationEx</A></LI>
+									<LI><A href="#Util.LineType">LineType</A></LI>
 									<LI><A href="#Util.LowByte">LowByte</A></LI>
 									<LI><A href="#Util.LowDWord">LowDWord</A></LI>
 									<LI><A href="#Util.LowWord">LowWord</A></LI>
@@ -1646,6 +1659,7 @@
 									<LI><A href="#Util.ParseTimeEx">ParseTimeEx</A></LI>
 									<LI><A href="#Util.Pluralise">Pluralise</A></LI>
 									<LI><A href="#Util.PluraliseEx">PluraliseEx</A></LI>
+									<LI><A href="#Util.PluraliseGrouped">PluraliseGrouped</A></LI>
 									<LI><A href="#Util.PlusOrMinus">PlusOrMinus</A></LI>
 									<LI><A href="#Util.PlusOrMinusEx">PlusOrMinusEx</A></LI>
 									<LI><A href="#Util.Position">Position</A></LI>
@@ -1803,7 +1817,7 @@
 			<LI id="idx.cc">
 				<DIV>
 					<DIV>
-						<A href="#cmds">Commands</A> <I>(88 commands)</I>
+						<A href="#cmds">Commands</A> <I>(89 commands)</I>
 						<OL>
 							<LI><P>Console commands that can see and manipulate all the data in the engine.</P></LI>
 							<LI>
@@ -1825,6 +1839,7 @@
 									<LI><A href="#cc.cpu">cpu</A></LI>
 									<LI><A href="#cc.crash">crash</A></LI>
 									<LI><A href="#cc.credits">credits</A></LI>
+									<LI><A href="#cc.creset">creset</A></LI>
 									<LI><A href="#cc.cvars">cvars</A></LI>
 									<LI><A href="#cc.cvclr">cvclr</A></LI>
 									<LI><A href="#cc.cvi">cvi</A></LI>
@@ -1906,7 +1921,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(216 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(222 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1944,6 +1959,7 @@
 									<LI><A href="#cv.aud_strbufcount">aud_strbufcount</A></LI>
 									<LI><A href="#cv.aud_strbuffer">aud_strbuffer</A></LI>
 									<LI><A href="#cv.aud_strvol">aud_strvol</A></LI>
+									<LI><A href="#cv.aud_version">aud_version</A></LI>
 									<LI><A href="#cv.aud_vol">aud_vol</A></LI>
 									<LI><A href="#cv.com_flags">com_flags</A></LI>
 									<LI><A href="#cv.con_autocomplete">con_autocomplete</A></LI>
@@ -2007,8 +2023,13 @@
 									<LI><A href="#cv.lua_debuglocals">lua_debuglocals</A></LI>
 									<LI><A href="#cv.lua_errignore">lua_errignore</A></LI>
 									<LI><A href="#cv.lua_errmode">lua_errmode</A></LI>
+									<LI><A href="#cv.lua_gcmajmin">lua_gcmajmin</A></LI>
+									<LI><A href="#cv.lua_gcminmaj">lua_gcminmaj</A></LI>
+									<LI><A href="#cv.lua_gcminmul">lua_gcminmul</A></LI>
+									<LI><A href="#cv.lua_gcmode">lua_gcmode</A></LI>
 									<LI><A href="#cv.lua_gcpause">lua_gcpause</A></LI>
 									<LI><A href="#cv.lua_gcstepmul">lua_gcstepmul</A></LI>
+									<LI><A href="#cv.lua_gcstepsize">lua_gcstepsize</A></LI>
 									<LI><A href="#cv.lua_lastver">lua_lastver</A></LI>
 									<LI><A href="#cv.lua_randomseed">lua_randomseed</A></LI>
 									<LI><A href="#cv.lua_script">lua_script</A></LI>
@@ -2740,6 +2761,16 @@
 		<PRE>Swaps the high/low order bits at the specified position.<BR><BR>Actual functions (replace 'Swap' with one of the following)...<BR>- S8     = Swaps high/low 4-bits.<BR>- S16    = Swaps high/low 8-bits.<BR>- S32    = Swaps high/low 16-bits.<BR>- S64    = Swaps high/low 32-bits.<BR></PRE>
 		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Asset:SwapEx" style="display:none">
+		<H3>Asset:SwapEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Asset:SwapEx(<I><U>Position</U>, <U>Bytes</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Position</U> <I>(integer)</I> = Position to swap the bytes at.<BR><U>Bytes</U> <I>(integer)</I> = Number of bytes to swap.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Same as Asset:Swap but swaps the specified number of bytes. The byte value is always truncated by the integer size. Misaligned positions will cause a copy to a new buffer and copy back which is a lot slower so keep the position in multiples of the integer size for the fastest execution.<BR><BR>Actual functions (replace 'SwapEx' with one of the following)...<BR>- SX8     = Swaps high/low 4-bits.<BR>- SX16    = Swaps high/low 8-bits.<BR>- SX32    = Swaps high/low 16-bits.<BR>- SX64    = Swaps high/low 32-bits.<BR></PRE>
+		<H4><A href="#idx:Asset">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Asset:ToFile" style="display:none">
 		<H3>Asset:ToFile</H3>
 		<H4>Syntax:-</H4>
@@ -3141,9 +3172,9 @@
 	<DIV id="Clip.Get" style="display:none">
 		<H3>Clip.Get</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Clip.Get(<I><U>Identifier</U>, <U>Completion</U></I>)</PRE>
+		<PRE>Clip.Get(<I><U>Name</U>, <U>Completion</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = The identifier for the request.<BR><U>Completion</U> <I>(function)</I> = The function to call when completed.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = The identifier for the request.<BR><U>Completion</U> <I>(function)</I> = The function to call when completed.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Retrieves text from the operating systems clipboard. Executes the specified function when completed as the window thread has to request the operation and then forward the request back to the engine thread.<BR></PRE>
 		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
@@ -3151,9 +3182,9 @@
 	<DIV id="Clip.Set" style="display:none">
 		<H3>Clip.Set</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Clip.Set(<I><U>Identifier</U>, <U>Text</U>, <U>Completion</U></I>)</PRE>
+		<PRE>Clip.Set(<I><U>Name</U>, <U>Text</U>, <U>Completion</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = The identifier for the request.<BR><U>Text</U> <I>(string)</I> = The text to copy.<BR><U>Completion</U> <I>(function)</I> = The function to call when completed.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = The identifier for the request.<BR><U>Text</U> <I>(string)</I> = The text to copy.<BR><U>Completion</U> <I>(function)</I> = The function to call when completed.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Stores the specified text into the operating system's clipboard and executes the specified completion function when done as the window thread has to request the operation and then forward the request back to the engine thread.<BR></PRE>
 		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
@@ -3189,9 +3220,9 @@
 	<DIV id="Clip:Name" style="display:none">
 		<H3>Clip:Name</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Identifier</U> = Clip:Name()</PRE>
+		<PRE><U>Name</U> = Clip:Name()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string )</I> =  The identifier given at creation.<BR></PRE>
+		<PRE><U>Name</U> <I>(string )</I> =  The identifier given at creation.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the identifier of this request given at creation.<BR></PRE>
 		<H4><A href="#idx:Clip">&#x25B2; Return to table of contents</A></H4>
@@ -3219,9 +3250,9 @@
 	<DIV id="Command.Exists" style="display:none">
 		<H3>Command.Exists</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Registered</U> = Command.Exists(<I><U>Identifier</U></I>)</PRE>
+		<PRE><U>Registered</U> = Command.Exists(<I><U>Name</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = The console command name to lookup<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = The console command name to lookup<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Registered</U> <I>(boolean)</I> = True if the command is registered<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -3231,9 +3262,9 @@
 	<DIV id="Command.Register" style="display:none">
 		<H3>Command.Register</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Object</U> = Command.Register(<I><U>Identifier</U>, <U>Minimum</U>, <U>Maximum</U>, <U>Callback</U></I>)</PRE>
+		<PRE><U>Object</U> = Command.Register(<I><U>Name</U>, <U>Minimum</U>, <U>Maximum</U>, <U>Callback</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = The console command name.<BR><U>Minimum</U> <I>(integer)</I> = The minimum number of parameters allowed.<BR><U>Maximum</U> <I>(integer)</I> = The maximum number of parameters allowed.<BR><U>Callback</U> <I>(function)</I> = Pointer to the function to callback.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = The console command name.<BR><U>Minimum</U> <I>(integer)</I> = The minimum number of parameters allowed.<BR><U>Maximum</U> <I>(integer)</I> = The maximum number of parameters allowed.<BR><U>Callback</U> <I>(function)</I> = Pointer to the function to callback.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Object</U> <I>(Command)</I> = The class object created.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -4311,9 +4342,9 @@
 	<DIV id="Fbo.Create" style="display:none">
 		<H3>Fbo.Create</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Fbo.Create(<I><U>Identifier</U>, <U>Width</U>, <U>Height</U>, <U>Triangles</U>, <U>Commands</U></I>)</PRE>
+		<PRE><U>Handle</U> = Fbo.Create(<I><U>Name</U>, <U>Width</U>, <U>Height</U>, <U>Triangles</U>, <U>Commands</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Width</U> <I>(integer)</I> = Width of the FBO.<BR><U>Height</U> <I>(integer)</I> = Height of the FBO.<BR><U>Triangles</U> <I>(integer)</I> = How many triangles to reserve in GPU float list<BR><U>Commands</U> <I>(integer)</I> = How many structs to reserve in GPU commands list<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Width</U> <I>(integer)</I> = Width of the FBO.<BR><U>Height</U> <I>(integer)</I> = Height of the FBO.<BR><U>Triangles</U> <I>(integer)</I> = How many triangles to reserve in GPU float list<BR><U>Commands</U> <I>(integer)</I> = How many structs to reserve in GPU commands list<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Fbo)</I> = A handle to the newly created main FBO object.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -4725,7 +4756,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Files</U> <I>(table)</I> = File list in a indexed table<BR><U>Directories</U> <I>(table)</I> = Directory list in a indexed table<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Dumps all the files in the specified directory to two tables </PRE>
+		<PRE>Dumps all the files in the specified directory to two tables. The format of each entry in either list is as follows...<BR><BR>table[1](string)  = File name.<BR>table[2](integer) = Unique ID number in the order of enumeration.<BR>table[3](integer) = Length of file.<BR>table[4](integer) = Creation time.<BR>table[5](integer) = Last modified time.<BR>table[6](integer) = Last access time.<BR>table[7](integer) = Attribute bits.<BR></PRE>
 		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="File.EnumerateEx" style="display:none">
@@ -4737,7 +4768,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Files</U> <I>(table)</I> = File list in a indexed table<BR><U>Directories</U> <I>(table)</I> = Directory list in a indexed table<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Dumps all the files ending in the specified extension in the specified directory to two tables.<BR></PRE>
+		<PRE>Dumps all the files ending in the specified extension in the specified directory to two tables. See 'File.Enumerate' description for more on the contents of the arrays.<BR></PRE>
 		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="File.Executable" style="display:none">
@@ -6127,7 +6158,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the flags that define the original image before manipulation. These values are used with the 'GetFlags()' function.<BR></PRE>
+		<PRE>Returns the flags that define the original image before manipulation. These values are used with the 'Flags()' function.<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Image.FlagsPost" style="display:none">
@@ -6137,7 +6168,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the flags that were activated after manipulation functions were completed. These values are used with the 'GetFlags()' function.<BR></PRE>
+		<PRE>Returns the flags that were activated after manipulation functions were completed. These values are used with the 'Flags()' function.<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Image.FlagsPre" style="display:none">
@@ -6147,7 +6178,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the flags that are sent to the loader functions to manipulate the the image. The flags that get activated are in the 'FlagsPost' array. These values are used with the 'GetFlags()' function.<BR></PRE>
+		<PRE>Returns the flags that are sent to the loader functions to manipulate the the image. The flags that get activated are in the 'FlagsPost' array. These values are used with the 'Flags()' function.<BR></PRE>
 		<H4><A href="#idx:Image">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Image.Formats" style="display:none">
@@ -6659,9 +6690,9 @@
 	<DIV id="Mask.CreateOne" style="display:none">
 		<H3>Mask.CreateOne</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Mask.CreateOne(<I><U>Identifier</U>, <U>Width</U>, <U>Height</U></I>)</PRE>
+		<PRE><U>Handle</U> = Mask.CreateOne(<I><U>Name</U>, <U>Width</U>, <U>Height</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = The identifier of the mask.<BR><U>Width</U> <I>(integer)</I> = The width of the new mask.<BR><U>Height</U> <I>(integer)</I> = The height of the new mask.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = The identifier of the mask.<BR><U>Width</U> <I>(integer)</I> = The width of the new mask.<BR><U>Height</U> <I>(integer)</I> = The height of the new mask.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Mask)</I> = The handle of the new mask created.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -6671,9 +6702,9 @@
 	<DIV id="Mask.CreateZero" style="display:none">
 		<H3>Mask.CreateZero</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Mask.CreateZero(<I><U>Identifier</U>, <U>Width</U>, <U>Height</U></I>)</PRE>
+		<PRE><U>Handle</U> = Mask.CreateZero(<I><U>Name</U>, <U>Width</U>, <U>Height</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = The identifier of the mask.<BR><U>Width</U> <I>(integer)</I> = The width of the new mask.<BR><U>Height</U> <I>(integer)</I> = The height of the new mask.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = The identifier of the mask.<BR><U>Width</U> <I>(integer)</I> = The width of the new mask.<BR><U>Height</U> <I>(integer)</I> = The height of the new mask.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Mask)</I> = The handle of the new mask created.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -6857,9 +6888,9 @@
 	<DIV id="Palette.Create" style="display:none">
 		<H3>Palette.Create</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Palette.Create(<I><U>Identifier</U></I>)</PRE>
+		<PRE><U>Handle</U> = Palette.Create(<I><U>Name</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = Reference only user-defined identifier.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Reference only user-defined identifier.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Palette)</I> = A handle to the newly created palette object.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -6869,9 +6900,9 @@
 	<DIV id="Palette.Default" style="display:none">
 		<H3>Palette.Default</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Palette.Default(<I><U>Identifier</U></I>)</PRE>
+		<PRE><U>Handle</U> = Palette.Default(<I><U>Name</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = Reference only user-defined identifier.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Reference only user-defined identifier.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Palette)</I> = A handle to the newly created palette object.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -6881,9 +6912,9 @@
 	<DIV id="Palette.Image" style="display:none">
 		<H3>Palette.Image</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Palette.Image(<I><U>Identifier</U>, <U>Handle</U></I>)</PRE>
+		<PRE>Palette.Image(<I><U>Name</U>, <U>Handle</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Handle</U> <I>(Image)</I> = Handle to image to grab palette from.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Handle</U> <I>(Image)</I> = Handle to image to grab palette from.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Creates a new palette from the specified image.<BR></PRE>
 		<H4><A href="#idx:Palette">&#x25B2; Return to table of contents</A></H4>
@@ -6891,9 +6922,9 @@
 	<DIV id="Palette.Palette" style="display:none">
 		<H3>Palette.Palette</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Palette.Palette(<I><U>Identifier</U>, <U>Handle</U></I>)</PRE>
+		<PRE><U>Handle</U> = Palette.Palette(<I><U>Name</U>, <U>Handle</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Handle</U> <I>(Palette)</I> = A handle to the palette object to copy.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Handle</U> <I>(Palette)</I> = A handle to the palette object to copy.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Palette)</I> = A handle to the newly created palette object.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -6903,9 +6934,9 @@
 	<DIV id="Palette.Texture" style="display:none">
 		<H3>Palette.Texture</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Palette.Texture(<I><U>Identifier</U>, <U>Handle</U></I>)</PRE>
+		<PRE>Palette.Texture(<I><U>Name</U>, <U>Handle</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Handle</U> <I>(Texture)</I> = Handle to texture to grab palette from.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Reference only user-defined identifier.<BR><U>Handle</U> <I>(Texture)</I> = Handle to texture to grab palette from.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Creates a new palette from the specified texture.<BR></PRE>
 		<H4><A href="#idx:Palette">&#x25B2; Return to table of contents</A></H4>
@@ -7285,9 +7316,9 @@
 	<DIV id="Pcm.Raw" style="display:none">
 		<H3>Pcm.Raw</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Handle</U> = Pcm.Raw(<I><U>Identifier</U>, <U>Data</U>, <U>Rate</U>, <U>Channels</U>, <U>Bits</U></I>)</PRE>
+		<PRE><U>Handle</U> = Pcm.Raw(<I><U>Name</U>, <U>Data</U>, <U>Rate</U>, <U>Channels</U>, <U>Bits</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Identifier</U> <I>(string)</I> = Identifier of the sample.<BR><U>Data</U> <I>(Asset)</I> = Sample PCM data.<BR><U>Rate</U> <I>(integer)</I> = Sample rate.<BR><U>Channels</U> <I>(integer)</I> = Sample channels.<BR><U>Bits</U> <I>(integer)</I> = Sample ibts per channel.<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Identifier of the sample.<BR><U>Data</U> <I>(Asset)</I> = Sample PCM data.<BR><U>Rate</U> <I>(integer)</I> = Sample rate.<BR><U>Channels</U> <I>(integer)</I> = Sample channels.<BR><U>Bits</U> <I>(integer)</I> = Sample ibts per channel.<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Handle</U> <I>(Pcm)</I> = The pcm object<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -7320,6 +7351,16 @@
 		<PRE>Returns if the Pcm class is destroyed.<BR></PRE>
 		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Pcm:Flags" style="display:none">
+		<H3>Pcm:Flags</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Flags</U> = Pcm:Flags()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Flags</U> <I>(integer)</I> = Pcm flags value<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current pcm flags.<BR></PRE>
+		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Pcm:Id" style="display:none">
 		<H3>Pcm:Id</H3>
 		<H4>Syntax:-</H4>
@@ -7340,14 +7381,34 @@
 		<PRE>Returns the name of the specified object when it was created, or if used by another function, a small trace of who took ownership of it prefixed with an exclamation mark (!).<BR></PRE>
 		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Pcm.Flags" style="display:none">
-		<H3>Pcm.Flags</H3>
+	<DIV id="Pcm.FlagsPcm" style="display:none">
+		<H3>Pcm.FlagsPcm</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Codes</U> = Pcm.Flags</PRE>
+		<PRE><U>Codes</U> = Pcm.FlagsPcm</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags<BR></PRE>
+		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the pcm flags available. Returned as key/value pairs. The value is a unique identifier to the flag.<BR></PRE>
+		<PRE>Returns the flags that define the original pcm before manipulation. These values are used with the 'Flags()' function.<BR></PRE>
+		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Pcm.FlagsPost" style="display:none">
+		<H3>Pcm.FlagsPost</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Codes</U> = Pcm.FlagsPost</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the flags that were activated after manipulation functions were completed. These values are used with the 'GetFlags()' function.<BR></PRE>
+		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Pcm.FlagsPre" style="display:none">
+		<H3>Pcm.FlagsPre</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Codes</U> = Pcm.FlagsPre</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Codes</U> <I>(table)</I> = The table of key/value pairs of available flags.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the flags that are sent to the loader functions to manipulate the the waveform. The flags that get activated are in the 'FlagsPost' array. These values are used with the 'GetFlags()' function.<BR></PRE>
 		<H4><A href="#idx:Pcm">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="SShot.Count" style="display:none">
@@ -7369,7 +7430,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Object</U> <I>(SShot)</I> = The screenshot object created.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Takes a screenshot of the specified FBO. You must completely omit the 'file' parameter to use an engine generated file.<BR></PRE>
+		<PRE>Takes a screenshot of the specified Fbo. You must completely omit the 'file' parameter to use an engine generated filename.<BR></PRE>
 		<H4><A href="#idx:SShot">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="SShot.Screen" style="display:none">
@@ -8158,12 +8219,54 @@
 		<PRE>Returns the current velocity of the source.<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Source:IsPlaying" style="display:none">
+		<H3>Source:IsPlaying</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Playing</U> = Source:IsPlaying()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Playing</U> <I>(boolean)</I> = Is the source playing?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Return if source is playing.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Source:IsStopped" style="display:none">
+		<H3>Source:IsStopped</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Stopped</U> = Source:IsStopped()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Stopped</U> <I>(boolean)</I> = Is the source playing?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Return if source is stopped.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Source:IsValid" style="display:none">
+		<H3>Source:IsValid</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Valid</U> = Source:IsValid()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Valid</U> <I>(boolean)</I> = Is the buffer attached to the source valid?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Return if source buffer is valid. If a Sample gets unloaded, then all of these methods are going to throw OpenAL exceptions. It is a good idea to keep a 'Sample' class created until the 'Source' class it spawned is destroyed.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Source:Play" style="display:none">
 		<H3>Source:Play</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Source:Play()</PRE>
+		<PRE><U>Success</U> = Source:Play()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Is the source now playing?<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Plays the source.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Source:PlayTwo" style="display:none">
+		<H3>Source:PlayTwo</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Success</U> = Source:PlayTwo()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Are the sources now playing?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Plays two sources. Useful if you want to play a stereo source.<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Source:SetDirection" style="display:none">
@@ -8582,6 +8685,22 @@
 		<PRE><U>Output</U> <I>(String)</I> = The final formatted output.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Builds the whole formatted output and returns a string. All data and headers are erased and the class can be reused. Sizes and thus memory are preserved as per C++ STL rules when being reused.<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:Flush" style="display:none">
+		<H3>Stat:Flush</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:Flush()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Completely clears the table so you can start again from scratch.<BR></PRE>
+		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Stat:FlushData" style="display:none">
+		<H3>Stat:FlushData</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Stat:FlushData()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Clears only the data in the table so you can start again.<BR></PRE>
 		<H4><A href="#idx:Stat">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Stat:Header" style="display:none">
@@ -10242,6 +10361,54 @@
 		<PRE>Converts the specified number of seconds into a human readable duration string in the format of 000:00:00:00.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.DurationL" style="display:none">
+		<H3>Util.DurationL</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DurationL(<I><U>Seconds</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DurationLEx" style="display:none">
+		<H3>Util.DurationLEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DurationLEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DurationS" style="display:none">
+		<H3>Util.DurationS</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DurationS(<I><U>Seconds</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0y0w0d0h0m0s.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DurationSEx" style="display:none">
+		<H3>Util.DurationSEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DurationSEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0y0w0d0h0m0s.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.EntDecode" style="display:none">
 		<H3>Util.EntDecode</H3>
 		<H4>Syntax:-</H4>
@@ -10734,28 +10901,16 @@
 		<PRE>Returns if specified parameter is a userdata object.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.LDuration" style="display:none">
-		<H3>Util.LDuration</H3>
+	<DIV id="Util.LineType" style="display:none">
+		<H3>Util.LineType</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.LDuration(<I><U>Seconds</U></I>)</PRE>
+		<PRE><U>Result</U> = Util.LineType(<I><U>String</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR></PRE>
+		<PRE><U>String</U> <I>(string)</I> = The string to check<BR></PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<PRE><U>Result</U> <I>(string)</I> = The line type detected<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.LDurationEx" style="display:none">
-		<H3>Util.LDurationEx</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.LDurationEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
+		<PRE>Determines the line return type in the specified string. It will return either CRLF, CR, LF, LFCR or blank if unable to detect it.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.LowByte" style="display:none">
@@ -10900,6 +11055,18 @@
 		<PRE><U>Result</U> <I>(string)</I> = The resulting number plus the suffixed text<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Checks the number and suffixes the appropriate word depending on if the supplied number is singular or plural. Uses the systems local settings to make sure the number is formatted properly.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.PluraliseGrouped" style="display:none">
+		<H3>Util.PluraliseGrouped</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.PluraliseGrouped(<I><U>Count</U>, <U>Singular</U>, <U>Plural</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Count</U> <I>(integer)</I> = The number to check<BR><U>Singular</U> <I>(string)</I> = The word to suffix if the number is singular<BR><U>Plural</U> <I>(string)</I> = The word to suffix if the number is plural<BR><U>Precision</U> <I>(integer)</I> = The amount of precision required on the nu,ber<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = Returns only the suffixed text whether it is singular or<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>plural.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.PlusOrMinus" style="display:none">
@@ -11065,7 +11232,7 @@
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Text</U> <I>(string)</I> = The modified string.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Tries to remove repetitions in the specified string.<BR></PRE>
+		<PRE>A powerful function that tries to remove repetitions in the specified string and decodes lookalike homoglyph utf-8 letters into standard ASCII letters.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.Sign" style="display:none">
@@ -11983,6 +12150,11 @@
 		<PRE>Shows information about all the contributing libraries to the engine. Specifying the command without an id number shows the list of contributors. Specify the id number to show information about that its accompanying license. Id 0 is always information about the engine. Data is statically stored and compressed using a 'Codec' class object inside the executable. The static compressed data is defined as code inside the 'license.hpp' header file and automatically generated by the Mhatxotic Engine Project Management Utility parsing all the 'licenses/*.txt' files.<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cc.creset" style="display:none">
+		<H3>creset</H3>
+		<PRE>This completely redraw a terminal window if not redrawing correctly.<BR></PRE>
+		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cc.cvars" style="display:none">
 		<H3>cvars</H3>
 		<PRE>Disables all the user configurable variables. You can add a 'prefix' argument to match the first part of the variable. Type the full variable name to show all the internal data about the variable. Do be careful when using this command when sharing desktops as this reveal the value even if the variable is set to 'confidential'.<BR></PRE>
@@ -12503,6 +12675,11 @@
 		<PRE>Specifies the volume of Stream classes. 0.0 (mute) to 1.0 (maximum volume).<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.aud_version" style="display:none">
+		<H3>aud_version</H3>
+		<PRE>Makes sure the specified version matches the internal openal version and soft initialises the library.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.aud_vol" style="display:none">
 		<H3>aud_vol</H3>
 		<PRE>Specifies the global volume of all class types. 0.0 (mute) to 1.0 (maximum volume). Setting a value too high may cause artifacts on older OS audio API's.<BR></PRE>
@@ -12510,7 +12687,7 @@
 	</DIV>
 	<DIV id="cv.com_flags" style="display:none">
 		<H3>com_flags</H3>
-		<PRE>Specifies compatibility flags. Great care is taken to make sure the engine works on any Ubuntu, MacOS or Windows system, when upgrading third-party components, problems may occur. These work as temporary workarounds to make the engine work flawlessly on certain systems. By default, all flags are enabled by default but you can selectively disable them in order to to assist with troubleshooting. The aim is to resolve all these issues so most of the time 'com_flags' has no function whatsoever...<BR>[Bit 1/Linux] = If Wayland is detected then the window and video system                 is restarted after creating it initially to fix a                 graphical corruption where you need to resize to fix it.<BR></PRE>
+		<PRE>Specifies compatibility flags. Great care is taken to make sure the engine works on any Ubuntu, MacOS or Windows system, when upgrading third-party components, problems may occur. These work as temporary workarounds to make the engine work flawlessly on certain systems. By default, all flags are enabled by default but you can selectively disable them in order to to assist with troubleshooting. The aim is to resolve all these issues so most of the time 'com_flags' has no function whatsoever. At the moment, there seem to be no compatibility problems so this is a nullop for now.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.con_autocomplete" style="display:none">
@@ -12818,14 +12995,39 @@
 		<PRE>Sets how to handle a LUA script error to one of these values...<BR>[0] LEM_IGNORE   = Ignore errors and try to continue.<BR>[1] LEM_RESET    = Automatically reset on error.<BR>[2] LEM_SHOW     = Open console and show error.<BR>[3] LEM_CRITICAL = Terminate engine with error.<BR>The default value is 3 for release executable and 2 for beta executable.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.lua_gcmajmin" style="display:none">
+		<H3>lua_gcmajmin</H3>
+		<PRE>Overrides Lua's internal LUA_GCPMAJORMINOR value. The default value is 50 and is only applied at sandbox initialisation. This determines when a minor collection upgrades into a major one. If the memory in use after a minor collection remains above x% of the memory threshold set by the last major collection, a full major cycle is triggered.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.lua_gcminmaj" style="display:none">
+		<H3>lua_gcminmaj</H3>
+		<PRE>Overrides Lua's internal LUA_GCPMINORMAJOR value. The default value is 50 and is only applied at sandbox initialisation. This controls how the major collections themselves behave when done incrementally, managing the pacing between back-to-back major collection steps.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.lua_gcminmul" style="display:none">
+		<H3>lua_gcminmul</H3>
+		<PRE>Overrides Lua's internal LUA_GCPMINORMUL value. The default value is 20 and is only applied at sandbox initialisation. This controls the frequency of minor collections. A minor collection triggers when memory grows by x% beyond the memory in use after the previous major collection.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.lua_gcmode" style="display:none">
+		<H3>lua_gcmode</H3>
+		<PRE>Overrides Lua's internal LUA_GCGEN and LUA_GCINC values. These are flags bit 1 specifies if LUA_GCGEN should be enabled and bit 2 specifies if LUA_GCINC should be enabled. The default value is 3 (both enabled) and is only applied at sandbox initialisation.<BR><BR>Generational GC: The heap is partitioned into at least two regions (a young/nursery generation and an old generation). Allocations are done in the young generation; the collector performs frequent minor collections that scan only the young generation and its remembered set (references from old to young). Objects that survive a number of minor collections are promoted to the old generation. Because most objects are shortlived, minor collections reclaim most garbage quickly at low cost.<BR>Major/full collections that scan both generations occur much less often; they are more expensive but infrequent. Correctness requires write barriers and a remembered/set mechanism to track crossgeneration references so the collector can avoid scanning the entire heap during minor collections.<BR><BR>Incremental GC: A full collection cycle (mark/sweep/compact phases as applicable) is broken into many small steps that the collector advances between mutator (program) operations. Each step performs a bounded amount of work (e.g., marking a portion of reachable objects, processing a chunk of the gray set, or sweeping a segment of memory) and then yields back to the mutator. The collector maintains invariants via barriers (incremental write/read barriers) to ensure the mutator does not invalidate the progress of marking. Incremental GC reduces maximum pause time - worst-case latency per step is bounded - at the cost of extra bookkeeping and slightly higher total overhead because of the barrier work and more frequent state transitions. Generational and incremental strategies are orthogonal and can be combined: minor generational collections can be incremental, and major collections can be performed incrementally as well.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.lua_gcpause" style="display:none">
 		<H3>lua_gcpause</H3>
-		<PRE>Overrides Lua's internal LUA_GCPAUSE value with this.<BR></PRE>
+		<PRE>Overrides Lua's internal LUA_GCPPAUSE value with this. The default value is 250 and only applied at sandbox initialisation. This controls how long the collector waits before beginning a new cycle. It is calculated as a percentage of memory allocation. A value &#x3c;=100 means the collector will not wait and will immediately begin a new cycle. The default of 200 means it waits for total memory to double before starting again.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.lua_gcstepmul" style="display:none">
 		<H3>lua_gcstepmul</H3>
-		<PRE>Overrides Lua's internal LUA_GCSTEP value with this.<BR></PRE>
+		<PRE>Overrides Lua's internal LUA_GCPSTEPMUL value with this. The default value is 200 and only applied at sandbox initialisation. This controls the collector's speed relative to how fast the application is allocating memory (e.g., how many elements it sweeps per KB allocated). Setting this below 100 makes the collector too slow, meaning it may never finish a full cycle and can cause memory leaks.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="cv.lua_gcstepsize" style="display:none">
+		<H3>lua_gcstepsize</H3>
+		<PRE>Overrides Lua's internal LUA_GCPSTEPSIZE value with this. The default value is 9600 and only applied at sandbox initialisation. This controls the size of each incremental step by dictating how many bytes (2n bytes) the interpreter allocates before triggering a collection step. Setting this to an intentionally large value (like 60) effectively forces the collector into a non-incremental, "stop-the-world" routine.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="cv.lua_lastver" style="display:none">
@@ -13419,6 +13621,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Apr 29 18:15:21 2026 +0100</ADDRESS>
+	This document was generated at Fri May 29 00:02:42 2026 +0100</ADDRESS>
 </BODY>
 </HTML>

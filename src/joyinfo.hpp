@@ -10,9 +10,9 @@
 namespace IJoyInfo {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IFlags::P;
-using namespace IGlFWUtil::P;          using namespace IIdent::P;
-using namespace IJoyAxis::P;           using namespace IJoyButton::P;
-using namespace ILog::P;
+using namespace IGlFWUtil::P;          using namespace IJoyAxis::P;
+using namespace IJoyButton::P;         using namespace ILog::P;
+using namespace IName::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -26,7 +26,7 @@ BUILD_FLAGS(Joy,                       // Joystick state flags
 class JoyInfo :                        // Joystick class
   /* -- Base classes ------------------------------------------------------- */
   public JoyFlags,                     // Joystick flags
-  public Ident,                        // Joystick identifier
+  public NameStr,                      // Joystick identifier
   public JoyAxisList<>,                // Joystick axes list
   public JoyButtonList<>               // Joystick button list
 { /* ----------------------------------------------------------------------- */
@@ -71,22 +71,22 @@ class JoyInfo :                        // Joystick class
     // Get joystick name and if it's not null?
     if(const char*const cpName = GlFWGetJoystickName(JoyGetId()))
     { // If monitor name is blank return blank name
-      if(*cpName) IdentSet(cpName);
+      if(*cpName) NameSet(cpName);
       // Return blank name
-      else IdentSet(cCommon->CommonUnspec());
+      else NameSet(cCommon->CommonUnspec());
     } // Return null name
-    else IdentSet(cCommon->CommonNull());
+    else NameSet(cCommon->CommonNull());
     // Refresh joystick data
     JoyRefreshData();
     // We gained this joystick
     cLog->LogInfoExSafe("Joystick detected $ '$' (I:$;B:$;A:$).",
-      JoyGetGamepadOrJoystickString(), IdentGet(), JoyGetId(),
+      JoyGetGamepadOrJoystickString(), NameGet(), JoyGetId(),
       JoyButtonListCount(), JoyAxisListCount());
     // Report unique identifier
     if(const char*const cpIdent = GlFWGetJoystickGUID(JoyGetId()))
     { // Save guid for future reference and log the identifier
       strGuid = cpIdent;
-      cLog->LogDebugExSafe("- Identifier: $.", strGuid);
+      cLog->LogDebugExSafe("- Name: $.", strGuid);
     } // Clear guid
     else strGuid = cCommon->CommonNull();
     // Report name if gamepad
@@ -109,7 +109,7 @@ class JoyInfo :                        // Joystick class
     JoyDoDisconnect();
     // We lost the specified joystick
     cLog->LogInfoExSafe("Joystick disconnected $ '$' (I:$).",
-      JoyGetGamepadOrJoystickString(), IdentGet(), JoyGetId());
+      JoyGetGamepadOrJoystickString(), NameGet(), JoyGetId());
   }
   /* -- Detect joystick ---------------------------------------------------- */
   bool JoyIsPresent() { return GlFWJoystickPresent(JoyGetId()); }
@@ -122,8 +122,8 @@ class JoyInfo :                        // Joystick class
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Joystick state typedefs -------------------------------------------- */
-typedef StdArray<JoyInfo, GLFW_JOYSTICK_LAST+1> JoyList; // Actual joy data
-typedef JoyList::const_iterator JoyListIt; // Iterator for vector of joys
+using JoyList   = StdArray<JoyInfo, GLFW_JOYSTICK_LAST + 1>; // Actual joy data
+using JoyListIt = JoyList::const_iterator;       // Iterator for vector of joys
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

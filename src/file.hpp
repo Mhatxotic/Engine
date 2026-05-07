@@ -10,12 +10,12 @@
 namespace IFile {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ICollector::P;
-using namespace IFStream::P;           using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace IFStream::P;           using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- File collector and member class -------------------------------------- */
@@ -27,7 +27,7 @@ CTOR_BEGIN_DUO(Files, File, CLHelperUnsafe, ICHelperUnsafe),
   File() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFile{ cFiles, this },      // Register the object in collector
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -79,14 +79,14 @@ static void FileAppendString(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
   const StdString strFile{ LuaUtilGetCppFile(lS, 1) },
                strWhat{ LuaUtilGetCppStr(lS, 2) };
-  FileWriteData(lS, strFile, FM_A_B, strWhat.data(), strWhat.length());
+  FileWriteData(lS, strFile, FM_A_B, strWhat.data(), strWhat.size());
 }
 /* -- Write string to file in one go --------------------------------------- */
 static void FileWriteString(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
   const StdString strFile{ LuaUtilGetCppFile(lS, 1) },
                strWhat{ LuaUtilGetCppStr(lS, 2) };
-  FileWriteData(lS, strFile, FM_W_B, strWhat.data(), strWhat.length());
+  FileWriteData(lS, strFile, FM_W_B, strWhat.data(), strWhat.size());
 }
 /* -- Append data to file in one go ---------------------------------------- */
 static void FileAppendBlock(lua_State*const lS)

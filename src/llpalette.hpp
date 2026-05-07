@@ -39,7 +39,7 @@ struct AgPosition : public AgSizeTLGE {
   explicit AgPosition(lua_State*const lS, const int iArg) :
     AgSizeTLGE{lS, iArg, 0, cPalettes->palDefault.size()}{} };
 /* -- Other types ---------------------------------------------------------- */
-typedef AgIntegerLEG<ssize_t> AgSSizeTLEG;
+using AgSSizeTLEG = AgIntegerLEG<ssize_t>;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Palette:* member functions                                          ## **
@@ -224,13 +224,13 @@ LLFUNC(GetRGBA, 4,
 // < Id:integer=The id number of the Palette object.
 // ? Returns the unique id of the Palette object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgPalette{lS, 1}().CtrGet()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgPalette{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Palette:GetName
 // < Name:string=The identifier of the palette.
 // ? Returns the palette identifier
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgPalette{lS, 1}().IdentGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgPalette{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Palette:SetA
 // > Id:integer=Palette entry to modify (0-255).
@@ -421,13 +421,13 @@ LLRSEND                                // Palette:* member functions end
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Palette.Create
-// > Identifier:string=Reference only user-defined identifier.
+// > Name:string=Reference only user-defined identifier.
 // < Handle:Palette=A handle to the newly created palette object.
 // ? Creates a new empty palette with the specified name
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
-  const AgNeString aIdentifier{lS, 1};
-  AcPalette{lS}().Init(aIdentifier))
+  const AgNeString aName{lS, 1};
+  AcPalette{lS}().Init(aName()))
 /* ========================================================================= */
 // $ Palette.Count
 // < Count:integer=Total number of palettes created.
@@ -436,44 +436,44 @@ LLFUNC(Create, 1,
 LLFUNC(Count, 1, LuaUtilPushVar(lS, cPalettes->CollectorCount()))
 /* ========================================================================= */
 // $ Palette.Default
-// > Identifier:string=Reference only user-defined identifier.
+// > Name:string=Reference only user-defined identifier.
 // < Handle:Palette=A handle to the newly created palette object.
 // ? Creates a new palette with the default VGA palette.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Default, 1,
-  const AgNeString aIdentifier{lS, 1};
-  AcPalette{lS}().Init(aIdentifier, cPalettes->palDefault))
+  const AgNeString aName{lS, 1};
+  AcPalette{lS}().Init(aName(), cPalettes->palDefault))
 /* ========================================================================= */
 // $ Palette.Image
-// > Identifier:string=Reference only user-defined identifier.
+// > Name:string=Reference only user-defined identifier.
 // > Handle:Image=Handle to image to grab palette from.
 // ? Creates a new palette from the specified image.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Image, 1,
-  const AgNeString aIdentifier{lS, 1};
-  const AgImage aImage{lS,2};
-  AcPalette{lS}().Init(aIdentifier, aImage))
+  const AgNeString aName{lS, 1};
+  const AgImage aImage{lS, 2};
+  AcPalette{lS}().Init(aName(), aImage))
 /* ========================================================================= */
 // $ Palette.Palette
-// > Identifier:string=Reference only user-defined identifier.
+// > Name:string=Reference only user-defined identifier.
 // > Handle:Palette=A handle to the palette object to copy.
 // < Handle:Palette=A handle to the newly created palette object.
 // ? Creates a new palette from another essentially copying it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Palette, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgPalette aSourcePalette{lS, 2};
-  AcPalette{lS}().Init(aIdentifier, aSourcePalette))
+  AcPalette{lS}().Init(aName(), aSourcePalette))
 /* ========================================================================= */
 // $ Palette.Texture
-// > Identifier:string=Reference only user-defined identifier.
+// > Name:string=Reference only user-defined identifier.
 // > Handle:Texture=Handle to texture to grab palette from.
 // ? Creates a new palette from the specified texture.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Texture, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgTexture aTexture{lS, 2};
-  AcPalette{lS}().Init(aIdentifier, aTexture))
+  AcPalette{lS}().Init(aName(), aTexture))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Palette.* namespace functions structure                             ## **

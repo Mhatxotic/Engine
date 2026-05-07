@@ -11,22 +11,33 @@
 /* == Build type setup ===================================================== */
 #if defined(RELEASE)                   // Final public release version?
 # if defined(BETA)||defined(ALPHA)     // Make sure none of the others defined
-#   error Do not mix BETA or ALPHA with RELEASE!
+#  error Do not mix BETA or ALPHA with RELEASE!
 # endif                                // Incompatible symbol check
 # define BUILD_TYPE_LABEL              "Release"
 #elif defined(BETA)                    // Beta private release version?
 # if defined(RELEASE)||defined(ALPHA)  // Make sure none of the others defined
-#   error Do not mix RELEASE or ALPHA with BETA!
+#  error Do not mix RELEASE or ALPHA with BETA!
 # endif                                // Incompatible symbol check
 # define BUILD_TYPE_LABEL              "Beta"
 #elif defined(ALPHA)                   // Alpha/Debug private release version?
 # if defined(RELEASE)||defined(BETA)   // Make sure none of the others defined
-#   error Do not mix RELEASE or BETA with ALPHA!
+#  error Do not mix RELEASE or BETA with ALPHA!
 # endif                                // Incompatible symbol check
 # define BUILD_TYPE_LABEL              "Alpha"
+extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #else                                  // Not specified? (error!)
 # error Release type of either RELEASE, BETA or ALPHA was not defined.
 #endif                                 // End of release type check
+/* == Compiler warning configuration ======================================= */
+#if defined(__GNUC__) || defined(__clang__)    // Using GCC or CLANG(-CL)?
+# pragma GCC diagnostic push                   // Save the warning settings
+# if defined(__APPLE__)                        // Compiling on MacOS/XCode?
+#  pragma GCC diagnostic ignored "-Weverything" // Disable ALL warnings
+# else                                         // Windows or Linux
+#  pragma GCC diagnostic ignored "-Wall"       // Disable ALL warnings
+# endif                                        // OS check
+# define DISABLED_ALL_WARNINGS                 // a lot of third-party software
+#endif                                         // doesn't write strict code.
 /* == Compiled type setup ================================================== */
 #if !defined(__cplusplus)              // Must be compiling in C++ mode
 # error Please use a C++ compiler such as GCC, CLANG or MSVC!
@@ -212,7 +223,7 @@
 #define LOG_EXTENSION            "log" // Default log file extension
 #define UDB_EXTENSION            "udb" // Default database file extension
 #define JSON_EXTENSION          "json" // Default json file extension
-#define CER_EXTENSION            "cer" // Default certificate file extension
+#define DER_EXTENSION            "der" // Default certificate file extension
 #define CRASH_EXTENSION          "dbg" // Default crash log extension
 /* == Base STL includes ==================================================== */
 #include <algorithm>                   // Searching, sorting, counting, etc.
@@ -240,7 +251,9 @@
 #include <mutex>                       // Thread synchronisation
 #include <numeric>                     // Accumulators
 #include <queue>                       // First-in and first-out containers
+#include <ranges>                      // Index ranges
 #include <set>                         // Automatically sorted lists
+#include <span>                        // Span class for safe usage of raw ptrs
 #include <sstream>                     // String streams
 #include <stdexcept>                   // Runtime errors
 #include <string>                      // String containers
@@ -279,28 +292,7 @@
 # include <process.h>                  // Process header
 # include <sys/timeb.h>                // Time block functions
 /* -- Endianness ----------------------------------------------------------- */
-# define SWAP_U16(v) _byteswap_ushort(static_cast<unsigned short>(v))
-# define SWAP_U32(v) _byteswap_ulong(static_cast<unsigned long>(v))
-# define SWAP_U64(v) _byteswap_uint64(static_cast<unsigned __int64>(v))
-# if REG_DWORD == REG_DWORD_LITTLE_ENDIAN // Using Intel/AMD? (LE)
-#  define STRICT_U16LE(v) (v)          // Use 16-bit integers as-is
-#  define STRICT_U16BE(v) SWAP_U16(v)  // Swap 16-bits
-#  define STRICT_U32LE(v) (v)          // Use 32-bit integers as-is
-#  define STRICT_U32BE(v) SWAP_U32(v)  // Swap 32-bits
-#  define STRICT_U64LE(v) (v)          // Use 64-bit integers as-is
-#  define STRICT_U64BE(v) SWAP_U64(v)  // Swap 64-bits
-#  define LITTLEENDIAN                 // Using little endian byte order
-# elif REG_DWORD == REG_DWORD_BIG_ENDIAN // Using ARM? (BE)
-#  define STRICT_U16LE(v) SWAP_U16(v)  // Swap 16-bits
-#  define STRICT_U16BE(v) (v)          // Use 16-bit integers as-is
-#  define STRICT_U32LE(v) SWAP_U32(v)  // Swap 32-bits
-#  define STRICT_U32BE(v) (v)          // Use 32-bit integers as-is
-#  define STRICT_U64LE(v) SWAP_U64(v)  // Swap 64-bits
-#  define STRICT_U64BE(v) (v)          // Use 64-bit integers as-is
-#  define BIGENDIAN                    // Using big endian byte order
-# else                                 // Unknown endianness?
-#  error Unknown endianness!
-# endif                                // Endianess setup
+# define LITTLEENDIAN                  // There are no BE versions of Windows
 /* -- Using anything but Windows? ------------------------------------------ */
 #else                                  // Could be MacOS or Linux
 /* ------------------------------------------------------------------------- */
@@ -314,24 +306,9 @@
 # include <sys/utsname.h>              // OS information
 # include <unistd.h>                   // Unix standard stuff
 /* -- Endianness ----------------------------------------------------------- */
-# define SWAP_U16(v) __builtin_bswap16(static_cast<unsigned short>(v))
-# define SWAP_U32(v) __builtin_bswap32(static_cast<unsigned int>(v))
-# define SWAP_U64(v) __builtin_bswap64(static_cast<unsigned long long>(v))
 # if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ // Using Intel/AMD? (LE)
-#  define STRICT_U16LE(v) (v)          // Use 16-bit integers as-is
-#  define STRICT_U16BE(v) SWAP_U16(v)  // Swap 16-bits
-#  define STRICT_U32LE(v) (v)          // Use 32-bit integers as-is
-#  define STRICT_U32BE(v) SWAP_U32(v)  // Swap 32-bits
-#  define STRICT_U64LE(v) (v)          // Use 64-bit integers as-is
-#  define STRICT_U64BE(v) SWAP_U64(v)  // Swap 64-bits
 #  define LITTLEENDIAN                 // Define it if not
 # elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ // Using ARM? (BE)
-#  define STRICT_U16LE(v) SWAP_U16(v)  // Swap 16-bits
-#  define STRICT_U16BE(v) (v)          // Use 16-bit integers as-is
-#  define STRICT_U32LE(v) SWAP_U32(v)  // Swap 32-bits
-#  define STRICT_U32BE(v) (v)          // Use 32-bit integers as-is
-#  define STRICT_U64LE(v) SWAP_U64(v)  // Swap 64-bits
-#  define STRICT_U64BE(v) (v)          // Use 64-bit integers as-is
 #  define BIGENDIAN                    // Define it if not
 # else                                 // Unknown endianness?
 #  error Unknown endianness!
@@ -342,15 +319,6 @@
 # endif                                // Apple check
 /* ------------------------------------------------------------------------- */
 #endif                                 // Operating system
-/* == Compiler warning configuration ======================================= */
-#if !defined(WINDOWS)                  // Not using windows?
-# pragma GCC diagnostic push           // Save warnings
-# if defined(LINUX)                    // Using Linux?
-#  pragma GCC diagnostic ignored "-Wall"        // Disable ALL warnings
-# elif defined(MACOS)                  // Using MacOS?
-#  pragma GCC diagnostic ignored "-Weverything" // Disable ALL warnings
-# endif                                // Linux or MacOS check
-#endif                                 // Not using windows
 /* -- Lua includes --------------------------------------------------------- **
 ** Because Lua was compiled as C++ in the root namespace, Lua's includes     **
 ** also need to be defined in the root namespace.                            **
@@ -400,6 +368,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #  define GLFW_EXPOSE_NATIVE_X11       // Expose X11 specific funcs in GLFW
 #  define GLFW_EXPOSE_NATIVE_WAYLAND   // Expose Wayland specific funcs in GLFW
 # elif defined(MACOS)                  // Targeting MacOS?
+#  include <crt_externs.h>             // For _NSGetEnviron();
 #  include <ApplicationServices/ApplicationServices.h> // Load app services API
 #  include <objc/objc.h>               // Load ObjectiveC in C++ API
 #  include <sys/sysctl.h>              // Kernel info stuff
@@ -420,7 +389,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #  include <termios.h>                 // For changing terminal settings
 #  include <libproc.h>                 // For getting program executable
 #  define _XOPEN_SOURCE_EXTENDED       // Unlock extended ncurses functionality
-     typedef void (*__sighandler_t)(int); // For signal() on MacOS
+     using __sighandler_t = void (*)(int); // For signal() on MacOS
 #  define GLFW_EXPOSE_NATIVE_COCOA     // Expose Cocoa specific funcs in GLFW
 # endif                                // POSIX system check
 # include <semaphore.h>                // Semaphores
@@ -458,7 +427,8 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     namespace JpegTurbo                // LIBJPEGTURBO API FUNCTIONS
     { /* ------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
-      typedef int boolean;             // Defined by system but not in our NS
+# define HAVE_BOOLEAN                  // Don't let headers override
+      using boolean = unsigned char;   // Defined by system but not in our NS
 #endif                                 // Windows check
 #include <jpeg/jpeglib.h>              // Our main header
 #include <jpeg/jerror.h>               // Our error handling
@@ -485,7 +455,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
         using GlFW::GLint;             // GL specific int type
         using GlFW::GLsizei;           // GL specific sizei type
         using GlFW::GLubyte;           // GL specific unsigned char type
-        using GlFW::GLuint;            // GL specific unsigned int type
+        using GlFW::GLuint;            // GL specific unsigned type
         using GlFW::GLvoid;            // GL specific void type
       } /* ----------------------------------------------------------------- */
 #if defined(MACOS)                     // MacOS defined?
@@ -554,7 +524,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
       using OpenAL::ALint;             // AL specific int type
       using OpenAL::ALshort;           // AL specific short type
       using OpenAL::ALsizei;           // AL specific sizei type
-      using OpenAL::ALuint;            // AL specific unsigned int type
+      using OpenAL::ALuint;            // AL specific unsigned type
       using OpenAL::ALvoid;            // AL specific void type
     } /* ------------------------------------------------------------------- */
   } /* -- Ogg Includes ----------------------------------------------------- */
@@ -574,9 +544,6 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <theora/theora.h>             // StrFormat codec (+ ogg codec)
 #include <theora/theoradec.h>          // Decoder
     } /* ------------------------------------------------------------------- */
-#if !defined(WINDOWS)                  // Not using windows?
-# pragma GCC diagnostic pop            // - Restore compiler warnings
-#endif                                 // Not using windows
   } /* --------------------------------------------------------------------- */
   namespace Sqlite                     // SQLITE API FUNCTIONS
   {/* ---------------------------------------------------------------------- */
@@ -595,15 +562,21 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <ft/ftglyph.h>                // Glyph header
 #include <ft/ftmodapi.h>               // Modification header
   } /* --------------------------------------------------------------------- */
-} /* ----------------------------------------------------------------------- */
+} /* -- End of system inclusions ------------------------------------------- */
+#if defined(DISABLED_ALL_WARNINGS)     // We disabled all warnings?
+# pragma GCC diagnostic pop            // Restore original compiler warnings
+# undef DISABLED_ALL_WARNINGS          // Done with this define
+#endif                                 // Disabled all warnings?
 /* == Main() configuration. So engine.cpp's main() declaration is tidy ===== */
 #if defined(WINDOWS)                   // Targeting Windows?
-typedef Lib::OS::TCHAR ArgType;        // Set main argument type
+using ssize_t = ptrdiff_t;             // Because Windows doesn't have this.
+using ArgType = Lib::OS::TCHAR;        // Set main argument type
 # define ENTRYFUNC WINAPI _tWinMain(Lib::OS::HINSTANCE, Lib::OS::HINSTANCE, \
     Lib::OS::LPTSTR, int)
 # define CONENTRYFUNC _tmain           // For project management utility
+extern int ENTRYFUNC;                  // Prevents -Wmissing-prototypes
 #else                                  // Targeting POSIX?
-typedef char ArgType;                  // Set main argument type
+using ArgType = char;                  // Set main argument type
 # define ENTRYFUNC main(int __argc, ArgType**__wargv, ArgType**_wenviron)
 # define CONENTRYFUNC main             // For project management utility
 #endif                                 // Target check

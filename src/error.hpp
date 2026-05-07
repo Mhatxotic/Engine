@@ -19,7 +19,7 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IError {                     // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
@@ -36,15 +36,52 @@ struct ErrorPluginStandard final
 struct ErrorPluginGeneric final
   { explicit ErrorPluginGeneric(StdOStringStream&) {} };
 /* ------------------------------------------------------------------------- */
-template<class Plugin=ErrorPluginGeneric>class Error final :
+template<class Plugin = ErrorPluginGeneric>
+  requires StdIsClass<Plugin>
+class Error final :
   /* -- Derivced classes --------------------------------------------------- */
   public StdException,                 // So we can capture as exception
   public StdString                     // String to store generated string
 { /* -- Private variables -------------------------------------------------- */
   StdOStringStream osS;                // Error message builder
   /* -- Write left part of var --------------------------------------------- */
-  void Init(const char*const cpName, const char*const cpType)
-    { osS << "\n+ " << cpName << '<' << cpType << "> = "; }
+  void Init(const StdStringView &strvName, const StdStringView &strvType)
+    { osS << "\n+ " << strvName << '<' << strvType << "> = "; }
+  /* -- Show integer ------------------------------------------------------- */
+  template<typename IntType, typename UIntType = StdMakeUnsigned<IntType>>
+    requires StdIsIntegral<IntType> && StdIsUnsigned<UIntType>
+  void Int(const StdStringView &strvName, const StdStringView &strvType,
+    const IntType itVal)
+  { // Write value and type to stream and then the human readable value
+    Init(strvName, strvType);
+    osS << StdIOSDec << itVal << " (0x" << StdIOSHex
+        << static_cast<UIntType>(itVal) << ").";
+  }
+  /* -- Show float --------------------------------------------------------- */
+  template<typename FloatType>
+    void Float(const StdStringView &strvName, const StdStringView &strvType,
+      const FloatType ftValue)
+  { Init(strvName, strvType); osS << StdIOSFixed << ftValue << '.'; }
+  /* -- Show STL string ---------------------------------------------------- */
+  template<class StrType>
+    void Str(const StdStringView &strvName, const StdStringView &strvType,
+      StrType &&strValue)
+  { // Initialise start of string
+    Init(strvName, strvType);
+    // String is empty? Write empty string label
+    if(strValue.empty()) { osS << cCommon->CommonEmpty() << '.'; return; }
+    // String is not displayable?
+    if(strValue.front() < 32)
+      { osS << cCommon->CommonInvalid() << '.'; return; }
+    // Write first part of string preview
+    osS << '\"' << strValue << '\"' << StdIOSDec
+        << " [" << strValue.size();
+    // Is a string view? (has no capacity())
+    if constexpr(!StdIsSame<StdDecay<StrType>, StdStringView>)
+      osS << '/' << strValue.capacity();
+    // End of string preview
+    osS << "].";
+  }
   /* -- Last parameter processed ------------------------------------------- */
   void Param()
   { // Process custom plugin on generated error message
@@ -54,240 +91,162 @@ template<class Plugin=ErrorPluginGeneric>class Error final :
     // It was just a functor cppcheck!
     static_cast<void>(pPlugin);
   }
-  /* -- Show integer ------------------------------------------------------- */
-  template<typename Type,typename UnsignedType=Type>
-    void Int(const char*const cpName, const char*const cpType, const Type tVal)
-  { // Write integer to stream
-    Init(cpName, cpType);
-    // Write value
-    osS << StdIOSDec << tVal << " (0x" << StdIOSHex
-        << static_cast<UnsignedType>(tVal) << ").";
-  }
-  /* ----------------------------------------------------------------------- */
-#if defined(WINDOWS)                   // Using windows?
-  /* -- Process long integer ----------------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const long lVal, VarArgs &&...vaArgs)
-  { Int<long,unsigned long>(cpName, "Long", lVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process unsigned long integer -------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName,
-      const unsigned long lVal, VarArgs &&...vaArgs)
-  { Int<unsigned long>(cpName, "ULong", lVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* ----------------------------------------------------------------------- */
-#elif defined(LINUX)                   // Targeting Linux?
-  /* -- Process long long int ---------------------------------------------- */
-  template<typename ...VarArgs>        // (Lua_Integer)
-    void Param(const char*const cpName, const long long int lliVal,
-      VarArgs &&...vaArgs)
-  { Int<long long int>(cpName, "LongLongInt", lliVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process unsigned long long int ------------------------------------- */
-  template<typename ...VarArgs>        // (Lua_Integer)
-    void Param(const char*const cpName, const unsigned long long int ulliVal,
-      VarArgs &&...vaArgs)
-  { Int<unsigned long long int>(cpName, "ULongLongInt", ulliVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* ----------------------------------------------------------------------- */
-#elif defined(MACOS)                   // Targeting Apple device?
-  /* -- Process signed long ------------------------------------------------ */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const long lVal, VarArgs &&...vaArgs)
-  { Int<long>(cpName, "Long", lVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process unsigned long ---------------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const unsigned long ulVal,
-      VarArgs &&...vaArgs)
-  { Int<unsigned long>(cpName, "ULong", ulVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* ----------------------------------------------------------------------- */
-#endif                                 // Target check
-  /* -- Process 16-bit signed integer -------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const int16_t sVal,
-      VarArgs &&...vaArgs)
-  { Int<int16_t,uint16_t>(cpName, "Int16", sVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process 16-bit unsigned integer ------------------------------------ */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const uint16_t usVal,
-      VarArgs &&...vaArgs)
-  { Int<uint16_t>(cpName, "UInt16", usVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process 32-bit signed integer -------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const int32_t lVal,
-      VarArgs &&...vaArgs)
-  { Int<int32_t,uint32_t>(cpName, "Int32", lVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process 32-bit unsigned integer ------------------------------------ */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const uint32_t ulVal,
-      VarArgs &&...vaArgs)
-  { Int<uint32_t>(cpName, "UInt32", ulVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process 64-bit signed integer -------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const int64_t llVal,
-      VarArgs &&...vaArgs)
-  { Int<int64_t,uint64_t>(cpName, "Int64", llVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process 64-bit unsigned integer ------------------------------------ */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const uint64_t ullVal,
-      VarArgs &&...vaArgs)
-  { Int<uint64_t>(cpName, "UInt64", ullVal);
-    Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process 8-bit unsigned integer ------------------------------------- */
-  template<typename ...VarArgs>void Param(const char*const cpName,
-    const unsigned char ucByte, VarArgs &&...vaArgs)
-  { // First show as integer
-    Int<unsigned int>(cpName, "UInt8", static_cast<unsigned int>(ucByte));
-    // Display only if valid
-    if(ucByte > 32) osS << " '" << static_cast<char>(ucByte) << "'.";
-    // Process more parameters
-    Param(StdForward<VarArgs>(vaArgs)...);
-  }
-  /* -- Process 8-bit signed integer --------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const char cByte, VarArgs &&...vaArgs)
-  { // First show as integer
-    Int<int,unsigned int>(cpName, "Int8", static_cast<int>(cByte));
-    // Display only if valid
-    if(cByte > 32) osS << " '" << cByte << "'.";
-    // Process more parameters
-    Param(StdForward<VarArgs>(vaArgs)...);
-  }
-  /* -- Show float --------------------------------------------------------- */
-  template<typename FloatType>void Float(const char*const cpName,
-    const char*const cpType, const FloatType tVal)
-  { Init(cpName, cpType); osS << StdIOSFixed << tVal << '.'; }
-  /* -- Process 64-bit double ---------------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const double dVal, VarArgs &&...vaArgs)
-  { Float(cpName, "Float64", dVal); Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process 32-bit float ----------------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const float fVal, VarArgs &&...vaArgs)
-  { Float(cpName, "Float32", fVal); Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process boolean ---------------------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const bool bFlag, VarArgs &&...vaArgs)
-  { // Prepare parameter
-    Init(cpName, "Bool");
-    osS << StrFromBoolTF(bFlag) << '.';
-    // Process more parameters
-    Param(StdForward<VarArgs>(vaArgs)...);
-  } /* -- Process pointer to address --------------------------------------- */
-  template<typename ...VarArgs>void Param(const char*const cpName,
-    const void*const vpPtr, VarArgs &&...vaArgs)
-  { // Get StringStream
-    Init(cpName, "Ptr");
-     // Get variable as a C-string
-    if(!vpPtr) osS << cCommon->CommonNull();
-    // Valid? Display and translation if neccesary
-#if defined(WINDOWS)                   // Using Windows?
-    else osS << "0x" << vpPtr;         // Windows doesn't put in 0x for us
-#else                                  // Using anything but Windows?
-    else osS << vpPtr;                 // Already puts in 0x for us
-#endif                                 // Windows check
-    // Add full stop
-    osS << '.';
-    // Process more parameters
-    Param(StdForward<VarArgs>(vaArgs)...);
-  }
-  /* -- Process C-String ------------------------------------------------- */
-  template<typename ...VarArgs>void Param(const char*const cpName,
-    const char*const cpStr, VarArgs &&...vaArgs)
-  { // Initialise start of string
-    Init(cpName, "CStr");
-    // Get variable as a C-string
-    if(!cpStr) osS << cCommon->CommonNull() << '.';
-    // Empty?
-    else if(!*cpStr) osS << cCommon->CommonEmpty() << '.';
-    // Displayable?
-    else if(*cpStr < 32) osS << cCommon->CommonInvalid() << '.';
-    // Valid? Display and translation if neccesary
-    else osS << '\"' << cpStr << "\".";
-    // Process more parameters
-    Param(StdForward<VarArgs>(vaArgs)...);
-  }
-  /* -- Process C-String ------------------------------------------------- */
-  template<typename ...VarArgs>
-    void Param[[maybe_unused]](const char*const cpName,
-      const wchar_t*const wcpStr, VarArgs &&...vaArgs)
-  { // Initialise start of string
-    Init(cpName, "WCStr");
-    // Get variable as a C-string
-    if(!wcpStr) osS << cCommon->CommonNull() << '.';
-    // Empty?
-    else if(!*wcpStr) osS << cCommon->CommonEmpty() << '.';
-    // Displayable?
-    else if(*wcpStr < 32) osS << cCommon->CommonInvalid() << '.';
-    // Valid? Display and translation if neccesary
-    else osS << '\"' << UtfFromWide(wcpStr) << "\".";
-    // Process more parameters
-    Param(StdForward<VarArgs>(vaArgs)...);
-  }
-  /* -- Process exception object ------------------------------------------- */
-  template<typename ...VarArgs>void Param(const char*const cpName,
-    const StdException &e, VarArgs &&...vaArgs)
-  { // Initialise start of string
-    Init(cpName, "Ex");
-    // Valid? Display and translation if neccesary
-    osS << e.what() << '.';
-    // Process more parameters
-    Param(StdForward<VarArgs>(vaArgs)...);
-  }
-  /* -- Show STL string ---------------------------------------------------- */
-  template<class StringType>void Str(const char*const cpName,
-    const char*const cpType, const StringType &tString)
-  { // Initialise start of string
-    Init(cpName, cpType);
-    // String is empty?
-    if(tString.empty()) osS << cCommon->CommonEmpty() << '.';
-    // String is not displayable?
-    else if(tString.front() < 32) osS << cCommon->CommonInvalid() << '.';
-    // Valid? Is a string view? (has no capacity())
-    else if constexpr(StdIsSame<StringType, StdStringView>)
-      osS << '\"' << tString << '\"' << StdIOSDec << " [" << tString.length()
-          << "].";
-    // Valid? Display string
-    else osS << '\"' << tString << '\"' << StdIOSDec << " ["
-             << tString.length() << '/' << tString.capacity() << "].";
-  }
-  /* -- Process STL string lvalue ------------------------------------------ */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const StdString &strV,
-      VarArgs &&...vaArgs)
-  { Str(cpName, "Str", strV); Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Process STL wstring lvalue ----------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const StdWideString &wstrV,
-      VarArgs &&...vaArgs)
-  { Str(cpName, "WStr", wstrV); Param(StdForward<VarArgs>(vaArgs)...); }
   /* -- Process STL string ------------------------------------------------- */
-  template<typename ...VarArgs>
-    void Param(const char*const cpName, const StdStringView &strvV,
-      VarArgs &&...vaArgs)
-  { Str(cpName, "StrV", strvV); Param(StdForward<VarArgs>(vaArgs)...); }
+  template<size_t stA, typename AnyType, typename ...VarArgs>
+    requires (stA > 0)
+  void Param(const char (&caName)[stA], AnyType &&atValue, VarArgs &&...vaArgs)
+  { // Make a string view of parameter since we have the size
+    const StdStringView strvName{ caName, stA - 1 };
+    // Remove trash from type and if is integral or enum type?
+    using AnyTypeNoRef = StdRemoveConstVolRef<AnyType>;
+    using AnyTypeDecayed = StdDecay<AnyType>;
+    if constexpr(StdIsIntegral<AnyTypeDecayed> || StdIsEnum<AnyTypeDecayed>)
+    { // Is a boolean type?
+      if constexpr(StdIsSame<AnyTypeDecayed, bool>)
+      { // Initialise key name with a boolean type and make it human readable
+        Init(strvName, "Bool");
+        osS << StrFromBoolTF(atValue) << '.';
+      } // If the type is a readable unsigned character type?
+      else if constexpr(StdIsSame<AnyTypeDecayed, unsigned char>)
+      { // Initialise key name with a uchar type and make it human readable
+        Int<unsigned>(strvName, "UChar", static_cast<unsigned>(atValue));
+        if(atValue > 32) osS << " '" << static_cast<char>(atValue) << "'.";
+      } // If the type is a readable character type?
+      else if constexpr(StdIsSame<AnyTypeDecayed, char>)
+      { // Initialise key name with a char type and make it human readable
+        Int<signed, unsigned>(strvName, "Char", static_cast<int>(atValue));
+        if(atValue > 32) osS << " '" << atValue << "'.";
+      } // If it is a 64-bit integer type?
+      else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint64_t))
+      { // If it's signed or unsigned type?
+        if constexpr(StdIsSigned<AnyTypeDecayed>)
+          Int<int64_t, uint64_t>(strvName, "Int64", atValue);
+        else Int<uint64_t>(strvName, "UInt64", atValue);
+      } // If it is a 32-bit integer type?
+      else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint32_t))
+      { // If it's signed or unsigned type?
+        if constexpr(StdIsSigned<AnyTypeDecayed>)
+          Int<int32_t, uint32_t>(strvName, "Int32", atValue);
+        else Int<uint32_t>(strvName, "UInt32", atValue);
+      } // If it is a 16-bit integer type?
+      else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint16_t))
+      { // If it's signed or unsigned type?
+        if constexpr(StdIsSigned<AnyTypeDecayed>)
+          Int<int16_t, uint16_t>(strvName, "Int16", atValue);
+        else Int<uint16_t>(strvName, "UInt16", atValue);
+      } // If it is a 8-bit integer type?
+      else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint8_t))
+      { // If it's signed or unsigned type?
+        if constexpr(StdIsSigned<AnyTypeDecayed>)
+          Int<int64_t, uint64_t>(strvName, "Int64", atValue);
+        else Int<uint64_t>(strvName, "UInt64", atValue);
+      } // Impossible size but just incase.
+      else static_assert(sizeof(atValue) == 0, "Unknown integral type!");
+    } // Is a floating point type?
+    else if constexpr(StdIsFloat<AnyTypeDecayed>)
+    { // Is a 64-bit floating point number?
+      if constexpr(sizeof(AnyTypeDecayed) == sizeof(double))
+        Float(strvName, "Float64", atValue);
+      // Is a 32-bit floating point number?
+      else if constexpr(sizeof(AnyTypeDecayed) == sizeof(float))
+        Float(strvName, "Float32", atValue);
+      // Impossible size but just incase.
+      else static_assert(sizeof(atValue) == 0, "Unknown float type!");
+    } // Is a class type?
+    else if constexpr(StdIsClass<AnyTypeDecayed>)
+    { // Is 'StdString' type?
+      if constexpr(StdIsSame<AnyTypeDecayed, StdString>)
+        Str(strvName, "Str", StdForward<AnyType>(atValue));
+      // Is 'StdStringView' type?
+      else if constexpr(StdIsSame<AnyTypeDecayed, StdStringView>)
+        Str(strvName, "StrV", StdForward<AnyType>(atValue));
+      // Is 'StdWideString' type?
+      else if constexpr(StdIsSame<AnyTypeDecayed, StdWideString>)
+        Str(strvName, "WStr", StdForward<AnyType>(atValue));
+      // Is 'StdWideStringView' type?
+      else if constexpr(StdIsSame<AnyTypeDecayed, StdWideStringView>)
+        Str(strvName, "WStrV", StdForward<AnyType>(atValue));
+      // Is 'StdException' type?
+      else if constexpr(StdIsSame<AnyTypeDecayed, StdException>)
+        Str(strvName, "Ex", StdStringView{ atValue.what() });
+      // We don't support any other types yet
+      else static_assert(sizeof(atValue) == 0, "Unknown class type!");
+    } // Is an array type?
+    else if constexpr(StdIsArray<AnyTypeNoRef>)
+    { // Get the size of the text array and throw error if no size
+      constexpr size_t stN = StdExtent<AnyTypeNoRef>;
+      static_assert(stN > 0);
+      // Initialise start of string
+      Init(strvName, "CStrArray");
+      // Empty?
+      if(!*atValue) osS << cCommon->CommonEmpty() << '.';
+      // Displayable?
+      else if(*atValue < 32) osS << cCommon->CommonInvalid() << '.';
+      // Valid? Display and translation if neccesary
+      else osS << '\"' << StdStringView{ atValue, stN - 1 } << "\" ["
+               << stN << "].";
+    } // Is a pointer type?
+    else if constexpr(StdIsPointer<AnyTypeDecayed>)
+    { // Completely strip
+      using AnyTypeNoRefPtr =
+        StdRemoveConstVolRef<
+          StdRemovePointer<StdRemoveConstVolRef<AnyTypeDecayed>>>;
+      if constexpr(StdIsSame<AnyTypeNoRefPtr, char>)
+      { // Initialise start of string
+        Init(strvName, "CStr");
+        // Get variable as a C-string
+        if(!atValue) osS << cCommon->CommonNull() << '.';
+        // Empty?
+        else if(!*atValue) osS << cCommon->CommonEmpty() << '.';
+        // Displayable?
+        else if(*atValue < 32) osS << cCommon->CommonInvalid() << '.';
+        // Valid? Display and translation if neccesary
+        else osS << '\"' << atValue << "\".";
+      } // If it's a wide char pointer type?
+      else if constexpr(StdIsSame<AnyTypeNoRefPtr, wchar_t>)
+      { // Initialise start of string
+        Init(strvName, "WCStr");
+        // Get variable as a C-string
+        if(!atValue) osS << cCommon->CommonNull() << '.';
+        // Empty?
+        else if(!*atValue) osS << cCommon->CommonEmpty() << '.';
+        // Displayable?
+        else if(*atValue < 32) osS << cCommon->CommonInvalid() << '.';
+        // Valid? Display and translation if neccesary
+        else osS << '\"' << UtfFromWide(StdWideStringView{ atValue }) << "\".";
+      } // Anything else we can just print the address
+      else
+      { // Initialise name
+        Init(strvName, "Ptr");
+         // Get variable as a C-string
+        if(!atValue) osS << cCommon->CommonNull();
+        // Valid? Display and translation if neccesary
+#if defined(WINDOWS)                   // Using Windows?
+        else osS << "0x" << atValue;   // Windows doesn't put in 0x for us
+#else                                  // Using anything but Windows?
+        else osS << atValue;           // Already puts in 0x for us
+#endif                                 // Windows check
+        // Add full stop
+        osS << '.';
+      }
+    } // Unknown type was sent in a exception constructor
+    else static_assert(sizeof(AnyType) == 0, "Invalid type!");
+    // Process more parameters
+    Param(StdForward<VarArgs>(vaArgs)...);
+  }
   /* -- Get message ------------------------------------------------ */ public:
   virtual const char *what() const noexcept override { return data(); }
   /* -- Prepare error message constructor with C-string--------------------- */
-  template<typename ...VarArgs>
-    Error(const char*const cpErr, VarArgs &&...vaArgs)
-  { osS << cpErr; Param(StdForward<VarArgs>(vaArgs)...); }
-  /* -- Prepare error message constructor with exception object ------------ */
-  template<typename ...VarArgs>
-    Error(const StdException &eReason, VarArgs &&...vaArgs) :
-      Error(eReason.what(), StdForward<VarArgs>(vaArgs)...) {}
-  /* -- Prepare error message constructor with STL string ------------------ */
-  template<typename ...VarArgs>
-    Error(const StdString &strErr, VarArgs &&...vaArgs)
-  { osS << strErr; Param(StdForward<VarArgs>(vaArgs)...); }
+  template<typename AnyType, typename ...VarArgs>
+    Error(AnyType &&aErrMsg, VarArgs &&...vaArgs)
+  { // If is an exception object? Push the string of it
+    if constexpr(StdIsSame<StdDecay<AnyType>, StdException>)
+      osS << aErrMsg.what();
+    // Let ostringstream handle the value
+    else osS << aErrMsg;
+    // Process key, value components
+    Param(StdForward<VarArgs>(vaArgs)...);
+  }
 };/* -- Helper macro to trigger exceptions --------------------------------- */
 #define XC(r,...) throw Error<>(r, ## __VA_ARGS__)
 /* ------------------------------------------------------------------------- */

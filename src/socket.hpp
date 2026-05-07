@@ -14,17 +14,17 @@ using namespace ICollector::P;         using namespace ICommon::P;
 using namespace ICrypt::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags::P;             using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IFlags::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IMutex::P;             using namespace IName::P;
 using namespace IParser::P;            using namespace IRefCtr::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace IToken::P;
-using namespace IUtil::P;              using namespace IUtf::P;
-using namespace Lib::OS::OpenSSL;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IToken::P;             using namespace IUtil::P;
+using namespace IUtf::P;               using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -62,8 +62,10 @@ const StdString    strRegVarPROTO;     // " for http protocol data
 const StdString    strRegVarCODE;      // " for http status code data
 const StdString    strRegVarMETHOD;    // " for http method string
 const StdString    strRegVarRESPONSE;  // HTTP response string
-const StdString    strCipherDefault;   // Default cipher to use
 /* -- Variables ------------------------------------------------------------ */
+const StdStringView strvCipherDefault; // Default cipher to use
+const StdStringView strvRX;            // "RX" string
+const StdStringView strvTX;            // "TX" string
 StdStringView      strvCipher12;       // Ciphers for TLSv1.2 from CVar
 StdStringView      strvCipher13;       // Ciphers for TLSv1.3+ from CVar
 StdStringView      strvUserAgent;      // User agent string from CVar
@@ -93,11 +95,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     ClkTimePoint   ctpStart;           // Packet timestamp
     Memory         mData;              // Memory block
   };/* --------------------------------------------------------------------- */
-  typedef StdList<Packet> PacketList;  // list of blocks
+  using PacketList = StdList<Packet>;  // list of blocks
   /* ----------------------------------------------------------------------- */
-  enum OpCode : unsigned int           // Websocket packet op codes
+  enum OpCode : unsigned               // Websocket packet op codes
   { /* --------------------------------------------------------------------- */
-    OC_NONE      = static_cast<unsigned int>(-1),
+    OC_NONE      = static_cast<unsigned>(-1),
     OC_FRAG      = 0x0,                // Fragmented packet
     OC_TEXT      = 0x1,                // UTF-8 Text packet
     OC_BINARY    = 0x2,                // Binary text packet
@@ -118,7 +120,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   bool             bUnlock;            // Condition variable unblocker
   condition_variable cvWriter;         // Waiting for write/terminate event
   /* -- Other variables ---------------------------------------------------- */
-  unsigned int     uiPort;             // The port number to connect to
+  unsigned         uPort;              // The port number to connect to
   AtomicInt        aiError,            // Socket error
                    aiFd;               // Socket descriptor
   StdString        strAddr,            // The address in string format
@@ -132,7 +134,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                    strRealHost;        // Real hostname connected to
   PacketList       plRX, plTX;         // Transmit/Receive buffers
   size_t           stRX, stTX;         // Total bytes stored in buffers
-  Parser<>         pRegistry;          // For storing keypairs
+  ParserStringVol  psvRegistry;        // For storing keypairs
   /* -- Timestamps --------------------------------------------------------- */
   AtomicClkDuration acdConnect,        // Time socket was connecting
                    acdConnected,       // Time socket was connected
@@ -141,33 +143,39 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                    acdDisconnect,      // Time socket was disconnecting
                    acdDisconnected;    // Time socket was disconnected
   /* -- Do internal log ---------------------------------------------------- */
-  template<typename ...VarArgs>void SocketLog(const LHLevel lhlSeverity,
-    const char*const cpFormat, VarArgs &&...vaArgs)
+  template<typename StrType, typename ...VarArgs>
+    void SocketLog(const LHLevel lhlSeverity, StrType &&strFormat,
+      VarArgs &&...vaArgs)
   { // If parameters are specified then cater to them
     if constexpr(sizeof...(VarArgs) > 0)
-      cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), StdIOSHex,
+      cLog->LogExSafe(lhlSeverity, "Socket $;$$$;$: $", Serial(), StdIOSHex,
         FlagGet(), StdIOSDec, GetAddressAndPort(),
-        StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...));
+        StrFormat(StdForward<StrType>(strFormat),
+          StdForward<VarArgs>(vaArgs)...));
     // No parameters specified so don't need to format them
-    else cLog->LogExSafe(lhlSeverity, "Socket $:$$$:$ $", CtrGet(), StdIOSHex,
-      FlagGet(), StdIOSDec, GetAddressAndPort(), cpFormat);
+    else cLog->LogExSafe(lhlSeverity, "Socket $;$$$;$: $", Serial(), StdIOSHex,
+      FlagGet(), StdIOSDec, GetAddressAndPort(),
+      StdForward<StrType>(strFormat));
   }
   /* -- Internal log ------------------------------------------------------- */
-  template<typename ...VarArgs>void SocketLogSafe(const LHLevel lhlSeverity,
-    const char*const cpFormat, VarArgs &&...vaArgs)
+  template<typename StrType, typename ...VarArgs>
+    void SocketLogSafe(const LHLevel lhlSeverity, StrType &&strFormat,
+      VarArgs &&...vaArgs)
   { // Return if we don't have this level
     if(cLog->LogNotHasLevel(lhlSeverity)) return;
     // Synchronise access to data while we log details
-    MutexCall([this, lhlSeverity, cpFormat, &vaArgs...](){
-      SocketLog(lhlSeverity, cpFormat, StdForward<VarArgs>(vaArgs)...);});
+    MutexCall([this, lhlSeverity, &strFormat, &vaArgs...](){
+      SocketLog(lhlSeverity, StdForward<StrType>(strFormat),
+        StdForward<VarArgs>(vaArgs)...);});
   }
   /* -- Internal log ------------------------------------------------------- */
-  template<typename ...VarArgs>void SocketLogUnsafe(const LHLevel lhlSeverity,
-    const char*const cpFormat, VarArgs &&...vaArgs)
-  { // Return if we don't have this level
+  template<typename StrType, typename ...VarArgs>
+    void SocketLogUnsafe(const LHLevel lhlSeverity, StrType &&strFormat,
+    VarArgs &&...vaArgs)
+  { // Return if we don't have this level else write formatted string to log
     if(cLog->LogNotHasLevel(lhlSeverity)) return;
-    // Write formatted string
-    SocketLog(lhlSeverity, cpFormat, StdForward<VarArgs>(vaArgs)...);
+    SocketLog(lhlSeverity, StdForward<StrType>(strFormat),
+      StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise static error (no openssl error) ------------------------- */
   ThreadStatus SetErrorStatic(const StdString &strReason, const bool bSet)
@@ -229,10 +237,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       } // Did the operation fail? Set error and clean up
       case StdMaxUInt:
         return static_cast<size_t>(IsDisconnectedByClient() ?
-          SetAborted() : SetErrorSafe("Read error or timeout"));
+          SetAborted() : SetErrorSafe("Read error or timeout!"));
       // Did openssl fail? Set error and clean up
       case static_cast<size_t>(-2):
-        return static_cast<size_t>(SetErrorSafe("Not implemented"));
+        return static_cast<size_t>(SetErrorSafe("Not implemented!"));
       // We read data. Incrememnt counter
       default:
         // Increment received bytes and packet counters
@@ -242,8 +250,6 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         ++cParent->aullRXp;
         // Set last received timestamp
         acdRead = cmHiRes.GetEpochTime();
-        // Log status
-        SocketLogSafe(LH_DEBUG, "$ received", stRead);
         // Return bytes read
         return stRead;
     }
@@ -260,13 +266,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       case 0:
       { // Server closed the connection so return that the server closed
         FlagSet(SS_CLOSEDBYSERVER);
-        return static_cast<size_t>(SetErrorStaticSafe("EOF from server"));
+        return static_cast<size_t>(SetErrorStaticSafe("EOF from server!"));
       } // Did the operation fail? Disconnect with error
       case StdMaxUInt:
-        return static_cast<size_t>(SetErrorSafe("Send error or timeout"));
+        return static_cast<size_t>(SetErrorSafe("Send error or timeout!"));
       // Other error? Set error and clean up
       case static_cast<size_t>(-2):
-        return static_cast<size_t>(SetErrorSafe("Not implemented"));
+        return static_cast<size_t>(SetErrorSafe("Not implemented!"));
       // We wrote data.
       default:
         // Increment sent bytes and packet counters
@@ -276,20 +282,17 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         ++cParent->aullTXp;
         // Set last sent timestamp
         acdWrite = cmHiRes.GetEpochTime();
-        // Make sure we sent the same bytes as read. This should never
-        // happen, but if we did?
-        if(stWritten == stSize)
-        { // Log the bytes sent and return bytes written
-          SocketLogSafe(LH_DEBUG, "$ sent", stWritten);
-          return stWritten;
-        } // Log the error we did not send enough bytes
+        // Make sure we sent the same bytes as requested. This should never
+        // happen, but if we did? Return the number of bytes written
+        if(stWritten == stSize) return stWritten;
+        // Log the error we did not send enough bytes
         return static_cast<size_t>
-          (SetErrorSafe(StrFormat("Sent only $ of $", stWritten, stSize)));
+          (SetErrorSafe(StrFormat("Sent only $ of $!", stWritten, stSize)));
     }
   }
   /* -- Write string to socket --------------------------------------------- */
   size_t SockWrite(const StdString &strStr)
-    { return SockWrite(strStr.data(), strStr.length()); }
+    { return SockWrite(strStr.data(), strStr.size()); }
   /* -- Write memory block class to socket --------------------------------- */
   size_t SockWrite(const MemConst &mcSrc)
     { return SockWrite(mcSrc.MemPtr<char>(), mcSrc.MemSize()); }
@@ -314,7 +317,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void FlushPackets()
   { // Setup lists we want to flush
     struct PacketListRef { PacketList &plList; size_t &stTotal; };
-    typedef StdArray<const PacketListRef, 2> PacketListArray;
+    using PacketListArray = StdArray<const PacketListRef, 2>;
     const PacketListArray plaData{ { { plRX, stRX }, { plTX, stTX } } };
     // Flush each list and total value
     for(const PacketListRef &plrItem : plaData)
@@ -332,7 +335,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void Send(const char *cpData, const size_t stSize)
   { // Bail if not connected
     if(!IsConnected())
-      XC("Send on unconnected socket!", "Address", strAddr, "Port", uiPort);
+      XC("Send on unconnected socket!", "Address", strAddr, "Port", uPort);
     // Add buffer to queue
     PushData(plTX, stTX, cpData, stSize);
     // Unblock writer thread
@@ -341,20 +344,20 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Send data as other types ------------------------------------------- */
   void Send(const MemConst &mcPacket)
     { Send(mcPacket.MemPtr<char>(), mcPacket.MemSize()); }
-  void SendString(const StdString &strData)
-    { Send(strData.data(), strData.length()); }
+  void SendString(const StdStringView &strvData)
+    { Send(strvData.data(), strvData.size()); }
   /* ----------------------------------------------------------------------- */
-  void SetAddressAndCipher(StdString &strNAddress, const unsigned int &uiNPort,
-    const StdString &strNCipher)
+  void SetAddressAndCipher(const StdStringView &strvAddress,
+    const unsigned &uNPort, const StdStringView &strvCipher)
   { // OK set address and port
-    strAddr = StdMove(strNAddress);
-    uiPort = uiNPort;
-    strAddrPort = StrAppend(strAddr, ':', uiNPort);
+    strAddr = strvAddress;
+    uPort = uNPort;
+    strAddrPort = StrAppend(strvAddress, ':', uNPort);
     // Clear previous names if re-using class
     strRealHost.clear();
     strIP.clear();
     // Default specified? Use defaults from both cvars
-    if(strNCipher == cParent->strCipherDefault)
+    if(cParent->strvCipherDefault == strvCipher)
     { // Setup <=TLSv1.2 ciphers
       strCipherList = cSockets->strvCipher12;
       // Setup TLSv1.3 ciphers
@@ -362,17 +365,18 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Done
       return;
     } // Split ciphers into two tokens
-    const Token tData{ strNCipher, "|" };
+    const TokenStrView tsvData{ strvCipher, cCommon->CommonPipeV() };
     // If we only have one part
-    switch(tData.size())
+    switch(tsvData.size())
     { // No tokens (insecure connection)
       case 0: strCipherSuite.clear(); strCipherList.clear(); break;
       // Only one token specified?
       case 1:
       { // Set TLSv1.3 cipher suite
-        const StdString &strSuite = tData.front();
-        strCipherSuite = strSuite == cParent->strCipherDefault ?
-          cSockets->strvCipher13 : strSuite;
+        const StdStringView &strvSuite = tsvData.front();
+        strCipherSuite =
+          strvSuite == cParent->strvCipherDefault ?
+            cSockets->strvCipher13 : strvSuite;
         // Set <=TLSv1.2 cipher list
         strCipherList = cSockets->strvCipher12;
         // Done
@@ -380,19 +384,19 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       } // Two tokens specified?
       case 2:
       { // Set TLSv1.3 cipher suite
-        const StdString &strSuite = tData.front();
-        strCipherSuite = strSuite == cParent->strCipherDefault ?
-          cSockets->strvCipher13 : strSuite;
+        const StdStringView &strvSuite = tsvData.front();
+        strCipherSuite = strvSuite == cParent->strvCipherDefault ?
+          cSockets->strvCipher13 : strvSuite;
         // Set <= TLSv1.2 cipher list
-        const StdString &strList = tData[1];
-        strCipherList = strList == cParent->strCipherDefault ?
-          cSockets->strvCipher12 : strList;
+        const StdStringView &strvList = tsvData[1];
+        strCipherList = strvList == cParent->strvCipherDefault ?
+          cSockets->strvCipher12 : strvList;
         // Done
         break;
       } // Invalid
       default: XC("Only two cipher tokens allowed!",
-        "Address", strAddr,     "Port", uiPort,
-        "Count",   tData.size(),"Spec", strNCipher);
+        "Address", strAddr,        "Port", uPort,
+        "Count",   tsvData.size(), "Spec", strvCipher);
     }
   }
   /* -- Disconnect the socket ---------------------------------------------- */
@@ -455,7 +459,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   ThreadStatus DoConnect()
   { // Set hostname (always returns 1).
     if(CryptBIOSetConnHostname(bioPtr, GetAddressAndPort().data()) != 1)
-      return SetErrorSafe("Resolve failed");
+      return SetErrorSafe("Resolve failed!");
     // Log and do secure connection
     SocketLogSafe(LH_DEBUG, "$onnecting...", IsSecure() ? "Securely c" : "C");
     // Set connecting flag. Do send an event for this
@@ -463,16 +467,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Abort if requested
     if(tReader.ThreadShouldExit()) return SetAborted();
     // Try to connect and if failed?
-    if(BIO_do_connect(bioPtr) != 1) return SetErrorSafe("Connect failed");
+    if(BIO_do_connect(bioPtr) != 1) return SetErrorSafe("Connect failed!");
     // Abort if requested
     if(tReader.ThreadShouldExit()) return SetAborted();
     // Set descriptor and set error if failed
-    if(!UpdateDescriptor()) return SetErrorSafe("Lost descriptor");
+    if(!UpdateDescriptor()) return SetErrorSafe("Lost descriptor!");
     // Get and check pointer to address data
     if(const BIO_ADDR*const baData = CryptBIOGetConnAddress(bioPtr))
     { // Setup query commands for host and IP data
       struct AddressData{ const int iId; StdString &strDest; };
-      typedef StdArray<const AddressData, 2> AddressDataArray;
+      using AddressDataArray = StdArray<const AddressData, 2>;
       const AddressDataArray adaCmds{ { { 1, strIP }, { 0, strRealHost } } };
       // Enumerate and store the address data
       for(const AddressData &adCmd : adaCmds)
@@ -492,11 +496,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           MutexCall([&adCmd, &apAddr](){ adCmd.strDest = apAddr.cpPtr; });
       }
     } // No IP address detected for some reason
-    else return SetErrorSafe("No address found");
+    else return SetErrorSafe("No address found!");
     // Set a flag if address and host are not the same
     if(strRealHost != strIP) FlagSet(SS_VHOST);
     // Show connected ip address
-    SocketLogSafe(LH_DEBUG, "Connected to $", GetIPAddress());
+    SocketLogSafe(LH_DEBUG, "Connected to '$'.", GetIPAddress());
     // Set socket read and send timeout
     switch(cSystem->SetSocketTimeout(aiFd,
       cParent->adRecvTimeout, cParent->adSendTimeout))
@@ -504,22 +508,22 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       case 0: break;
       // Failed so just log message
       case 1:
-        SocketLogSafe(LH_WARNING, "Set recv timeout failed");
+        SocketLogSafe(LH_WARNING, "Set recv timeout failed!");
         break;
       case 2:
-        SocketLogSafe(LH_WARNING, "Set send timeout failed");
+        SocketLogSafe(LH_WARNING, "Set send timeout failed!");
         break;
       case 3:
-        SocketLogSafe(LH_WARNING, "Set recv/send timeout failed");
+        SocketLogSafe(LH_WARNING, "Set recv/send timeout failed!");
         break;
       default:
-        SocketLogSafe(LH_WARNING, "Unknown error setting socket timeouts");
+        SocketLogSafe(LH_WARNING, "Unknown error setting socket timeouts!");
         break;
     } // Until thread says to terminate
     if(tReader.ThreadShouldExit()) return SetAborted();
     // Return success if the handshake succeeded or process error
     return BIO_do_handshake(bioPtr) == 1 ?
-      TS_OK : SetErrorSafe("Handshake failed");
+      TS_OK : SetErrorSafe("Handshake failed!");
   }
   /* -- OCSP verification result ------------------------------------------- */
   int OCSPVerificationResponse(SSL*const sslCbPtr)
@@ -529,17 +533,17 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     const long lLength = SSL_get_tlsext_status_ocsp_resp(sslCbPtr, &cpResp);
     if(lLength != -1 && UtfIsCStringValid(cpResp))
     { // Got a response so make sure it is freed on leaving the scope
-      typedef StdUniquePtr<ocsp_response_st,
-        function<decltype(OCSP_RESPONSE_free)>> OcspResponsePtr;
+      using OcspResponsePtr = StdUniquePtr<ocsp_response_st,
+        function<decltype(OCSP_RESPONSE_free)>>;
       if(OcspResponsePtr orpResp{ d2i_OCSP_RESPONSE(nullptr, &cpResp,
         lLength), OCSP_RESPONSE_free })
           return 1;
       // Failed to parse response
-      SocketLogSafe(LH_WARNING, "OCSP response parse failure");
+      SocketLogSafe(LH_WARNING, "OCSP response parse failure!");
       // Return result from response call
       return 0;
     } // No response but connection may continue
-    SocketLogSafe(LH_DEBUG, "No OCSP response");
+    SocketLogSafe(LH_DEBUG, "No OCSP response.");
     // The callback when used on the client side should return a negative value
     // on error; 0 if the response is not acceptable (in which case the
     // handshake will fail) or a positive value if it is acceptable.
@@ -561,24 +565,24 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       FlagSet(SS_ENCRYPTION);
       // Setup new TLS client context
       sslctxPtr = SSL_CTX_new(TLS_client_method());
-      if(!sslctxPtr) return SetErrorSafe("Init TLS failed");
+      if(!sslctxPtr) return SetErrorSafe("Init TLS failed!");
       // Set cipher options
       if(!strCipherSuite.empty())
         if(!SSL_CTX_set_ciphersuites(sslctxPtr, strCipherSuite.data()))
-          return SetErrorStaticSafe("Invalid cipher suite");
+          return SetErrorStaticSafe("Invalid cipher suite!");
       // Set ciphers supported, and if failed? Just show warning
       if(!strCipherList.empty())
         if(!SSL_CTX_set_cipher_list(sslctxPtr, strCipherList.data()))
-          return SetErrorStaticSafe("Invalid cipher list");
+          return SetErrorStaticSafe("Invalid cipher list!");
       // Set context to release buffers as we don't reuse the contexts
       SSL_CTX_set_mode(sslctxPtr, SSL_MODE_RELEASE_BUFFERS);
       // Set our shared certificate store if we have one
       if(cParent->CertsIsStoreAvailable() &&
         !CryptSSLCtxSet1VerifyCertStore(sslctxPtr, cParent->CertsGetStore()))
-          return SetErrorStaticSafe("Cert store failure");
+          return SetErrorStaticSafe("Cert store failure!");
       // Setup verification, make a new verification context and if succeded?
-      typedef StdUniquePtr<X509_VERIFY_PARAM,
-        function<decltype(X509_VERIFY_PARAM_free)>> X509VerifyParamPtr;
+      using X509VerifyParamPtr = StdUniquePtr<X509_VERIFY_PARAM,
+        function<decltype(X509_VERIFY_PARAM_free)>>;
       if(X509VerifyParamPtr x509vp{ X509_VERIFY_PARAM_new(),
         X509_VERIFY_PARAM_free })
       { // Set flags
@@ -597,44 +601,44 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             X509_PURPOSE_SSL_SERVER))
           { // Ceritificate must match this domain
             if(X509_VERIFY_PARAM_set1_host(x509vp.get(), strAddr.data(),
-              strAddr.length()))
+              strAddr.size()))
             { // Apply to context and return success
               if(!SSL_CTX_set1_param(sslctxPtr, x509vp.get()))
               { // Log the error and return failure
                 SocketLogSafe(LH_WARNING,
-                  "Failed to assign verification parameters to context");
+                  "Failed to assign verification parameters to context!");
                 return TS_ERROR;
               } // Succeeded a this point
             } // Failed setting host?
             else
             { // Log the error and return failure
-              SocketLogSafe(LH_WARNING, "Failed to set matching hostname");
+              SocketLogSafe(LH_WARNING, "Failed to set matching hostname!");
               return TS_ERROR;
             }
           } // Failed setting purpose?
           else
           { // Log the error and return failure
-            SocketLogSafe(LH_WARNING, "Failed to set purpose");
+            SocketLogSafe(LH_WARNING, "Failed to set purpose!");
             return TS_ERROR;
           }
         } // Failed setting verification flags?
         else
         { // Log the error and return failure
-          SocketLogSafe(LH_WARNING, "Failed to set verification flags");
+          SocketLogSafe(LH_WARNING, "Failed to set verification flags!");
           return TS_ERROR;
         }
       } // Failed creating context?
       else
       { // Log the error and return failure
-        SocketLogSafe(LH_WARNING, "Failed to create verification context");
+        SocketLogSafe(LH_WARNING, "Failed to create verification context!");
         return TS_ERROR;
       } // Done setting up verification. Now create socket
       bioPtr = BIO_new_ssl_connect(sslctxPtr);
-      if(!bioPtr) return SetErrorSafe("Failed to create BIO socket");
+      if(!bioPtr) return SetErrorSafe("Failed to create BIO socket!");
       // Try to get ssl pointer from socket
       if(CryptBIOGetSSL(bioPtr, &sslPtr) < 1)
-        return SetErrorSafe("No SSL ptr from BIO");
-      if(!sslPtr) return SetErrorSafe("Get SSL ptr failed");
+        return SetErrorSafe("No SSL ptr from BIO!");
+      if(!sslPtr) return SetErrorSafe("Get SSL ptr failed!");
       // Client mode
       BIO_set_ssl_mode(bioPtr, 1);
       // OCSP verification option enabled?
@@ -655,14 +659,14 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               "Failed to setup OCSP verification argument!");
       } // Set SNI hostname. Some sites break if this is not set
       if(!CryptSSLSetTlsExtHostName(sslPtr, strAddr.data()))
-        return SetErrorStaticSafe("Init TLS SNI hostname failed");
+        return SetErrorStaticSafe("Init TLS SNI hostname failed!");
       // Log and do secure connection
       if(DoConnect() == TS_ERROR) return TS_ERROR;
       // Get X509 chain verificiation result
       switch(const size_t stRes =
         static_cast<size_t>(SSL_get_verify_result(sslPtr)))
       { // No error? Log success and carry on
-        case X509_V_OK: SocketLogSafe(LH_DEBUG, "X509 chain is good"); break;
+        case X509_V_OK: SocketLogSafe(LH_DEBUG, "X509 chain is good."); break;
         // Anything else?
         default:
         { // Find error code if the error code information is not found?
@@ -706,9 +710,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           // Set cipher and remove spaces, carriage returns and linefeeds
           strCipher = cpStr;
           StrCompactRef(strCipher);
-          StrChop(strCipher);
+          StrChopRef(strCipher);
           // Print encryption info. Don't need to lock twice
-          SocketLogUnsafe(LH_DEBUG, "Cipher is $", strCipher);
+          SocketLogUnsafe(LH_DEBUG, "Cipher is '$'.", strCipher);
         });
       } // Get cipher failed? Log failure
       else return SetErrorSafe("Server using no cipher!");
@@ -717,18 +721,18 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       { // Get certificate subject and if successful? Log subject line. OpenSSL
         // doesn't give us the length so feed into logger as c-string
         if(X509_NAME_oneline(X509_get_subject_name(xCert), cpStr, iLen))
-          SocketLogSafe(LH_DEBUG, "Subject is $", cpStr);
+          SocketLogSafe(LH_DEBUG, "Subject is '$'.", cpStr);
         // Get certificate issuer and if successful? Log issuer line
         if(X509_NAME_oneline(X509_get_issuer_name(xCert), cpStr, iLen))
-          SocketLogSafe(LH_DEBUG, "Issuer is $", cpStr);
+          SocketLogSafe(LH_DEBUG, "Issuer is '$'.", cpStr);
         // Don't free certificate since we're using SSL_get0_*
       } // Error occured
-      else return SetErrorSafe("Server returned no certificate");
+      else return SetErrorSafe("Server returned no certificate!");
     } // No security
     else
     { // Create socket and bail out if failed
       bioPtr = BIO_new(BIO_s_connect());
-      if(!bioPtr) return SetErrorSafe("Failed to create BIO socket");
+      if(!bioPtr) return SetErrorSafe("Failed to create BIO socket!");
       // Log and do insecure connection
       if(DoConnect() == TS_ERROR) return TS_ERROR;
     } // Now connected
@@ -749,16 +753,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     });
   }
   /* -- Get registry iterator ---------------------------------------------- */
-  StrNCStrMapIt GetRegistryIterator(const StdString &strItem)
-    { return pRegistry.find(strItem); }
+  ParserStringVolIt GetRegistryIterator(const StdStringView &strvItem)
+    { return psvRegistry.find(strvItem); }
   /* -- Get and delete registry item --------------------------------------- */
-  const StdString GetRegistry(const StdString &strItem)
+  StdString GetRegistry(const StdString &strItem)
   { // Find item and if we didn't find it? Return default string
-    const StrNCStrMapIt sncsmiIt{ GetRegistryIterator(strItem) };
-    if(sncsmiIt == pRegistry.cend()) return {};
+    const ParserStringVolConstIt psvciIt{ GetRegistryIterator(strItem) };
+    if(psvciIt == psvRegistry.cend()) return {};
     // Get the value and delete it. We will move instead of copying
-    const StdString strReq{ StdMove(sncsmiIt->second) };
-    pRegistry.erase(sncsmiIt);
+    const StdString strReq{ StdMove(psvciIt->second) };
+    psvRegistry.erase(psvciIt);
     return strReq;
   }
   /* -- String is binary? Returns location of binary ----------------------- */
@@ -784,23 +788,23 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Web socket main thread function reusing temporary buffer ----------- */
   ThreadStatus WebSocketMain(Memory &mDest)
   { // Check for upgrade status and return error if not found
-    const StrNCStrMapIt sncsmiIt{ GetRegistryIterator("Upgrade") };
-    if(sncsmiIt == pRegistry.cend())
+    const ParserStringVolConstIt psvciIt{ GetRegistryIterator("Upgrade") };
+    if(psvciIt == psvRegistry.cend())
       return SetErrorStaticSafe("Missing upgrade header!");
     // Must be websocket
-    if(sncsmiIt->second != "websocket")
+    if(psvciIt->second != "websocket")
       return SetErrorStaticSafe(
-        StrAppend("Invalid upgrade protocol '$'!", sncsmiIt->second));
+        StrAppend("Invalid upgrade protocol '$'!", psvciIt->second));
     // Create a thread to write data requests
-    tWriter.ThreadInit(StrAppend("websocketwriter:", CtrGet()),
+    tWriter.ThreadInit(StrAppend("websocketwriter:", Serial()),
       bind(&Socket::SockWebWriteThreadMain, this, _1), this);
     // Set upgraded status and dispatch event
     AddStatus(SS_UPGRADED);
     // Websocket packet op codes
-    enum OpCode uiOpCode = OC_NONE;
+    enum OpCode uOpCode = OC_NONE;
     // Websocket packet read modes
-    enum ReadMode : unsigned int { RM_HEADER, RM_SMALL_PAYLOAD,
-      RM_LARGE_PAYLOAD, RM_PAYLOAD } uiMode = RM_HEADER;
+    enum ReadMode : unsigned { RM_HEADER, RM_SMALL_PAYLOAD,
+      RM_LARGE_PAYLOAD, RM_PAYLOAD } uMode = RM_HEADER;
     // Current buffer position and required bytes
     size_t stRequired  = 2, // Bytes required in buffer
            stPLTotal   = 0, // Payload size
@@ -824,7 +828,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       } // Calculate any extra data we read
       size_t stExtra = stTRead > stRequired ? stTRead - stRequired : 0;
       // What section of the data are we on?
-      switch(uiMode)
+      switch(uMode)
       { // Payload?
         case RM_PAYLOAD: Payload:
         { // Put payload straight into packets
@@ -832,7 +836,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           PushData(plTemp, stPLCurrent,
             mDest.MemRead(0, stPLPktSize), stPLPktSize);
           // Check opcode
-          switch(uiOpCode)
+          switch(uOpCode)
           { // Normal data?
             case OC_TEXT: case OC_BINARY: case OC_FRAG:
             { // Keep reading data if we're not done yet
@@ -875,11 +879,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             // Unsupported opcode?
             default: plTemp.clear();
               return SetErrorStaticSafe(
-                StrAppend("Invalid opcode 0x", StdIOSHex, uiOpCode));
+                StrAppend("Invalid opcode 0x", StdIOSHex, uOpCode));
           } // Reset to header mode
-          uiMode = RM_HEADER;
+          uMode = RM_HEADER;
           // Reset op code function
-          uiOpCode = OC_NONE;
+          uOpCode = OC_NONE;
           // Reset payload values
           stPLCurrent = stPLTotal = 0;
           // Set required bytes for a header
@@ -899,25 +903,25 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         } // Waiting for header?
         case RM_HEADER:
         { // Get bits 0 to 7 and 8 to 15
-          const unsigned int uiFirst = mDest.MemReadInt<uint8_t>(),
-                             uiSecond = mDest.MemReadInt<uint8_t>(1);
+          const unsigned uFirst = mDest.MemReadInt<uint8_t>(),
+                         uSecond = mDest.MemReadInt<uint8_t>(1);
           // Throw error if reserved bits are set
-          if(uiFirst & 0x40 || uiFirst & 0x20 || uiFirst & 0x10)
+          if(uFirst & 0x40 || uFirst & 0x20 || uFirst & 0x10)
             return SetErrorStaticSafe("Reserved headers set!");
           // Server should not send a mask (bit 8)
-          if(uiSecond & 0x80) return SetErrorStaticSafe("Mask bit set!");
+          if(uSecond & 0x80) return SetErrorStaticSafe("Mask bit set!");
           // Set if a final packet (bit 0)
-          bFinal = !!(uiFirst & 0x80);
+          bFinal = !!(uFirst & 0x80);
           // Set the opcode (bit 4-7)
-          uiOpCode = static_cast<OpCode>(uiFirst & 0x0F);
+          uOpCode = static_cast<OpCode>(uFirst & 0x0F);
           // Get initial payload value (bits 9 to 15)
-          stPLTotal = uiSecond & 0x7F;
+          stPLTotal = uSecond & 0x7F;
           // Compare payload value
           switch(stPLTotal)
           { // Payload is small? (126 bytes)
             case 126:
             { // Set small payload expected next
-              uiMode = RM_SMALL_PAYLOAD;
+              uMode = RM_SMALL_PAYLOAD;
               // Need two bytes next
               const size_t stRequiredNext = 2;
               // If we don't have extra data? Wait for more data
@@ -937,7 +941,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             } // Payload is large? (127 bytes)
             case 127:
             { // Set large payload expected next
-              uiMode = RM_LARGE_PAYLOAD;
+              uMode = RM_LARGE_PAYLOAD;
               // Need eight bytes next
               const size_t stRequiredNext = 8;
               // If we don't have extra data? Wait for more data
@@ -981,7 +985,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         } // Should never get here
         default: return SetErrorStaticSafe("Invalid mode!");
       } // Set payload mode
-      uiMode = RM_PAYLOAD;
+      uMode = RM_PAYLOAD;
       // Expecting the payload size next
       const size_t stRequiredNext = stPLTotal;
       // If we don't have extra data? Wait for more data
@@ -1008,16 +1012,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Check if websocket
     enum { HTTP, HTTP_HEAD, WEBSOCKET } eMode;
     { // Check for websocket key and if we have it
-      StrNCStrMapIt sncsmiIt{ GetRegistryIterator("Sec-WebSocket-Key") };
-      if(sncsmiIt != pRegistry.cend())
+      ParserStringVolIt psvciIt{ GetRegistryIterator("Sec-WebSocket-Key") };
+      if(psvciIt != psvRegistry.cend())
       { // Create base 64 key
-        sncsmiIt->second = CryptMBtoB64(CryptRandomBlock(16));
+        psvciIt->second.assign(CryptMBtoB64(CryptRandomBlock(16)));
         // Set mode
         eMode = WEBSOCKET;
         // Remove request method from registry so it doesn't accidentally get
         // sent as a header.
-        sncsmiIt = GetRegistryIterator(cParent->strRegVarMETHOD);
-        if(sncsmiIt != pRegistry.cend()) pRegistry.erase(sncsmiIt);
+        psvciIt = GetRegistryIterator(cParent->strRegVarMETHOD);
+        if(psvciIt != psvRegistry.cend()) psvRegistry.erase(psvciIt);
       } // Set normal HTTP request or HEAD request
       else eMode = GetRegistry(cParent->strRegVarMETHOD) == "HEAD" ?
                      HTTP_HEAD : HTTP;
@@ -1034,7 +1038,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         strBody{
           StdMove(GetRegistry(cParent->strRegVarBODY)) },
         strHdrs{
-          StdMove(pRegistry.ParserImplodeEx(": ", cCommon->CommonCrLf())) },
+          StdMove(psvRegistry.ParserImplodeEx(": ", cCommon->CommonCrLf())) },
         strPk{
           StdMove(StrAppend(strReq, strHdrs, cCommon->CommonCrLf(),
             strBody)) };
@@ -1057,17 +1061,17 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Connection error or server closed connection?
       if(stRead == static_cast<size_t>(TS_ERROR))
       { // If we were waiting for headers still?
-        if(bHeaders) return SetErrorSafe("Response failed");
+        if(bHeaders) return SetErrorSafe("Response failed!");
         // We were downloading so if there was a content length?
         if(stContentLength)
         { // Read the correct number of bytes? Or we're just doing a HEAD req?
           // Log that the download was successful.
           if(stContentRead == stContentLength || eMode == HTTP_HEAD)
-            SocketLogSafe(LH_DEBUG, "Download successful");
+            SocketLogSafe(LH_DEBUG, "Download successful.");
           // We did not get the correct number of bytes? Set error code.
-          else return SetErrorSafe(StrAppend("Failed at ", stContentRead));
+          else return SetErrorSafe(StrFormat("Failed at $!", stContentRead));
         } // There was no content length? Just log the bytes downloaded
-        else SocketLogSafe(LH_DEBUG, "$ downloaded", stContentRead);
+        else SocketLogSafe(LH_DEBUG, "$ downloaded.", stContentRead);
         // We're done with the connection
         return TS_ERROR;
       } // Not processing headers?
@@ -1083,7 +1087,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Have content length and at EOF? Log it
         if(stContentLength && stContentRead == stContentLength)
         { // All downloaded
-          SocketLogSafe(LH_DEBUG, "Download complete");
+          SocketLogSafe(LH_DEBUG, "Download complete.");
           // So below scopes can jump here
           return TS_OK;
         } // Wait for next packet, thread abort or server disconnect.
@@ -1103,7 +1107,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       } // Ok we got the headers. Collect data.
       bHeaders = false;
       // Get cut off point between headers to data and if we got it?
-      const size_t stInitial = strvResp.length() - (stEnd + 4);
+      const size_t stInitial = strvResp.size() - (stEnd + 4);
       if(stInitial > 0)
       { // Push data into RX list
         PushDataSafe(plRX, stRX, mDest.MemRead(stEnd+4), stInitial);
@@ -1113,38 +1117,40 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         strvResp = { mDest.MemPtr<char>(), stEnd };
       } // Check for binary code in the last packet returned? Bail out!
       if(!ValidHeaderPacket(strvResp))
-        return SetErrorStaticSafe("Binary code in headers");
+        return SetErrorStaticSafe("Binary code in headers!");
       // Add rest of response to headers
       strHeaders += strvResp;
       // Build output headers list by exploding header string
-      pRegistry.ParserReInit(strHeaders, cCommon->CommonCrLf(), ':');
-      if(pRegistry.empty()) return SetErrorStaticSafe("No response");
+      psvRegistry.ParserReInit(strHeaders, cCommon->CommonCrLf(), ':');
+      if(psvRegistry.empty()) return SetErrorStaticSafe("No response!");
       // Done with the headers string
       strHeaders.clear();
       strHeaders.shrink_to_fit();
       // Find initial reponse (should be #0 set by VARS class)
       const StrNCStrMapConstIt
         vlR{ GetRegistryIterator(cParent->strRegVarRESPONSE) };
-      if(vlR == pRegistry.cend()) return SetErrorStaticSafe("Bad response");
+      if(vlR == psvRegistry.cend()) return SetErrorStaticSafe("Bad response!");
       // Split into words. We should have got at least three words
-      const Token tWords{ vlR->second, cCommon->CommonSpace() };
-      if(tWords.size() < 3) return SetErrorStaticSafe("Unknown response");
+      const TokenStrView tsvWords{ vlR->second, cCommon->CommonSpaceV() };
+      if(tsvWords.size() < 3) return SetErrorStaticSafe("Unknown response!");
       // Get protocol and if it is not valid?
-      const StdString &strProtoRecv = tWords.front();
-      if(strProtoRecv != "HTTP/1.0" && strProtoRecv != "HTTP/1.1")
-        return SetErrorStaticSafe(StrFormat("Bad protocol '$'", strProtoRecv));
+      const StdStringView &strvProtoRecv = tsvWords.front();
+      if(strvProtoRecv != "HTTP/1.0" && strvProtoRecv != "HTTP/1.1")
+        return SetErrorStaticSafe(
+          StrFormat("Bad protocol '$'!", strvProtoRecv));
       // Get http status code string and if not a valid number?
-      const StdString &strStatus = tWords[1];
-      if(!StrIsInt(strStatus))
-        return SetErrorStaticSafe(StrFormat("Bad status '$'", strStatus));
+      const StdStringView &strvStatus = tsvWords[1];
+      if(!StrIsInt(strvStatus))
+        return SetErrorStaticSafe(StrFormat("Bad status '$'!", strvStatus));
       // Convert to integer and if valid?
-      const size_t stStatus = StrToNum<size_t>(strStatus);
+      const size_t stStatus = StrToNum<size_t>(strvStatus);
       if(stStatus < 100 || stStatus > 999)
-        return SetErrorStaticSafe(StrAppend("Bad status code ", strStatus));
+        return SetErrorStaticSafe(
+          StrFormat("Bad status code '$'!", strvStatus));
       // If the status code is anything but an error? Log successful code
-      if(stStatus < 400) SocketLogSafe(LH_DEBUG, "Status code $", strStatus);
+      if(stStatus < 400) SocketLogSafe(LH_DEBUG, "Status code $.", strvStatus);
       // Error status code? Log error status code
-      else SocketLogSafe(LH_WARNING, "Status error $", strStatus);
+      else SocketLogSafe(LH_WARNING, "Status error $!", strvStatus);
       // If connection upgrade required? Handle websocket if requested else
       // throw an error because the socket might be left in a waiting state
       // which our client expects the server to close the connection.
@@ -1153,51 +1159,53 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           SetErrorStaticSafe("Not upgrading");
       // Add protocol and status code to registry so guest can read them
       // without having to perform any special string operations
-      pRegistry.ParserPushOrUpdatePair(cParent->strRegVarPROTO, strProtoRecv);
-      pRegistry.ParserPushOrUpdatePair(cParent->strRegVarCODE, strStatus);
+      psvRegistry.ParserPushOrUpdatePair(cParent->strRegVarPROTO,
+        StdString{ strvProtoRecv });
+      psvRegistry.ParserPushOrUpdatePair(cParent->strRegVarCODE,
+        StdString{ strvStatus });
       // We have to lock the TX list since a LUA function can read this
       MutexCall([this](){
         // Enumerate registry entries
-        for(const StrNCStrMapPair &sncsmpPair : pRegistry)
+        for(const StrNCStrMapPair &sncsmpPair : psvRegistry)
         { // Get items and push into TX since we're not using it anymore. Make
           // sure to include the null-terminator so we can use StdStringView
           // for when LUA grabs the list.
           PushData(plTX, stTX,
             StrToLowCaseRef(UtilToNonConst(sncsmpPair.first)).data(),
-            sncsmpPair.first.size()+1);
+            sncsmpPair.first.size() + 1);
           PushData(plTX, stTX, sncsmpPair.second.data(),
-            sncsmpPair.second.size()+1);
+            sncsmpPair.second.size() + 1);
         }
       });
       // If we got a content type?
       const StrNCStrMapConstIt sncsmciType{
         GetRegistryIterator("content-type") };
-      if(sncsmciType != pRegistry.cend())
-        SocketLogSafe(LH_DEBUG, "Type is $", sncsmciType->second);
+      if(sncsmciType != psvRegistry.cend())
+        SocketLogSafe(LH_DEBUG, "Type is '$'.", sncsmciType->second);
       // Should get content length
       const StrNCStrMapConstIt sncsmciLen{
         GetRegistryIterator("content-length") };
-      if(sncsmciLen != pRegistry.cend())
+      if(sncsmciLen != psvRegistry.cend())
       { // Get reference to string and if it's not valid?
         const StdString &strVal = sncsmciLen->second;
         if(!StrIsInt(strVal))
         { // Assume zero, safe to continue and log the warning
           stContentLength = 0;
-          SocketLogSafe(LH_WARNING, "Invalid content length");
+          SocketLogSafe(LH_WARNING, "Invalid content length!");
         } // Valid content-length
         else
         { // Convert length string to integer and log the length
           stContentLength = StrToNum<size_t>(strVal);
-          SocketLogSafe(LH_DEBUG, "Length is $", stContentLength);
+          SocketLogSafe(LH_DEBUG, "Length is $.", stContentLength);
         } // Set downloading status
         AddStatus(SS_DOWNLOADING);
         // If we already got enough bytes from the header packet?
         if(stInitial == stContentLength)
-          SocketLogSafe(LH_DEBUG, "Downloaded in one go");
+          SocketLogSafe(LH_DEBUG, "Downloaded in one packet.");
         // If we got too many bytes? treat it as completed anyway
         else if(stInitial > stContentLength)
-          SocketLogSafe(LH_DEBUG, "Downloaded ($ excess)",
-            stInitial-stContentLength);
+          SocketLogSafe(LH_WARNING, "Downloaded ($ excess)!",
+            stInitial - stContentLength);
         // Keep waiting for data
         else continue;
         // Success
@@ -1286,7 +1294,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           // Anything else?
           default: SmallPacket:
             // Typedef for mask data
-            typedef StdArray<uint8_t,4> MaskData;
+            using MaskData = StdArray<uint8_t, 4>;
             // Small payload size?
             if(mcPacket.MemSize() < 125)
             { // Setup header
@@ -1408,17 +1416,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return tsReturn;
   }
   /* -- Dispatch an event -------------------------------------------------- */
-  template<typename ...VarArgs>
-    void DispatchEvent(const SocketFlagsConst &evtId, const VarArgs ...vaArgs)
+  void DispatchEvent(const SocketFlagsConst &evtId, auto &&...aArgs)
   { // Signal events handler to execute event callback on the next frame.
     // Add the event to the event store so we can remove the event when the
     // destructor is called before the event is called.
-    LuaEvtDispatch(evtId.FlagGet(), vaArgs...);
+    LuaEvtDispatch(evtId.FlagGet(), StdForward<decltype(aArgs)>(aArgs)...);
   }
   /* -- Socket read manager ------------------------------------------------ */
   ThreadStatus SockReadManager()
   { // Create a thread to write data requests
-    tWriter.ThreadInit(StrAppend("socketwriter:", CtrGet()),
+    tWriter.ThreadInit(StrAppend("socketwriter:", Serial()),
       bind(&Socket::SockWriteThreadMain, this, _1), this);
     // Try to connect and if it didn't fail kill the thread
     if(InitialConnect() == TS_ERROR) return TS_ERROR;
@@ -1476,26 +1483,43 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   }
   /* ----------------------------------------------------------------------- */
   const StdString &GetAddressAndPort() const { return strAddrPort; }
-  const StdString GetIPAddressAndPort() const
+  StdString GetIPAddressAndPort() const
     { return StrAppend(GetIPAddress(), ':', GetPort()); }
   const StdString &GetErrorStr() const { return strError; }
   /* ----------------------------------------------------------------------- */
-  double GetPacketXSafe(Memory &mbD, PacketList &plList, size_t &stX)
+  double GetPacketXSafe(Memory &mbD, PacketList &plList, size_t &stX,
+    const StdStringView &strvKind)
   { // Synchronise access to packet list
-    return MutexCall([this, &mbD, &plList, &stX](){
-      // Not empty? Return top memory block else through error
+    return MutexCall([this, &mbD, &plList, &stX, &strvKind]()->double
+    { // Not empty? Return top memory block else through error
       if(plList.empty())
-        XC("No packets remaining in blocklist!",
-          "Address", strAddr, "Port", uiPort);
-      // Get last packet and return time
-      return GetPacket(mbD, plList, stX);
+        XC("No single packet remaining in blocklist to pop!",
+          "Address", strAddr, "Port", uPort);
+      // Get last packet, log the transfer and return the time
+      const double dTime = GetPacket(mbD, plList, stX);
+      SocketLogUnsafe(LH_DEBUG, "$ of $ to LUA.",
+        mbD.MemSize(), strvKind);
+      return dTime;
     });
   }
   /* ----------------------------------------------------------------------- */
   size_t GetXQCountSafe(const PacketList &plList)
     { return MutexCall([&plList](){ return plList.size(); }); }
-  void CompactXSafe(Memory &mbD, PacketList &plList, size_t &stX)
-    { MutexCall([this, &mbD, &plList, &stX](){ Compact(mbD, plList, stX); }); }
+  void CompactXSafe(Memory &mbD, PacketList &plList, size_t &stX,
+    const StdStringView strvKind)
+  { // Synchronise socket access
+    MutexCall([this, &mbD, &plList, &stX, &strvKind]()
+    { // Not empty? Return top memory block else through error
+      if(plList.empty())
+        XC("No packets remaining in blocklist to compact!",
+          "Address", strAddr, "Port", uPort);
+      // Get packet count and compact all of them into this memory and log
+      const size_t stCount = plList.size();
+      Compact(mbD, plList, stX);
+      SocketLogUnsafe(LH_DEBUG, "$ $ of $ to LUA.",
+        stCount, strvKind, mbD.MemSize());
+    });
+  }
   /* -- Events status ------------------------------------------------------ */
   bool IsConnected() const { return FlagIsSet(SS_CONNECTED); }
   bool IsDisconnected() const { return FlagIsSet(SS_STANDBY); }
@@ -1511,23 +1535,22 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   const StdString &GetAddress() const { return strAddr; }
   const StdString GetAddressSafe()
     { return MutexCall([this](){ return GetAddress(); }); }
-  const unsigned int &GetPort() const { return uiPort; }
-  unsigned int GetPortSafe()
-    { return MutexCall([this](){ return GetPort(); }); }
+  const unsigned &GetPort() const { return uPort; }
+  unsigned GetPortSafe() { return MutexCall([this](){ return GetPort(); }); }
   const StdString &GetIPAddress() const { return strIP; }
-  const StdString GetIPAddressSafe()
+  StdString GetIPAddressSafe()
     { return MutexCall([this](){ return GetIPAddress(); }); }
-  const StdString GetAddressAndPortSafe()
+  StdString GetAddressAndPortSafe()
     { return MutexCall([this](){ return GetAddressAndPort(); }); }
-  const StdString GetIPAddressAndPortSafe()
+  StdString GetIPAddressAndPortSafe()
     { return MutexCall([this](){ return GetIPAddressAndPort(); }); }
   const StdString &GetRealHost() const { return strRealHost; }
-  const StdString GetRealHostSafe()
+  StdString GetRealHostSafe()
     { return MutexCall([this](){ return GetRealHost(); }); }
   const StdString &GetCipher() const { return strCipher; }
-  const StdString GetCipherSafe()
+  StdString GetCipherSafe()
     { return MutexCall([this](){ return GetCipher(); }); }
-  const StdString GetErrorStrSafe()
+  StdString GetErrorStrSafe()
     { return MutexCall([this](){ return GetErrorStr(); }); }
   /* -- RX packets --------------------------------------------------------- */
   uint64_t GetRX() const { return aullRX; }
@@ -1535,16 +1558,18 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   size_t GetRXQCount() const { return plRX.size(); }
   size_t GetRXQCountSafe() { return GetXQCountSafe(plRX); }
   double GetPacketRXSafe(Memory &mbD)
-    { return GetPacketXSafe(mbD, plRX, stRX); }
-  void CompactRXSafe(Memory &mbD) { CompactXSafe(mbD, plRX, stRX); }
+    { return GetPacketXSafe(mbD, plRX, stRX, cSockets->strvRX); }
+  void CompactRXSafe(Memory &mbD)
+    { CompactXSafe(mbD, plRX, stRX, cSockets->strvRX); }
   /* -- TX packets --------------------------------------------------------- */
   uint64_t GetTX() const { return aullTX; }
   uint64_t GetTXpkt() const { return aullTXp; }
   size_t GetTXQCount() const { return plTX.size(); }
   size_t GetTXQCountSafe() { return GetXQCountSafe(plTX); }
   double GetPacketTXSafe(Memory &mbD)
-    { return GetPacketXSafe(mbD, plTX, stTX); }
-  void CompactTXSafe(Memory &mbD) { CompactXSafe(mbD, plTX, stTX); }
+    { return GetPacketXSafe(mbD, plTX, stTX, cSockets->strvTX); }
+  void CompactTXSafe(Memory &mbD)
+    { CompactXSafe(mbD, plTX, stTX, cSockets->strvTX); }
   /* ----------------------------------------------------------------------- */
   ThreadStatus SetErrorSafe(const StdString &strS)
     { return MutexCall([this, &strS](){ return SetError(strS); }); }
@@ -1557,17 +1582,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           PushData(blD, stX, cpData, stS);}); }
   void SendSafe(const MemConst &mcPacket)
     { MutexCall([this, &mcPacket](){ Send(mcPacket); }); }
-  void SendStringSafe(const StdString &strData)
-    { MutexCall([this, &strData](){ SendString(strData); }); }
+  void SendStringSafe(const StdStringView &strvData)
+    { MutexCall([this, &strvData](){ SendString(strvData); }); }
   /* -- Get timers --------------------------------------------------------- */
-  const ClkTimePoint GetTConnect() const { return ClkTimePoint{ acdConnect }; }
-  const ClkTimePoint GetTConnected() const
-    { return ClkTimePoint{ acdConnected }; }
-  const ClkTimePoint GetTRead() const { return ClkTimePoint{ acdRead }; }
-  const ClkTimePoint GetTWrite() const { return ClkTimePoint{ acdWrite }; }
-  const ClkTimePoint GetTDisconnect() const
-    { return ClkTimePoint{ acdDisconnect }; }
-  const ClkTimePoint GetTDisconnected() const
+  ClkTimePoint GetTConnect() const { return ClkTimePoint{ acdConnect }; }
+  ClkTimePoint GetTConnected() const { return ClkTimePoint{ acdConnected }; }
+  ClkTimePoint GetTRead() const { return ClkTimePoint{ acdRead }; }
+  ClkTimePoint GetTWrite() const { return ClkTimePoint{ acdWrite }; }
+  ClkTimePoint GetTDisconnect() const { return ClkTimePoint{ acdDisconnect }; }
+  ClkTimePoint GetTDisconnected() const
     { return ClkTimePoint{ acdDisconnected }; }
   /* -- Set a new callback ------------------------------------------------- */
   void SetNewCallback(lua_State*const lS) { LuaEvtInitEx(lS, 1); }
@@ -1579,20 +1602,20 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Remove iterator from our events dispatched list if we can
     if(LuaEvtsCheckParams<3>(emaArgs))
     { // Get the status and warn if we have incorrect number of parameters
-      const unsigned int uiStatus = emaArgs[2].UInt();
+      const unsigned uStatus = emaArgs[2].UInt();
       // Lua is not paused?
-      if(!uiLuaPaused)
+      if(!uLuaPaused)
       { // Push function callback onto stack
         if(LuaRefGetFunc(1))
         { // Push class reference onto stack
           if(LuaRefGetUData())
           { // Push the status code that was fired and if valid?
-            LuaUtilPushInt(lsState, uiStatus);
+            LuaUtilPushInt(lsState, uStatus);
             if(LuaUtilIsInteger(lsState, -1))
             { // Call callback
               LuaUtilCallFuncRefCtrEx(lsState, this, 2);
               // Clear references and state if this is the last event
-              if(uiStatus == SS_STANDBY.FlagGet()) LuaEvtDeInit();
+              if(uStatus == SS_STANDBY.FlagGet()) LuaEvtDeInit();
               // Success
               return;
             } // Not a valid integer so debug it
@@ -1606,7 +1629,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           "Invalid callback\n$", LuaUtilGetVarStack(lsState));
       } // Lua is paused? Log this just to know this event was ignored
       else SocketLogSafe(LH_WARNING,
-        "Ignoring event $=$$!", emeEvent.cCmd, StdIOSHex, uiStatus);
+        "Ignoring event $=$$!", emeEvent.cCmd, StdIOSHex, uStatus);
     } // Not enough parameters so log error
     else SocketLogSafe(LH_ERROR,
       "Not enough event params ($)", emaArgs.size());
@@ -1707,79 +1730,90 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     });
   }
   /* -- Init connection ---------------------------------------------------- */
-  void Connect(lua_State*const lS, StdString &strNAddress,
-    const unsigned int uiNPort, const StdString &strNCipher)
+  void Connect(lua_State*const lS, const StdStringView &strvAddress,
+    const unsigned uNPort, const StdStringView &strvCipher)
   { // Set address and port and TLS cipher
-    SetAddressAndCipher(strNAddress, uiNPort, strNCipher);
+    SetAddressAndCipher(strvAddress, uNPort, strvCipher);
     // Init LUA references
     LuaEvtInitEx(lS);
     // Initialise name, thread and start the connection process
-    IdentSetA("S:", GetAddressAndPort());
-    tReader.ThreadInit(StrAppend("socketreader:", CtrGet()),
+    NameSetA("S:", GetAddressAndPort());
+    tReader.ThreadInit(StrAppend("socketreader:", Serial()),
       bind(&Socket::SockReadThreadMain, this, _1), this);
   }
   /* -- Init --------------------------------------------------------------- */
-  void HTTPRequest(lua_State*const lS, const StdString &strNCipher,
-    StdString &strNAddress, const unsigned int uiNPort,
-    const StdString &strRequest, StdString &strMethod,
-    const StdString &strHeaders, const StdString &strBody)
+  void HTTPRequest(lua_State*const lS, const StdStringView &strvCipher,
+    const StdStringView &strvAddress, const unsigned uNPort,
+    const StdStringView &strvRequest, const StdStringView &strvMethod,
+    const StdStringView &strvHeaders, const StdStringView &strvBody)
   { // Request must begin with a forward slash
-    if(strRequest.front() != '/')
-      XC("Resource is invalid!", "Resource", strRequest);
+    if(strvRequest.front() != '/')
+      XC("Resource is invalid!", "Resource", strvRequest);
     // Set address and TLS cipher
-    SetAddressAndCipher(strNAddress, uiNPort, strNCipher);
+    SetAddressAndCipher(strvAddress, uNPort, strvCipher);
     // Initialise registry with headers
-    pRegistry.ParserReInit(strHeaders, cCommon->CommonLf(), ':');
+    psvRegistry.ParserReInit(StdString{ strvHeaders },
+      cCommon->CommonLf(), ':');
     // Push default user agent if not specified already
-    pRegistry.ParserPushIfNotExist("User-Agent", cSockets->strvUserAgent);
+    psvRegistry.ParserPushIfNotExist("User-Agent", cSockets->strvUserAgent);
+    // Chosen method
+    StdStringView strvChosenMethod;
     // Check for websocket method
-    if(strMethod == "WS")
+    if(strvMethod == "WS")
     { // Set GET mathod back
-      strMethod = "GET";
+      strvChosenMethod = "GET";
       // Set required websocket headers
-      pRegistry.ParserPushOrUpdatePairs({
+      psvRegistry.ParserPushOrUpdatePairs({
         // Websocket required headers
         { "Connection", "Upgrade, close" },
         { "Sec-WebSocket-Key", "" },
         { "Sec-WebSocket-Version", "13" },
         { "Upgrade", "websocket" }
       });
-    } // Disable keep-alive, we don't support it (yet?).
-    else pRegistry.ParserPushPair("Connection", "close");
-    // Find if the request contains a bookmark fragment
-    const size_t stFrag = strRequest.find('#');
+    } // Not a wegbsocket
+    else
+    { // Set chosen method
+      strvChosenMethod = strvMethod;
+      // Disable keep-alive, we don't support it (yet?).
+      psvRegistry.ParserPushPair("Connection", "close");
+    } // Find if the request contains a bookmark fragment
+    const size_t stFrag = strvRequest.find('#');
+    // Format the request
+    StdResized<StdString> strRequest
+      { strvChosenMethod.size() + strvRequest.size() + 12 };
+    if(stFrag == StdNPos) strRequest.assign(strvRequest);
+    else strRequest.assign(strvRequest.substr(0, stFrag));
     // Start building registry for connector thread
-    pRegistry.ParserPushOrUpdatePairs({
+    psvRegistry.ParserPushOrUpdatePairs({
       // Push the source address
       { "Host", strAddrPort },
       // Push the formulated request line. Remove the right hand fragment from
       // the URL if neccesary.
-      { cParent->strRegVarREQ, StrAppend(strMethod, ' ',
-          (StrUrlEncodeSpaces(stFrag == StdNPos ?
-            strRequest : strRequest.substr(0, stFrag))), " HTTP/1.0\r\n") },
+      { cParent->strRegVarREQ, StrFormat("$ $ HTTP/1.0\r\n",
+          strvChosenMethod, StrUrlEncodeSpaces(strRequest())) },
       // Push method because we need to check if this is a HEAD request and
       // thus to know when to expect no output.
-      { cParent->strRegVarMETHOD, StdMove(strMethod) },
+      { cParent->strRegVarMETHOD, StdString{ strvChosenMethod } },
     });
     // Body specified?
-    if(!strBody.empty()) pRegistry.ParserPushOrUpdatePairs({
+    if(!strvBody.empty()) psvRegistry.ParserPushOrUpdatePairs({
       // Add length of body text
-      { "Content-Length", StrFromNum(strBody.length()) },
+      { "Content-Length", StrFromNum(strvBody.size()) },
       // Add body text
-      { cParent->strRegVarBODY, StdMove(strBody) }
+      { cParent->strRegVarBODY, StdString{ strvBody } }
     });
     // Init LUA references
     LuaEvtInitEx(lS);
     // Start the thread
-    IdentSetA("HS:", GetAddressAndPort());
-    tReader.ThreadInit(StrAppend("sockethttp:", CtrGet()),
+    NameSetA("HS:", GetAddressAndPort());
+    tReader.ThreadInit(StrAppend("sockethttp:", Serial()),
       bind(&Socket::SocketHTTPThreadMain, this, _1), this);
   }
   /* -- Constructor -------------------------------------------------------- */
   Socket() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSocket{ cSockets, this },  // Register in collector
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     LuaEvtSlave{ this,EMC_MP_SOCKET }, // Socket async events init
     SocketFlags{ SS_STANDBY },         // Initially on standby
     bioPtr(nullptr),                   // Invalid bio (openssl)
@@ -1790,7 +1824,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     tReader{ STP_LOW },                // Low priority reader thread
     tWriter{ STP_LOW },                // Low priority writer thread
     bUnlock(false),                    // Block sock writer thread
-    uiPort(0),                         // No port
+    uPort(0),                          // No port
     aiError(0),                        // No error
     aiFd(-1),                          // Invalid file descriptor
     stRX(0), stTX(0)                   // No RX or TX packets in queue
@@ -1844,7 +1878,8 @@ CTOR_END(Sockets, Socket, SOCKET, InitSockets(), DeInitSockets(),,
   strRegVarCODE{ "\004" },             // " for http status code data
   strRegVarMETHOD{ "\005" },           // " for http method string
   strRegVarRESPONSE{ "\255" "0" },     // " for http response string
-  strCipherDefault{ "-" },             // Default cipher
+  strvCipherDefault{ "-" },            // Default cipher
+  strvRX{ "RX" }, strvTX{ "TX" },      // RX and TX strings
   aullRX(0), aullTX(0),                // Init received and sent bytes
   aullRXp(0), aullTXp(0),              // Init received and sent packets
   astConnected(0)                      // Init sockets connected
@@ -1913,10 +1948,10 @@ static CVarReturn SocketAgentModified(const StdString &strN, StdString &strV)
   return ACCEPT_HANDLED;
 }
 /* -- Find socket (Lock the mutex before using) ---------------------------- */
-static SocketsItConst SocketFind(const unsigned int uiId)
+static SocketsItConst SocketFind(const unsigned uId)
   { return StdFindIf(par_unseq, cSockets->cbegin(), cSockets->cend(),
-      [uiId](const Socket*const sCptr)
-        { return sCptr->CtrGet() == uiId; }); }
+      [uId](const Socket*const sCptr)
+        { return sCptr->Serial() == uId; }); }
 /* ------------------------------------------------------------------------- */
 static void SocketResetCounters()
   { cSockets->aullRX = cSockets->aullTX =

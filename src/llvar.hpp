@@ -36,6 +36,10 @@ struct AcVariable : public ArClass<Variable> {
 struct AgCVarId : public AgIntegerLGE<CVarEnums>
   { explicit AgCVarId(lua_State*const lS, const int iArg) :
       AgIntegerLGE{ lS, iArg, CVAR_FIRST, CVAR_MAX } {} };
+/* -- Read Font flags argument --------------------------------------------- */
+struct AgVariableFlags : public AgFlags<CVarFlagsConst> {
+  explicit AgVariableFlags(lua_State*const lS, const int iArg) :
+    AgFlags{ lS, iArg, CVMASK }{} };
 /* ========================================================================= */
 // $ Variable:Boolean
 // > State:boolean=The new cvar value.
@@ -75,7 +79,7 @@ LLFUNC(Empty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Empty()))
 // < Id:integer=The id of the Variable object.
 // ? Returns the unique id of the Variable object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Variable:Name
 // < Name:string=The name of the console command.
@@ -178,7 +182,13 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
 // ? force committed to disk (true) or not (false). Note that variable values
 // ? that are equal to the default value are not committed to the database.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Register, 1, cLua->LuaStateAssert(lS);AcVariable{lS}().Init(lS))
+LLFUNC(Register, 1,
+  const AgNeString aName{lS, 1};
+  const AgString aDefault{lS, 2};
+  const AgVariableFlags aFlags{lS, 3};
+  LuaUtilCheckFunc(lS, 4);
+  cLua->LuaStateAssert(lS);
+  AcVariable{lS}().Init(lS, aName, aDefault, aFlags))
 /* ========================================================================= */
 // $ Variable.Exists
 // > String:string=The console command name to lookup

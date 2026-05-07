@@ -10,19 +10,15 @@
 namespace IUrl {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICommon::P;
-using namespace ICrypt::P;             using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ICrypt::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
 using namespace IParser::P;            using namespace IStd::P;
-using namespace IString::P;
-/* -- Map type for class --------------------------------------------------- */
-typedef StdMap<StdString, const StdString> ParamMap;
-typedef ParserBase<ParamMap> ParamParser;
-typedef ParamMap::const_iterator ParamIt;
+using namespace ISerial::P;            using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-enum Result : unsigned int             // Result codes
+enum Result : unsigned                 // Result codes
 { /* ----------------------------------------------------------------------- */
   R_GOOD,                              // [00] Url is good
   R_TOOLONG,                           // [01] Url is too long
@@ -44,9 +40,11 @@ enum Result : unsigned int             // Result codes
   R_MAX                                // [17] Maximum number of codes
 };/* ----------------------------------------------------------------------- */
 /* == Class to break apart urls ============================================ */
-struct UrlBase : public ParamParser    // Members initially public
+template<class StrType = StdString, class ParserType = ParserString>
+  requires StdIsString<StrType>
+struct UrlBase : public ParserType     // Members initially public
 { /* ----------------------------------------------------------------------- */
-  enum Port : unsigned int             // Frequently used ports
+  enum Port : unsigned                 // Frequently used ports
   { /* --------------------------------------------------------------------- */
     P_NONE                    =     0, // Not initialised
     P_MIN                     =     1, // Minimum port number
@@ -56,7 +54,7 @@ struct UrlBase : public ParamParser    // Members initially public
   };/* --------------------------------------------------------------------- */
   /* -- Private variables ----------------------------------------- */ private:
   Result           rResult;            // Result
-  StdString        strBookmark,        // Bookmark
+  StrType          strBookmark,        // Bookmark
                    strCanonicalised,   // Canonicalised url
                    strHost,            // Hostname
                    strPassword,        // Password
@@ -79,31 +77,31 @@ struct UrlBase : public ParamParser    // Members initially public
   Port UrlGetPort() const { return pPort; }
   bool UrlGetSecure() const { return bSecure; }
   /* -- Parse -------------------------------------------------------------- */
-  void UrlParse(const StdString &strUrl, const unsigned int uiMode=0)
+  void UrlParse(const StdStringView &strvUrl, const unsigned uMode = 0)
   { // Error if string is empty
-    if(strUrl.empty()) { UrlSetCode(R_EMURL); return; }
+    if(strvUrl.empty()) { UrlSetCode(R_EMURL); return; }
     // Error if URL is too long
-    if(strUrl.size() > 2048) { UrlSetCode(R_TOOLONG); return; }
+    if(strvUrl.size() > 2048) { UrlSetCode(R_TOOLONG); return; }
     // Error if no scheme
-    size_t stStart = 0, stEnd = strUrl.find(':');
+    size_t stStart = 0, stEnd = strvUrl.find(':');
     if(stEnd == StdNPos) { UrlSetCode(R_NOSCHEME); return; }
     // Set scheme and error if empty
-    strScheme = strUrl.substr(stStart, stEnd);
+    strScheme = strvUrl.substr(stStart, stEnd);
     if(strScheme.empty()) { UrlSetCode(R_EMSCHEME); return; }
     // Error if scheme is invalid
     stStart = stEnd + 1;
-    if(strUrl.substr(stStart, 2) != "//") { UrlSetCode(R_INVSCHEME); return; }
+    if(strvUrl.substr(stStart, 2) != "//") { UrlSetCode(R_INVSCHEME); return; }
     // Move past scheme and find the resource part
     stStart += 2;
-    stEnd = strUrl.find('/', stStart);
+    stEnd = strvUrl.find('/', stStart);
     if(stEnd == StdNPos)
     { // Couldn't find it so the resource wasn't specified so assume the root
-      stEnd = strUrl.size();
+      stEnd = strvUrl.size();
       strResource = "/";
     } // We got the resource
-    else strResource = strUrl.substr(stEnd);
+    else strResource = strvUrl.substr(stEnd);
     // Extract entire part of authority, hostname and port
-    StdString strAHP{ strUrl.substr(stStart, stEnd - stStart) };
+    StdString strAHP{ strvUrl.substr(stStart, stEnd - stStart) };
     // Find authority delimiter and if we find it?
     size_t stAtPos = strAHP.find('@');
     if(stAtPos != StdNPos)
@@ -139,16 +137,16 @@ struct UrlBase : public ParamParser    // Members initially public
       pPort = StrToNum<Port>(strPort);
       if(pPort < P_MIN || pPort >= P_MAX) { UrlSetCode(R_INVPORT); return; }
       // Check if non-standard port
-      bNSPort = (pPort != P_HTTP && strScheme == cCommon->CommonHttp()) ||
-                (pPort != P_HTTPS && strScheme == cCommon->CommonHttps());
+      bNSPort = (pPort != P_HTTP && strScheme == cCommon->CommonHttpV()) ||
+                (pPort != P_HTTPS && strScheme == cCommon->CommonHttpsV());
     } // Port delimiter not found
     else
     { // We have the host
       strHost = strAHP;
       // But we need to guess the port
-      if(strScheme == cCommon->CommonHttp())
+      if(strScheme == cCommon->CommonHttpV())
         { pPort = P_HTTP; bSecure = false; }
-      else if(strScheme == cCommon->CommonHttps())
+      else if(strScheme == cCommon->CommonHttpsV())
         { pPort = P_HTTPS; bSecure = true; }
       else { UrlSetCode(R_UNKSCHEME); return; }
       // Is a standard port
@@ -167,10 +165,10 @@ struct UrlBase : public ParamParser    // Members initially public
     const size_t stParamsPos = strResource.find('?');
     if(stParamsPos != StdNPos)
     { // Get list of parameters and if we have them?
-      ParserReInit(strResource.substr(stParamsPos + 1), "&", '=');
-      if(!empty())
+      this->ParserReInit(strResource.substr(stParamsPos + 1), "&", '=');
+      if(!this->empty())
       { // Compare mode
-        switch(uiMode)
+        switch(uMode)
         { // No mode? Don't do anything
           case 0: break;
           // Encode parameters?
@@ -178,15 +176,15 @@ struct UrlBase : public ParamParser    // Members initially public
           { // Start rebuilding resource with first parameter
             StdOStringStream osS;
             // Get iterator for first item
-            ParamIt piIt{ cbegin() };
+            ParserStringConstIt psciIt{ this->cbegin() };
             // Start off
             osS << strResource.substr(0, stParamsPos) << '?' <<
-              CryptURLEncode(piIt->first) << '=' <<
-              CryptURLEncode(piIt->second);
+              CryptURLEncode(psciIt->first) << '=' <<
+              CryptURLEncode(psciIt->second);
             // Now the rest of the parameters
-            while(++piIt != cend())
-              osS << '&' << CryptURLEncode(piIt->first) << '=' <<
-                CryptURLEncode(piIt->second);
+            while(++psciIt != this->cend())
+              osS << '&' << CryptURLEncode(psciIt->first) << '=' <<
+                CryptURLEncode(psciIt->second);
             // Replace original resource url
             strResource = osS.str();
             // Done
@@ -196,15 +194,15 @@ struct UrlBase : public ParamParser    // Members initially public
           { // Start rebuilding resource with first parameter
             StdOStringStream osS;
             // Get iterator for first item
-            ParamIt piIt{ cbegin() };
+            ParserStringConstIt psciIt{ this->cbegin() };
             // Start off
             osS << strResource.substr(0, stParamsPos) << '?' <<
-              CryptURLDecode(piIt->first) << '=' <<
-              CryptURLDecode(piIt->second);
+              CryptURLDecode(psciIt->first) << '=' <<
+              CryptURLDecode(psciIt->second);
             // Now the rest of the parameters
-            while(++piIt != cend())
-              osS << '&' << CryptURLDecode(piIt->first) << '=' <<
-                CryptURLDecode(piIt->second);
+            while(++psciIt != this->cend())
+              osS << '&' << CryptURLDecode(psciIt->first) << '=' <<
+                CryptURLDecode(psciIt->second);
             // Replace original resource url
             strResource = osS.str();
             // Done
@@ -227,20 +225,20 @@ struct UrlBase : public ParamParser    // Members initially public
     UrlSetCode(R_GOOD);
   }
   /* -- Constructor -------------------------------------------------------- */
-  explicit UrlBase(const StdString &strUrl, const unsigned int uiMode=0)
-    { UrlParse(strUrl, uiMode); }
+  explicit UrlBase(const StdStringView &strvUrl, const unsigned uMode = 0)
+    { UrlParse(strvUrl, uMode); }
   /* -- Default constructor that does nothing ------------------------------ */
   UrlBase() : rResult(R_STANDBY), pPort(P_NONE), bSecure(false) { }
 };/* == Url collector and member class ===================================== */
 CTOR_BEGIN_DUO(Urls, Url, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Lockable,                     // Lua garbage collector instruction
-  public UrlBase                       // Url class
+  public UrlBase<>                     // Url class
 { /* -- Default constructor with no init --------------------------- */ public:
   Url() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperUrl{ cUrls, this },        // Register the object in collector
-    IdentCSlave{ cParent->CtrNext() }  // Initialise identification number
+    SerialSlave{ cParent->Serial() }   // Initialise identification number
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

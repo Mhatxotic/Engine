@@ -9,7 +9,7 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IDim {                       // Start of module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace IIntPair::P;           using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -31,14 +31,25 @@ struct Dimensions :                    // Members initially public
     { return this->IPIsEqual(dRef); }
   bool DimIsNotEqual(const Dimensions &dRef) const
     { return this->IPIsNotEqual(dRef); }
+  bool DimIsEqual(const IntType itW, const IntType itH) const
+    { return this->IPIsEqual(itW, itH); }
+  bool DimIsNotEqual(const IntType itW, const IntType itH) const
+    { return this->IPIsNotEqual(itW, itH); }
   /* -- Get ---------------------------------------------------------------- */
-  template<typename RIntType=IntType>RIntType DimGetWidth() const
+  template<typename RIntType = IntType>
+    requires StdIsArithmatic<RIntType>
+  RIntType DimGetWidth() const
     { return this->template IPGetOne<RIntType>(); }
-  template<typename RIntType=IntType>RIntType DimGetHeight() const
+  template<typename RIntType = IntType>
+    requires StdIsArithmatic<RIntType>
+  RIntType DimGetHeight() const
     { return this->template IPGetTwo<RIntType>(); }
-  template<typename RIntType,class RBase=Dimensions<RIntType>>
-    RBase DimGet() const { return this->template IPGet<RIntType,RBase>(); }
-  template<typename RIntType=IntType>RIntType DimDefGet() const
+  template<typename RIntType, class RBase = Dimensions<RIntType>>
+    requires StdIsArithmatic<RIntType>
+  RBase DimGet() const { return this->template IPGet<RIntType,RBase>(); }
+  template<typename RIntType = IntType>
+    requires StdIsArithmatic<RIntType>
+  RIntType DimDefGet() const
     { return this->template IPDefGet<RIntType>(); }
   /* -- Get reference ------------------------------------------------------ */
   IntType &DimGetWidthRef() { return this->IPGetOneRef(); }
@@ -72,13 +83,13 @@ struct Dimensions :                    // Members initially public
   /* -- Default constructor that does not need to do anything -------------- */
   Dimensions() = default;
 };/* ----------------------------------------------------------------------- */
-typedef Dimensions<GLfloat>      DimGLFloat; // Dimension of GLfloats
-typedef Dimensions<GLsizei>      DimGLSizei; // Dimension of GLsizeis
-typedef Dimensions<GLuint>       DimGLUInt;  // Dimension of GLuints
-typedef Dimensions<double>       DimDouble;  // Dimension of doubles
-typedef Dimensions<float>        DimFloat;   // Dimension of floats
-typedef Dimensions<int>          DimInt;     // Dimension of ints
-typedef Dimensions<unsigned int> DimUInt;    // Dimension of unsigned ints
+using DimGLFloat = Dimensions<GLfloat>;  // Dimension of GLfloats
+using DimGLSizei = Dimensions<GLsizei>;  // Dimension of GLsizeis
+using DimGLUInt  = Dimensions<GLuint>;   // Dimension of GLuints
+using DimDouble  = Dimensions<double>;   // Dimension of doubles
+using DimFloat   = Dimensions<float>;    // Dimension of floats
+using DimInt     = Dimensions<int>;      // Dimension of ints
+using DimUInt    = Dimensions<unsigned>; // Dimension of unsigned ints
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

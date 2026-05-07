@@ -8,7 +8,7 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IDimCoord {                  // Start of module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICoord::P;             using namespace IDim::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -44,7 +44,7 @@ struct DimCoords :                     // Members initially public
   /* -- Default constructor that zero initialises everything --------------- */
   DimCoords() = default;
 };/* ----------------------------------------------------------------------- */
-typedef DimCoords<int> DimCoInt;       // Dimension Cordinates typedef
+using DimCoInt = DimCoords<int>;       // Dimension Cordinates typedef
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -76,7 +76,7 @@ LLFUNC(Height, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().DimGetHeight()))
 // < Id:integer=The id number of the Bin object.
 // ? Returns the unique id of the Bin object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Bin:Insert
 // > Width:integer=The width of the item to insert in units

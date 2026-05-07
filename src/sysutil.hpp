@@ -11,9 +11,9 @@
 namespace ISysUtil {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IDir::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -33,44 +33,45 @@ enum SysThread : size_t                // Thread priority types
 static StdString SysError(const int iError)
 { // Convert int to DWORD as we use the same function type across platforms
   const DWORD dwError = static_cast<DWORD>(iError);
-  // Pointer to string
+  // Flags we will be using
+  constexpr const DWORD dwFlags =
+    FORMAT_MESSAGE_ALLOCATE_BUFFER |   // Let Windows allocate the buffer
+    FORMAT_MESSAGE_FROM_SYSTEM |       // Let Windows find the error message
+    FORMAT_MESSAGE_IGNORE_INSERTS;     // Ignore inserts like %1, %2, etc.
+  // Use default language id
+  constexpr const DWORD dwLanguage = MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT);
+  // Format the system error code and if we wrote something?
   LPWSTR lpszError = nullptr;
-  // Capture exceptions
-  try
-  { // Format the system error code and catch result
-    switch(const DWORD dwLen = FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|
-      FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_IGNORE_INSERTS, nullptr,
-      dwError, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-        reinterpret_cast<LPWSTR>(&lpszError), 0, nullptr))
-    { // Failed and no allocation was made so just store error code
-      case 0: return StrAppend("SE#", dwError);
-      // We can remove carriage return and free the string (fall through)
-      default: lpszError[dwLen - 3] = '\0';
-      // Just incase we don't have enough characters
-      case 1: case 2: const StdString strOut(S16toUTF(lpszError));
-                      LocalFree(lpszError);
-                      return strOut;
-    }
-  } // exception occured
+  if(const DWORD dwLen = FormatMessage(dwFlags, nullptr, dwError, dwLanguage,
+       reinterpret_cast<LPWSTR>(&lpszError), 0, nullptr)) try
+  { // Convert the output to UTF8 string, free the allocated buffer and
+    // Remove any carriage returns and line feeds and return the string with
+    // any carriage returns and line feeds chopped off.
+    StdString strOut{ S16toUTF(StdWideStringView{
+      lpszError, static_cast<size_t>(dwLen) }) };
+    LocalFree(lpszError);
+    return StrChopRef(strOut);
+  } // Exception occurred whilst building error string?
   catch(const StdException &eReason)
-  { // Free the string if allocated
+  { // Free the string if allocated and assign code and exception as output
     if(lpszError) LocalFree(lpszError);
-    // Assign the exception message as the error
-    return StrFormat("SE#$($)", dwError, eReason);
-  }
+    return StrFormat("SE#$/XC($)", dwError, eReason);
+  } // Error occurred so just stringify the error code and return it
+  else return StrAppend("SE#", dwError);
 }
 /* -- System error code ---------------------------------------------------- */
-template<typename IntType=int>static IntType SysErrorCode()
-  { return static_cast<IntType>(GetLastError()); }
+template<typename IntType = int>
+  requires StdIsIntegral<IntType>
+static IntType SysErrorCode() { return static_cast<IntType>(GetLastError()); }
 /* -- System error formatter with current error code ----------------------- */
 static StdString SysError() { return SysError(SysErrorCode()); }
 /* -- Actual interface to MessageBoxExW ------------------------------------ */
-static unsigned int SysMessage(void*const vpHandle, const StdString &strTitle,
-  const StdString &strMessage, const unsigned int uiFlags)
-    { return static_cast<unsigned int>(
+static unsigned SysMessage(void*const vpHandle, const StdString &strTitle,
+  const StdString &strMessage, const unsigned uFlags)
+    { return static_cast<unsigned>(
         MessageBoxExW(reinterpret_cast<HWND>(vpHandle),
           UTFtoS16(strMessage).data(), UTFtoS16(strTitle).data(),
-          static_cast<DWORD>(uiFlags), 0)); }
+          static_cast<DWORD>(uFlags), 0)); }
 /* -- Set thread priority -------------------------------------------------- */
 static bool SysSetThreadPriority(const SysThread stLevel)
 { // STP_* id to priority lookup table
@@ -95,19 +96,31 @@ static void SysSetThreadName(const char*const cpName)
   } // Initialiser
   tInfo { 0x1000, cpName, static_cast<DWORD>(-1), 0 }; // Was ~DWORD{0}
 #pragma pack(pop)
+  // This next bit of code is required for debugger which causes a warning but
+  // on CLang-CL but however is still parsed and machine code emitted.
+#if defined(__clang__)
+# pragma clang diagnostic ignored "-Wlanguage-extension-token"
+# pragma clang diagnostic push
+#endif
   // Send message to debugger to name the thread
-  __try { RaiseException(0x406D1388, 0,
-            sizeof(tInfo)/sizeof(ULONG_PTR), (ULONG_PTR*)&tInfo); }
+  __try {
+    RaiseException(0x406D1388, 0,
+      sizeof(tInfo) / sizeof(ULONG_PTR),
+      reinterpret_cast<ULONG_PTR*>(&tInfo)); }
   __except(EXCEPTION_CONTINUE_EXECUTION) {}
+  // Restore original warning
+#if defined(__clang__)
+# pragma clang diagnostic pop
+#endif
 }
 /* ------------------------------------------------------------------------- */
 #elif defined(MACOS)                   // Using mac?
 /* -- Actual interface to show a message box ------------------------------- */
-static unsigned int SysMessage(void*const, const StdString &strTitle,
-  const StdString &strMessage, const unsigned int uiFlags)
+static unsigned SysMessage(void*const, const StdString &strTitle,
+  const StdString &strMessage, const unsigned uFlags)
 { // Make an autorelease ptr for Apple strings. Not sure if Apple provides a
   // non-pointer based CStringRef so we'll just remove it instead!
-  typedef StdUniquePtr<const void, function<decltype(CFRelease)>> CFAutoRelPtr;
+  using CFAutoRelPtr = StdUniquePtr<const void, function<decltype(CFRelease)>>;
   // Setup dialogue title string with autorelease and if succeeded?
   if(const CFAutoRelPtr csrTitle{
     CFStringCreateWithCString(kCFAllocatorDefault, strTitle.data(),
@@ -140,20 +153,18 @@ static unsigned int SysMessage(void*const, const StdString &strTitle,
           // Dispatch the message box and return result if successful
           if(const CFAutoRelPtr pDlg{
             CFUserNotificationCreate(kCFAllocatorDefault, 0,
-              (uiFlags & MB_ICONSTOP) ?
+              (uFlags & MB_ICONSTOP) ?
                 kCFUserNotificationStopAlertLevel
-            :((uiFlags & MB_ICONEXCLAMATION) ?
+            :((uFlags & MB_ICONEXCLAMATION) ?
                 kCFUserNotificationCautionAlertLevel
-            :((uiFlags & MB_ICONINFORMATION) ?
+            :((uFlags & MB_ICONINFORMATION) ?
                 kCFUserNotificationPlainAlertLevel
             : kCFUserNotificationNoteAlertLevel)), &nRes,
               reinterpret_cast<CFDictionaryRef>(cfdrDict.get())),
               CFRelease })
-            return static_cast<unsigned int>(nRes);
+            return static_cast<unsigned>(nRes);
         }
       }
-   // Get handle to wide error output in terminal
-  static auto &StdWcErr = ::std::wcerr;
   // Didn't work so put in stdout
   StdWcErr << UtfDecoder{ strTitle }.UtfWide() << ": "
            << UtfDecoder{ strMessage }.UtfWide() << StdIOSEndLine;
@@ -193,8 +204,8 @@ static bool SysSetThreadPriority(const SysThread stLevel)
 #  undef Bool                          // To prevent problems with other apis
 # endif                                // Done checking for 'Bool'
 /* -- Actual interface to show a message box ------------------------------- */
-static unsigned int SysMessage(void*const, StdString strTitle,
-  StdString strMessage, const unsigned int uiFlags)
+static unsigned SysMessage(void*const, StdString strTitle,
+  StdString strMessage, const unsigned uFlags)
 { // Print the error in console
   fprintf(stderr, "%s: %s\n", strTitle.data(), strMessage.data());
   // Eligable directories for dialog box elf binaries
@@ -222,8 +233,8 @@ static unsigned int SysMessage(void*const, StdString strTitle,
   } }; // Command-line safety replacements
   const StrPairList splReplace
     { { "\"", "\\\"" }, { "'", "\\\'" }, { "`", "\\`" } };
-  StrReplaceEx(strTitle, splReplace);
-  StrReplaceEx(strMessage, splReplace);
+  StrReplaceExRef(strTitle, splReplace);
+  StrReplaceExRef(strMessage, splReplace);
   // Search for one of these apps now
   for(const DlgBoxApplication &dbaApp : dbaaApps)
   { // In one of these directories
@@ -253,15 +264,16 @@ static bool SysSetThreadPriority(const SysThread stPriority) { return true; }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Windows is defined?
 /* -- System message without a handle -------------------------------------- */
-static unsigned int SysMessage(const StdString &strTitle,
-  const StdString &strMessage, const unsigned int uiFlags)
+static unsigned SysMessage(const StdString &strTitle,
+  const StdString &strMessage, const unsigned uFlags)
     { return SysMessage(nullptr, strTitle, strMessage,
-        MB_SYSTEMMODAL|uiFlags); }
+        MB_SYSTEMMODAL|uFlags); }
 /* ------------------------------------------------------------------------- */
 #else                                  // Not using Windows target? (POSIX)
 /* -- System error code ---------------------------------------------------- */
-template<typename IntType=int>static IntType SysErrorCode()
-  { return static_cast<IntType>(StdGetError()); }
+template<typename IntType = int>
+  requires StdIsIntegral<IntType>
+static IntType SysErrorCode() { return static_cast<IntType>(StdGetError()); }
 /* -- System error formatter with specified error code --------------------- */
 static StdString SysError(const int iError) { return StrFromErrNo(iError); }
 /* -- System error formatter with current error code ----------------------- */
@@ -276,9 +288,9 @@ static void SysSetThreadName(const char*const cpName)
     cpName);
 }
 /* -- System message without a handle -------------------------------------- */
-static unsigned int SysMessage(const StdString &strTitle,
-  const StdString &strMessage, const unsigned int uiFlags)
-{ return SysMessage(nullptr, strTitle, strMessage, uiFlags); }
+static unsigned SysMessage(const StdString &strTitle,
+  const StdString &strMessage, const unsigned uFlags)
+{ return SysMessage(nullptr, strTitle, strMessage, uFlags); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Not using Windows target
 /* ------------------------------------------------------------------------- */

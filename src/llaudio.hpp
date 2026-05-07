@@ -17,9 +17,10 @@
 namespace LLAudio {                    // Audio namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAudio::P;             using namespace ILua::P;
-using namespace IOal::P;               using namespace ISample::P;
-using namespace ISource::P;            using namespace IStream::P;
-using namespace IVideo::P;             using namespace Common;
+using namespace IMixer::P;             using namespace IOal::P;
+using namespace ISample::P;            using namespace ISource::P;
+using namespace IStream::P;            using namespace IVideo::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Audio.* namespace functions                                         ## **
@@ -29,25 +30,25 @@ using namespace IVideo::P;             using namespace Common;
 // < Volume:number=Current master volume (0 to 1).
 // ? Returns global/master volume.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetGlobalVolume, 1, LuaUtilPushVar(lS, cSources->fGVolume.load()))
+LLFUNC(GetGlobalVolume, 1, LuaUtilPushVar(lS, cMixer->MixerGetGlobalVolume()))
 /* ========================================================================= */
 // $ Audio.GetStreamVolume
 // < Volume:number=Current streams volume (0 to 1).
 // ? Returns master volume of all stream classes.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetStreamVolume, 1, LuaUtilPushVar(lS, cSources->fMVolume.load()))
+LLFUNC(GetStreamVolume, 1, LuaUtilPushVar(lS, cMixer->MixerGetStreamVolume()))
 /* ========================================================================= */
 // $ Audio.GetSampleVolume
 // < Volume:number=Current samples volume (0 to 1).
 // ? Returns master volume of all sample classes.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetSampleVolume, 1, LuaUtilPushVar(lS, cSources->fSVolume.load()))
+LLFUNC(GetSampleVolume, 1, LuaUtilPushVar(lS, cMixer->MixerGetSampleVolume()))
 /* ========================================================================= */
 // $ Audio.GetVideoVolume
 // < Volume:number=Current samples volume (0 to 1).
 // ? Returns master volume of all video classes.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetVideoVolume, 1, LuaUtilPushVar(lS, cSources->fVVolume.load()))
+LLFUNC(GetVideoVolume, 1, LuaUtilPushVar(lS, cMixer->MixerGetVideoVolume()))
 /* ========================================================================= */
 // $ Audio.OnUpdate
 // > Func:function=The callback function to use

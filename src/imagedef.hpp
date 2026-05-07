@@ -88,16 +88,16 @@ struct ImageSlot :                     // Members initially public
   public Memory,                       // Memory data
   public DimUInt                       // Bitmap dimensions
 { /* -- Init constructor --------------------------------------------------- */
-  ImageSlot(Memory &&mData, const unsigned int uiW, const unsigned int uiH) :
+  ImageSlot(Memory &&mData, const unsigned uW, const unsigned uH) :
     /* -- Initialisers ----------------------------------------------------- */
     Memory{ StdMove(mData) },          // Move memory in place
-    DimUInt{ uiW, uiH }                // Set dimensions
+    DimUInt{ uW, uH }                  // Set dimensions
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-typedef StdVector<ImageSlot> SlotList; // list of bitmaps
+using SlotList = StdVector<ImageSlot>; // list of bitmaps
 /* ------------------------------------------------------------------------- */
-enum BitDepth : unsigned int           // Human readable bit-depths
+enum BitDepth : unsigned               // Human readable bit-depths
 { /* ----------------------------------------------------------------------- */
   BD_NONE                        =  0, // Not initialised yet
   BD_BINARY                      =  1, // Binary format (8 pixels per byte)
@@ -128,37 +128,35 @@ class ImageData :                      // Members initially private
     DimSwap(imdRef);
     slSlots.swap(imdRef.slSlots);
     // Swap values
-    swap(bdDepth, imdRef.bdDepth);
-    swap(byDepth, imdRef.byDepth);
-    swap(ttType, imdRef.ttType);
-    swap(stAlloc, imdRef.stAlloc);
+    StdSwap(bdDepth, imdRef.bdDepth);
+    StdSwap(byDepth, imdRef.byDepth);
+    StdSwap(ttType, imdRef.ttType);
+    StdSwap(stAlloc, imdRef.stAlloc);
     // Swap tiles and dimensions
     duTileOR.DimSwap(imdRef.duTileOR);
-    swap(stTiles, imdRef.stTiles);
+    StdSwap(stTiles, imdRef.stTiles);
   }
   /* -- Set width and height and return if they are valid ------------------ */
-  bool SetDimSafe(const unsigned int uiNWidth, const unsigned int uiNHeight)
-    { DimSet(uiNWidth, uiNHeight); return uiNWidth && uiNHeight; }
+  bool SetDimSafe(const unsigned uNWidth, const unsigned uNHeight)
+    { DimSet(uNWidth, uNHeight); return uNWidth && uNHeight; }
   /* -- Set bits per pixel ------------------------------------------------- */
   void SetBitsPerPixel(const BitDepth bdNBPP) { bdDepth = bdNBPP; }
-  template<typename IntType>void SetBitsPerPixelCast(const IntType uiNBPP)
-    { SetBitsPerPixel(static_cast<BitDepth>(uiNBPP)); }
+  void SetBitsPerPixelCast(const auto aNBPP)
+    { SetBitsPerPixel(static_cast<BitDepth>(aNBPP)); }
   /* -- Set bytes per pixel ------------------------------------------------ */
   void SetBytesPerPixel(const ByteDepth byNBPP) { byDepth = byNBPP; }
-  template<typename IntType>void SetBytesPerPixelCast(const IntType uiNBPP)
-    { SetBytesPerPixel(static_cast<ByteDepth>(uiNBPP)); }
+  void SetBytesPerPixelCast(const auto aNBPP)
+    { SetBytesPerPixel(static_cast<ByteDepth>(aNBPP)); }
   /* -- Set bits per pixel and auto update bytes per pixel ----------------- */
   void SetBitsAndBytesPerPixel(const BitDepth bdNBPP)
     { SetBitsPerPixel(bdNBPP); SetBytesPerPixelCast(bdNBPP / 8); }
-  template<typename IntType>
-    void SetBitsAndBytesPerPixelCast(const IntType uiNBPP)
-      { SetBitsAndBytesPerPixel(static_cast<BitDepth>(uiNBPP)); }
+  void SetBitsAndBytesPerPixelCast(const auto aNBPP)
+    { SetBitsAndBytesPerPixel(static_cast<BitDepth>(aNBPP)); }
   /* -- Set bytes per pixel and auto update bits per pixel ----------------- */
   void SetBytesAndBitsPerPixel(const ByteDepth byNBPP)
     { SetBytesPerPixel(byNBPP); SetBitsPerPixelCast(byNBPP * 8); }
-  template<typename IntType>
-    void SetBytesAndBitsPerPixelCast(const IntType uiNBPP)
-      { SetBytesAndBitsPerPixel(static_cast<ByteDepth>(uiNBPP)); }
+  void SetBytesAndBitsPerPixelCast(const auto aNBPP)
+    { SetBytesAndBitsPerPixel(static_cast<ByteDepth>(aNBPP)); }
   /* ----------------------------------------------------------------------- */
   size_t GetAlloc() const { return stAlloc; }
   /* ----------------------------------------------------------------------- */
@@ -208,20 +206,15 @@ class ImageData :                      // Members initially private
   size_t TotalPixels() const
     { return DimGetWidth<size_t>() * DimGetHeight<size_t>(); }
   /* ----------------------------------------------------------------------- */
-  template<typename IntType=decltype(bdDepth)>
-    IntType GetBitsPerPixel() const
-      { return static_cast<IntType>(bdDepth); }
+  decltype(bdDepth) GetBitsPerPixel() const { return bdDepth; }
   /* ----------------------------------------------------------------------- */
-  template<typename IntType=decltype(byDepth)>
-    IntType GetBytesPerPixel() const
-      { return static_cast<IntType>(byDepth); }
+  decltype(byDepth) GetBytesPerPixel() const { return byDepth; }
   /* -- Get slots ---------------------------------------------------------- */
   SlotList &GetSlots() { return slSlots; }
   /* -- Add a new slot ----------------------------------------------------- */
-  void AddSlot(Memory &mData, const unsigned int uiSWidth,
-    const unsigned int uiSHeight)
+  void AddSlot(Memory &mData, const unsigned uSWidth, const unsigned uSHeight)
   { // Add the slot moving the memory over
-    GetSlots().push_back({ StdMove(mData), uiSWidth, uiSHeight });
+    GetSlots().push_back({ StdMove(mData), uSWidth, uSHeight });
     // Add to memory bytes allocated counter
     IncreaseAlloc(GetSlots().back().MemSize());
   }

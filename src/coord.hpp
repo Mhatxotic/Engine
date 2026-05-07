@@ -8,7 +8,7 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace ICoord {                     // Start of module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace IIntPair::P;           using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -20,12 +20,15 @@ struct Coord :                         // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   private Base                         // Base double value class
 { /* -- Get ---------------------------------------------------------------- */
-  template<typename RInt=IntType>RInt CoordGetX() const
-    { return this->template IPGetOne<RInt>(); }
-  template<typename RInt=IntType>RInt CoordGetY() const
-    { return this->template IPGetTwo<RInt>(); }
-  template<typename RInt=IntType>RInt CoordDefGet() const
-    { return this->template IPDefGet<RInt>(); }
+  template<typename RIntType = IntType>
+    requires StdIsArithmatic<RIntType>
+  RIntType CoordGetX() const { return this->template IPGetOne<RIntType>(); }
+  template<typename RIntType = IntType>
+    requires StdIsArithmatic<RIntType>
+  RIntType CoordGetY() const { return this->template IPGetTwo<RIntType>(); }
+  template<typename RIntType = IntType>
+    requires StdIsArithmatic<RIntType>
+  RIntType CoordDefGet() const { return this->template IPDefGet<RIntType>(); }
   /* -- Get reference ------------------------------------------------------ */
   IntType &CoordGetXRef() { return this->IPGetOneRef(); }
   IntType &CoordGetYRef() { return this->IPGetTwoRef(); }
@@ -73,7 +76,7 @@ struct Coord :                         // Members initially public
   /* -- Default constructor that does not need to do anything -------------- */
   Coord() = default;
 };/* ----------------------------------------------------------------------- */
-typedef Coord<int> CoordInt;           // Cordinates typedef
+using CoordInt = Coord<int>;           // Cordinates typedef
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

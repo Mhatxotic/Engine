@@ -53,14 +53,14 @@ LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cJsons)))
 // < Id:integer=The id number of the Json object.
 // ? Returns the unique id of the Json object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Json:Name
 // < Name:string=Name of the json.
 // ? If this json was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Json:Sort
 // > Descending:bool=Descending (true) or ascending (false) flag.
@@ -130,9 +130,9 @@ LLRSEND                                // Json:* member functions end
 // ? to 255 due to limitations with LUA's hardcoded stack level.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Asset, 1, const AgFilename aFilename{lS,1};
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
-  AcJson{lS}().SyncInitArray(aIdentifier, aAsset))
+  AcJson{lS}().SyncInitArray(aName(), aAsset))
 /* ========================================================================= */
 // $ Json.AssetAsync
 // > Id:string=The user specified identifier of the asset.
@@ -144,10 +144,10 @@ LLFUNC(Asset, 1, const AgFilename aFilename{lS,1};
 /* ------------------------------------------------------------------------- */
 LLFUNC(AssetAsync, 0,
   LuaUtilCheckParams(lS, 5);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcJson{lS}().AsyncInitArray(lS, aIdentifier, "jsonasset", aAsset))
+  AcJson{lS}().AsyncInitArray(lS, aName(), "jsonasset", aAsset))
 /* ========================================================================= */
 // $ Json.Count
 // < Count:integer=Total number of jsons created.
@@ -184,9 +184,9 @@ LLFUNC(FileAsync, 0,
 // ? to 255 due to limitations with LUA's hardcoded stack level.
 /* ------------------------------------------------------------------------- */
 LLFUNC(String, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   AgMbString aCode{lS, 2};
-  AcJson{lS}().SyncInitArray(aIdentifier, aCode))
+  AcJson{lS}().SyncInitArray(aName(), aCode))
 /* ========================================================================= */
 // $ Json.StringAsync
 // > Id:string=The user specified identifier of the asset.
@@ -198,10 +198,10 @@ LLFUNC(String, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(StringAsync, 0,
   LuaUtilCheckParams(lS, 5);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   AgMbString aCode{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcJson{lS}().AsyncInitArray(lS, aIdentifier, "jsonstring", aCode));
+  AcJson{lS}().AsyncInitArray(lS, aName(), "jsonstring", aCode));
 /* ========================================================================= */
 // $ Json.Table
 // > Table:string=The string of JSON encoded data to decode

@@ -59,14 +59,14 @@ LLFUNC(Duration, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().GetDuration()))
 // < Id:integer=The id number of the Sample object.
 // ? Returns the unique id of the Sample object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Sample:Name
 // < Name:string=Name of the sample.
 // ? If this sample was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Sample:Play
 // > Gain:number=Volume of sample to play at.
@@ -96,13 +96,15 @@ LLFUNC(Play, 0,
 // ? specified 2D panning position. The source that this sample spawns is
 // ? managed internally. See PlayEx() if you need to manage the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(PlayEx, 2,
+LLFUNCBEGIN(PlayEx)
   const AgSample aSample{lS, 1};
   const AgALfloatLG aGain{lS, 2, 0.0f, 1.0f},
                     aPan{lS, 3, -1.0f, 1.0f};
   const AgALfloat aPitch{lS, 4};
   const AgBoolean aLooping{lS, 5};
-  aSample().Play(lS, aGain, aPan, aPitch, aLooping))
+  const int iReturn =
+    static_cast<int>(aSample().Play(lS, aGain, aPan, aPitch, aLooping));
+LLFUNCENDEX(iReturn)
 /* ========================================================================= */
 // $ Sample:Spawn
 // < Class:Source=The source created from the sample or left channel source.
@@ -110,7 +112,9 @@ LLFUNC(PlayEx, 2,
 // ? Spawns a new source from the sample. It is initially stopped and
 // ? uninitialised in a 3-D state.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Spawn, 2, AgSample{lS, 1}().Spawn(lS))
+LLFUNCBEGIN(Spawn)
+  const int iReturn = static_cast<int>(AgSample{lS, 1}().Spawn(lS));
+LLFUNCENDEX(iReturn)
 /* ========================================================================= */
 // $ Sample:Stop
 // < Count:integer=Number of source buffers stopped;

@@ -12,13 +12,18 @@ namespace IMutex {                     // Start of private module namespace
 using namespace IStd::P;               using ::std::invoke;
 using ::std::lock_guard;               using ::std::mutex;
 using ::std::scoped_lock;              using ::std::unique_lock;
+/* -- Required to fix (-Wctad-maybe-unsupported) with scoped_lock ctor ----- */
+template<class...VarArgs>
+  static auto MutexMakeScopedLock(VarArgs &&...vaArgs)
+{ return scoped_lock<StdRemoveReference<VarArgs>...>
+    (StdForward<VarArgs>(vaArgs)...); }
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Dependencies and types ----------------------------------------------- */
 using ::std::condition_variable;       // Condition variable alias
 using ::std::try_to_lock;              // Try to lock and continue if failed
-typedef lock_guard<mutex> LockGuard;   // Shortcut to a mutex lock guard
-typedef unique_lock<mutex> UniqueLock; // Shortcut to a mutex unique lock
+using LockGuard = lock_guard<mutex>;   // Shortcut to a mutex lock guard
+using UniqueLock = unique_lock<mutex>; // Shortcut to a mutex unique lock
 /* -- Dummy mutex lock ----------------------------------------------------- */
 struct mutexnoop
 { /* -- No-op lock/unlock/try_lock ----------------------------------------- */
@@ -60,7 +65,8 @@ template<class MutexType>class Mutex   // Members initially private
   template<typename Func, typename...Args>
     decltype(auto) MutexScopedCall(Func &&fCb, Args&&...aArgs)
   { // Lock access to the mutex and call the requested function
-    const scoped_lock slLock{ MutexGet(), StdForward<Args>(aArgs)... };
+    const auto slLock{
+      MutexMakeScopedLock(MutexGet(), StdForward<Args>(aArgs)...) };
     return invoke(StdForward<Func>(fCb));
   }
   /* -- Default constructor to initialise random uuid ---------------------- */

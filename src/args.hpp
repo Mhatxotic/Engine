@@ -18,7 +18,9 @@ struct Args :                          // Arguments list class
   /* -- Base classes ------------------------------------------------------- */
   public StrVector                     // A vector of strings
 { /* -- Constructor with string argument ----------------------------------- */
-  explicit Args(const StdString &strArgs)
+  template<typename StrType>
+    requires StdIsString<StrType>
+  explicit Args(const StrType &strArgs)
   { // Get beginning position of usable character and return if not found
     const size_t stFirst = strArgs.find_first_not_of(' ');
     if(stFirst == StdNPos) return;
@@ -88,7 +90,9 @@ struct Args :                          // Arguments list class
   /* -- Return if list is empty -------------------------------------------- */
   operator bool() const { return !empty(); }
 };/* -- Build an array of arguments from a string -------------------------- */
-static Args ArgsBuildSafe(const StdString &strArgs)
+template<typename StrType>
+  requires StdIsString<StrType>
+static Args ArgsBuildSafe(const StrType &strArgs)
   { return strArgs.empty() ? Args{} : Args{ strArgs }; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

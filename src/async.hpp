@@ -24,8 +24,8 @@ using namespace IFileMap::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Prototypes ----------------------------------------------------------- */
-static FileMap AssetExtract(const StdString&); // Extract files from archives
-static FileMap AssetLoadFromDisk(const StdString&); // Load file from disk
+static FileMap AssetExtract(const StdStringView&); // Extract from archives
+static FileMap AssetLoadFromDisk(const StdStringView&); // Load file from disk
 static size_t AssetGetPipeBufferSize(); // Get pipe buffer size
 /* ------------------------------------------------------------------------- */
 }                                      // End of public namespace
@@ -37,16 +37,17 @@ namespace IASync {                     // Start of private module namespace
 using namespace IAsset::P;             using namespace IClock::P;
 using namespace IChrono::P;            using namespace ICollector::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFileMap::P;           using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaEvt::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IFileMap::P;           using namespace ILog::P;
+using namespace ILuaEvt::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IName::P;
 using namespace IRefCtr::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
+using namespace IString::P;            using namespace ITime::P;
+using namespace ISysPipe::P;           using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-enum ASyncProgressCommand : unsigned int // For lua callback events
+enum ASyncProgressCommand : unsigned   // For lua callback events
 { /* ----------------------------------------------------------------------- */
   APC_EXECSTART,                       // Exec started (2=Pid)
   APC_EXECDATAWRITE,                   // Exec writing data (2=Pos,3=Total)
@@ -54,11 +55,11 @@ enum ASyncProgressCommand : unsigned int // For lua callback events
 };/* ----------------------------------------------------------------------- */
 template<class MemberType, class ColType>class AsyncLoader :
   /* -- Base classes ------------------------------------------------------- */
-  public virtual Ident,                // Reference to name of object
+  public virtual NameStr,              // Reference to name of object
   public Memory,                       // Loading from memory data (reusable)
   public RefCtrMaster<>                // Ref counter to protect from destructs
 { /* -- Private typedefs ------------------------------------------ */ private:
-  enum AsyncResult : unsigned int      // Async loading results
+  enum AsyncResult : unsigned          // Async loading results
   { /* --------------------------------------------------------------------- */
     AR_STANDBY,                        // Loading has not started
     AR_LOADING,                        // Resource is loading
@@ -83,7 +84,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     LR_ERROR,                          // [3] Ref to the error callback
     LR_MAX                             // [4] Maximum lua references
   };/* --------------------------------------------------------------------- */
-  typedef LuaEvtSlave<MemberType,LR_MAX> LuaEvtCallback;
+  using LuaEvtCallback = LuaEvtSlave<MemberType, LR_MAX>;
   /* -- Initialised in parent class ---------------------------------------- */
   MemberType      &mtAsyncOwner;       // Parent collector that owns this
   EvtMainCmd       emcAsyncCmd;        // Event command to fire on load
@@ -92,7 +93,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   Thread           tAsyncThread;       // Asynchronous loading
   StdString        strAsyncError;      // The last error exception
   ASyncCmdType     asctAsyncType;      // Async load init type
-  AtomicUInt       auiAsyncPid;        // Pid of executing process
+  AtomicUnsigned   auAsyncPid;         // Pid of executing process
   /* -- Dispatch event without parameter ----------------------------------- */
   void AsyncCompletionDispatch(const AsyncResult arResult)
   { // Signal events handler to execute event callback on the next frame.
@@ -135,8 +136,8 @@ template<class MemberType, class ColType>class AsyncLoader :
     const size_t stWrote = spProcess.Send(MemRead(stPosition), stBuffer);
     if(stWrote != stBuffer)
       XCS("Not enough data written to process pipe!",
-        "Ident",    spProcess.IdentGet(), "Pid",    spProcess.GetPid(),
-        "Expected", stBuffer,             "Actual", stWrote,
+        "Ident",    spProcess.NameGet(), "Pid",    spProcess.GetPid(),
+        "Expected", stBuffer,            "Actual", stWrote,
         "Position", stPosition);
     // Move forward
     stPosition += stBuffer;
@@ -154,7 +155,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     strAsyncError.shrink_to_fit();
     // Clear other members
     asctAsyncType = BA_NONE;
-    auiAsyncPid = 0;
+    auAsyncPid = 0;
     // Clear references and state or Lua's GC won't ever delete the class
     lecAsync.LuaRefDeInit();
   }
@@ -171,11 +172,11 @@ template<class MemberType, class ColType>class AsyncLoader :
   { // Duration of execution
     const Chrono chExecute;
     // Open pipe to application
-    SysPipe spProcess{ IdentGet() };
+    SysPipe spProcess{ NameGet() };
     // Record pid. This is so the destructor can kill it on exit
-    auiAsyncPid = spProcess.GetPid();
+    auAsyncPid = spProcess.GetPid();
     // Send progress event
-    AsyncProgress(APC_EXECSTART, static_cast<uint64_t>(auiAsyncPid.load()));
+    AsyncProgress(APC_EXECSTART, static_cast<uint64_t>(auAsyncPid.load()));
     // Get requested buffer size
     const size_t stBuffer = AssetGetPipeBufferSize();
     // If we have data to send?
@@ -198,7 +199,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       // Report that we write data
       cLog->LogInfoExSafe("Async pipe wrote $ bytes to stdin of pid $ in $!",
         stPosition, spProcess.GetPid(),
-        StrShortFromDuration(chExecute.CCDeltaToDouble()));
+        TimeToShortDuration(chExecute.CCDeltaToDouble()));
       // Clear the memory to re-use for output
       MemDeInit();
     } // List of output
@@ -216,12 +217,12 @@ template<class MemberType, class ColType>class AsyncLoader :
     } // Finished with pipe. Also gets the exit code too.
     spProcess.Finish();
     // Pid no longer valid
-    auiAsyncPid = 0;
+    auAsyncPid = 0;
     // Log pipe result.
     cLog->LogInfoExSafe(
       "Async pipe returned $ bytes and exit code $ from pid $ in $!",
       stTotalRead, spProcess.SysPipeBaseGetStatus(), spProcess.GetPid(),
-      StrShortFromDuration(chExecute.CCDeltaToDouble()));
+      TimeToShortDuration(chExecute.CCDeltaToDouble()));
     // If we have no memory stored? Return exit code
     if(!stTotalRead) return spProcess.SysPipeBaseGetStatus();
     // Initialise memory for program output data block
@@ -254,11 +255,11 @@ template<class MemberType, class ColType>class AsyncLoader :
   }
   /* -- Move the stored memory block into a new filemap and parse it ------- */
   void AsyncParseMemory()
-    { FileMap fmData{ IdentGet(), StdMove(*this), cmSys.GetTimeS() };
+    { FileMap fmData{ NameGet(), StdMove(*this), cmSys.GetTimeS() };
       AsyncParseFileMap(fmData); }
   /* -- Load the specified file and parse it ------------------------------- */
   void AsyncParseFile()
-    { FileMap fmData{ AssetExtract(IdentGet()) };
+    { FileMap fmData{ AssetExtract(NameGet()) };
       AsyncParseFileMap(fmData); }
   /* -- Async off-main thread function ------------------------------------- */
   ThreadStatus AsyncThreadMain(Thread&)
@@ -311,10 +312,10 @@ template<class MemberType, class ColType>class AsyncLoader :
     }
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncInit(lua_State*const lsS, const StdString &strIdent,
-    const StdString &strLabel)
+  void AsyncInit(lua_State*const lsS, const StdStringView &strvIdent,
+    const StdStringView &strvLabel)
   { // Set the filename
-    IdentSet(strIdent);
+    NameSet(strvIdent);
     // Parse the class, error and success functions.
     lecAsync.LuaEvtInitEx(lsS);
     // Save the current stack because if an error occurs asynchronously, the
@@ -322,14 +323,14 @@ template<class MemberType, class ColType>class AsyncLoader :
     strAsyncError = StdMove(LuaUtilStack(lsS));
     // Begin async thread
     tAsyncThread.ThreadInit(
-      StrAppend(strLabel, ':', mtAsyncOwner.CtrGet()),
-      bind(&AsyncLoader<MemberType,ColType>::AsyncThreadMain, this, _1),
+      StrAppend(strvLabel, ':', mtAsyncOwner.Serial()),
+      bind(&AsyncLoader<MemberType, ColType>::AsyncThreadMain, this, _1),
         this);
   }
   /* ----------------------------------------------------------------------- */
   void AsyncStop()
   { // If a pid is set then we need to kill it
-    if(auiAsyncPid) { cSystem->TerminatePid(auiAsyncPid); auiAsyncPid = 0; }
+    if(auAsyncPid) { cSystem->TerminatePid(auAsyncPid); auAsyncPid = 0; }
     // Wait for thread to terminate
     tAsyncThread.ThreadDeInit();
   }
@@ -351,7 +352,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     } // Invalid userdata?
     else cLog->LogErrorExSafe("AsyncLoader got invalid params in failure "
       "event $ for '$' with luastate($) and fref($) from $ params!",
-      emeEvent.cCmd, IdentGet(), lecAsync.LuaRefStateIsSet(),
+      emeEvent.cCmd, NameGet(), lecAsync.LuaRefStateIsSet(),
       lecAsync.LuaRefGetFunc(LR_ERROR), emeEvent.eaArgs.size());
   }
   /* -- Async do protected dispatch (assumes params already on lua stack) -- */
@@ -400,40 +401,40 @@ template<class MemberType, class ColType>class AsyncLoader :
     lecAsync.LuaEvtDeInit();
   }
   /* -- The thread only calls LoadData() and thats it ---------------------- */
-  void AsyncInitNone(lua_State*const lsS, const StdString &strIdent,
-    const StdString &strLabel)
+  void AsyncInitNone(lua_State*const lsS, const StdStringView &strvIdent,
+    const StdStringView &strvLabel)
   { // Loading from memory
     asctAsyncType = BA_NONE;
     // Init rest of members
-    AsyncInit(lsS, strIdent, strLabel);
+    AsyncInit(lsS, strvIdent, strvLabel);
   }
   /* -- The thread loads from a filemap and calls LoadData() --------------- */
-  void AsyncInitFile(lua_State*const lsS, const StdString &strFilename,
-    const StdString &strLabel)
+  void AsyncInitFile(lua_State*const lsS, const StdStringView &strvFilename,
+    const StdStringView &strvLabel)
   { // Loading from file
     asctAsyncType = BA_FILE;
     // Init rest of members
-    AsyncInit(lsS, strFilename, strLabel);
+    AsyncInit(lsS, strvFilename, strvLabel);
   }
   /* -- The thread loads from the command-line ----------------------------- */
-  void AsyncInitCmdLine(lua_State*const lsS, const StdString &strCmdLine,
-    const StdString &strLabel, Memory &mbInput)
+  void AsyncInitCmdLine(lua_State*const lsS, const StdStringView &strvCmdLine,
+    const StdStringView &strvLabel, Memory &mbInput)
   { // Loading from command-line
     asctAsyncType = BA_EXECUTE;
     // Set memory sent to stdin
     MemSwap(mbInput);
     // Init rest of members
-    AsyncInit(lsS, strCmdLine, strLabel);
+    AsyncInit(lsS, strvCmdLine, strvLabel);
   }
   /* -- The thread loads from existing memory and calls LoadData() --------- */
-  void AsyncInitArray(lua_State*const lsS, const StdString &strIdent,
-    const StdString &strLabel, Memory &mData)
+  void AsyncInitArray(lua_State*const lsS, const StdStringView &strvIdent,
+    const StdStringView &strvLabel, Memory &mData)
   { // Set data to load from
     MemSwap(mData);
     // Loading from memory
     asctAsyncType = BA_MEMORY;
     // Init rest of members
-    AsyncInit(lsS, strIdent, strLabel);
+    AsyncInit(lsS, strvIdent, strvLabel);
   }
   /* -- Send load data update and register in collector -------------------- */
   void SyncLoadDataAndRegister(FileMap &fmData) const
@@ -443,38 +444,38 @@ template<class MemberType, class ColType>class AsyncLoader :
     static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
   }
   /* -- Init from file synchronously from disk only ------------------------ */
-  void SyncInitFileDisk(const StdString &strFilename)
+  void SyncInitFileDisk(const StdStringView &strvFilename)
   { // Set filename
-    IdentSet(strFilename);
+    NameSet(strvFilename);
     // Load from specified file
-    FileMap fmData{ AssetLoadFromDisk(strFilename) };
+    FileMap fmData{ AssetLoadFromDisk(strvFilename) };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from file synchronously --------------------------------------- */
-  void SyncInitFile(const StdString &strFilename)
+  void SyncInitFile(const StdStringView &strvFilename)
   { // Set filename
-    IdentSet(strFilename);
+    NameSet(strvFilename);
     // Load from specified file
-    FileMap fmData{ AssetExtract(strFilename) };
+    FileMap fmData{ AssetExtract(strvFilename) };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from array synchronously -------------------------------------- */
-  void SyncInitArray(const StdString &strIdent, Memory &mData)
+  void SyncInitArray(const StdStringView &strvIdent, Memory &mData)
   { // Set identifier
-    IdentSet(strIdent);
+    NameSet(strvIdent);
     // Put the memory block into a file map and load the block
-    FileMap fmData{ strIdent, StdMove(mData), cmSys.GetTimeS() };
+    FileMap fmData{ strvIdent, StdMove(mData), cmSys.GetTimeS() };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from file synchronously with filename checking ---------------- */
-  void SyncInitFileSafe(const StdString &strFilename)
+  void SyncInitFileSafe(const StdStringView &strvFilename)
   { // Set filename
-    IdentSet(strFilename);
+    NameSet(strvFilename);
     // Load from specified file from archives or disk
-    FileMap fmData{ AssetExtract(strFilename) };
+    FileMap fmData{ AssetExtract(strvFilename) };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
@@ -484,21 +485,21 @@ template<class MemberType, class ColType>class AsyncLoader :
     // [0]=Pointer to socket class, [1]=Event list id, [2]=Status
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Event result
-    const AsyncResult uiAsyncResult =
+    const AsyncResult uAsyncResult =
       lecAsync.template LuaEvtsCheckParams<3>(emaArgs) ?
         static_cast<AsyncResult>(emaArgs[2].ULong()) : AR_UNKNOWN;
     // If lua is not paused?
-    if(!uiLuaPaused)
+    if(!uLuaPaused)
     { // Save stack position and restore it on leaving scope
       const LuaStackSaver lssSaved{ lecAsync.LuaRefGetState() };
       // Whats the code sent in the event?
-      switch(uiAsyncResult)
+      switch(uAsyncResult)
       { // Unknown operation?
         case AR_UNKNOWN:
         { // Log the invalid parameter count
           cLog->LogWarningExSafe("AsyncLoader parameter mismatch of $ in "
             "event $ for '$' with status $!", emaArgs.size(),
-            emeEvent.cCmd, IdentGet(), uiAsyncResult);
+            emeEvent.cCmd, NameGet(), uAsyncResult);
           // Done
           break;
         } // The operation is still loading?
@@ -521,7 +522,7 @@ template<class MemberType, class ColType>class AsyncLoader :
           else cLog->LogErrorExSafe("AsyncLoader got invalid params in "
             "progress event $ for '$' with luastate($) and fref($) from $ "
             "params!",
-            emeEvent.cCmd, IdentGet(), lecAsync.LuaRefStateIsSet(),
+            emeEvent.cCmd, NameGet(), lecAsync.LuaRefStateIsSet(),
             lecAsync.LuaRefGetFunc(LR_PROGRESS), emaArgs.size());
           // Done
           break;
@@ -543,18 +544,18 @@ template<class MemberType, class ColType>class AsyncLoader :
               } // Failed? Write error to log
               else cLog->LogErrorExSafe("AsyncLoader got invalid userdata "
                 "param in success param event $ for '$' from $ params!",
-                emeEvent.cCmd, IdentGet(), emaArgs.size());
+                emeEvent.cCmd, NameGet(), emaArgs.size());
             } // Show error
             else cLog->LogErrorExSafe("AsyncLoader got invalid params in "
               "success param event $ for '$' with luastate($) and fref($) "
               "from $ params!",
-              emeEvent.cCmd, IdentGet(),
+              emeEvent.cCmd, NameGet(),
               lecAsync.LuaRefStateIsSet(), lecAsync.LuaRefGetFunc(LR_SUCCESS),
               emaArgs.size());
           } // Log error
           else cLog->LogErrorExSafe("AsyncLoader got invalid value in "
             "success param event $ for '$' from $ params!", emeEvent.cCmd,
-              IdentGet(), emaArgs.size());
+            NameGet(), emaArgs.size());
           // Done
           break;
         } // The operation succeeded?
@@ -569,12 +570,12 @@ template<class MemberType, class ColType>class AsyncLoader :
             // Failed? Write error to log
             else cLog->LogErrorExSafe("AsyncLoader got invalid userdata param "
               "in success event $ for '$' from $ params!",
-              emeEvent.cCmd, IdentGet(), emaArgs.size());
+              emeEvent.cCmd, NameGet(), emaArgs.size());
           } // Show error
           else cLog->LogErrorExSafe("AsyncLoader got invalid params in "
             "success event $ for '$' with luastate($) and fref($) from $ "
             "params!",
-            emeEvent.cCmd, IdentGet(), lecAsync.LuaRefStateIsSet(),
+            emeEvent.cCmd, NameGet(), lecAsync.LuaRefStateIsSet(),
             lecAsync.LuaRefGetFunc(LR_SUCCESS), emaArgs.size());
           // Done
           break;
@@ -591,7 +592,7 @@ template<class MemberType, class ColType>class AsyncLoader :
         { // Report it and fall through to clean-up
           cLog->LogErrorExSafe(
             "AsyncLoader got unknown result $ after loading '$'!",
-            uiAsyncResult, IdentGet());
+            uAsyncResult, NameGet());
           // Fall through to break
           [[fallthrough]];
         } // If the thread was told to abort? Just break to clear references
@@ -617,7 +618,7 @@ template<class MemberType, class ColType>class AsyncLoader :
               emcNAsyncCmd },          // ...with owner class and event cmd.
     tAsyncThread{ STP_LOW },           // Initialise low priority thread
     asctAsyncType(BA_NONE),            // Initialise load source type
-    auiAsyncPid(0)                     // Initialise pid for BA_EXECUTE
+    auAsyncPid(0)                      // Initialise pid for BA_EXECUTE
     /* -- No code ---------------------------------------------------------- */
     {}
   /* ----------------------------------------------------------------------- */
@@ -641,14 +642,15 @@ template<class MemberType,
   class ListType,
   class IteratorType,
   class CLHelperType = CLHelperSafe<MemberType, ListType, IteratorType>,
-  class BaseType = CLHelper<MemberType, CLHelperType, ListType, IteratorType>,
-  class LuaEvtSlaveType = LuaEvtTypeAsync<MemberType>,
-  class LuaEvtMasterType = LuaEvtMaster<MemberType, LuaEvtSlaveType>>
+  class BaseType = CLHelper<MemberType, CLHelperType, ListType, IteratorType>>
 class CLHelperAsync :
   /* -- Derivced classes --------------------------------------------------- */
   public BaseType                      // CLHelper
-{ /* -- Functions -------------------------------------------------- */ public:
-  const LuaEvtMasterType lemAsync;     // Event name id
+{ /* -- Private typedefs --------------------------------------------------- */
+  using LuaEvtSlaveType  = LuaEvtTypeAsync<MemberType>;
+  using LuaEvtMasterType = LuaEvtMaster<MemberType, LuaEvtSlaveType>;
+  /* -- Public variables ------------------------------------------- */ public:
+  const LuaEvtMasterType lemtAsync;    // Event name id
   /* -- Functions ---------------------------------------------------------- */
   void WaitAsync()
   { // Lock the collector's mutex and sync all members
@@ -660,7 +662,7 @@ class CLHelperAsync :
   CLHelperAsync(const char*const cpName, const EvtMainCmd emcCmd) :
     /* -- Initialisers ----------------------------------------------------- */
     BaseType{ cpName },                // Initialise name of base tpye
-    lemAsync{ emcCmd }                 // Initialise event name
+    lemtAsync{ emcCmd }                // Initialise event name
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

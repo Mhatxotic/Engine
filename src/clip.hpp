@@ -14,12 +14,12 @@ namespace IClipboard {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IGlFW::P;              using namespace IIdent::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IRefCtr::P;            using namespace IStd::P;
-using namespace ISysUtil::P;
+using namespace IGlFW::P;              using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IName::P ;
+using namespace IRefCtr::P;            using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
@@ -72,17 +72,15 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     // Must have 2 parameters
     if(!LuaEvtsCheckParams<2>(emaArgs))
       XC("Clipboard did not receive two parameters!",
-        "Identifier", IdentGet(), "Count", emaArgs.size());
+        "Name", NameGet(), "Count", emaArgs.size());
     // If lua is not paused?
-    if(!uiLuaPaused)
+    if(!uLuaPaused)
     { // Get and push function
       if(!LuaRefGetFunc(1))
-        XC("Clipboard first argument not a function!",
-          "Identifier", IdentGet());
+        XC("Clipboard first argument not a function!", "Name", NameGet());
       // Get and push class
       if(!LuaRefGetUData())
-        XC("Clipboard second argument not a class!",
-          "Identifier", IdentGet());
+        XC("Clipboard second argument not a class!", "Name", NameGet());
       // Call callback with class
       LuaUtilCallFuncRefCtrEx(lsState, this, 1);
     } // Done with references. We won't be using them anymore.
@@ -90,20 +88,20 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   } // Exception occured? Cleanup and rethrow exception
   catch(const StdException &) { LuaEvtDeInit(); throw; }
   /* -- Initialise and set string ------------------------------------------ */
-  void ClipSetAsync(lua_State*const lS, const StdString &strIdent,
-    const StdString &strContent)
+  void ClipSetAsync(lua_State*const lS, const StdStringView &strvIdent,
+    const StdStringView &strvContent)
   { // Get and check parameters
-    IdentSet(StdMove(strIdent));
-    strClipboard = StdMove(strContent);
+    NameSet(strvIdent);
+    strClipboard = strvContent;
     // Init LUA references
     LuaEvtInitEx(lS);
     // We're ready, so dispatch to the window thread with this class
     cEvtWin->Add(EWC_CB_SET, this);
   }
   /* -- Initialise and get string ------------------------------------------ */
-  void ClipGetAsync(lua_State*const lS, const StdString &strIdent)
+  void ClipGetAsync(lua_State*const lS, const StdStringView &strvIdent)
   { // Get and check parameters
-    IdentSet(StdMove(strIdent));
+    NameSet(strvIdent);
     // Init LUA references
     LuaEvtInitEx(lS);
     // We're ready, so dispatch to the window thread with this class
@@ -113,7 +111,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   Clip() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperClip{ cClips },            // Initially unregistered
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     LuaEvtSlave{ this, EMC_CLP_EVENT } // Register Clip async event
     /* -- No code ---------------------------------------------------------- */
     {}

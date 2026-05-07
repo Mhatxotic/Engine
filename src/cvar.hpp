@@ -36,7 +36,7 @@ static CVarShowFlags csfShowFlags{CSF_NONE}; // Console cvar display flags
 ** -- Default no-op for cvar lib callback functions ------------------------ */
 static CVarReturn NoOp(CVarItem&, const StdString&) { return ACCEPT; }
 /* ------------------------------------------------------------------------- */
-enum CVarSetEnums : unsigned int       // Cvar set return codes
+enum CVarSetEnums : unsigned           // Cvar set return codes
 { /* ----------------------------------------------------------------------- */
   CVS_OK,                              // [00] Value set successful
   CVS_OKNOTCHANGED,                    // [01] Value set successful, no change
@@ -71,9 +71,9 @@ class CVarItem :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public CVarFlags                     // Cvar configuration settings
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef int64_t ValueIntType;        // When handling integral values
+  using ValueIntType = int64_t;        // When handling integral values
   /* ----------------------------------------------------------------------- */
-  enum CommitResult : unsigned int     // Result to a commit request
+  enum CommitResult : unsigned         // Result to a commit request
   { /* --------------------------------------------------------------------- */
     CR_OK,                             // [00] Call commited the variable
     CR_FAIL,                           // [01] Call update cvar failed
@@ -102,7 +102,7 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   const StdString &GetDefValue() const { return strDefValue; }
   /* ----------------------------------------------------------------------- */
-  size_t GetDefLength() const { return GetDefValue().length(); }
+  size_t GetDefLength() const { return GetDefValue().size(); }
   /* ----------------------------------------------------------------------- */
   size_t GetDefCapacity() const { return GetDefValue().capacity(); }
   /* ----------------------------------------------------------------------- */
@@ -113,7 +113,7 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   const StdString &GetValue() const { return strValue; }
   /* ----------------------------------------------------------------------- */
-  size_t GetValueLength() const { return GetValue().length(); }
+  size_t GetValueLength() const { return GetValue().size(); }
   /* ----------------------------------------------------------------------- */
   size_t GetValueCapacity() const { return GetValue().capacity(); }
   /* ----------------------------------------------------------------------- */
@@ -129,15 +129,11 @@ class CVarItem :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   void SetDefault() { strValue = GetDefValue(); }
   /* ----------------------------------------------------------------------- */
-  void SetDefValue(const StdString &strN) { strDefValue = strN; }
+  void SetDefValue(auto &&strV) { strDefValue = StdMove(strV); }
   /* ----------------------------------------------------------------------- */
-  void SetDefValue(StdString &&strN) { strDefValue = StdMove(strN); }
+  void SetValue(auto &&strV) { strValue = StdMove(strV); }
   /* ----------------------------------------------------------------------- */
-  void SetValue(const StdString &strV) { strValue = strV; }
-  /* ----------------------------------------------------------------------- */
-  void SetValue(StdString &&strV) { strValue = StdMove(strV); }
-  /* ----------------------------------------------------------------------- */
-  const StdString GetValueSafe() const
+  StdString GetValueSafe() const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
       return cCommon->CommonPrivate();
@@ -151,7 +147,7 @@ class CVarItem :                       // Members initially private
       return StrFromNum(StrToNum<double>(GetValue()), 0, 12);
     // Is a boolean
     if(FlagIsSet(TBOOLEAN))
-      return StrFromNum(StrFromBoolTF(StrToNum<bool>(GetValue())));
+      return StrFromBoolTF(StrToNum<bool>(GetValue()));
     // If is a integer, return number + hex
     if(FlagIsSet(TINTEGER))
     { // Get value as 64-bit integer
@@ -230,7 +226,8 @@ class CVarItem :                       // Members initially private
     return CR_OK;
   }
   /* -- Save with counter increment ---------------------------------------- */
-  template<typename IntType>void Save(IntType &itCommit, IntType &itPurge)
+  template<typename IntType>
+    void Save(IntType &itCommit, IntType &itPurge)
   { // Try to commit the cvar. 'this->' needed to stop clang whining about
     // 'this' not being used but it is needed!
     switch(Commit())
@@ -242,7 +239,7 @@ class CVarItem :                       // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums HandleCallbackException(const StdException &eReason,
-    const CVarConditionFlagsConst &ccfcFlags, const StdString &strNValue,
+    const CVarConditionFlagsConst ccfcFlags, const StdString &strNValue,
     StdString &strCBError)
   { // Throw exception if requested
     if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
@@ -253,11 +250,11 @@ class CVarItem :                       // Members initially private
     return CVS_TRIGGEREXCEPTION;
   }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums SetValue(const StdString &strNValue,
-    const CVarConditionFlagsConst &ccfcFlags, StdString &strCBError)
+  CVarSetEnums SetValueCheckPassed(const StdString &strNValue,
+    const CVarConditionFlagsConst ccfcFlags, StdString &strCBError)
   { // If value is equal as current value then ignore it. We'll allow the
     // change when setting new vars because the triggers should trigger
-    if(strNValue == GetValue() && ccfcFlags.FlagIsClear(CCF_NEWCVAR))
+    if(GetValue() == strNValue && ccfcFlags.FlagIsClear(CCF_NEWCVAR))
       return CVS_OKNOTCHANGED;
     // Result storage
     CVarReturn cbrResult;
@@ -325,8 +322,72 @@ class CVarItem :                       // Members initially private
     return CVS_OK;
   }
   /* ----------------------------------------------------------------------- */
-  CVarSetEnums SetValue(const StdString &strNValue,
-    const CVarFlagsConst &cvfcFlags, const CVarConditionFlagsConst &ccfcFlags,
+  CVarSetEnums CheckAndSetString(const StdString &strNValue,
+    const CVarConditionFlagsConst ccfcFlags, StdString &strCBError)
+  { // String cannot be empty and string is empty?
+    if(FlagIsSet(CNOTEMPTY) && strNValue.empty())
+    { // If we should not abort? Just return error else throw exception
+      if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
+        return CVS_EMPTY;
+      XC("CVar specified cannot be empty!", "Variable", GetVar());
+    } // Check if valid untrusted pathname required
+    if(FlagIsSet(CFILENAME))
+    { // Check filename and get result
+      switch(const ValidResult vrRes = DirValidName(strNValue))
+      { // Break if ok or empty
+        case VR_OK: case VR_EMPTY: break;
+        // Show error otherwise
+        default: if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
+                   return CVS_NOTFILENAME;
+                 XC("CVar untrusted path name is invalid!",
+                   "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
+                   "Result",   vrRes,
+                   "Variable", GetVar());
+      }
+    } // Check if valid trusted pathname required
+    if(FlagIsSet(CTRUSTEDFN))
+    { // Check filename and get result
+      switch(const ValidResult vrRes =
+        DirValidName(strNValue, VT_TRUSTED))
+      { // Break if ok or empty
+        case VR_OK: case VR_EMPTY: break;
+        // Show error otherwise
+        default : if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
+                    return CVS_NOTFILENAME;
+                  XC("CVar trusted path name is invalid!",
+                    "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
+                    "Result",   vrRes,
+                    "Variable", GetVar(),
+                    "Path",     strNValue);
+      }
+    } // Alpha characters only?
+    if(FlagIsSet(CALPHA))
+    { // And numeric characters?
+      if(FlagIsSet(CNUMERIC) && !StrIsAlphaNum(strNValue))
+      { // If we should not abort? Just return error else throw exception
+        if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
+          return CVS_NOTALPHANUMERIC;
+        XC("CVar specified must only contain alphanumeric characters!",
+          "Variable", GetVar());
+      } // Only letters?
+      if(!StrIsAlpha(strNValue))
+      { // If we should not abort? Just return error else throw exception
+        if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTALPHA;
+        XC("CVar specified must only contain letters!",
+          "Variable", GetVar());
+      }
+    } // Must only contain numbers
+    else if(FlagIsSet(CNUMERIC) && !StrIsInt(strNValue))
+    { // If we should not abort? Just return error else throw exception
+      if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTNUMERIC;
+      XC("CVar specified must only contain numeric characters!",
+        "Variable", GetVar());
+    } // Next step
+    return SetValueCheckPassed(strNValue, ccfcFlags, strCBError);
+  }
+  /* ----------------------------------------------------------------------- */
+  CVarSetEnums CheckAndSetValue(const StdString &strNValue,
+    const CVarFlagsConst &cvfcFlags, const CVarConditionFlagsConst ccfcFlags,
     StdString &strCBError)
   { // Failed if not writable
     if(FlagIsClear(cvfcFlags))
@@ -340,8 +401,8 @@ class CVarItem :                       // Members initially private
     { // If number begins with '0x' to denote hexadecimal? Convert specified
       // value from hexadecimal to decimal and restart the call with the
       // converted value.
-      if(strNValue.length() > 2 && strNValue[0] == '0' && strNValue[1] == 'x')
-        return SetValue(StrFromNum(StrHexToInt<ValueIntType>
+      if(strNValue.size() > 2 && strNValue[0] == '0' && strNValue[1] == 'x')
+        return SetValueCheckPassed(StrFromNum(StrHexToInt<ValueIntType>
           (strNValue.substr(2))), ccfcFlags, strCBError);
       // If specified value is not a valid integer?
       if(!StrIsInt(strNValue))
@@ -368,7 +429,7 @@ class CVarItem :                       // Members initially private
         XC("CVar specified must be power of two!",
           "Variable", GetVar(), "Value", strNValue);
       } // Next step
-      return SetValue(strNValue, ccfcFlags, strCBError);
+      return SetValueCheckPassed(strNValue, ccfcFlags, strCBError);
     } // If float? Bail if not a floating point number
     if(FlagIsSet(TFLOAT))
     { // If specified value is not a valid floating point number?
@@ -386,24 +447,26 @@ class CVarItem :                       // Members initially private
         XC("CVar specified must be a non-negative float!",
           "Variable", GetVar(), "Value", strNValue);
       } // Next step
-      return SetValue(strNValue, ccfcFlags, strCBError);
+      return SetValueCheckPassed(strNValue, ccfcFlags, strCBError);
     } // Is a boolean?
     if(FlagIsSet(TBOOLEAN))
     { // Must be one byte, then test first character
       if(strNValue.size() == 1) switch(strNValue.front())
       { // Is zero or one? OK
         case '0': case '1':
-          return SetValue(strNValue, ccfcFlags, strCBError);
+          return SetValueCheckPassed(strNValue, ccfcFlags, strCBError);
         // Invalid value
         default: break;
       } // True?
       else if(strNValue.size() == 4 &&
         StrToLowCase(strNValue) == cCommon->CommonTrue())
-          return SetValue(cCommon->CommonOne(), ccfcFlags, strCBError);
+          return SetValueCheckPassed(cCommon->CommonOne(), ccfcFlags,
+            strCBError);
       // False?
       else if(strNValue.size() == 5 &&
         StrToLowCase(strNValue) == cCommon->CommonFalse())
-          return SetValue(cCommon->CommonZero(), ccfcFlags, strCBError);
+          return SetValueCheckPassed(cCommon->CommonZero(), ccfcFlags,
+            strCBError);
       // If we should not abort? Just return error else throw exception
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
         return CVS_NOTBOOLEAN;
@@ -411,68 +474,18 @@ class CVarItem :                       // Members initially private
         "Variable", GetVar(), "Value", strNValue);
     } // Is a string?
     if(FlagIsSet(TSTRING))
-    { // Trim string if setting requests it and get new result
-      const StdString &strNewValue =
-        FlagIsSet(MTRIM) ? StrTrim(strNValue, ' ') : strNValue;
-      // String cannot be empty and string is empty?
-      if(FlagIsSet(CNOTEMPTY) && strNewValue.empty())
-      { // If we should not abort? Just return error else throw exception
-        if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
-          return CVS_EMPTY;
-        XC("CVar specified cannot be empty!", "Variable", GetVar());
-      } // Check if valid untrusted pathname required
-      if(FlagIsSet(CFILENAME))
-      { // Check filename and get result
-        switch(const ValidResult vrRes = DirValidName(strNewValue))
-        { // Break if ok or empty
-          case VR_OK: case VR_EMPTY: break;
-          // Show error otherwise
-          default: if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
-                     return CVS_NOTFILENAME;
-                   XC("CVar untrusted path name is invalid!",
-                     "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
-                     "Result",   vrRes,
-                     "Variable", GetVar());
-        }
-      } // Check if valid trusted pathname required
-      if(FlagIsSet(CTRUSTEDFN))
-      { // Check filename and get result
-        switch(const ValidResult vrRes = DirValidName(strNewValue, VT_TRUSTED))
-        { // Break if ok or empty
-          case VR_OK: case VR_EMPTY: break;
-          // Show error otherwise
-          default : if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
-                      return CVS_NOTFILENAME;
-                    XC("CVar trusted path name is invalid!",
-                      "Reason",   cDirBase->DirBaseVNRtoStr(vrRes),
-                      "Result",   vrRes,
-                      "Variable", GetVar(),
-                      "Path",     strNewValue);
-        }
-      } // Alpha characters only?
-      if(FlagIsSet(CALPHA))
-      { // And numeric characters?
-        if(FlagIsSet(CNUMERIC) && !StrIsAlphaNum(strNewValue))
-        { // If we should not abort? Just return error else throw exception
-          if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
-            return CVS_NOTALPHANUMERIC;
-          XC("CVar specified must only contain alphanumeric characters!",
-            "Variable", GetVar());
-        } // Only letters?
-        if(!StrIsAlpha(strNewValue))
-        { // If we should not abort? Just return error else throw exception
-          if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTALPHA;
-          XC("CVar specified must only contain letters!",
-            "Variable", GetVar());
-        }
-      } // Must only contain numbers
-      else if(FlagIsSet(CNUMERIC) && !StrIsInt(strNewValue))
-      { // If we should not abort? Just return error else throw exception
-        if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTNUMERIC;
-        XC("CVar specified must only contain numeric characters!",
-          "Variable", GetVar());
-      } // Next step
-      return SetValue(strNewValue, ccfcFlags, strCBError);
+    { // If not modification flags are set? Just set to verify
+      if(FlagIsClear(MMASK))
+        return CheckAndSetString(strNValue, ccfcFlags, strCBError);
+      // We're modifying the value
+      StdString strModifiedValue{ strNValue };
+      // Remove whitespaces?
+      if(FlagIsSet(MTRIM)) StrTrimRef(strModifiedValue, ' ');
+      // Set uppercase or lowercase?
+      if(FlagIsSet(MUPPER)) StrToUpCaseRef(strModifiedValue);
+      else if(FlagIsSet(MLOWER)) StrToLowCaseRef(strModifiedValue);
+      // Verify and return  result
+      return CheckAndSetString(strModifiedValue, ccfcFlags, strCBError);
     } // If we should not throw error? Just return code else throw exception
     if(ccfcFlags.FlagIsClear(CCF_THROWONERROR)) return CVS_NOTYPESET;
     XC("CVar type is not set!",
@@ -481,8 +494,8 @@ class CVarItem :                       // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums ResetValue(const CVarFlagsConst &cvfcFlags,
-    const CVarConditionFlagsConst &ccfcFlags, StdString &strCBError)
-      { return SetValue(strDefValue, cvfcFlags, ccfcFlags, strCBError); }
+    const CVarConditionFlagsConst ccfcFlags, StdString &strCBError)
+  { return CheckAndSetValue(strDefValue, cvfcFlags, ccfcFlags, strCBError); }
   /* -- Move constructor --------------------------------------------------- */
   CVarItem(CVarItem &&ciOther) :       // Other item
     /* -- Initialisers ----------------------------------------------------- */

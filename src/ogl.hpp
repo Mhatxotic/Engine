@@ -16,12 +16,14 @@ using namespace IEvtWin::P;            using namespace IFboBlend::P;
 using namespace IFboCmd::P;            using namespace IColour::P;
 using namespace IFlags::P;             using namespace IGlFW::P;
 using namespace IGlFWUtil::P;          using namespace IHelper::P;
-using namespace IIdent::P;             using namespace ILog::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace IUtf::P;               using namespace IUtil::P;
 using namespace Lib::OS::GlFW;
+/* ------------------------------------------------------------------------- */
+constexpr static const GLuint gluMax = StdLimits<GLuint>::max();
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
@@ -88,8 +90,8 @@ enum OglUndefinedEnums : GLenum        // Some undefined OpenGL consts
   GL_RGBA_DXT3               = 0x83F2, // GL_COMPRESSED_RGBA_S3TC_DXT3_EXT
   GL_RGBA_DXT5               = 0x83F3, // GL_COMPRESSED_RGBA_S3TC_DXT5_EXT
 };/* ----------------------------------------------------------------------- */
-typedef StdVector<GLuint> GLUIntVector;   // Vector of GLuints
-typedef StdVector<GLfloat> GLFloatVector; // Vector of GLfloats
+using GLUIntVector  = StdVector<GLuint>;  // Vector of GLuints
+using GLFloatVector = StdVector<GLfloat>; // Vector of GLfloats
 /* ------------------------------------------------------------------------- */
 enum VSyncMode : int {                 // VSync settings
   VSYNC_MIN      = -1,                 // [-1] Minimum Vertical Sync value
@@ -113,52 +115,53 @@ class Ogl :                            // OGL class for OpenGL use simplicity
 #define IGL(F,M,...)  GLEX(CheckExceptError, F, M, ## __VA_ARGS__)
 #define IGLC(M,...)   GLEX(CheckExceptError, , M, ## __VA_ARGS__)
   /* -- Private typedefs --------------------------------------------------- */
-  typedef StdArray<GLuint,2> OglVHandles; // Vertex Array/Buffer handles type
+  using OglVHandles = StdArray<GLuint, 2>; // Vertex Array/Buffer handles type
   /* -- String defines ----------------------------------------------------- */
-  const IdMap<GLenum> idExtensions,    // OpenGL extension names (log detail)
-                      idHintTargets,   // Hint target names (log detail)
-                      idHintModes,     // Hint mode values (log detail)
-                      idFormatModes,   // Pixel format modes (log detail)
-                      idOGLCodes;      // OpenGL codes
+  using GLenumMap = LookupMap<GLenum>; // A map of ALenum integers
+  const GLenumMap  glemExtensions,     // OpenGL extension names (log detail)
+                   glemHintTargets,    // Hint target names (log detail)
+                   glemHintModes,      // Hint mode values (log detail)
+                   glemFormatModes,    // Pixel format modes (log detail)
+                   glemOGLCodes;       // OpenGL codes
   /* -- Engine blending id to OpenGL blending id list ---------------------- */
-  typedef StdArray<const GLenum, OB_MAX> BlendFunctions;
+  using BlendFunctions = StdArray<const GLenum, OB_MAX> ;
   const BlendFunctions aBlends;        // Convert engine to opengl blend type
   /* -- Texture filter lists ----------------------------------------------- */
-  typedef StdArray<const GLint, 2> TwoGLints;
-  typedef StdArray<const TwoGLints, OF_NM_MAX> TexFilterNMList;
-  const TexFilterNMList tfnmList;      // Texture filter (no-mipmap) list
-  typedef StdArray<const TwoGLints, OF_MAX> TexFilterList;
-  const TexFilterList tfList;          // Texture filter list
+  using TwoGLints = StdArray<const GLint, 2>;
+  using TexFilterNMList = StdArray<const TwoGLints, OF_NM_MAX>;
+  const TexFilterNMList tfnmlMM;       // Texture filter (no-mipmap) list
+  using TexFilterList = StdArray<const TwoGLints, OF_MAX>;
+  const TexFilterList tflMM;           // Texture filter list
   /* -- Variables ---------------------------------------------------------- */
-  OglVHandles      ovhVAO, ovhVBO;     // Vertex Array/Buffer Object handles
-  GLuint           uiActiveFbo,        // Currently selected FBO name cache
-                   uiActiveProgram,    // Currently active shader program
-                   uiActiveTexture,    // Currently bound texture
-                   uiActiveTUnit,      // Currently active texture unit
-                   uiActiveVao,        // Currently active vertex array object
-                   uiActiveVbo,        // Currently active vertex buffer object
-                   uiTexSize,          // Maximum reported texture size
-                   uiPackAlign,        // Default pack alignment
-                   uiUnpackAlign,      // Default Unpack alignment
-                   uiMaxVertexAttribs, // Maximum vertex attributes per shader
-                   uiTexUnits,         // Texture units count
-                  &uiVAO,              // ovhVAO[0]: VAO for global use
-                  &uiVBO,              // ovhVBO[0]: FBO for global use
-                  &uiVAOmain,          // ovhVAO[1]: VAO to draw back buffer
-                  &uiVBOmain;          // ovhVBO[1]: FBO to draw back buffer
-  GLenum           ePolyMode;          // Current polygon mode
-  GLint            iUnpackRowLength;   // Default unpack row length
-  GLuint64         ullMinVRAM,         // Minimum VRAM required
-                   ullTotalVRAM,       // Maximum VRAM supported
-                   ullFreeVRAM;        // Current VRAM available
+  OglVHandles      ovhVao, ovhVbo;     // Vertex Array/Buffer Object handles
+  GLuint           gluActiveFbo,       // Currently selected Fbo name cache
+                   gluActiveProgram,   // Currently active shader program
+                   gluActiveTexture,   // Currently bound texture
+                   gluActiveTUnit,     // Currently active texture unit
+                   gluActiveVao,       // Currently active vertex array object
+                   gluActiveVbo,       // Currently active vertex buffer object
+                   gluTexSize,         // Maximum reported texture size
+                   gluPackAlign,       // Default pack alignment
+                   gluUnpackAlign,     // Default Unpack alignment
+                   gluMaxVertexAttr,   // Maximum vertex attributes per shader
+                   gluTexUnits,        // Texture units count
+                  &gluVaoGlobal,       // ovhVao[0]: Vao for global use
+                  &gluVboGlobal,       // ovhVbo[0]: Fbo for global use
+                  &gluVaoMain,         // ovhVao[1]: Vao to draw back buffer
+                  &gluVboMain;         // ovhVbo[1]: Fbo to draw back buffer
+  GLenum           glePolyMode;        // Current polygon mode
+  GLint            gliUnpackRowLength; // Default unpack row length
+  GLuint64         glullMinVRAM,       // Minimum VRAM required
+                   glullTotalVRAM,     // Maximum VRAM supported
+                   glullFreeVRAM;      // Current VRAM available
   ClkDuration      cdLimit;            // Frame limit based on refresh rate
-  StdStringView      strvRenderer,       // GL renderer string
+  StdStringView    strvRenderer,       // GL renderer string
                    strvVersion,        // GL version string
                    strvVendor;         // GL vendor string
   VSyncMode        vsmSetting;         // VSync setting
   /* -- Delayed destruction ------------------------------------------------ */
-  /* Because LUA garbage collection could zap a texture or FBO class at any  */
-  /* time, we need to delay deletion of textures and FBO handles in OpenGL   */
+  /* Because LUA garbage collection could zap a texture or Fbo class at any  */
+  /* time, we need to delay deletion of textures and Fbo handles in OpenGL   */
   /* so that a framebuffer can select/draw without binding non-existant      */
   /* handles. Contents will be destroyed after all drawing is completed!     */
   GLUIntVector     gluivTextures,      // Textures to destroy
@@ -231,30 +234,30 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     /* --------------------------------------------------------------------- */
   } sAPI;                              // API functions list
   /* -- GL error logger ---------------------------------------------------- */
-  template<typename ...VarArgs>
-    void CheckLogError(const char*const cpFormat, VarArgs &&...vaArgs) const
+  template<typename StrType, typename ...VarArgs>
+    void CheckLogError(StrType &&strFormat, VarArgs &&...vaArgs) const
   { // While there are OpenGL errors
-    for(GLenum eCode = sAPI.glGetError();
-               eCode != GL_NO_ERROR;
-               eCode = sAPI.glGetError())
+    for(GLenum gleCode = sAPI.glGetError();
+               gleCode != GL_NO_ERROR;
+               gleCode = sAPI.glGetError())
     cLog->LogWarningExSafe("GL call failed: $ ($/$$).",
-      StrFormat(cpFormat, StdForward<VarArgs>(vaArgs)...),
-      GetGLErr(eCode), StdIOSHex, eCode);
+      StrFormat(StdForward<StrType>(strFormat),
+                StdForward<VarArgs>(vaArgs)...),
+      GetGLErr(gleCode), StdIOSHex, gleCode);
   }
   /* -- GL error handler --------------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckExceptError(const char*const cpFormat,
-      VarArgs &&...vaArgs) const
+    void CheckExceptError(const char*const cpFormat, VarArgs &&...vaArgs) const
   { // If there is no error then return
-    const GLenum eCode = sAPI.glGetError();
-    if(eCode == GL_NO_ERROR) return;
+    const GLenum gleCode = sAPI.glGetError();
+    if(gleCode == GL_NO_ERROR) return;
     // Raise exception with error details
-    XC(cpFormat, "Code", eCode, "Reason",
-      GetGLErr(eCode), StdForward<VarArgs>(vaArgs)...);
+    XC(cpFormat, "Code", gleCode, "Reason",
+      GetGLErr(gleCode), StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Flag setter ----------------------------------------------- */ private:
-  void SetFlagExt(const char*const cpName, const OglFlagsConst &glFlag)
-    { FlagSetOrClear(glFlag, HaveExtension(cpName)); }
+  void SetFlagExt(const char*const cpName, const OglFlagsConst &ofcFlags)
+    { FlagSetOrClear(ofcFlags, HaveExtension(cpName)); }
   /* -- Load GL capabilities ----------------------------------------------- */
   void DetectCapabilities()
   { // Current current OpenGL strings
@@ -274,14 +277,14 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     FlagSetOrClear(GFL_HAVEASYNC,
       FlagIsAnyOfSet(GFL_HAVEWASYNC|GFL_HAVELASYNC));
     // Cache maximum texture size (Minimum hardware support for 3.2 is 1024^2)
-    uiTexSize = GetInteger<GLuint>(GL_MAX_TEXTURE_SIZE);
-    uiMaxVertexAttribs = GetInteger<GLuint>(GL_MAX_VERTEX_ATTRIBS);
+    gluTexSize = GetInteger<GLuint>(GL_MAX_TEXTURE_SIZE);
+    gluMaxVertexAttr = GetInteger<GLuint>(GL_MAX_VERTEX_ATTRIBS);
     // Cache texture unit count
-    uiTexUnits = GetInteger<GLuint>(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
+    gluTexUnits = GetInteger<GLuint>(GL_MAX_COMBINED_TEXTURE_IMAGE_UNITS);
     // Cache current default pack alignment size
-    uiPackAlign = GetInteger<GLuint>(GL_PACK_ALIGNMENT);
-    uiUnpackAlign = GetInteger<GLuint>(GL_UNPACK_ALIGNMENT);
-    iUnpackRowLength = GetInteger<GLint>(GL_UNPACK_ROW_LENGTH);
+    gluPackAlign = GetInteger<GLuint>(GL_PACK_ALIGNMENT);
+    gluUnpackAlign = GetInteger<GLuint>(GL_UNPACK_ALIGNMENT);
+    gliUnpackRowLength = GetInteger<GLint>(GL_UNPACK_ROW_LENGTH);
     // Load current clear colour
     GetFloatArray<4>(GL_COLOR_CLEAR_VALUE, ColourGetMemory());
     // Load current blending settings
@@ -293,16 +296,28 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Zero index to hint helper for cvars -------------------------------- */
   static GLenum SHIndexToEnum(const size_t stIndex)
   { // Parameters available to translate
-    typedef StdArray<const GLenum, 4> Values;
+    using Values = StdArray<const GLenum, 4>;
     static const Values vaCmds{ GL_TRUE, GL_DONT_CARE, GL_FASTEST, GL_NICEST };
     // Return position or invalid
     return stIndex < vaCmds.size() ? vaCmds[stIndex] : GL_NONE;
   }
+  /* -- Custom loader to avoid function typecast warnings ------------------ */
+  template<typename FuncType>
+    static void LoadFunc(FuncType &ftPtr, const char*const cpName)
+  { // Get the function and copy it over to prevent warning and return it
+    if(StdCopyFunction(&ftPtr, GlFWGetProcAddress(cpName)) != nullptr) return;
+    // No function so return error
+    XC("The specified OpenGL ICD function could not be found from your video "
+      "card manufacturers display driver. Try upgrading your graphics "
+      "drivers to the latest version from your manufacturers or OEM "
+      "website and make sure your operating system is up to date. If all "
+      "else fails, you will need to upgrade your graphics hardware!",
+      "Function", cpName);
+  }
   /* -- Load GL extensions ------------------------------------------------- */
-  const char *LoadFunctions()
+  void LoadFunctions()
   { // Helper macro
-#define GETPTR(v,t) sAPI.v = reinterpret_cast<t>(GlFWGetProcAddress(#v)); \
-    if(!sAPI.v) return #v
+#define GETPTR(v,t) LoadFunc(sAPI.v, #v)
     // Get basic ARB functions
     GETPTR(glActiveTexture, PFNGLACTIVETEXTUREPROC);
     GETPTR(glBindTexture, PFNGLBINDTEXTUREPROC);
@@ -352,12 +367,12 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     GETPTR(glUniform4f, PFNGLUNIFORM4FPROC);
     GETPTR(glUniform4fv, PFNGLUNIFORM4FVPROC);
     GETPTR(glUseProgram, PFNGLUSEPROGRAMPROC);
-    // Vertex Buffer Object (VBO) functions
+    // Vertex Buffer Object (Vbo) functions
     GETPTR(glBindBuffer, PFNGLBINDBUFFERPROC);
     GETPTR(glBufferData, PFNGLBUFFERDATAPROC);
     GETPTR(glDeleteBuffers, PFNGLDELETEBUFFERSPROC);
     GETPTR(glGenBuffers, PFNGLGENBUFFERSPROC);
-    // Vertex Memory Object (VAO) functions
+    // Vertex Memory Object (Vao) functions
     GETPTR(glBindVertexArray, PFNGLBINDVERTEXARRAYPROC);
     GETPTR(glDeleteVertexArrays, PFNGLDELETEVERTEXARRAYSPROC);
     GETPTR(glDisableVertexAttribArray, PFNGLDISABLEVERTEXATTRIBARRAYPROC);
@@ -375,49 +390,49 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Log functions initialised
     cLog->LogDebugExSafe("OGL loaded $ function addresses.",
       sizeof(sAPI) / sizeof(void*));
-    // Return success
-    return nullptr;
   }
   /* == OpenGL features ============================================ */ public:
   static bool HaveExtension(const char*const cpName)
     { return !!glfwExtensionSupported(cpName); }
   /* ----------------------------------------------------------------------- */
-  template<typename RetType=decltype(uiTexSize)>
-    RetType MaxTexSize() const
-  { return static_cast<RetType>(uiTexSize); }
+  template<typename IntType = decltype(gluTexSize)>
+    requires StdIsIntegral<IntType>
+  IntType MaxTexSize() const { return static_cast<IntType>(gluTexSize); }
   /* ----------------------------------------------------------------------- */
-  GLuint MaxVertexAttribs() const { return uiMaxVertexAttribs; }
+  GLuint MaxVertexAttribs() const { return gluMaxVertexAttr; }
   /* ----------------------------------------------------------------------- */
-  GLuint PackAlign() const { return uiPackAlign; }
+  GLuint PackAlign() const { return gluPackAlign; }
   /* ----------------------------------------------------------------------- */
-  GLuint UnpackAlign() const { return uiUnpackAlign; }
+  GLuint UnpackAlign() const { return gluUnpackAlign; }
   /* ----------------------------------------------------------------------- */
-  GLint UnpackRowLength() const { return iUnpackRowLength; }
+  GLint UnpackRowLength() const { return gliUnpackRowLength; }
   /* ----------------------------------------------------------------------- */
-  void VertexAttribPointer(const GLuint uiAttrib, const GLint iSize,
-    const GLsizei siStride, const GLvoid*const vpBuffer) const
-  { sAPI.glVertexAttribPointer(uiAttrib, iSize, GL_FLOAT, GL_FALSE,
-      siStride, vpBuffer); }
+  void VertexAttribPointer(const GLuint gluAttrib, const GLint gliSize,
+    const GLsizei glsiStride, const GLvoid*const glvpBuffer) const
+  { sAPI.glVertexAttribPointer(gluAttrib, gliSize, GL_FLOAT, GL_FALSE,
+      glsiStride, glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void SetPixelStore(const GLenum eId, const GLint iValue) const
-    { sAPI.glPixelStorei(eId, iValue); }
+  void SetPixelStore(const GLenum gleId, const GLint gliValue) const
+    { sAPI.glPixelStorei(gleId, gliValue); }
   /* ----------------------------------------------------------------------- */
-  void SetPackAlignment(const GLint iValue) const
-    { SetPixelStore(GL_PACK_ALIGNMENT, iValue); }
+  void SetPackAlignment(const GLint gliValue) const
+    { SetPixelStore(GL_PACK_ALIGNMENT, gliValue); }
   /* ----------------------------------------------------------------------- */
-  void SetUnpackAlignment(const GLint iValue) const
-    { SetPixelStore(GL_UNPACK_ALIGNMENT, iValue); }
+  void SetUnpackAlignment(const GLint gliValue) const
+    { SetPixelStore(GL_UNPACK_ALIGNMENT, gliValue); }
   /* ----------------------------------------------------------------------- */
-  void SetUnpackRowLength(const GLint iValue) const
-    { SetPixelStore(GL_UNPACK_ROW_LENGTH, iValue); }
+  void SetUnpackRowLength(const GLint gliValue) const
+    { SetPixelStore(GL_UNPACK_ROW_LENGTH, gliValue); }
   /* ----------------------------------------------------------------------- */
-  void ReadBuffer(const GLenum uiBuffer) const { sAPI.glReadBuffer(uiBuffer); }
+  void ReadBuffer(const GLenum gleBuffer) const
+    { sAPI.glReadBuffer(gleBuffer); }
   /* ----------------------------------------------------------------------- */
-  template<typename IntType=GLenum>
-    IntType TexTypeToNative(const TextureType ttType) const
+  template<typename IntType = GLenum>
+    requires StdIsIntegral<IntType>
+  IntType TexTypeToNative(const TextureType ttType) const
   { // Setup translation list. Make sure it's the same order as shown in
     // ITexDef::P::TextureType in 'texdef.hpp'.
-    typedef StdArray<const GLenum, TT_MAX> TexTypeToGLenum;
+    using TexTypeToGLenum = StdArray<const GLenum, TT_MAX>;
     static const TexTypeToGLenum tttglLookup{
       GL_NONE,      /* TT_NONE */ GL_BGR,       /* TT_BGR */
       GL_BGRA,      /* TT_BGRA */ GL_RGBA_DXT1, /* TT_DXT1 */
@@ -428,408 +443,407 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     return static_cast<IntType>(tttglLookup[ttType]);
   }
   /* -- Texture functions -------------------------------------------------- */
-  void ReadTexture(const GLenum eFormat, GLvoid*const vpBuffer) const
-    { sAPI.glGetTexImage(GL_TEXTURE_2D, 0, eFormat, GL_UNSIGNED_BYTE,
-        vpBuffer); }
+  void ReadTexture(const GLenum gleFormat, GLvoid*const glvpBuffer) const
+    { sAPI.glGetTexImage(GL_TEXTURE_2D, 0, gleFormat, GL_UNSIGNED_BYTE,
+        glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void ReadTextureTT(const TextureType ttFormat, GLvoid*const vpBuffer) const
-    { ReadTexture(TexTypeToNative<GLenum>(ttFormat), vpBuffer); }
+  void ReadTextureTT(const TextureType ttFormat, GLvoid*const glvpBuffer) const
+    { ReadTexture(TexTypeToNative<GLenum>(ttFormat), glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void UploadTexture(const GLint iLevel, const GLsizei siWidth,
-    const GLsizei siHeight, const GLint iFormat, const GLenum eType,
-    const GLvoid*const vpBuffer) const
-  { sAPI.glTexImage2D(GL_TEXTURE_2D, iLevel, iFormat, siWidth, siHeight, 0,
-      eType, GL_UNSIGNED_BYTE, vpBuffer); }
+  void UploadTexture(const GLint gliLevel, const GLsizei glsiWidth,
+    const GLsizei glsiHeight, const GLint gliFormat, const GLenum gleType,
+    const GLvoid*const glvpBuffer) const
+  { sAPI.glTexImage2D(GL_TEXTURE_2D, gliLevel, gliFormat, glsiWidth,
+      glsiHeight, 0, gleType, GL_UNSIGNED_BYTE, glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void UploadTextureTT(const GLint iLevel, const GLsizei siWidth,
-    const GLsizei siHeight, const TextureType ttFormat,
-    const TextureType ttType, const GLvoid*const vpBuffer) const
-  { UploadTexture(iLevel, siWidth, siHeight, TexTypeToNative<GLint>(ttFormat),
-      TexTypeToNative<GLenum>(ttType), vpBuffer); }
+  void UploadTextureTT(const GLint gliLevel, const GLsizei glsiWidth,
+    const GLsizei glsiHeight, const TextureType ttFormat,
+    const TextureType ttType, const GLvoid*const glvpBuffer) const
+  { UploadTexture(gliLevel, glsiWidth, glsiHeight,
+      TexTypeToNative<GLint>(ttFormat), TexTypeToNative<GLenum>(ttType),
+      glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void UploadCompressedTexture(const GLint iLevel, const GLenum eFormat,
-    const GLsizei siWidth, const GLsizei siHeight, const GLsizei siSize,
-    const GLvoid*const vpBuffer) const
-  { sAPI.glCompressedTexImage2D(GL_TEXTURE_2D, iLevel, eFormat, siWidth,
-      siHeight, 0, siSize, vpBuffer); }
+  void UploadCompressedTexture(const GLint gliLevel, const GLenum gleFormat,
+    const GLsizei glsiWidth, const GLsizei glsiHeight, const GLsizei glsiSize,
+    const GLvoid*const glvpBuffer) const
+  { sAPI.glCompressedTexImage2D(GL_TEXTURE_2D, gliLevel, gleFormat, glsiWidth,
+      glsiHeight, 0, glsiSize, glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void UploadCompressedTextureTT(const GLint iLevel,
-    const TextureType ttFormat, const GLsizei siWidth, const GLsizei siHeight,
-    const GLsizei siSize, const GLvoid*const vpBuffer) const
-  { UploadCompressedTexture(iLevel, TexTypeToNative<GLenum>(ttFormat), siWidth,
-      siHeight, siSize, vpBuffer); }
+  void UploadCompressedTextureTT(const GLint gliLevel,
+    const TextureType ttFormat, const GLsizei glsiWidth,
+    const GLsizei glsiHeight, const GLsizei glsiSize,
+    const GLvoid*const glvpBuffer) const
+  { UploadCompressedTexture(gliLevel, TexTypeToNative<GLenum>(ttFormat),
+      glsiWidth, glsiHeight, glsiSize, glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void UploadTextureSub(const GLint iLeft, const GLint iTop,
-    const GLsizei siWidth, const GLsizei siHeight, const GLenum ePixFormat,
-    const GLvoid*const vpBuffer) const
-  { sAPI.glTexSubImage2D(GL_TEXTURE_2D, 0, iLeft, iTop, siWidth, siHeight,
-      ePixFormat, GL_UNSIGNED_BYTE, vpBuffer); }
+  void UploadTextureSub(const GLint gliLeft, const GLint gliTop,
+    const GLsizei glsiWidth, const GLsizei glsiHeight,
+    const GLenum glePixFormat, const GLvoid*const glvpBuffer) const
+  { sAPI.glTexSubImage2D(GL_TEXTURE_2D, 0, gliLeft, gliTop, glsiWidth,
+      glsiHeight, glePixFormat, GL_UNSIGNED_BYTE, glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void UploadTextureSubTT(const GLint iLeft, const GLint iTop,
-    const GLsizei siWidth, const GLsizei siHeight,
-    const TextureType ttPixFormat, const GLvoid*const vpBuffer) const
-  { UploadTextureSub(iLeft, iTop, siWidth, siHeight,
-      TexTypeToNative<GLenum>(ttPixFormat), vpBuffer); }
+  void UploadTextureSubTT(const GLint gliLeft, const GLint gliTop,
+    const GLsizei glsiWidth, const GLsizei glsiHeight,
+    const TextureType ttPixFormat, const GLvoid*const glvpBuffer) const
+  { UploadTextureSub(gliLeft, gliTop, glsiWidth, glsiHeight,
+      TexTypeToNative<GLenum>(ttPixFormat), glvpBuffer); }
   /* ----------------------------------------------------------------------- */
-  void UploadTextureSub(const GLsizei siWidth, const GLsizei siHeight,
-    const GLenum ePixFormat, const GLvoid*const vpBuffer) const
-  { UploadTextureSub(0, 0, siWidth, siHeight, ePixFormat, vpBuffer); }
+  void UploadTextureSub(const GLsizei glsiWidth, const GLsizei glsiHeight,
+    const GLenum glePixFormat, const GLvoid*const glvpBuffer) const
+  { UploadTextureSub(0, 0, glsiWidth, glsiHeight, glePixFormat, glvpBuffer); }
   /* ----------------------------------------------------------------------- */
   void GenerateMipmaps() const { sAPI.glGenerateMipmap(GL_TEXTURE_2D); }
   /* ----------------------------------------------------------------------- */
-  void CreateTextures(const GLsizei siCount,
-    GLuint*const uipTexture) const
-  { sAPI.glGenTextures(siCount, uipTexture); }
+  void CreateTextures(const GLsizei glsiCount, GLuint*const glupTextures) const
+  { sAPI.glGenTextures(glsiCount, glupTextures); }
   /* ----------------------------------------------------------------------- */
-  template<class ListType>void CreateTextures(ListType &lIds) const
-    { CreateTextures(static_cast<GLsizei>(lIds.size()), lIds.data()); }
+  template<class ListType>
+    requires StdHasDataSize<ListType>
+  void CreateTextures(ListType &ltTexList) const
+    { CreateTextures(static_cast<GLsizei>(ltTexList.size()),
+        ltTexList.data()); }
   /* ----------------------------------------------------------------------- */
-  void CreateTexture(GLuint*const uipTexture) const
-    { CreateTextures(1, uipTexture); }
+  void CreateTexture(GLuint*const glupTextures) const
+    { CreateTextures(1, glupTextures); }
   /* ----------------------------------------------------------------------- */
   GLuint GetCurrentTexture() const
     { return GetInteger<GLuint>(GL_TEXTURE_BINDING_2D); }
   /* ----------------------------------------------------------------------- */
-  void ActiveTexture(const GLuint uiTexUnit=0)
+  void ActiveTexture(const GLuint gluTexUnit=0)
   { // If we're already the active texture then don't set it
-    if(uiActiveTUnit == uiTexUnit) return;
+    if(gluActiveTUnit == gluTexUnit) return;
     // Texture unit id lookup table
-    typedef StdArray<const GLenum, 3> TexUnits;
+    using TexUnits = StdArray<const GLenum, 3>;
     static const TexUnits tuTexUnit{ GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2 };
     // Activate texture
-    sAPI.glActiveTexture(tuTexUnit[uiTexUnit]);
+    sAPI.glActiveTexture(tuTexUnit[gluTexUnit]);
     // Update the selected texture unit
-    uiActiveTUnit = uiTexUnit;
+    gluActiveTUnit = gluTexUnit;
   }
   /* ----------------------------------------------------------------------- */
-  void DeleteTexture(const GLsizei siCount,
-    const GLuint*const uipTexture)
+  void DeleteTexture(const GLsizei glsiCount,
+    const GLuint*const glupTextures)
   { // Check each texture that is about to be deleted
-    for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
+    for(GLsizei glsiIndex = 0; glsiIndex < glsiCount; ++glsiIndex)
     { // Keep scanning until we find a bound texture
-      if(uiActiveTexture != uipTexture[siIndex]) continue;
+      if(gluActiveTexture != glupTextures[glsiIndex]) continue;
       // Reset currently bound texture
-      uiActiveTexture = StdLimits<GLuint>::max();
+      gluActiveTexture = gluMax;
       // No need to check any others
       break;
     } // Delete the textures
-    sAPI.glDeleteTextures(siCount, uipTexture);
+    sAPI.glDeleteTextures(glsiCount, glupTextures);
   }
   /* ----------------------------------------------------------------------- */
-  void BindTexture(const GLuint uiTexture=0)
+  void BindTexture(const GLuint gluTexture=0)
   { // Ignore if already bound
-    if(uiTexture == uiActiveTexture) return;
+    if(gluTexture == gluActiveTexture) return;
     // Bind the texture
-    sAPI.glBindTexture(GL_TEXTURE_2D, uiTexture);
+    sAPI.glBindTexture(GL_TEXTURE_2D, gluTexture);
     // Set active texture
-    uiActiveTexture = uiTexture;
+    gluActiveTexture = gluTexture;
   }
   /* -- Create multiple framebuffer objects -------------------------------- */
-  void CreateFBOs(const GLsizei siCount, GLuint*const uipFbo) const
-    { sAPI.glGenFramebuffers(siCount, uipFbo); }
+  void CreateFbos(const GLsizei glsiCount, GLuint*const glupFbos) const
+    { sAPI.glGenFramebuffers(glsiCount, glupFbos); }
   /* -- Create one framebuffer object -------------------------------------- */
-  void CreateFBO(GLuint*const uipFbo) const { CreateFBOs(1, uipFbo); }
+  void CreateFbo(GLuint*const glupFbos) const { CreateFbos(1, glupFbos); }
   /* ----------------------------------------------------------------------- */
-  void BindFBO(const GLuint uiFbo=0)
-  { // If we're already the active FBO, ignore
-    if(uiActiveFbo == uiFbo) return;
-    // Bind the FBO
-    sAPI.glBindFramebuffer(GL_FRAMEBUFFER, uiFbo);
-    // Cache the active FBO
-    uiActiveFbo = uiFbo;
+  void BindFbo(const GLuint gluFbo=0)
+  { // If we're already the active Fbo, ignore
+    if(gluActiveFbo == gluFbo) return;
+    // Bind the Fbo
+    sAPI.glBindFramebuffer(GL_FRAMEBUFFER, gluFbo);
+    // Cache the active Fbo
+    gluActiveFbo = gluFbo;
   }
   /* ----------------------------------------------------------------------- */
-  void DeleteFBO(const GLsizei siCount, const GLuint*const uipFbo)
-  { // Check each FBO that is about to be deleted
-    for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
-    { // Keep scanning until we find a cached FBO
-      if(uipFbo[siIndex] != uiActiveFbo) continue;
-      // Reset currently selected FBO
-      uiActiveFbo = StdLimits<GLuint>::max();
+  void DeleteFbo(const GLsizei glsiCount, const GLuint*const glupFbos)
+  { // Check each Fbo that is about to be deleted
+    for(GLsizei glsiIndex = 0; glsiIndex < glsiCount; ++glsiIndex)
+    { // Keep scanning until we find a cached Fbo
+      if(glupFbos[glsiIndex] != gluActiveFbo) continue;
+      // Reset currently selected Fbo
+      gluActiveFbo = gluMax;
       // No need to check any others
       break;
-    } // Delete the FBO
-    sAPI.glDeleteFramebuffers(siCount, uipFbo);
+    } // Delete the Fbo
+    sAPI.glDeleteFramebuffers(glsiCount, glupFbos);
   }
   /* ----------------------------------------------------------------------- */
-  void AttachTexFBO(const GLuint uiTId) const
-    { sAPI.glFramebufferTexture2D(GL_FRAMEBUFFER,
-      GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, uiTId, 0); }
+  void AttachTexFbo(const GLuint gluTexture) const
+    { sAPI.glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+        GL_TEXTURE_2D, gluTexture, 0); }
   /* ----------------------------------------------------------------------- */
-  GLuint VerifyFBO() const
+  GLuint VerifyFbo() const
     { return sAPI.glCheckFramebufferStatus(GL_FRAMEBUFFER); }
   /* -- GLSL functions ----------------------------------------------------- */
-  GLuint CreateShader(const GLenum eType) const
-    { return sAPI.glCreateShader(eType); }
+  GLuint CreateShader(const GLenum gleType) const
+    { return sAPI.glCreateShader(gleType); }
   /* ----------------------------------------------------------------------- */
-  void DeleteShader(const GLuint uiShader) const
-    { sAPI.glDeleteShader(uiShader); }
+  void DeleteShader(const GLuint gluShader) const
+    { sAPI.glDeleteShader(gluShader); }
   /* ----------------------------------------------------------------------- */
-  void ShaderSource(const GLuint uiShader,
-    const GLchar*const cpCode) const
-  { sAPI.glShaderSource(uiShader, 1, &cpCode, nullptr); }
+  void ShaderSource(const GLuint gluShader, const GLchar*const glcpCode) const
+    { sAPI.glShaderSource(gluShader, 1, &glcpCode, nullptr); }
   /* ----------------------------------------------------------------------- */
-  void CompileShader(const GLuint uiShader) const
-    { sAPI.glCompileShader(uiShader); }
+  void CompileShader(const GLuint gluShader) const
+    { sAPI.glCompileShader(gluShader); }
   /* ----------------------------------------------------------------------- */
-  void AttachShader(const GLenum uiProgram,
-    const GLuint uiShader) const
-  { sAPI.glAttachShader(uiProgram, uiShader); }
+  void AttachShader(const GLuint gluProgram, const GLuint gluShader) const
+    { sAPI.glAttachShader(gluProgram, gluShader); }
   /* ----------------------------------------------------------------------- */
-  void DetachShader(const GLenum uiProgram,
-    const GLuint uiShader) const
-  { sAPI.glDetachShader(uiProgram, uiShader); }
+  void DetachShader(const GLuint gluProgram, const GLuint gluShader) const
+    { sAPI.glDetachShader(gluProgram, gluShader); }
   /* -- Get compilation status --------------------------------------------- */
-  GLenum GetCompileStatus(const GLuint uiProgram) const
-    { return GetShaderInt<GLenum>(uiProgram, GL_COMPILE_STATUS); }
+  GLenum GetCompileStatus(const GLuint gluProgram) const
+    { return GetShaderInt<GLenum>(gluProgram, GL_COMPILE_STATUS); }
   /* ----------------------------------------------------------------------- */
-  GLsizei GetShaderInfoLog(const GLuint uiPId, const GLsizei siMaxLength,
-    GLchar*const cpDest) const
+  GLsizei GetShaderInfoLog(const GLuint gluShader, const GLsizei glsiMaxLength,
+    GLchar*const glcpDest) const
   { // Get shader log entry and return length
-    GLsizei siLength;
-    sAPI.glGetShaderInfoLog(uiPId, siMaxLength, &siLength, cpDest);
-    return siLength;
+    GLsizei glsiLength;
+    sAPI.glGetShaderInfoLog(gluShader, glsiMaxLength, &glsiLength, glcpDest);
+    return glsiLength;
   }
   /* -- Get compilation failure reason ------------------------------------- */
-  const StdString GetCompileFailureReason(const GLuint uiId) const
+  StdString GetCompileFailureReason(const GLuint gluProgram) const
   { // Make string to store the message and return generic string if empty
     StdString strErrMsg;
-    strErrMsg.resize(GetShaderInt<size_t>(uiId, GL_INFO_LOG_LENGTH));
+    strErrMsg.resize(GetShaderInt<size_t>(gluProgram, GL_INFO_LOG_LENGTH));
     if(strErrMsg.empty()) return "No reason";
     // Get the error message
     strErrMsg.resize(static_cast<size_t>(
-      GetShaderInfoLog(uiId, static_cast<GLsizei>(strErrMsg.size()),
+      GetShaderInfoLog(gluProgram, static_cast<GLsizei>(strErrMsg.size()),
         StdToNonConstCast<GLchar*>(strErrMsg.data()))));
     // Get error and if an error occured put it as a failure reason
-    const GLenum eCode = GetError();
-    if(eCode != GL_NO_ERROR || strErrMsg.empty())
-      return StrFormat("Problem getting reason (0x$$)", StdIOSHex, eCode);
+    const GLenum gleCode = GetError();
+    if(gleCode != GL_NO_ERROR || strErrMsg.empty())
+      return StrFormat("Problem getting reason (0x$$)", StdIOSHex, gleCode);
     // Return the string while chopping off return characters
     return StrChop(strErrMsg);
   }
   /* -- Get linker status -------------------------------------------------- */
-  GLenum GetLinkStatus(const GLuint uiProgram) const
-    { return GetProgramInt<GLenum>(uiProgram, GL_LINK_STATUS); }
+  GLenum GetLinkStatus(const GLuint gluProgram) const
+    { return GetProgramInt<GLenum>(gluProgram, GL_LINK_STATUS); }
   /* ----------------------------------------------------------------------- */
-  GLsizei GetProgramInfoLog(const GLuint uiProgram, const GLsizei siMaxLength,
-    GLchar*const cpDest) const
+  GLsizei GetProgramInfoLog(const GLuint gluProgram,
+    const GLsizei glsiMaxLength, GLchar*const glcpDest) const
   { // Get shader program log entry and return length
-    GLsizei siLength;
-    sAPI.glGetProgramInfoLog(uiProgram, siMaxLength, &siLength, cpDest);
-    return siLength;
+    GLsizei glsiLength;
+    sAPI.glGetProgramInfoLog(gluProgram, glsiMaxLength, &glsiLength, glcpDest);
+    return glsiLength;
   }
   /* -- Get linker failure reason ------------------------------------------ */
-  const StdString GetLinkFailureReason(const GLuint uiProgram) const
+  StdString GetLinkFailureReason(const GLuint gluProgram) const
   { // Make string to store the message and return generic string if empty
     StdString strErrMsg;
-    strErrMsg.resize(GetProgramInt<size_t>(uiProgram, GL_INFO_LOG_LENGTH));
+    strErrMsg.resize(GetProgramInt<size_t>(gluProgram, GL_INFO_LOG_LENGTH));
     if(strErrMsg.empty()) return "No reason";
     // Get the error message and resize string as a result
-    strErrMsg.resize(static_cast<size_t>(GetProgramInfoLog(uiProgram,
+    strErrMsg.resize(static_cast<size_t>(GetProgramInfoLog(gluProgram,
       static_cast<GLsizei>(strErrMsg.size()),
       StdToNonConstCast<GLchar*>(strErrMsg.data()))));
     // Get error and if an error occured put it as a failure reason
-    const GLenum eCode = GetError();
-    if(eCode != GL_NO_ERROR || strErrMsg.empty())
-      return StrFormat("Problem getting reason ($$)", StdIOSHex, eCode);
+    const GLenum gleCode = GetError();
+    if(gleCode != GL_NO_ERROR || strErrMsg.empty())
+      return StrFormat("Problem getting reason ($$)", StdIOSHex, gleCode);
     // Return the string while chopping off return characters
     return StrChop(strErrMsg);
   }
   /* ----------------------------------------------------------------------- */
-  template<typename IntegerType>
-    const IntegerType GetShaderInt(const GLuint uiShader,
-      const GLenum eCmd) const
-  { // Storage for result
-    IntegerType tResult;
-    // Do the query
-    IGL(sAPI.glGetShaderiv(uiShader, eCmd, reinterpret_cast<GLint*>(&tResult)),
-      "Get shader integer failed!", "Shader", uiShader, "Enum", eCmd);
-    // return the result
-    return tResult;
+  template<typename IntType>
+    requires StdIsIntegral<IntType>
+  IntType GetShaderInt(const GLuint gluShader, const GLenum gleCmd) const
+  { // Create storage for result, do the checked query and return it
+    IntType itResult;
+    IGL(sAPI.glGetShaderiv(gluShader, gleCmd,
+      reinterpret_cast<GLint*>(&itResult)),
+      "Get shader integer failed!",
+      "Shader", gluShader, "Enum", gleCmd);
+    return itResult;
   }
   /* ----------------------------------------------------------------------- */
   GLuint CreateProgram() const { return sAPI.glCreateProgram(); }
   /* ----------------------------------------------------------------------- */
-  template<typename IntegerType>
-    const IntegerType GetProgramInt(const GLuint uiProgram,
-      const GLenum eCmd) const
-  { // Storage for result
-    IntegerType tResult;
-    // Do the query
-    IGL(sAPI.glGetProgramiv(uiProgram, eCmd,
-      reinterpret_cast<GLint*>(&tResult)),
-        "Get program integer failed!", "Program", uiProgram, "Enum", eCmd);
+  template<typename IntType>
+    requires StdIsIntegral<IntType>
+  IntType GetProgramInt(const GLuint gluProgram, const GLenum gleCmd) const
+  { // Do the checked query and return the result
+    IntType itResult;
+    IGL(sAPI.glGetProgramiv(gluProgram, gleCmd,
+          reinterpret_cast<GLint*>(&itResult)),
+      "Get program integer failed!",
+      "Program", gluProgram, "Enum", gleCmd);
     // return the result
-    return tResult;
+    return itResult;
   }
   /* ----------------------------------------------------------------------- */
-  void DeleteProgram(const GLuint uiProgram)
-  { // Delete the program
-    sAPI.glDeleteProgram(uiProgram);
-    // If it was the active program then reset the cache
-    if(uiActiveProgram == uiProgram)
-      uiActiveProgram = StdLimits<GLuint>::max();
+  void DeleteProgram(const GLuint gluProgram)
+  { // Delete the program and reset cache if it was the active program
+    sAPI.glDeleteProgram(gluProgram);
+    if(gluActiveProgram == gluProgram) gluActiveProgram = gluMax;
   }
   /* ----------------------------------------------------------------------- */
-  void LinkProgram(const GLuint uiProgram) const
-    { sAPI.glLinkProgram(uiProgram); }
+  void LinkProgram(const GLuint gluProgram) const
+    { sAPI.glLinkProgram(gluProgram); }
   /* ----------------------------------------------------------------------- */
   GLuint GetProgram() const { return GetInteger<GLuint>(GL_CURRENT_PROGRAM); }
   /* ----------------------------------------------------------------------- */
-  void UseProgram(const GLuint uiProgram=0)
+  void UseProgram(const GLuint gluProgram=0)
   { // Ignore if we already have the program selected
-    if(uiProgram == uiActiveProgram) return;
+    if(gluProgram == gluActiveProgram) return;
     // Activate the shader program
-    sAPI.glUseProgram(uiProgram);
+    sAPI.glUseProgram(gluProgram);
     // Update the active program
-    uiActiveProgram = uiProgram;
+    gluActiveProgram = gluProgram;
   }
   /* ----------------------------------------------------------------------- */
-  GLint GetUniformLocation(const GLuint uiProgram,
+  GLint GetUniformLocation(const GLuint gluProgram,
     const GLchar*const cpValue) const
-  { return sAPI.glGetUniformLocation(uiProgram, cpValue); }
+  { return sAPI.glGetUniformLocation(gluProgram, cpValue); }
   /* ----------------------------------------------------------------------- */
-  void BindAttribLocation(const GLuint uiProgram, const GLuint uiAttrib,
+  void BindAttribLocation(const GLuint gluProgram, const GLuint gluAttrib,
     const GLchar*const cpValue) const
-  { sAPI.glBindAttribLocation(uiProgram, uiAttrib, cpValue); }
+  { sAPI.glBindAttribLocation(gluProgram, gluAttrib, cpValue); }
   /* -- Assign a new vec4 array -------------------------------------------- */
-  void Uniform(const GLint iUniform, const GLsizei iCount,
-    const GLfloat*const fpValues) const
-  { sAPI.glUniform4fv(iUniform, iCount, fpValues); }
+  void Uniform(const GLint gliUniform, const GLsizei gliCount,
+    const GLfloat*const glfpValues) const
+  { sAPI.glUniform4fv(gliUniform, gliCount, glfpValues); }
   /* -- Assign a integer value to a uniform -------------------------------- */
-  void Uniform(const GLint iUniform, const GLint iValue) const
-    { sAPI.glUniform1i(iUniform, iValue); }
+  void Uniform(const GLint gliUniform, const GLint gliValue) const
+    { sAPI.glUniform1i(gliUniform, gliValue); }
   /* -- Assign four floats to a uniform ------------------------------------ */
-  void Uniform(const GLint iUniform, const GLfloat fV1, const GLfloat fV2,
-    const GLfloat fV3, const GLfloat fV4) const
-  { sAPI.glUniform4f(iUniform, fV1, fV2, fV3, fV4); }
+  void Uniform(const GLint gliUniform, const GLfloat glfV1,
+    const GLfloat glfV2, const GLfloat glfV3, const GLfloat glfV4) const
+  { sAPI.glUniform4f(gliUniform, glfV1, glfV2, glfV3, glfV4); }
   /* -- Create multiple vertex buffer objects ------------------------------ */
-  void GenVertexBuffers(const GLsizei siCount,
-    GLuint*const uipVbo) const
-  { sAPI.glGenBuffers(siCount, uipVbo); }
+  void GenVertexBuffers(const GLsizei glsiCount, GLuint*const gluipVbo) const
+    { sAPI.glGenBuffers(glsiCount, gluipVbo); }
   /* -- Bind vertex buffer object ------------------------------------------ */
-  void BindVertexBuffer(const GLenum eTarget, const GLuint uiVbo)
+  void BindVertexBuffer(const GLenum gleTarget, const GLuint gluVbo)
   { // Ignore if this vbo is already selected
-    if(uiVbo == uiActiveVbo) return;
+    if(gluVbo == gluActiveVbo) return;
     // Bind the vbo
-    sAPI.glBindBuffer(eTarget, uiVbo);
+    sAPI.glBindBuffer(gleTarget, gluVbo);
     // Is active vbo
-    uiActiveVbo = uiVbo;
+    gluActiveVbo = gluVbo;
   }
   /* -- Bind vertex buffer object ------------------------------------------ */
-  void BindStaticVertexBuffer(const GLuint uiVbo)
-    { BindVertexBuffer(GL_ARRAY_BUFFER, uiVbo); }
+  void BindStaticVertexBuffer(const GLuint gluVbo)
+    { BindVertexBuffer(GL_ARRAY_BUFFER, gluVbo); }
   /* -- Delete multiple vertex buffer objects ------------------------------ */
-  void DeleteVertexBuffers(const GLsizei siCount,
-    const GLuint*const uipVbo)
+  void DeleteVertexBuffers(const GLsizei glsiCount,
+    const GLuint*const gluipVbo)
   { // Check each vbo deleted
-    for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
+    for(GLsizei glsiIndex = 0; glsiIndex < glsiCount; ++glsiIndex)
     { // Keep scanning until we find a bound vbo
-      if(uipVbo[siIndex] != uiActiveVbo) continue;
+      if(gluipVbo[glsiIndex] != gluActiveVbo) continue;
       // Reset currently bound vbo
-      uiActiveVbo = StdLimits<GLuint>::max();
+      gluActiveVbo = gluMax;
       // No need to check any others
       break;
     } // Delete the vbo's
-    sAPI.glDeleteBuffers(siCount, uipVbo);
+    sAPI.glDeleteBuffers(glsiCount, gluipVbo);
   }
   /* -- Generate vertex array objects -------------------------------------- */
-  void GenVertexArrays(const GLsizei siCount, GLuint*const uipVao) const
-    { sAPI.glGenVertexArrays(siCount, uipVao); }
+  void GenVertexArrays(const GLsizei glsiCount, GLuint*const gluipVao) const
+    { sAPI.glGenVertexArrays(glsiCount, gluipVao); }
   /* -- Bind vertex array object ------------------------------------------- */
-  void BindVertexArray(const GLuint uiVao)
+  void BindVertexArray(const GLuint gluVao)
   { // Ignore if this vao is already selected
-    if(uiVao == uiActiveVao) return;
+    if(gluVao == gluActiveVao) return;
     // Bind the vertex array
-    sAPI.glBindVertexArray(uiVao);
+    sAPI.glBindVertexArray(gluVao);
     // Is active vao
-    uiActiveVao = uiVao;
+    gluActiveVao = gluVao;
   }
   /* -- Delete multiple vertex array objects ------------------------------- */
-  void DeleteVertexArrays(const GLsizei siCount, const GLuint*const uipVao)
+  void DeleteVertexArrays(const GLsizei glsiCount, const GLuint*const gluipVao)
   { // Check each vao deleted
-    for(GLsizei siIndex = 0; siIndex < siCount; ++siIndex)
+    for(GLsizei glsiIndex = 0; glsiIndex < glsiCount; ++glsiIndex)
     { // Keep scanning until we find a bound vao
-      if(uipVao[siIndex] != uiActiveVao) continue;
+      if(gluipVao[glsiIndex] != gluActiveVao) continue;
       // Reset currently bound vao
-      uiActiveVao = StdLimits<GLuint>::max();
+      gluActiveVao = gluMax;
       // No need to check any others
       break;
     } // Delete the vao's
-    sAPI.glDeleteVertexArrays(siCount, uipVao);
+    sAPI.glDeleteVertexArrays(glsiCount, gluipVao);
   }
   /* -- Data buffering functions ------------------------------------------- */
-  void BufferData(const GLenum eTarget, const GLsizei siSize,
-    const GLvoid*const vpBuffer, const GLenum eUsage) const
-  { sAPI.glBufferData(eTarget, siSize, vpBuffer, eUsage); }
+  void BufferData(const GLenum gleTarget, const GLsizei glsiSize,
+    const GLvoid*const glvpBuffer, const GLenum gleUsage) const
+  { sAPI.glBufferData(gleTarget, glsiSize, glvpBuffer, gleUsage); }
   /* ----------------------------------------------------------------------- */
-  void BufferStaticData(const GLsizei siSize, const GLvoid*const vpBuffer)
-    { BufferData(GL_ARRAY_BUFFER, siSize, vpBuffer, GL_STREAM_DRAW); }
-  /* -- Clear bound FBO or back buffer ------------------------------------- */
+  void BufferStaticData(const GLsizei glsiSize, const GLvoid*const glvpBuffer)
+    { BufferData(GL_ARRAY_BUFFER, glsiSize, glvpBuffer, GL_STREAM_DRAW); }
+  /* -- Clear bound Fbo or back buffer ------------------------------------- */
   void ClearBuffer() const { sAPI.glClear(GL_COLOR_BUFFER_BIT); }
-  /* -- Set specified VBO and VAO ------------------------------------------ */
-  void BindVAOandVBO(const GLuint uiNVAO, const GLuint uiNVBO)
-    { BindVertexArray(uiNVAO); BindStaticVertexBuffer(uiNVBO); }
-  /* -- Set main VBO/VAO data for main FBO --------------------------------- */
-  void BindMainVAOandVBO(void) { BindVAOandVBO(uiVAOmain, uiVBOmain); }
-  /* -- Set default VBO/VAO data for main FBO ------------------------------ */
-  void BindGlobalVAOandVBO(void) { BindVAOandVBO(uiVAO, uiVBO); }
-  /* -- Initialise main VBO/VAO data for main FBO -------------------------- */
-  void MainFBOInitDrawData(const GLsizei siSize, const GLvoid*const vpBuffer,
-    const GLvoid*const vpCoordBuffer, const GLvoid*const vpVertexBuffer,
-    const GLvoid*const vpColourBuffer)
-  { // Bind main FBO vertex buffer and array
-    IGL(BindMainVAOandVBO(), "Failed to bind main frame buffer VBO and VAO!",
-      "Main VAO", uiVAOmain, "Main VBO", uiVBOmain);
+  /* -- Set specified Vbo and Vao ------------------------------------------ */
+  void BindVaoandVbo(const GLuint gluNVao, const GLuint gluNVbo)
+    { BindVertexArray(gluNVao); BindStaticVertexBuffer(gluNVbo); }
+  /* -- Set main Vbo/Vao data for main Fbo --------------------------------- */
+  void BindMainVaoandVbo(void) { BindVaoandVbo(gluVaoMain, gluVboMain); }
+  /* -- Set default Vbo/Vao data for main Fbo ------------------------------ */
+  void BindGlobalVaoandVbo(void) { BindVaoandVbo(gluVaoGlobal, gluVboGlobal); }
+  /* -- Initialise main Vbo/Vao data for main Fbo -------------------------- */
+  void MainFboInitDrawData(const GLsizei glsiSize,
+    const GLvoid*const glvpBuffer, const GLvoid*const glvpCoordBuffer,
+    const GLvoid*const glvpVertexBuffer, const GLvoid*const glvpColourBuffer)
+  { // Bind main Fbo vertex buffer and array
+    IGL(BindMainVaoandVbo(), "Failed to bind main frame buffer Vbo and Vao!",
+      "Main Vao", gluVaoMain, "Main Vbo", gluVboMain);
     // Buffer the interlaced triangle data
-    IGL(BufferStaticData(siSize, vpBuffer), "Failed to buffer main FBO data!",
-      "Buffer", vpBuffer, "Size", siSize);
+    IGL(BufferStaticData(glsiSize, glvpBuffer),
+      "Failed to buffer main Fbo data!",
+      "Buffer", glvpBuffer, "Size", glsiSize);
     // Specify format of the interlaced triangle texture coord data
-    IGL(VertexAttribPointer(A_COORD, stCompsPerCoord, 0, vpCoordBuffer),
-      "Failed to set main FBO/VAO coord data!",
-      "Buffer", vpBuffer, "Size", siSize,
-      "Attrib", A_COORD,  "Data", vpCoordBuffer);
+    IGL(VertexAttribPointer(A_COORD, stCompsPerCoord, 0, glvpCoordBuffer),
+      "Failed to set main Fbo/Vao coord data!",
+      "Buffer", glvpBuffer, "Size", glsiSize,
+      "Attrib", A_COORD,    "Data", glvpCoordBuffer);
     IGL(EnableVertexAttribArray(A_COORD),
-      "Failed to enable texture co-ordinates array for this VAO!",
+      "Failed to enable texture co-ordinates array for this Vao!",
       "Attrib", A_COORD);
     // Specify format of the interlaced triangle vertex coord data
-    IGL(VertexAttribPointer(A_VERTEX, stCompsPerPos, 0, vpVertexBuffer),
-      "Failed to set main FBO/VAO vertex data!",
-      "Buffer", vpBuffer, "Size", siSize,
-      "Attrib", A_VERTEX, "Data", vpVertexBuffer);
+    IGL(VertexAttribPointer(A_VERTEX, stCompsPerPos, 0, glvpVertexBuffer),
+      "Failed to set main Fbo/Vao vertex data!",
+      "Buffer", glvpBuffer, "Size", glsiSize,
+      "Attrib", A_VERTEX,   "Data", glvpVertexBuffer);
     // Specify format of the interlaced triable texture intensity data
     IGL(EnableVertexAttribArray(A_VERTEX),
-      "Failed to enable vertex array for this VAO!", "Attrib", A_VERTEX);
-    IGL(VertexAttribPointer(A_COLOUR, stCompsPerColour, 0, vpColourBuffer),
-      "Failed to set main FBO/VAO colour data!",
-      "Buffer", vpBuffer, "Size", siSize,
-      "Attrib", A_COLOUR, "Data", vpColourBuffer);
+      "Failed to enable vertex array for this Vao!", "Attrib", A_VERTEX);
+    IGL(VertexAttribPointer(A_COLOUR, stCompsPerColour, 0, glvpColourBuffer),
+      "Failed to set main Fbo/Vao colour data!",
+      "Buffer", glvpBuffer, "Size", glsiSize,
+      "Attrib", A_COLOUR,   "Data", glvpColourBuffer);
     IGL(EnableVertexAttribArray(A_COLOUR),
-      "Failed to enable colour intensity array for this VAO!",
+      "Failed to enable colour intensity array for this Vao!",
       "Attrib", A_COLOUR);
     // Select default vertex buffer and array
-    IGL(BindGlobalVAOandVBO(), "Failed to bind global VBO and VAO!",
-      "Global VAO", uiVAO, "Global VBO", uiVBO);
+    IGL(BindGlobalVaoandVbo(), "Failed to bind global Vbo and Vao!",
+      "Global Vao", gluVaoGlobal, "Global Vbo", gluVboGlobal);
   }
   /* -- Set clear colour --------------------------------------------------- */
   void CommitClearColour() const
     { sAPI.glClearColor(ColourGetRed(),  ColourGetGreen(),
                         ColourGetBlue(), ColourGetAlpha()); }
   /* ----------------------------------------------------------------------- */
-  void SetClearColourInt(const unsigned int uiColour)
-    { ColourSetInt(uiColour); CommitClearColour(); }
-  /* -- Set clear colour (applies to all FBO's) ---------------------------- */
-  void SetClearColourIfChanged(const Colour &fcData)
-    { if(ColourSet(fcData)) CommitClearColour(); }
+  void SetClearColourInt(const unsigned uColour)
+    { ColourSetInt(uColour); CommitClearColour(); }
+  /* -- Set clear colour (applies to all Fbo's) ---------------------------- */
+  void SetClearColourIfChanged(const Colour &coCol)
+    { if(ColourSet(coCol)) CommitClearColour(); }
   /* ----------------------------------------------------------------------- */
-  void SetAndClear(const Colour &cCol)
-    { SetClearColourIfChanged(cCol); ClearBuffer(); }
+  void SetAndClear(const Colour &coCol)
+    { SetClearColourIfChanged(coCol); ClearBuffer(); }
   /* -- Update polygon rendering mode -------------------------------------- */
-  void SetPolygonMode(const GLenum eMode)
+  void SetPolygonMode(const GLenum gleMode)
   { // Return if we already set this mode else set it and update cached mode
-    if(ePolyMode == eMode) return;
-    sAPI.glPolygonMode(GL_FRONT_AND_BACK, eMode);
-    ePolyMode = eMode;
+    if(glePolyMode == gleMode) return;
+    sAPI.glPolygonMode(GL_FRONT_AND_BACK, gleMode);
+    glePolyMode = gleMode;
   }
   /* ----------------------------------------------------------------------- */
   GLenum GetError() const{ return sAPI.glGetError(); }
@@ -838,15 +852,15 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* ----------------------------------------------------------------------- */
   VSyncMode GetVSync() const { return vsmSetting; }
   /* ----------------------------------------------------------------------- */
-  void DrawArrays(const GLenum eMode, const GLint iFirst,
-    const GLsizei siCount) const
-  { sAPI.glDrawArrays(eMode, iFirst, siCount); }
+  void DrawArrays(const GLenum gleMode, const GLint gliFirst,
+    const GLsizei glsiCount) const
+  { sAPI.glDrawArrays(gleMode, gliFirst, glsiCount); }
   /* ----------------------------------------------------------------------- */
-  void DrawArraysTriangles(const GLsizei siCount) const
-    { DrawArrays(GL_TRIANGLES, 0, siCount); }
+  void DrawArraysTriangles(const GLsizei glsiCount) const
+    { DrawArrays(GL_TRIANGLES, 0, glsiCount); }
   /* -- Delete lingering textures and finish ------------------------------- */
   void OglPostRender()
-  { // Delete texture and FBO handles
+  { // Delete texture and Fbo handles
     DeleteTexturesAndFboHandles();
     // Flush and wait for GPU to complete
     Finish();
@@ -859,8 +873,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void OglDrawArrays(void)
   { // Set normal fill poly mode
     SetPolygonMode(GL_FILL);
-    // Bind main VAO and VBO containing our pre-defined data (MainFBOInit())
-    BindMainVAOandVBO();
+    // Bind main Vao and Vbo containing our pre-defined data (MainFboInit())
+    BindMainVaoandVbo();
     // Using MacOS?
 #if defined(MACOS)
     // This locking code is required to fix a major crash bug in Ventura
@@ -879,61 +893,60 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Blit the two triangles
     DrawArraysTriangles(stTwoTriangles);
 #endif
-    // Reset to global VAO and VBO
-    BindGlobalVAOandVBO();
+    // Reset to global Vao and Vbo
+    BindGlobalVaoandVbo();
   }
   /* ----------------------------------------------------------------------- */
-  void SetViewport(const GLsizei siWidth,
-    const GLsizei siHeight) const
-  { sAPI.glViewport(0, 0, siWidth, siHeight); }
+  void SetViewport(const GLsizei glsiWidth, const GLsizei glsiHeight) const
+    { sAPI.glViewport(0, 0, glsiWidth, glsiHeight); }
   /* -- Get openGL float array --------------------------------------------- */
   template<size_t stCount>
-    void GetFloatArray(const GLenum eId, GLfloat *const fpDest) const
-  { IGL(sAPI.glGetFloatv(eId, fpDest),
-      "Get float array failed!", "Index", eId, "Count", stCount); }
+    void GetFloatArray(const GLenum gleId, GLfloat *const glfpDest) const
+  { IGL(sAPI.glGetFloatv(gleId, glfpDest),
+      "Get float array failed!", "Index", gleId, "Count", stCount); }
   /* -- Get openGL float array --------------------------------------------- */
-  template<size_t stCount, class ArrayType = StdArray<GLfloat, stCount>>
-    const ArrayType GetFloatArray(const GLenum eId) const
-  { // Create array to return
-    ArrayType aData;
-    // Get specified value for enum and store it
-    GetFloatArray<stCount>(eId, aData.data());
-    // Return array
-    return aData;
+  template<size_t stCount, class IntType = StdArray<GLfloat, stCount>>
+    requires StdHasDataSize<IntType>
+  IntType GetFloatArray(const GLenum gleId) const
+  { // Create array to return data into, populate and return it
+    IntType tData;
+    GetFloatArray<stCount>(gleId, tData.data());
+    return tData;
   }
   /* -- Get openGL int array ----------------------------------------------- */
-  template<size_t stCount, class ArrayType = StdArray<GLint, stCount>>
-    const ArrayType GetIntegerArray(const GLenum eId) const
-  { // Create array to return
-    ArrayType aData;
-    // Get specified value for enum and store it
-    IGL(sAPI.glGetIntegerv(eId, aData.data()),
-      "Get integer array failed!", "Index", eId, "Count", stCount);
-    // Return array
+  template<size_t stCount, class IntType = StdArray<GLint, stCount>>
+    requires StdHasDataSize<IntType>
+  IntType GetIntegerArray(const GLenum gleId) const
+  { // Create array to return data into, populate and return it
+    IntType aData;
+    IGL(sAPI.glGetIntegerv(gleId, aData.data()),
+      "Get integer array failed!", "Index", gleId, "Count", stCount);
     return aData;
   }
   /* -- Get openGL int ----------------------------------------------------- */
-  template<typename IntegerType = GLint>
-    IntegerType GetInteger(const GLenum eId) const
-  { return static_cast<IntegerType>(
-      GetIntegerArray<sizeof(IntegerType) / sizeof(GLint)>(eId)[0]); }
+  template<typename IntType = GLint>
+    requires StdIsIntegral<IntType>
+  IntType GetInteger(const GLenum gleId) const
+  { return static_cast<IntType>(
+      GetIntegerArray<sizeof(IntType) / sizeof(GLint)>(gleId)[0]); }
   /* -- Get openGL string -------------------------------------------------- */
-  template<typename PtrType = GLubyte>
-    const PtrType* GetString(const GLenum eId) const
+  template<typename IntType = GLubyte>
+    requires StdIsIntegral<IntType>
+  const IntType* GetString(const GLenum gleId) const
   { // Get the variable and throw error if occured
-    const GLubyte*const ucpStr = sAPI.glGetString(eId);
-    IGLC("Get string failed!", "Index", eId);
+    const GLubyte*const ucpStr = sAPI.glGetString(gleId);
+    IGLC("Get string failed!", "Index", gleId);
     // Sanity check actual string
     if(!UtfIsCStringValid(ucpStr))
-      XC("Invalid string returned!", "Index", eId, "String", ucpStr);
+      XC("Invalid string returned!", "Index", gleId, "String", ucpStr);
     // Return result
-    return reinterpret_cast<const PtrType*>(ucpStr);
+    return reinterpret_cast<const IntType*>(ucpStr);
   }
-  /* -- Do delete all the marked FBO handles ------------------------------- */
+  /* -- Do delete all the marked Fbo handles ------------------------------- */
   void DeleteMarkedFboHandles()
-  { // Delete the FBO's
-    IGLL(DeleteFBO(static_cast<GLsizei>(gluivFbos.size()), gluivFbos.data()),
-      "OGL failed to destroy $ FBO handles!", gluivFbos.size());
+  { // Delete the Fbo's
+    IGLL(DeleteFbo(static_cast<GLsizei>(gluivFbos.size()), gluivFbos.data()),
+      "OGL failed to destroy $ Fbo handles!", gluivFbos.size());
     // Clear the list
     gluivFbos.clear();
   }
@@ -947,30 +960,31 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     gluivTextures.clear();
   }
   /* -- Enable vertex attribute array -------------------------------------- */
-  void EnableVertexAttribArray(const GLuint uiAId) const
-    { sAPI.glEnableVertexAttribArray(uiAId); }
+  void EnableVertexAttribArray(const GLuint gluAttrib) const
+    { sAPI.glEnableVertexAttribArray(gluAttrib); }
   /* -- Disable vertex attribute array ------------------------------------- */
-  void DisableVertexAttribArray(const GLuint uiAId) const
-    { sAPI.glDisableVertexAttribArray(uiAId); }
+  void DisableVertexAttribArray(const GLuint gluAttrib) const
+    { sAPI.glDisableVertexAttribArray(gluAttrib); }
   /* -- Enable an extension ------------------------------------------------ */
-  void EnableExtension(const GLenum eExtension) const
+  void EnableExtension(const GLenum gleExtension) const
   { // Ignore if already disabled
-    if(sAPI.glIsEnabled(eExtension)) return;
+    if(sAPI.glIsEnabled(gleExtension)) return;
     // Enable the extension and log result
-    IGL(sAPI.glEnable(eExtension), "Enable extension failed!",
-      "Extension", eExtension, "ExtensionId", idExtensions.Get(eExtension));
+    IGL(sAPI.glEnable(gleExtension), "Enable extension failed!",
+      "Extension",   gleExtension,
+      "ExtensionId", glemExtensions.Get(gleExtension));
     cLog->LogDebugExSafe("OGL enabled extension $<0x$$>.",
-      idExtensions.Get(eExtension), StdIOSHex, eExtension);
+      glemExtensions.Get(gleExtension), StdIOSHex, gleExtension);
   }
   /* -- Disable an extension ----------------------------------------------- */
-  void DisableExtension(const GLenum eExtension) const
+  void DisableExtension(const GLenum gleExtension) const
   { // Ignore if already disabled
-    if(!sAPI.glIsEnabled(eExtension)) return;
+    if(!sAPI.glIsEnabled(gleExtension)) return;
     // Disable the extension and log result
-    IGL(sAPI.glDisable(eExtension), "Disable extension failed!",
-      "Key", eExtension, "KeyId", idExtensions.Get(eExtension));
+    IGL(sAPI.glDisable(gleExtension), "Disable extension failed!",
+      "Key", gleExtension, "KeyId", glemExtensions.Get(gleExtension));
     cLog->LogDebugExSafe("OGL disabled extension $<0x$$>.",
-      idExtensions.Get(eExtension), StdIOSHex, eExtension);
+      glemExtensions.Get(gleExtension), StdIOSHex, gleExtension);
   }
   /* -- Commit blending algorithms ----------------------------------------- */
   void CommitBlend() const
@@ -980,21 +994,22 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void SetBlendIfChanged(const FboBlend &fbOther)
     { if(FboBlendSet(fbOther)) CommitBlend(); }
   /* -- Set texture parameter (No error checking needed) ------------------- */
-  void SetTexParam(const GLenum eVar, const GLint iVal) const
-    { sAPI.glTexParameteri(GL_TEXTURE_2D, eVar, iVal); }
+  void SetTexParam(const GLenum gleVar, const GLint gliValue) const
+    { sAPI.glTexParameteri(GL_TEXTURE_2D, gleVar, gliValue); }
   /* -- Convert pixel mode to string --------------------------------------- */
   template<typename IntType> // Forcing any type to GLenum
-    const StdStringView &GetPixelFormat(const IntType itMode) const
-  { return idFormatModes.Get(static_cast<GLenum>(itMode)); }
+    requires StdIsIntegral<IntType>
+  const StdStringView &GetPixelFormat(const IntType glitMode) const
+    { return glemFormatModes.Get(static_cast<GLenum>(glitMode)); }
   /* -- Update hint -------------------------------------------------------- */
-  void SetHint(const GLenum eTarget, const GLenum eMode) const
+  void SetHint(const GLenum gleTarget, const GLenum gleMode) const
   { // Get opengl hint and throw if not failed else set hint
-    IGL(sAPI.glHint(eTarget, eMode), "Failed to set hint!",
-      "Target", idHintTargets.Get(eTarget), "TargetId", eTarget,
-      "Mode",   idHintModes.Get(eMode),     "ModeId",   eMode);
+    IGL(sAPI.glHint(gleTarget, gleMode), "Failed to set hint!",
+      "Target", glemHintTargets.Get(gleTarget), "TargetId", gleTarget,
+      "Mode",   glemHintModes.Get(gleMode),     "ModeId",   gleMode);
     cLog->LogDebugExSafe("OGL set hint $<0x$$> to $<0x$>.",
-      idHintTargets.Get(eTarget), StdIOSHex, eTarget, idHintModes.Get(eMode),
-      eMode);
+      glemHintTargets.Get(gleTarget), StdIOSHex, gleTarget,
+      glemHintModes.Get(gleMode), gleMode);
   }
   /* -- GL is initialised? ------------------------------------------------- */
   bool IsGLInitialised() const { return FlagIsSet(GFL_INITIALISED); }
@@ -1026,7 +1041,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // If debug log level?
     if(cLog->LogHasLevel(LH_DEBUG))
     { // Get number of extensions and return if we're not interested in them?
-      const GLuint uiExts = GetExtensionCount();
+      const GLuint gluExts = GetExtensionCount();
       // Report device selected and basic capabilities
       cLog->LogNLCDebugExSafe(
         "- Clear colour: $,$,$,$; "      "Blend: $,$,$,$.\n"
@@ -1038,111 +1053,110 @@ class Ogl :                            // OGL class for OpenGL use simplicity
         ColourGetAlpha(),      FboBlendGetSrcRGB(),   FboBlendGetDstRGB(),
         FboBlendGetSrcAlpha(), FboBlendGetDstAlpha(), StdIOSDec,
         MaxTexSize(),          PackAlign(),           UnpackAlign(),
-        UnpackRowLength(),     MaxVertexAttribs(),    uiTexUnits,
-        uiExts);
+        UnpackRowLength(),     MaxVertexAttribs(),    gluTexUnits,
+        gluExts);
       // Build sorted list of extensions and log them all
-      StrUIntMap mExts;
-      for(GLuint uiI = 0; uiI < uiExts; ++uiI)
-        mExts.insert({ GetExtension(uiI), uiI });
-      for(const StrUIntMapPair &suimpPair : mExts)
+      StrUIntMap suimExts;
+      for(GLuint gluIndex = 0; gluIndex < gluExts; ++gluIndex)
+        suimExts.insert({ GetExtension(gluIndex), gluIndex });
+      for(const StrUIntMapPair &suimpPair : suimExts)
         cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
           suimpPair.first, suimpPair.second);
     } // Show warning if not enough texture units
-    if(uiTexUnits < 3)
+    if(gluTexUnits < 3)
       cLog->LogWarningSafe("Ogl detected only $ of the three texture units "
         "that are required for video playback!");
     // Set the initialised flag
     FlagSet(GFL_INITIALISED);
   }
   /* -- Set texture mode by filter id -------------------------------------- */
-  void SetFilterById(const OglFilterEnum ofeId, GLint &iMin, GLint &iMag) const
+  void SetFilterById(const OglFilterEnum ofeId, GLint &gliMin, GLint &gliMag)
+    const
   { // Get filter lookup id and set values
-    const TwoGLints &tfItem = tfnmList[ofeId];
-    iMag = tfItem.front();
-    iMin = tfItem.back();
+    const TwoGLints &tglItem = tfnmlMM[ofeId];
+    gliMag = tglItem.front();
+    gliMin = tglItem.back();
   }
   /* -- Convert engine blend id to blend OpenGL enum ----------------------- */
   GLenum EngineBlendToOglBlend(const OglBlendEnum obeEnum) const
     { return aBlends[obeEnum]; }
   /* -- Set texture mode by filter id -------------------------------------- */
-  void SetMipMapFilterById(const OglFilterEnum ofeId, GLint &iMin,
-    GLint &iMag) const
+  void SetMipMapFilterById(const OglFilterEnum ofeId, GLint &gliMin,
+    GLint &gliMag) const
   { // Get filter lookup id and set values
-    const TwoGLints &iaPair = tfList[ofeId];
-    iMag = iaPair.front();
-    iMin = iaPair.back();
+    const TwoGLints &tglItem = tflMM[ofeId];
+    gliMag = tglItem.front();
+    gliMin = tglItem.back();
   }
   /* -- Extensions --------------------------------------------------------- */
   GLuint GetExtensionCount() const
     { return GetInteger<GLuint>(GL_NUM_EXTENSIONS); }
   /* ----------------------------------------------------------------------- */
-  const char *GetExtension(const GLuint uiI) const
+  const char *GetExtension(const GLuint gluIndex) const
     { return reinterpret_cast<const char*>
-        (sAPI.glGetStringi(GL_EXTENSIONS, uiI)); }
+        (sAPI.glGetStringi(GL_EXTENSIONS, gluIndex)); }
   /* -- Read OpenGL renderer data ------------------------------------------ */
   const StdStringView &GetVendor() const { return strvVendor; }
   const StdStringView &GetRenderer() const { return strvRenderer; }
   const StdStringView &GetVersion() const { return strvVersion; }
   /* -- Reset all binds ---------------------------------------------------- */
   void OglResetBinds()
-  { // Unbind active texture
+  { // Unbind active texture, shader program, texture, fbo and select default
+    // vertex buffer and array objects.
     ActiveTexture();
-    // Unbind shader program
     UseProgram();
-    // Unbind texture
     BindTexture();
-    // Unbind FBO and select main back buffer
-    BindFBO();
-    // Select default vertex buffer
-    BindStaticVertexBuffer(uiVBO);
-    // Select default vertex array
-    BindVertexArray(uiVAO);
+    BindFbo();
+    BindStaticVertexBuffer(gluVboGlobal);
+    BindVertexArray(gluVaoGlobal);
   }
   /* -- Mark an array of textures for deletion ----------------------------- */
-  template<class List>void SetDeleteTextures(const List &vT)
-    { gluivTextures.insert(gluivTextures.cend(), vT.cbegin(), vT.cend()); }
+  template<class ListType>
+    requires StdHasDataSize<ListType>
+  void SetDeleteTextures(const ListType &ltTexList)
+    { gluivTextures.insert(gluivTextures.cend(),
+        ltTexList.cbegin(), ltTexList.cend()); }
   /* -- Mark a single texture for deletion --------------------------------- */
-  void SetDeleteTexture(const GLuint uiI)
-    { gluivTextures.emplace_back(uiI); }
-  /* -- Mark an FBO for deletion ------------------------------------------- */
-  void SetDeleteFbo(const GLuint uiI)
-    { gluivFbos.emplace_back(uiI); }
-  /* -- Do delete all the marked textures and FBO's ------------------------ */
+  void SetDeleteTexture(const GLuint gluTexture)
+    { gluivTextures.emplace_back(gluTexture); }
+  /* -- Mark an Fbo for deletion ------------------------------------------- */
+  void SetDeleteFbo(const GLuint gluFbo)
+    { gluivFbos.emplace_back(gluFbo); }
+  /* -- Do delete all the marked textures and Fbo's ------------------------ */
   void DeleteTexturesAndFboHandles()
   { // Have textures to delete?
     if(!gluivTextures.empty()) DeleteMarkedTextureHandles();
-    // Have FBO's to delete?
+    // Have Fbo's to delete?
     if(!gluivFbos.empty()) DeleteMarkedFboHandles();
   }
   /* -- Get available and total VRAM --------------------------------------- */
-  GLuint64 GetVRAMFree() const { return ullFreeVRAM; }
-  GLuint64 GetVRAMTotal() const { return ullTotalVRAM; }
+  GLuint64 GetVRAMFree() const { return glullFreeVRAM; }
+  GLuint64 GetVRAMTotal() const { return glullTotalVRAM; }
   GLuint64 GetVRAMUsed() const
     { return GetVRAMTotal() - GetVRAMFree(); }
   double GetVRAMFreePC() const
     { return 100.0 - UtilMakePercentage(GetVRAMFree(), GetVRAMTotal()); }
   /* -- Get free memory on nvidia cards ------------------------------------ */
   void UpdateVRAMAvailableNV()
-  { // - OG macro name: GPU_MEMORY_INFO_CURRENT_AVAILABLE_VIDMEM_NVX
-    // - https://www.khronos.org/registry/OpenGL/extensions/
+  { // - https://www.khronos.org/registry/OpenGL/extensions/
     //     NVX/NVX_gpu_memory_info.txt
-    ullFreeVRAM = GetInteger<GLuint64>(0x9049) * 1024;
+    glullFreeVRAM = GetInteger<GLuint64>(0x9049) * 1024;
   }
   /* -- Get free memory on ATI cards --------------------------------------- */
   void UpdateVRAMAvailableATI()
   { // - OG macro name: TEXTURE_FREE_MEMORY_ATI
     // - https://www.khronos.org/registry/OpenGL/extensions/
     //     ATI/ATI_meminfo.txt
-    ullFreeVRAM = GetInteger<GLuint64>(0x87FC) * 1024;
+    glullFreeVRAM = GetInteger<GLuint64>(0x87FC) * 1024;
     // Update total if higher
-    if(ullFreeVRAM > ullTotalVRAM) ullTotalVRAM = ullFreeVRAM;
+    if(glullFreeVRAM > glullTotalVRAM) glullTotalVRAM = glullFreeVRAM;
   }
   /* -- Get free memory on shared system memory renderer ------------------- */
   void UpdateVRAMAvailableShared()
   { // Update system memory usage data
     cSystem->UpdateMemoryUsageData();
     // Get system values
-    ullFreeVRAM = cSystem->RAMFree();
+    glullFreeVRAM = cSystem->RAMFree();
   }
   /* -- Get memory information --------------------------------------------- */
   void UpdateVRAMAvailable()
@@ -1159,7 +1173,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     if(FlagIsSet(GFL_HAVENVMEM))
     { // Get total video memory
       // - OG macro name: GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX
-      ullTotalVRAM = static_cast<GLuint64>(GetInteger<GLuint>(0x9048)) * 1024;
+      glullTotalVRAM =
+        static_cast<GLuint64>(GetInteger<GLuint>(0x9048)) * 1024;
       // Update available VRAM
       UpdateVRAMAvailableNV();
       // Report VRAM information to log
@@ -1167,7 +1182,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     } // Have ATI memory info?
     else if(FlagIsSet(GFL_HAVEATIMEM))
     { // No total video memory on ATI cards so let UpdateVRAMAvailable set it.
-      ullTotalVRAM = 0;
+      glullTotalVRAM = 0;
       // Update available VRAM
       UpdateVRAMAvailableATI();
       // Report VRAM information to log
@@ -1175,7 +1190,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     } // Device shares memory with system?
     else if(FlagIsSet(GFL_SHARERAM))
     { // Update total memory information
-      ullTotalVRAM = cSystem->RAMTotal();
+      glullTotalVRAM = cSystem->RAMTotal();
       // Update memory information
       UpdateVRAMAvailableShared();
       // Report VRAM information to log
@@ -1183,28 +1198,30 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     } // Have no memory information command?
     else
     { // Set maximum total VRAM
-      ullTotalVRAM = ullFreeVRAM = StdLimits<GLuint64>::max();
+      glullTotalVRAM = glullFreeVRAM = StdLimits<GLuint64>::max();
       // Report VRAM information to log
       cLog->LogWarningSafe("- Video memory data functions not available.");
       // No need to check anything
       return;
     } // Load free VRAM and if we don't have enough free VRAM? Throw error
-    if(ullMinVRAM && ullFreeVRAM < ullMinVRAM)
+    if(glullMinVRAM && glullFreeVRAM < glullMinVRAM)
       XC("There is not enough video memory available. Close any "
         "running applications consuming it and try running again!",
-        "Available", ullFreeVRAM, "Total",  ullTotalVRAM,
-        "Percent",   UtilMakePercentage(ullFreeVRAM, ullTotalVRAM),
-        "Required",  ullMinVRAM,  "Needed", ullMinVRAM - ullFreeVRAM);
+        "Available", glullFreeVRAM, "Total",  glullTotalVRAM,
+        "Percent",   UtilMakePercentage(glullFreeVRAM, glullTotalVRAM),
+        "Required",  glullMinVRAM,  "Needed", glullMinVRAM - glullFreeVRAM);
     // Report VRAM information to log
-    cLog->LogInfoExSafe("- Total VRAM: $ bytes ($).\n"
-                        "- Available VRAM: $ bytes ($).",
-      ullTotalVRAM, StrToBytes(ullTotalVRAM), ullFreeVRAM,
-      StrToBytes(ullFreeVRAM));
+    cLog->LogInfoExSafe(
+      "- Total VRAM: $ bytes ($).\n"
+      "- Available VRAM: $ bytes ($).",
+      glullTotalVRAM, StrToBytes(glullTotalVRAM), glullFreeVRAM,
+      StrToBytes(glullFreeVRAM));
   }
   /* --------------------------------------------------------------- */ public:
   template<typename IntType>
-    const StdStringView &GetGLErr(const IntType itCode) const
-  { return idOGLCodes.Get(static_cast<GLenum>(itCode)); }
+    requires StdIsIntegral<IntType>
+  const StdStringView &GetGLErr(const IntType itCode) const
+    { return glemOGLCodes.Get(static_cast<GLenum>(itCode)); }
   /* -- Return potential fps limit ----------------------------------------- */
   double GetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Flush pipeline and wait for GPU to finish -------------------------- */
@@ -1212,16 +1229,16 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Update window size limits ------------------------------------------ */
   void UpdateWindowSizeLimits()
   { // Get app specified minimums and maximums
-    const unsigned int
-      uiWMin = cCVars->CVarsGetInternal<unsigned int>(WIN_WIDTHMIN),
-      uiWMax = cCVars->CVarsGetInternal<unsigned int>(WIN_HEIGHTMIN),
-      uiHMin = cCVars->CVarsGetInternal<unsigned int>(WIN_WIDTHMAX),
-      uiHMax = cCVars->CVarsGetInternal<unsigned int>(WIN_HEIGHTMAX);
+    const unsigned
+      uWMin = cCVars->CVarsGetInternal<unsigned>(WIN_WIDTHMIN),
+      uWMax = cCVars->CVarsGetInternal<unsigned>(WIN_HEIGHTMIN),
+      uHMin = cCVars->CVarsGetInternal<unsigned>(WIN_WIDTHMAX),
+      uHMax = cCVars->CVarsGetInternal<unsigned>(WIN_HEIGHTMAX);
     // Set the window size limits. The specified maximum must not exceed the
     // video cards maximum texture size or perhaps BOOM! (not tested though).
-    cEvtWin->Add(EWC_WIN_LIMITS, uiWMin, uiWMax,
-      uiHMin ? UtilMinimum(uiHMin, MaxTexSize()) : MaxTexSize(),
-      uiHMax ? UtilMinimum(uiHMax, MaxTexSize()) : MaxTexSize());
+    cEvtWin->Add(EWC_WIN_LIMITS, uWMin, uWMax,
+      uHMin ? UtilMinimum(uHMin, MaxTexSize()) : MaxTexSize(),
+      uHMax ? UtilMinimum(uHMax, MaxTexSize()) : MaxTexSize());
   }
   /* -- Initialise --------------------------------------------------------- */
   void OglInit(const int iRefresh, const bool bForce=false)
@@ -1232,8 +1249,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Set opengl context to engine thread
     cGlFW->WinSetContext();
     // Load GL functions and throw exception with reason if not all loaded
-    if(const char*const cpErr = LoadFunctions())
-      XCS("Failed to load OpenGL export!", "Function", cpErr);
+    LoadFunctions();
     // Clear error that Wine or GLFW might have caused
     if(const GLenum eError = sAPI.glGetError())
       cLog->LogDebugExSafe("Ogl cleared host caused error code! ($/$$).",
@@ -1275,16 +1291,16 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // uploading odd sized textures.
     IGL(SetPackAlignment(1), "Set byte pack alignment failed!");
     IGL(SetUnpackAlignment(1), "Set byte unpack alignment failed!");
-    // Create and bind VAO
-    IGL(GenVertexArrays(static_cast<GLsizei>(ovhVAO.size()), ovhVAO.data()),
-      "Generate default VAOs failed!", "Count", ovhVAO.size());
-    IGL(BindVertexArray(uiVAO),
-      "Bind global VAO failed!", "Index", uiVAO);
-    // Create and bind VBO
-    IGL(GenVertexBuffers(static_cast<GLsizei>(ovhVBO.size()), ovhVBO.data()),
-      "Generate default VBOs failed!", "Count", ovhVBO.size());
-    IGL(BindStaticVertexBuffer(uiVBO),
-      "Bind global VBO failed!", "Index", uiVBO);
+    // Create and bind Vao
+    IGL(GenVertexArrays(static_cast<GLsizei>(ovhVao.size()), ovhVao.data()),
+      "Generate default Vaos failed!", "Count", ovhVao.size());
+    IGL(BindVertexArray(gluVaoGlobal),
+      "Bind global Vao failed!", "Index", gluVaoGlobal);
+    // Create and bind Vbo
+    IGL(GenVertexBuffers(static_cast<GLsizei>(ovhVbo.size()), ovhVbo.data()),
+      "Generate default Vbos failed!", "Count", ovhVbo.size());
+    IGL(BindStaticVertexBuffer(gluVboGlobal),
+      "Bind global Vbo failed!", "Index", gluVboGlobal);
     // Log class initialising
     cLog->LogInfoSafe("OGL subsystem initialised.");
   }
@@ -1305,45 +1321,45 @@ class Ogl :                            // OGL class for OpenGL use simplicity
         gluivTextures.size());
       DeleteMarkedTextureHandles();
       cLog->LogInfoSafe("OGL deleted marked texture handles.");
-    } // Have FBO's to delete?
+    } // Have Fbo's to delete?
     if(!gluivFbos.empty())
-    { // Delete the FBO handles
-      cLog->LogDebugExSafe("OGL deleting $ marked FBO handles...",
+    { // Delete the Fbo handles
+      cLog->LogDebugExSafe("OGL deleting $ marked Fbo handles...",
         gluivFbos.size());
       DeleteMarkedFboHandles();
-      cLog->LogInfoSafe("OGL deleted marked FBO handles.");
+      cLog->LogInfoSafe("OGL deleted marked Fbo handles.");
     } // Vertex buffer object created?
-    if(uiVBO && uiVBOmain)
+    if(gluVboGlobal && gluVboMain)
     { // Delete vertex buffer object
       cLog->LogDebugExSafe("OGL deleting $ vertex buffer objects $ and $...",
-        ovhVBO.size(), uiVBO, uiVBOmain);
+        ovhVbo.size(), gluVboGlobal, gluVboMain);
       IGLL(DeleteVertexBuffers(
-        static_cast<GLsizei>(ovhVBO.size()), ovhVBO.data()),
+        static_cast<GLsizei>(ovhVbo.size()), ovhVbo.data()),
           "Failed to delete vertex buffer objects!",
-          "Global", uiVBO, "Main", uiVBOmain);
-      StdFill(seq, ovhVBO.begin(), ovhVBO.end(), 0);
+          "Global", gluVboGlobal, "Main", gluVboMain);
+      StdFill(seq, ovhVbo.begin(), ovhVbo.end(), 0);
       cLog->LogInfoExSafe("OGL deleted $ vertex buffer objects.",
-        ovhVBO.size());
+        ovhVbo.size());
     } // Vertex array object created?
-    if(uiVAO && uiVAOmain)
+    if(gluVaoGlobal && gluVaoMain)
     { // Delete vertex array object
       cLog->LogDebugExSafe("OGL deleting $ vertex array objects $ and $...",
-        ovhVAO.size(), uiVAO, uiVAOmain);
+        ovhVao.size(), gluVaoGlobal, gluVaoMain);
       IGLL(DeleteVertexArrays(
-        static_cast<GLsizei>(ovhVAO.size()), ovhVAO.data()),
-          "Failed to delete vertex array object!", "Index", uiVAO);
-      StdFill(seq, ovhVAO.begin(), ovhVAO.end(), 0);
+        static_cast<GLsizei>(ovhVao.size()), ovhVao.data()),
+          "Failed to delete vertex array object!", "Index", gluVaoGlobal);
+      StdFill(seq, ovhVao.begin(), ovhVao.end(), 0);
       cLog->LogInfoExSafe("OGL deleted $ vertex array objects.",
-        ovhVAO.size());
+        ovhVao.size());
     } // Release opengl context from engine thread
     GlFWSetContext();
     // Init flags
     FlagReset(GFL_NONE);
     // Pack alignment and texture size and caches
-    uiActiveFbo = uiActiveProgram = uiActiveTexture = uiActiveTUnit =
-      uiActiveVao = uiActiveVbo = StdLimits<GLuint>::max();
-    uiPackAlign = uiTexUnits = uiMaxVertexAttribs = 0;
-    ePolyMode = GL_NONE;
+    gluActiveFbo = gluActiveProgram = gluActiveTexture = gluActiveTUnit =
+      gluActiveVao = gluActiveVbo = gluMax;
+    gluPackAlign = gluTexUnits = gluMaxVertexAttr = 0;
+    glePolyMode = GL_NONE;
     // Set blank generic text for strings
     strvVendor = cCommon->CommonNull();
     strvVersion = cCommon->CommonNull();
@@ -1357,20 +1373,20 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     InitHelper{ __FUNCTION__ },        // Send name to InitHelper
     OglFlags{ GFL_NONE },              // Set no flags
     /* -- Const members ---------------------------------------------------- */
-    idExtensions{{                     // Init GL extension names
+    glemExtensions{{                   // Init GL extension names
       IDMAPSTR(GL_BLEND),              IDMAPSTR(GL_DITHER),
       IDMAPSTR(GL_POLYGON_SMOOTH),     IDMAPSTR(GL_LINE_SMOOTH),
     }, "GL_EXT_UNKNOWN" },             // Unknown extension name
-    idHintTargets{{                    // Init hint target strings
+    glemHintTargets{{                  // Init hint target strings
       IDMAPSTR(GL_FRAGMENT_SHADER_DERIVATIVE_HINT),
       IDMAPSTR(GL_LINE_SMOOTH_HINT),   IDMAPSTR(GL_POLYGON_SMOOTH_HINT),
       IDMAPSTR(GL_TEXTURE_COMPRESSION_HINT),
     }, "GL_HINT_TARGET_UNKNOWN" },     // Unknown hint target name
-    idHintModes{{                      // INit hint mode strings
+    glemHintModes{{                    // INit hint mode strings
       IDMAPSTR(GL_FASTEST),            IDMAPSTR(GL_NICEST),
       IDMAPSTR(GL_DONT_CARE)
     }, "GL_HINT_MODE_UNKNOWN"},        // Unknown hint mode name
-    idFormatModes{{                    // Pixel format modes
+    glemFormatModes{{                  // Pixel format modes
       IDMAPSTR(GL_RGBA8),              IDMAPSTR(GL_RGB8),
       IDMAPSTR(GL_RED),                IDMAPSTR(GL_RG),
       IDMAPSTR(GL_RGB),                IDMAPSTR(GL_BGR),
@@ -1378,7 +1394,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       IDMAPSTR(GL_RGBA_DXT1),          IDMAPSTR(GL_RGBA_DXT3),
       IDMAPSTR(GL_RGBA_DXT5)
     }, "GL_FORMAT_UNKNOWN"},           // Unknown pixel format mode
-    idOGLCodes{{                       // Init error codes
+    glemOGLCodes{{                     // Init error codes
       IDMAPSTR(GL_NO_ERROR),           IDMAPSTR(GL_INVALID_ENUM),
       IDMAPSTR(GL_INVALID_VALUE),      IDMAPSTR(GL_INVALID_OPERATION),
 #if !defined(MACOS)                    // These only work on non-Apple targets
@@ -1404,43 +1420,42 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       GL_ONE_MINUS_CONSTANT_ALPHA,     // 13 (1,1,1)-(Ac,Ac,Ac) 1-Ac   O_M_C_A
       GL_SRC_ALPHA_SATURATE },         // 14 (i,i,i)            1      S_A_S
     /* -- Engine filter ID to OpenGL filter ID initialiser (no mipmap) ----- */
-    tfnmList{{ { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR },    // 0-1
-               { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR } }}, // 2-3
+    tfnmlMM{{ { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR },    // 0-1
+              { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR } }}, // 2-3
     /* -- Engine filter ID to OpenGL filter ID initialiser ----------------- */
-    tfList{{ { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR }, // 00-01
-             { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR }, // 02-03
-             { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST },    // 04
-             { GL_LINEAR,  GL_NEAREST_MIPMAP_NEAREST },    // 05
-             { GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR  },    // 06
-             { GL_LINEAR,  GL_NEAREST_MIPMAP_LINEAR  },    // 07
-             { GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST  },    // 08
-             { GL_LINEAR,  GL_LINEAR_MIPMAP_NEAREST  },    // 09
-             { GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR   },    // 10
-             { GL_LINEAR,  GL_LINEAR_MIPMAP_LINEAR   } }}, // 11
+    tflMM{{ { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR }, // 00-01
+            { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR }, // 02-03
+            { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST },    // 04
+            { GL_LINEAR,  GL_NEAREST_MIPMAP_NEAREST },    // 05
+            { GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR  },    // 06
+            { GL_LINEAR,  GL_NEAREST_MIPMAP_LINEAR  },    // 07
+            { GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST  },    // 08
+            { GL_LINEAR,  GL_LINEAR_MIPMAP_NEAREST  },    // 09
+            { GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR   },    // 10
+            { GL_LINEAR,  GL_LINEAR_MIPMAP_LINEAR   } }}, // 11
     /* -- Other initialisers ----------------------------------------------- */
-    ovhVAO{ 0, 0 },                    // Initialise vertex array objects
-    ovhVBO{ 0, 0 },                    // Initialise vertex buffer objects
-    uiActiveFbo(                       // Select back buffer
-      StdLimits<GLuint>::max()),       // Maxed so values commit properly
-    uiActiveProgram(uiActiveFbo),      // No active shader programme
-    uiActiveTexture(uiActiveFbo),      // No active texture
-    uiActiveTUnit(uiActiveFbo),        // No active texture unit
-    uiActiveVao(uiActiveFbo),          // No active vertex array object
-    uiActiveVbo(uiActiveFbo),          // No active vertex buffer object
-    uiTexSize(0),                      // No maximum texture size
-    uiPackAlign(0),                    // No pack align
-    uiUnpackAlign(0),                  // No unpack align
-    uiMaxVertexAttribs(0),             // No maximum vertex attributes
-    uiTexUnits(0),                     // No maximum texture units
-    uiVAO(ovhVAO[0]),                  // Set reference to global VAO
-    uiVBO(ovhVBO[0]),                  // Set reference to global VBO
-    uiVAOmain(ovhVAO[1]),              // Set reference to bb draw VAO
-    uiVBOmain(ovhVBO[1]),              // Set reference to bb draw VBO
-    ePolyMode(GL_NONE),                // No set polygon mode yet
-    iUnpackRowLength(0),               // No unpack row length
-    ullMinVRAM(0),                     // No minimum vram
-    ullTotalVRAM(0),                   // No total vram
-    ullFreeVRAM(0),                    // No free vram
+    ovhVao{ 0, 0 },                    // Initialise vertex array objects
+    ovhVbo{ 0, 0 },                    // Initialise vertex buffer objects
+    gluActiveFbo(gluMax),              // Select back buffer
+    gluActiveProgram(gluMax),          // No active shader programme
+    gluActiveTexture(gluMax),          // No active texture
+    gluActiveTUnit(gluMax),            // No active texture unit
+    gluActiveVao(gluMax),              // No active vertex array object
+    gluActiveVbo(gluMax),              // No active vertex buffer object
+    gluTexSize(0),                     // No maximum texture size
+    gluPackAlign(0),                   // No pack align
+    gluUnpackAlign(0),                 // No unpack align
+    gluMaxVertexAttr(0),               // No maximum vertex attributes
+    gluTexUnits(0),                    // No maximum texture units
+    gluVaoGlobal(ovhVao[0]),           // Set reference to global Vao
+    gluVboGlobal(ovhVbo[0]),           // Set reference to global Vbo
+    gluVaoMain(ovhVao[1]),             // Set reference to bb draw Vao
+    gluVboMain(ovhVbo[1]),             // Set reference to bb draw Vbo
+    glePolyMode(GL_NONE),              // No set polygon mode yet
+    gliUnpackRowLength(0),             // No unpack row length
+    glullMinVRAM(0),                   // No minimum vram
+    glullTotalVRAM(0),                 // No total vram
+    glullFreeVRAM(0),                  // No free vram
     cdLimit{ cd0 },                    // Init frame duration
     strvRenderer{                      // Blank renderer
       cCommon->CommonNull() },         // Initialise with "<null>" text
@@ -1466,22 +1481,22 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Update texture destroy list size ----------------------------------- */
   CVarReturn SetTexDListReserve(const size_t stCount)
     { return BoolToCVarReturn(UtilReserveList(gluivTextures, stCount)); }
-  /* -- Update FBO destroy list size --------------------------------------- */
+  /* -- Update Fbo destroy list size --------------------------------------- */
   CVarReturn SetFboDListReserve(const size_t stCount)
     { return BoolToCVarReturn(UtilReserveList(gluivFbos, stCount)); }
   /* -- Update minimum VRAM ------------------------------------------------ */
   CVarReturn SetMinVRAM(const GLuint64 ullValue)
-    { return CVarSimpleSetInt(ullMinVRAM, ullValue); }
+    { return CVarSimpleSetInt(glullMinVRAM, ullValue); }
   /* -- Update hints ------------------------------------------------------- */
   CVarReturn SetQCompressHint(const size_t stMode)
   { // Ignore if no context, but still succeeded
     if(IsGLNotInitialised()) return ACCEPT;
     // Get new value to set and return false if invalid
-    switch(const GLenum eNew = SHIndexToEnum(stMode))
+    switch(const GLenum gleNew = SHIndexToEnum(stMode))
     { // Invalid parameter or zero
       case GL_NONE: case GL_TRUE: return DENY;
       // Anything else, set the hint
-      default: SetHint(GL_TEXTURE_COMPRESSION_HINT, eNew); break;
+      default: SetHint(GL_TEXTURE_COMPRESSION_HINT, gleNew); break;
     } // Succeeded
     return ACCEPT;
   }
@@ -1490,13 +1505,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   { // Ignore if no context, but still succeeded
     if(IsGLNotInitialised()) return ACCEPT;
     // Get new value to set and return false if invalid
-    switch(const GLenum eNew = SHIndexToEnum(stMode))
+    switch(const GLenum gleNew = SHIndexToEnum(stMode))
     { // Invalid parameter
       case GL_NONE: return DENY;
       // If feature is to be disabled? Disable it
       case GL_TRUE: DisableExtension(GL_POLYGON_SMOOTH); break;
       // Anything else, set the hint and enable it
-      default: SetHint(GL_POLYGON_SMOOTH_HINT, eNew);
+      default: SetHint(GL_POLYGON_SMOOTH_HINT, gleNew);
                EnableExtension(GL_POLYGON_SMOOTH); break;
     } // Succeeded
     return ACCEPT;
@@ -1506,13 +1521,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   { // Ignore if no context, but still succeeded
     if(IsGLNotInitialised()) return ACCEPT;
     // Get new value to set and return false if invalid
-    switch(const GLenum eNew = SHIndexToEnum(stMode))
+    switch(const GLenum gleNew = SHIndexToEnum(stMode))
     { // Invalid parameter
       case GL_NONE: return DENY;
       // If feature is to be disabled? Disable it
       case GL_TRUE: DisableExtension(GL_LINE_SMOOTH); break;
       // Anything else, set the hint and enable it
-      default: SetHint(GL_LINE_SMOOTH_HINT, eNew);
+      default: SetHint(GL_LINE_SMOOTH_HINT, gleNew);
                EnableExtension(GL_LINE_SMOOTH); break;
     } // Succeeded
     return ACCEPT;
@@ -1522,11 +1537,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   { // Ignore if no context, but still succeeded
     if(IsGLNotInitialised()) return ACCEPT;
     // Get new value to set and return false if invalid
-    switch(const GLenum eNew = SHIndexToEnum(stMode))
+    switch(const GLenum gleNew = SHIndexToEnum(stMode))
     { // Invalid parameter or zero
       case GL_NONE: case GL_TRUE: return DENY;
       // Anything else, set the hint
-      default: SetHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, eNew); break;
+      default: SetHint(GL_FRAGMENT_SHADER_DERIVATIVE_HINT, gleNew); break;
     } // Succeeded
     return ACCEPT;
   }

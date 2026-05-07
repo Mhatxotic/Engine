@@ -9,20 +9,15 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IString {                    // Start of private module namespace
-/* -- Private dependencies and functions ----------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
 using namespace IUtf::P;
-/* -- Format time alias ---------------------------------------------------- */
-template<typename T>static auto StrPutTime(const StdTMStruct*const stdData,
-  const T*const tFormat) { return ::std::put_time(stdData, tFormat); }
-/* -- Parse time alias ----------------------------------------------------- */
-template<typename T>static auto StrGetTime(StdTMStruct*const stdData,
-  const T*const tFormat) { return ::std::get_time(stdData, tFormat); }
 /* -- Process string format/append value into output string stream --------- */
 template<typename AnyType>
-  static void StrFormatValue(StdOStringStream &osS, const AnyType &atVal)
+  static void StrFormatValue(StdOStringStream &osS, AnyType &&atVal)
 { // If is an exception object? Push the string of it
-  if constexpr(StdIsSame<AnyType, StdException>) osS << atVal.what();
+  if constexpr(StdIsSame<StdDecay<AnyType>, StdException>)
+    osS << atVal.what();
   // Let ostringstream handle the value
   else osS << atVal;
 }
@@ -30,64 +25,69 @@ template<typename AnyType>
 static void StrAppendParam(StdOStringStream&) {}
 /* -- Append a parameter to output string stream --------------------------- */
 template<typename AnyType, typename ...VarArgs>
-  static void StrAppendParam(StdOStringStream &osS, const AnyType &atVal,
+  static void StrAppendParam(StdOStringStream &osS, AnyType &&atVal,
     VarArgs &&...vaArgs)
 { // Push the specified value and process the next argument
-  StrFormatValue(osS, atVal);
+  StrFormatValue(osS, StdForward<AnyType>(atVal));
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Format final parameter to output string stream ----------------------- */
-static void StrFormatParam(StdOStringStream &osS, const char *cpPos)
-  { if(*cpPos) osS << cpPos; }
+static void StrFormatParam(StdOStringStream &osS, const StdStringView &strvPos,
+  const size_t stPos) { osS << strvPos.substr(stPos); }
+/* -- Check for next limiter ----------------------------------------------- */
+static size_t StrFormatGetNextDelimiter(StdOStringStream &osS,
+  const StdStringView &strvPos, size_t stPos)
+{ // Find mark that will be replaced by this param and if no more tokens?
+  const size_t stNewPos = strvPos.find('$', stPos);
+  if(stNewPos == StdNPos)
+  { // Return the rest of the string and return finished to the caller
+    StrFormatParam(osS, strvPos, stPos);
+    return StdNPos;
+  } // How far did we find the new position
+  switch(const size_t sitNum = static_cast<size_t>(stNewPos - stPos))
+  { // One character? Just copy one character and move ahead two to skip over
+    // the '$' we just processed.
+    case 1: osS << strvPos[stPos];
+            stPos += 2; break;
+    // More than one character? Copy characters and stride over the '$' we
+    // just processed. Better than storing single characters.
+    default: osS << strvPos.substr(stPos, sitNum);
+             stPos += sitNum + 1;
+             break;
+    // Did not move? This can happen at the start of the string. Just move
+    // over the first '$'.
+    case 0: ++stPos; break;
+  } // Return new position
+  return stPos;
+}
 /* -- Format any parameter to output string stream ------------------------- */
 template<typename AnyType, typename ...VarArgs>
-  static void StrFormatParam(StdOStringStream &osS, const char *cpPos,
-    const AnyType &atVal, VarArgs &&...vaArgs)
-{ // Find mark that will be replaced by this param and if we find the char?
-  if(const char*const cpNewPos = strchr(cpPos, '$'))
-  { // How far did we find the new position
-    switch(const size_t stNum = static_cast<size_t>(cpNewPos - cpPos))
-    { // One character? Just copy one character and move ahead two to skip over
-      // the '$' we just processed.
-      case 1: osS << *cpPos; cpPos += 2; break;
-      // More than one character? Copy characters and stride over the '$' we
-      // just processed. Better than storing single characters.
-      default: osS << StdString{ cpPos, stNum };
-               cpPos += stNum + 1;
-               break;
-      // Did not move? This can happen at the start of the string. Just move
-      // over the first '$'.
-      case 0: ++cpPos; break;
-    } // Push the value we are supposed to replace the matched '$' with.
-    StrFormatValue(osS, atVal);
-    // Process more parameters if we can.
-    StrFormatParam(osS, cpPos, StdForward<VarArgs>(vaArgs)...);
-  } // Return the rest of the string.
-  else StrFormatParam(osS, cpPos);
+  static void StrFormatParam(StdOStringStream &osS,
+    const StdStringView &strvPos, size_t stPos, AnyType &&atVal,
+    VarArgs &&...vaArgs)
+{ // Find mark that will be replaced by this param and return if finished
+  const size_t stNewPos = StrFormatGetNextDelimiter(osS, strvPos, stPos);
+  if(stNewPos == StdNPos) return;
+  // Push the value we are supposed to replace the matched '$' with.
+  StrFormatValue(osS, StdForward<AnyType>(atVal));
+  // Process more parameters if we can.
+  StrFormatParam(osS, strvPos, stNewPos, StdForward<VarArgs>(vaArgs)...);
 }
-/* -- Aliases -------------------------------------------------------------- */
-template<typename T>using StdUnderlyingType = ::std::underlying_type_t<T>;
-constexpr static auto &NoSkipWhitespace = ::std::noskipws;
-constexpr static auto &StdIOSShowPos = ::std::showpos; // Show + indicator
-typedef StdPair<const bool, const char> BoolCharPair;
-typedef StdVector<BoolCharPair> BoolCharPairVector;
- /* -- Public functions ---------------------------------------------------- */
+/* -- Public functions ----------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Some helpful globals so not to repeat anything ----------------------- */
-static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
 /* -- Append main function ------------------------------------------------- */
-template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
-  static StdString StrAppend(VarArgs &&...vaArgs)
-{ // Stream to write to
+template<typename ...VarArgs>
+  requires (sizeof...(VarArgs) > 0)
+static StdString StrAppend(VarArgs &&...vaArgs)
+{ // Create stream to write to, build it and return it
   StdOStringStream osS;
-  // Build string
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
-  // Return string
   return osS.str();
 }
 /* -- Append with formatted numbers ---------------------------------------- */
-template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
-  static StdString StrAppendImbue(VarArgs &&...vaArgs)
+template<typename ...VarArgs>
+  requires (sizeof...(VarArgs) > 0)
+static StdString StrAppendImbue(VarArgs &&...vaArgs)
 { // Stream to write to
   StdOStringStream osS;
   // Imbue current locale
@@ -97,132 +97,199 @@ template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
   // Return appended string
   return osS.str();
 }
-/* -- Prepare message from c-string format --------------------------------- */
-template<typename ...VarArgs> requires (sizeof...(VarArgs) > 0)
-  static StdString StrFormat(const char*const cpFmt, VarArgs &&...vaArgs)
-{ // Return if string empty of invalid
-  if(UtfIsCStringNotValid(cpFmt)) return {};
-  // Stream to write to
-  StdOStringStream osS;
-  // Format the text
-  StrFormatParam(osS, cpFmt, StdForward<VarArgs>(vaArgs)...);
-  // Return formated text
-  return osS.str();
-}
-/* -- Prepare message from string format (used by build.cpp) --------------- */
-template<typename ...VarArgs>
-  static StdString StrFormat [[maybe_unused]](const StdString &strS,
-    VarArgs &&...vaArgs)
-{ // Return if string empty of invalid
-  if(strS.empty()) return {};
-  // Stream to write to
-  StdOStringStream osS;
-  // StrFormat the text
-  StrFormatParam(osS, strS.data(), StdForward<VarArgs>(vaArgs)...);
-  // Return formated text
-  return osS.str();
+/* -- Prepare message from a c-string pointer ------------------------------ */
+template<typename StrType, typename ...VarArgs>
+  requires (sizeof...(VarArgs) > 0)
+static StdString StrFormat(StrType &&strFormat, VarArgs &&...vaArgs)
+{ // Get type without reference and a decayed type
+  using StrTypeNoRef = StdRemoveReference<StrType>;
+  using StrTypeDecayed = StdDecay<StrType>;
+  // If type is an C-style text array?
+  if constexpr(StdIsArray<StrTypeNoRef>)
+  { // Get the size of the text array and throw error if no size
+    constexpr size_t stN = StdExtent<StrTypeNoRef>;
+    static_assert(stN > 0);
+    // Call itself again with the correct format
+    return StrFormat(StdStringView{ strFormat, stN - 1 },
+      StdForward<VarArgs>(vaArgs)...);
+  } // If type is a null-terminated pointer to a C-String?
+  else if constexpr(StdIsPointer<StrTypeDecayed>)
+  { // We don't know the size so StdStringView will have to check for us
+    return StrFormat(StdStringView{ strFormat },
+      StdForward<VarArgs>(vaArgs)...);
+  } // Correct type is a StdString?
+  else if constexpr(StdIsString<StrTypeDecayed>)
+  { // Create stringstream to write to, format the text and return it
+    if(strFormat.empty()) return {};
+    StdOStringStream osS;
+    StrFormatParam(osS, StdForward<StrType>(strFormat), 0,
+      StdForward<VarArgs>(vaArgs)...);
+    return osS.str();
+  } // Anything else is invalid
+  else static_assert(sizeof(StrType) == 0, "Invalid format type!");
 }
 /* -- Format a number ------------------------------------------------------ */
 template<typename IntType>
-  static StdString StrReadableFromNum(const IntType itVal, const int iPrec=0)
-    { return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrec), itVal); }
+  requires StdIsArithmatic<IntType>
+static StdString StrReadableFromNum(const IntType itVal, const int iPrec = 0)
+  { return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrec), itVal); }
 /* -- Trim specified characters from end of string ------------------------- */
-static StdString StrTrimSuffix(const StdString &strStr, const char cChar)
+static StdString StrTrimSuffix(const StdStringView &strvStr, const char cChar)
 { // Return empty string if source string is empty or calculate ending
   // misoccurance of character then copy and return the string
-  return strStr.empty() ?
-    strStr : strStr.substr(0, strStr.find_last_not_of(cChar) + 1);
+  return StdString{ strvStr.empty() ?
+    strvStr : strvStr.substr(0, strvStr.find_last_not_of(cChar) + 1) };
+}
+/* -- Trim specified characters from end of string ------------------------- */
+template<class StrType>
+  requires StdIsString<StrType>
+static StrType &StrTrimSuffixRef[[maybe_unused]]
+  (StrType &strStr, const char cChar)
+{ // Locate the first non-occurrence of the char from end and erase them
+  const size_t stPos = strStr.find_last_not_of(cChar);
+  if(stPos != StdNPos) strStr.erase(stPos + 1);
+  return strStr;
 }
 /* -- Trim specified characters from string -------------------------------- */
-static StdString StrTrim(const StdString &strStr, const char cChar)
+template<class StrType>
+  requires StdIsString<StrType>
+static StrType &StrTrimRef(StrType &strStr, const char cChar)
 { // Return empty string if source string is empty
-  if(strStr.empty()) return strStr;
-  // Calculate starting misoccurance of character. Return original if not found
-  const size_t stBegin = strStr.find_first_not_of(cChar);
-  if(stBegin == StdNPos) return strStr;
-  // Calculate ending misoccurance of character then copy and return the string
-  return strStr.substr(stBegin, strStr.find_last_not_of(cChar) - stBegin + 1);
+  if(!strStr.empty())
+  { // Calculate starting misoccurance of char. Return original if not found
+    const size_t stBegin = strStr.find_first_not_of(cChar);
+    if(stBegin != StdNPos) strStr.erase(0, stBegin);
+    const size_t stEnd = strStr.find_last_not_of(cChar);
+    if(stEnd != StdNPos) strStr.resize(stEnd + 1);
+    strStr.shrink_to_fit();
+  } // Return original string
+  return strStr;
+}
+/* -- Trim specified characters from string -------------------------------- */
+template<class StrType>
+  requires StdIsString<StrType>
+static StdDecay<StrType> StrTrim(StrType &&strStr, const char cChar)
+{ // Return empty string if source string is empty
+  if(!strStr.empty())
+  { // Calculate starting misoccurance of char. Return original if not found
+    const size_t stBegin = strStr.find_first_not_of(cChar);
+    if(stBegin != StdNPos)
+      // Calculate ending misoccurance of char then copy and return the string
+      return strStr.substr(stBegin,
+        strStr.find_last_not_of(cChar) - stBegin + 1);
+  } // Return original string
+  return strStr;
 }
 /* -- Convert integer to string with padding and precision ----------------- */
 template<typename IntType>
-  static StdString StrFromNum(const IntType itV, const int iW=0,
-    const int iPrecision=StdLimits<IntType>::digits10)
+  requires StdIsArithmatic<IntType> || StdIsEnum<IntType>
+static StdString StrFromNum(const IntType itV, const int iW = 0,
+  const int iPrecision = StdLimits<IntType>::digits10)
 { return StrAppend(StdIOSSetWidth(iW), StdIOSFixed,
     StdIOSSetPrecision(iPrecision), itV); }
 /* -- Quickly convert numbered string to integer --------------------------- */
-template<typename IntType=int64_t>
-  static IntType StrToNum(const StdString &strValue)
+template<typename IntType>
+  static IntType PtrToNum(const char*const cpStr, const ssize_t sstSize)
 { // Put value into input string stream
-  StdIStringStream isS{ strValue };
-  // Push value into integer
+  StdStringBuf sbBuffer;
+  sbBuffer.sputn(cpStr, sstSize);
+  StdIStream isS{ &sbBuffer };
+  // Is an enum? We have to treat it differently
   if constexpr(StdIsEnum<IntType>)
-  { // Underlying value of the enum type to store into
+  { // Underlying value of the enum type to store into and convert it back
     StdUnderlyingType<IntType> utN;
-    // Store the value
     isS >> utN;
-    // Return converting it back to the original type (no performance loss)
     return static_cast<IntType>(utN);
-  } // Value is not enum type?
-  else
-  { // Value to store into
-    IntType itN;
-    // Store the value
-    isS >> itN;
-    // Return the value
-    return itN;
-  }
+  } // Value is a normal integral? Treat it nromally
+  else { IntType iitN; isS >> iitN; return iitN; }
 }
-/* -- Quickly convert hex string to integer ------------------------------== */
-template<typename IntType=int64_t>
-  static IntType StrHexToInt(const StdString &strValue)
-{ // Value to store into
-  IntType itN;
-  // Put value into input string stream
-  StdIStringStream isS{ strValue };
-  // Push value into integer
-  isS >> StdIOSHex >> itN;
-  // Return result
-  return itN;
+/* -- Quickly convert numbered string to integer (thin template) ----------- */
+template<typename IntType = int64_t, class StrType>
+  requires (StdIsArithmatic<IntType> || StdIsEnum<IntType>) &&
+            StdIsStrOrCStr<StrType>
+static IntType StrToNum(StrType &&strStr)
+  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+      [](auto &aStr)->IntType{
+        return PtrToNum<IntType>(aStr.data(),
+          static_cast<ssize_t>(aStr.size())); }); }
+/* -- Quickly convert hex string to integer -------------------------------- */
+template<typename IntType>
+  static IntType PtrHexToInt(const char*const cpStr, const ssize_t sstSize)
+{ // Put value into input string stream
+  StdStringBuf sbBuffer;
+  sbBuffer.sputn(cpStr, sstSize);
+  StdIStream isS{ &sbBuffer };
+  // Push value into integer and return result
+  IntType iitN; isS >> StdIOSHex >> iitN;
+  return iitN;
 }
+/* -- Quickly convert hex string to integer (thin template) ---------------- */
+template<typename IntType = int64_t, typename StrType>
+  requires StdIsArithmatic<IntType> && StdIsString<StrType>
+static IntType StrHexToInt(StrType &&strStr)
+  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+      [](auto &&aStr)->IntType{
+        return PtrHexToInt<IntType>(aStr.data(),
+          static_cast<ssize_t>(aStr.size())); }); }
 /* -- Convert hex to string with zero padding (lowercase) ------------------ */
 template<typename IntType>
-  static StdString StrHexFromInt(const IntType itVal, const int iPrec=0)
-{ return StrAppend(StdIOSSetFill('0'), StdIOSHex, StdIOSSetWidth(iPrec),
-    itVal); }
+  requires StdIsArithmatic<IntType> ||
+           StdIsArithmatic<StdUnderlyingType<IntType>>
+static StdString StrHexFromInt(const IntType itVal, const int iPrec = 0)
+  { return StrAppend(StdIOSSetFill('0'), StdIOSHex, StdIOSSetWidth(iPrec),
+      itVal); }
 /* -- Convert hex to string with zero padding (uppercase) ------------------ */
 template<typename IntType>
-  static StdString StrHexUFromInt(const IntType itVal, const int iPrec=0)
-{ constexpr static auto StdIOSUpCase = ::std::uppercase;
-  return StrAppend(StdIOSSetFill('0'), StdIOSHex, StdIOSSetWidth(iPrec),
-    StdIOSUpCase, itVal); }
+  requires StdIsArithmatic<IntType>
+static StdString StrHexUFromInt(const IntType itVal, const int iPrec = 0)
+  { return StrAppend(StdIOSSetFill('0'), StdIOSHex, StdIOSSetWidth(iPrec),
+      StdIOSUpCase, itVal); }
 /* -- Return if specified string has numbers ------------------------------- */
-static bool StrIsAlpha(const StdString &strValue)
-  { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
+template<class StrType>
+  requires StdIsString<StrType>
+static bool StrIsAlpha(StrType &&strStr)
+  { return StdAllOf(par_unseq, strStr.cbegin(), strStr.cend(),
       [](const char cValue) { return StdIsAlpha(cValue); }); }
 /* -- Return if specified string has numbers ------------------------------- */
-static bool StrIsAlphaNum(const StdString &strValue)
-  { return StdAllOf(par_unseq, strValue.cbegin(), strValue.cend(),
+template<class StrType>
+  requires StdIsString<StrType>
+static bool StrIsAlphaNum(StrType &&strStr)
+  { return StdAllOf(par_unseq, strStr.cbegin(), strStr.cend(),
       [](const char cValue)
         { return StdIsAlnum(static_cast<int>(cValue)); }); }
 /* -- Return if specified string is a valid integer ------------------------ */
-template<typename IntType=int64_t>
-  static bool StrIsInt(const StdString &strValue)
+template<typename IntType>
+  static bool PtrIsInt(const char*const cpStr, const ssize_t sstSize)
 { // Get string stream
-  StdIStringStream isS{ strValue };
-  // Test with string stream
-  IntType itV; isS >> NoSkipWhitespace >> itV;
-  // Return if succeeded
+  StdStringBuf sbBuffer;
+  sbBuffer.sputn(cpStr, sstSize);
+  StdIStream isS{ &sbBuffer };
+  // Test value with input stream and return if failed
+  IntType itV; isS >> StdIOSNoSkipWS >> itV;
   return isS.eof() && !isS.fail();
 }
+/* -- Return if specified string is a valid integer (thin template) -------- */
+template<typename IntType = int64_t, class StrType>
+  requires (StdIsArithmatic<IntType> || StdIsEnum<IntType>) &&
+    StdIsStrOrCStr<StrType>
+static bool StrIsInt(StrType &&strStr)
+  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+      [](auto &&aStr)->bool{
+        return PtrIsInt<IntType>(aStr.data(),
+          static_cast<ssize_t>(aStr.size())); }); }
 /* -- Return if specified string is a valid float -------------------------- */
-static bool StrIsFloat(const StdString &strValue)
-  { return StrIsInt<double>(strValue); }
+template<typename StrType>
+  requires StdIsStrOrCStr<StrType>
+static bool StrIsFloat(StrType &&strStr)
+  { return StrIsInt<double>(StdForward<StrType>(strStr)); }
 /* -- Return true if string is a value number to the power of 2 ------------ */
-static bool StrIsNumPOW2(const StdString &strValue)
-  { return !strValue.empty() &&
-      StdIntIsPOW2(StdAbsolute(StrToNum(strValue))); }
+template<typename StrType>
+  requires StdIsStrOrCStr<StrType>
+static bool StrIsNumPOW2(StrType &&strStr)
+  { return !strStr.empty() &&
+     StdIntIsPOW2(StdAbsolute(StrToNum(StdForward<StrType>(strStr)))); }
 /* -- Convert error number to string --------------------------------------- */
-static StdString StrFromErrNo(const int iErrNo=errno)
+static StdString StrFromErrNo(const int iErrNo = errno)
 { // Buffer to store error message into
   StdResized<StdString> strErr{ 128 };
   // Windows?
@@ -250,44 +317,6 @@ static StdString StrFromErrNo(const int iErrNo=errno)
   // Have to do this because the string is still actually 94 bytes long
   return strErr;
 }
-/* -- Convert special formatted string to unix timestamp ------------------- */
-static StdTimeT StrParseTime2(const StdString &strS)
-{ // Time structure
-  StdTMStruct tData;
-  // Scan timestamp into time structure (Don't care about day name). We'll
-  // store the timezone in tm_isdst and we'll optimise this by storing the
-  // month string in the actual month integer var (4 or 8 bytes so safe).
-  // Fmt: %3s %3s %02d %02d:%02d:%02d %05d %04d
-  // Test example to just quickly copy and paste in the engine...
-  // lexec 'Console.Write(Util.ParseTime2("Mon Mar 14 00:00:00 -0800 2017"));'
-  StdIStringStream isS{ strS };
-  isS >> StrGetTime(&tData, "%a %b %d %T");
-  if(isS.fail()) return 0;
-  isS >> tData.tm_wday;
-  isS >> StrGetTime(&tData, "%Y");
-  if(isS.fail()) return 0;
-  // No daylight savings
-  tData.tm_isdst = 0;
-  // Return timestamp and adjust for specified timezone if neccesary
-  return StdMkTime(&tData) + (!tData.tm_wday ? 0 : ((tData.tm_wday < 0 ?
-    ((tData.tm_wday % 100) * 60) : -((tData.tm_wday % 100) * 60)) +
-    ((tData.tm_wday / 100) * 3600)));
-}
-/* -- Convert ISO 8601 string to unix timestamp ---------------------------- */
-static StdTimeT StrParseTime(const StdString &strS,
-  const char*const cpF="%Y-%m-%dT%TZ")
-{ // Time structure
-  StdTMStruct tData;
-  // Create static input stringstream (safe and fast in c++11)
-  StdIStringStream isS{ strS };
-  // Scan timestamp into time structure
-  isS >> StrGetTime(&tData, cpF);
-  if(isS.fail()) return 0;
-  // Fill in other useless junk in the struct
-  tData.tm_isdst = 0;
-  // Return timestamp
-  return StdMkTime(&tData);
-}
 /* -- Convert writable reference string to uppercase ----------------------- */
 static StdString &StrToUpCaseRef(StdString &strStr)
 { // If string is not empty
@@ -296,6 +325,19 @@ static StdString &StrToUpCaseRef(StdString &strStr)
       [](unsigned char ucChar) { return StdToUpper(ucChar); });
   // Return output
   return strStr;
+}
+/* -- Convert string to upper case ----------------------------------------- */
+template<typename StrType>
+  requires StdIsString<StrType>
+static StdString StrToUpCase[[maybe_unused]](StrType &&strSrc)
+{ // String empty? Return a blank one
+  if(strSrc.empty()) return {};
+  // Create memory for destination string and copy the string over
+  StdReserved<StdString> strDst{ strSrc.size() };
+  StdTransformNXP(strSrc.begin(), strSrc.end(), StdBackInserter(strDst),
+    [](unsigned char ucChar) { return StdToUpper(ucChar); });
+  // Return result
+  return strDst;
 }
 /* -- Convert writable referenced string to lowercase ---------------------- */
 static StdString &StrToLowCaseRef(StdString &strStr)
@@ -306,19 +348,10 @@ static StdString &StrToLowCaseRef(StdString &strStr)
   // Return output
   return strStr;
 }
-/* -- Convert string to upper case ----------------------------------------- */
-static StdString StrToUpCase[[maybe_unused]](const StdString &strSrc)
-{ // String empty? Return a blank one
-  if(strSrc.empty()) return {};
-  // Create memory for destination string and copy the string over
-  StdReserved<StdString> strDst{ strSrc.size() };
-  StdTransformNXP(strSrc.begin(), strSrc.end(), StdBackInserter(strDst),
-    [](unsigned char ucChar) { return StdToUpper(ucChar); });
-  // Return result
-  return strDst;
-}
 /* -- Convert string to lower case ----------------------------------------- */
-static StdString StrToLowCase[[maybe_unused]](const StdString &strSrc)
+template<typename StrType>
+  requires StdIsString<StrType>
+static StdString StrToLowCase(StrType &&strSrc)
 { // String empty? Return a blank one
   if(strSrc.empty()) return {};
   // Prepare destination string and run a transform to lowercase each char
@@ -329,8 +362,9 @@ static StdString StrToLowCase[[maybe_unused]](const StdString &strSrc)
   return strDst;
 }
 /* -- Basic multiple replace of text in string ----------------------------- */
-template<class ListType=StrPairList>
-  static StdString &StrReplaceEx(StdString &strDest, const ListType &ltList)
+template<class ListType = StrPairList, class StrType>
+  requires StdIsString<StrType>
+static StdString &StrReplaceExRef(StrType &&strDest, const ListType &ltList)
 { // Return original string if empty
   if(strDest.empty() || ltList.empty()) return strDest;
   // Current index to scan
@@ -338,20 +372,19 @@ template<class ListType=StrPairList>
   // Repeat...
   do
   { // Container type
-    typedef typename ListType::value_type ListTypeItem;
+    using ListTypeItem = typename ListType::value_type;
     // Enumerate each occurence to find...
     for(const ListTypeItem &ltiItem : ltList)
     { // Get string to find
-      const StdString &strWhat = ltiItem.first;
+      const StdTupleElement<0, ListTypeItem> &strWhat = ltiItem.first;
       // Last cut position and current character index
-      if(strncmp(strDest.data()+stPos, strWhat.data(), strWhat.length()))
-        continue;
-      // Get string to replace with
-      const StdString &strWith = ltiItem.second;
-      // Replace the occurence with the specified text
-      strDest.replace(stPos, strWhat.length(), strWith);
+      if(strDest.size() < stPos + strWhat.size() ||
+        strDest.compare(stPos, strWhat.size(), strWhat)) continue;
+      // Get string to replace with and replace the occurence
+      const StdTupleElement<1, ListTypeItem> &strWith = ltiItem.second;
+      strDest.replace(stPos, strWhat.size(), strWith);
       // Go forward so we can search for the next occurence
-      stPos += strWith.length();
+      stPos += strWith.size();
       // Start again
       goto NextCharacter;
     } // Occurences not found
@@ -359,134 +392,109 @@ template<class ListType=StrPairList>
     // Occurence found
     NextCharacter:;
   } // ...until no more characters left
-  while(stPos < strDest.length());
+  while(stPos < strDest.size());
   // Return the string we build
   return strDest;
 }
+/* -- Basic multiple replace of text in string ----------------------------- */
+template<class ListType = StrPairList, class StrType>
+  requires StdIsStrOrCStr<StrType>
+static StdString StrReplaceEx(StrType &&strSrc, const ListType &ltList)
+  { StdString strDest{ strSrc }; return StrReplaceExRef(strDest, ltList); }
 /* -- Basic replace of text in string -------------------------------------- */
-static StdString &StrReplace(StdString &strStr, const char cWhat,
+static StdString &StrReplaceCharRef(StdString &strStr, const char cWhat,
   const char cWith)
-{ // Return original string if empty
-  if(strStr.empty()) return strStr;
-  // For each occurence of 'strWhat' with 'strWith'.
-  for(size_t stPos  = strStr.find(cWhat, 0);
-             stPos != StdNPos;
-             stPos  = strStr.find(cWhat, stPos)) strStr[stPos++] = cWith;
+{ // If not empty then replace every character we find
+  if(!strStr.empty())
+    for(size_t stPos = strStr.find(cWhat, 0); stPos != StdNPos;
+      stPos = strStr.find(cWhat, stPos)) strStr[stPos++] = cWith;
   // Return string
   return strStr;
 }
 /* -- Basic replace of text in string -------------------------------------- */
-static StdString StrReplace(const StdString &strStr, const char cWhat,
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static StdString StrReplaceChar(StrType &&strStr, const char cWhat,
   const char cWith)
-    { StdString strDst{ strStr }; return StrReplace(strDst, cWhat, cWith); }
+{ StdString strDst{ strStr }; return StrReplaceCharRef(strDst, cWhat, cWith); }
 /* ------------------------------------------------------------------------- */
-static StdString &StrReplace(StdString &strDest, const StdString &strWhat,
-  const StdString &strWith)
+template<class StrWhatType, class StrWithType>
+  requires StdIsString<StrWhatType> && StdIsString<StrWithType>
+static StdString &StrReplaceRef(StdString &strDest, StrWhatType &&strWhat,
+  StrWithType &&strWith)
 { // Return original string if empty
   if(strDest.empty()) return strDest;
   // For each occurence of 'strWhat' with 'strWith'.
-  for(size_t stPos  = strDest.find(strWhat,0);
+  for(size_t stPos  = strDest.find(strWhat, 0);
              stPos != StdNPos;
              stPos  = strDest.find(strWhat, stPos))
   { // Replace occurence
-    strDest.replace(stPos, strWhat.length(), strWith);
+    strDest.replace(stPos, strWhat.size(), strWith);
     // Push position forward so we don't risk infinite loop
-    stPos += strWith.length();
+    stPos += strWith.size();
   } // Return string
   return strDest;
 }
 /* -- Basic replace of text in string -------------------------------------- */
-static StdString StrReplace(const StdString &strIn, const StdString &strWhat,
-  const StdString &strWith)
-    { StdString strOut{ strIn }; return StrReplace(strOut, strWhat, strWith); }
+template<class StrType, class StrWhatType, class StrWithType>
+  requires StdIsStrOrCStr<StrType> &&
+           StdIsStrOrCStr<StrWhatType> &&
+           StdIsStrOrCStr<StrWithType>
+static StdString StrReplace(StrType &&strStr, StrWhatType &&strWhat,
+  StrWithType &&strWith)
+{ StdString strOut{ strStr };
+  return StrReplaceRef(strOut, StdForward<StrWhatType>(strWhat),
+                               StdForward<StrWithType>(strWith)); }
 /* -- Replace all occurences of whitespace with plus ----------------------- */
-static StdString StrUrlEncodeSpaces(const StdString &strText)
-  { return StrReplace(strText, ' ', '+'); }
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static StdString StrUrlEncodeSpaces(StrType &&strText)
+  { return StrReplaceChar(StdForward<StrType>(strText), ' ', '+'); }
 /* ------------------------------------------------------------------------- */
-template<class StrTypeIn, class StrTypeAlt=StrTypeIn>
-  requires (StdIsPointer<StrTypeIn> || StdIsClass<StrTypeIn>) &&
-    StdIsSame<StrTypeIn, StrTypeAlt>
-static auto &StrIsBlank(const StrTypeIn &strIn, const StrTypeAlt &strAlt)
+template<class StrTypeIn, class StrTypeAlt = StrTypeIn>
+  requires StdIsStrOrCStr<StrTypeIn> && StdIsSame<StrTypeIn, StrTypeAlt>
+static auto &StrIsBlank(StrTypeIn &&strIn, StrTypeAlt &&strAlt)
   { return strIn.empty() ? strAlt : strIn; }
-/* ------------------------------------------------------------------------- */
-template<class StrTypeIn>
-  requires StdIsPointer<StrTypeIn> || StdIsClass<StrTypeIn>
-static auto &StrIsBlank[[maybe_unused]](const StrTypeIn &strIn)
-  { return StrIsBlank<StrTypeIn>(strIn, cCommon->CommonBlank()); }
-/* ------------------------------------------------------------------------- */
-template<typename IntType> requires StdIsInteger<IntType>
-  static const char *StrCPluralise(const IntType itCount,
-    const char*const cpSingular, const char*const cpPlural)
-{ return itCount == 1 ? cpSingular : cpPlural; }
-/* ------------------------------------------------------------------------- */
-template<typename IntType>
-  static StdString StrCPluraliseNum(const IntType itCount,
-    const char *cpSingular, const char *cpPlural)
+/* -- Pluralise (returns a reference to an lvalue argument) ---------------- */
+template<typename IntType, typename StrTypeSing, typename StrTypePlur>
+  requires StdIsIntegral<IntType> &&
+           StdIsStrOrCStr<StrTypeSing> &&
+           StdIsStrOrCStr<StrTypePlur> &&
+           StdIsSame<StrTypeSing, StrTypePlur>
+StrTypeSing StrPluraliseRef(const IntType itC, StrTypeSing &&stsSingular,
+  StrTypePlur &&stpPlural)
+{ return itC != 1 ? stpPlural : stsSingular; }
+/* -- Handles temporaries by returning by value avoiding dangling refs ----- */
+template<typename IntType, typename StrTypeSing, typename StrTypePlur>
+  requires StdIsIntegral<IntType> &&
+           StdIsStrOrCStr<StrTypeSing> &&
+           StdIsStrOrCStr<StrTypePlur>
+constexpr auto StrPluraliseCopy(const IntType itC, StrTypeSing &&stsSingular,
+  StrTypePlur &&stpPlural)
+{ return itC != 1 ? StdForward<StrTypePlur>(stpPlural) :
+                    StdForward<StrTypeSing>(stsSingular); }
+/* -- Build non-imbued number with requested strings ----------------------- */
+template<typename IntType, typename StrTypeSing, typename StrTypePlur>
+  requires StdIsIntegral<IntType> &&
+           StdIsStrOrCStr<StrTypeSing> &&
+           StdIsStrOrCStr<StrTypePlur>
+static StdString StrPluraliseNum(const IntType itCount,
+  StrTypeSing &&stsSingular, StrTypePlur &&stpPlural)
 { return StrAppend(itCount, ' ',
-    StrCPluralise<IntType>(itCount, cpSingular, cpPlural)); }
-/* ------------------------------------------------------------------------- */
-template<typename IntType>
-  static StdString StrCPluraliseNumEx(const IntType itCount,
-    const char *cpSingular, const char *cpPlural)
+    StrPluraliseCopy<IntType, StrTypeSing, StrTypePlur>
+      (itCount, StdForward<StrTypeSing>(stsSingular),
+                StdForward<StrTypePlur>(stpPlural))); }
+/* -- Build imbued number with requested strings --------------------------- */
+template<typename IntType, typename StrTypeSing, typename StrTypePlur>
+  requires StdIsIntegral<IntType> &&
+           StdIsStrOrCStr<StrTypeSing> &&
+           StdIsStrOrCStr<StrTypePlur>
+static StdString StrPluraliseNumEx(const IntType itCount,
+  StrTypeSing &&stsSingular, StrTypePlur &&stpPlural)
 { return StrAppend(StrReadableFromNum(itCount), ' ',
-    StrCPluralise<IntType>(itCount, cpSingular, cpPlural)); }
-/* -- Convert time to long duration ---------------------------------------- */
-static StdString StrLongFromDuration(const StdTimeT tDuration,
-  unsigned int uiCompMax = StdMaxUInt)
-{ // Time buffer
-  StdTMStruct tD;
-  // Lets convert the duration as a time then it will be properly formated
-  // in terms of leap years, proper days in a month etc.
-  StdGMTime(&tD, &tDuration);
-  // Output string
-  StdOStringStream osS;
-  // If failed? Manually do it
-  if(tD.tm_year == -1)
-  { // Clear years and months since we can't realiably calculate that.
-    tD.tm_year = tD.tm_mon = 0;
-    // Set days, hours, minutes and seconds
-    tD.tm_mday = static_cast<int>(tDuration / 86400);
-    tD.tm_hour = static_cast<int>(tDuration / 3600 % 24);
-    tD.tm_min = static_cast<int>(tDuration / 60 % 60);
-    tD.tm_sec = static_cast<int>(tDuration % 60);
-  } // Succeeded, subtract 70 as it returns as years past 1900.
-  else tD.tm_year -= 70;
-  // Add years?
-  if(tD.tm_year && uiCompMax > 0)
-  { // Do add years
-    osS << StrCPluraliseNum(tD.tm_year, "year", "years");
-    --uiCompMax;
-  } // Add months?
-  if(tD.tm_mon && uiCompMax > 0)
-  { // Do add months
-    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-        << StrCPluraliseNum(tD.tm_mon, "month", "months");
-    --uiCompMax;
-  } // Add days? (removing the added 1)
-  if(--tD.tm_mday && uiCompMax > 0)
-  { // Do add days
-    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-        << StrCPluraliseNum(tD.tm_mday, "day", "days");
-    --uiCompMax;
-  } // Add hours?
-  if(tD.tm_hour && uiCompMax > 0)
-  { // Do add hours
-    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-        << StrCPluraliseNum(tD.tm_hour, "hour", "hours");
-    --uiCompMax;
-  } // Add Minutes?
-  if(tD.tm_min && uiCompMax > 0)
-  { // Do add minutes
-    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-        << StrCPluraliseNum(tD.tm_min, "min", "mins");
-    --uiCompMax;
-  } // Check seconds
-  if((tD.tm_sec || !tDuration) && uiCompMax > 0)
-    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-        << StrCPluraliseNum(tD.tm_sec, "sec", "secs");
-  // Return string
-  return osS.str();
-}
+    StrPluraliseRef<IntType, StrTypeSing, StrTypePlur>
+      (itCount, StdForward<StrTypeSing>(stsSingular),
+                StdForward<StrTypePlur>(stpPlural))); }
 /* ------------------------------------------------------------------------- */
 static const StdStringView &StrGetPositionSuffix(const uint64_t ullPosition)
 { // Pre-defined strings
@@ -504,16 +512,17 @@ static const StdStringView &StrGetPositionSuffix(const uint64_t ullPosition)
 /* -- Get position of number as a string ----------------------------------- */
 static StdString StrFromPosition(const uint64_t ullPosition)
   { return StrAppend(ullPosition, StrGetPositionSuffix(ullPosition)); }
-/* -- Capitalise a string -------------------------------------------------- */
-static StdString StrCapitalise(const StdString &strStr)
-{ // Capitalise first character if string not nullptr or empty
-  if(strStr.empty()) return strStr;
-  // Duplicate the string anad uppercase the first character
-  StdString strNew{ strStr };
-  strNew[0] = StdToUpper<char>(strStr.front());
-  // Return provided string
-  return strNew;
+/* -- Capitalise a string reference ---------------------------------------- */
+static StdString &StrCapitaliseRef(StdString &strStr)
+{ // Uppercase the first character of the string if we can and return it
+  if(!strStr.empty()) strStr[0] = StdToUpper<char>(strStr.front());
+  return strStr;
 }
+/* -- Capitalise a string -------------------------------------------------- */
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static StdString StrCapitalise(StrType &&strStr)
+  { StdString strNew{ strStr }; return StrCapitaliseRef(strNew); }
 /* -- Evaluate a list of booleans and return a character value ------------- */
 static StdString StrFromEvalTokens(const BoolCharPairVector &bcpvList)
   { return bcpvList.empty() ? cCommon->CommonBlank() :
@@ -521,84 +530,50 @@ static StdString StrFromEvalTokens(const BoolCharPairVector &bcpvList)
         [](const StdString &strOut, const BoolCharPair &bcpPair)
           { return bcpPair.first ? StrAppend(strOut,
             bcpPair.second) : strOut; }); }
-/* -- Convert time to short duration --------------------------------------- */
-static StdString StrShortFromDuration(const double dDuration,
-  const int iPrecision=6)
-{ // Output string
-  StdOStringStream osS;
-  // Get duration ceiled and if negative?
-  double dInt, dFrac = modf(dDuration, &dInt);
-  if(dInt < 0)
-  { // Set negative symbol and negate the duration
-    osS << '-';
-    dInt = -dInt;
-    dFrac = -dFrac;
-  } // Set floating point precision with zero fill
-  osS << StdIOSFixed << StdIOSSetFill('0') << StdIOSSetPrecision(0);
-  // Have days?
-  if(dInt >= 86400)
-    osS <<                           floor(dInt/86400)     << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/3600), 24) << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
-        << StdIOSSetWidth(2);
-  // No days, but hours?
-  else if(dInt >= 3600)
-    osS <<                      fmod(floor(dInt/3600), 24) << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
-        << StdIOSSetWidth(2);
-  // No hours, but minutes?
-  else if(dInt >= 60)
-    osS << fmod(floor(dInt/60), 60) << ':' << StdIOSSetWidth(2);
-  // No minutes so no zero padding
-  else osS << StdIOSSetWidth(0);
-  // On the seconds part, we have a problem where having a precision
-  // of zero is causing stringstream to round so we'll just convert it to an
-  // int instead to fix it.
-  osS << fmod(dInt, 60);
-  if(iPrecision > 0)
-    osS << '.' << StdIOSSetWidth(iPrecision) <<
-      static_cast<unsigned int>(fabs(dFrac) * pow(10.0, iPrecision));
-  // Return string
-  return osS.str();
-}
 /* -- Return true of false ------------------------------------------------- */
 static const StdString &StrFromBoolTF(const bool bCondition)
   { return bCondition ? cCommon->CommonTrue() : cCommon->CommonFalse(); }
 static const StdString &StrFromBoolYN(const bool bCondition)
   { return bCondition ? cCommon->CommonYes() : cCommon->CommonNo(); }
 /* -- Count occurence of string -------------------------------------------- */
-static size_t StrCountOccurences(const StdString &strStr,
-  const StdString &strWhat)
-{ // Zero if string is empty
-  if(strStr.empty() || strWhat.empty()) return 0;
-  // Matching occurences
+template<class StrType, class StrWhatType>
+  static size_t StrCountOccurences(StrType &&strStr, StrWhatType &&strWhat)
+{ // Normalise to StringView if not a string
+  using StdNormString = StdNormalisedString<StrType>;
+  StdNormString snsStr{ StdForward<StrType>(strStr) };
+  using StdNormWhat = StdNormalisedString<StrWhatType>;
+  StdNormWhat snsWhat{ StdForward<StrWhatType>(strWhat) };
+  // Zero if string is empty
+  if(snsStr.empty() || snsWhat.empty()) return 0;
+  // Matching occurrences
   size_t stCount = 0;
-  // Find occurences
-  for(size_t stIndex = strStr.find(strWhat);
+  // Find occurrences
+  for(size_t stIndex = snsStr.find(snsWhat);
              stIndex != StdNPos;
-             stIndex = strStr.find(strWhat, stIndex + 1)) ++stCount;
-  // Return occurences
+             stIndex = snsStr.find(snsWhat, stIndex + 1)) ++stCount;
+  // Return occurrences
   return stCount;
 }
 /* -- Implode a stringdeque to a single string ----------------------------- */
-template<class AnyArray, class CtrType = typename AnyArray::value_type>
-  static StdString StrImplode(const AnyArray &aArray,
-  const ssize_t &sstBegin=0, const StdString &strSep=cCommon->CommonSpace())
+template<class AnyArray, class StrSepType>
+  requires StdIsStrOrCStr<StrSepType>
+static StdString StrImplode(const AnyArray &aaArray,
+  StrSepType &sstSep, const ssize_t &sstBegin = 0)
 { // Cast array size to ssize_t
-  const ssize_t sstSize = static_cast<ssize_t>(aArray.size());
+  const ssize_t sstSize = static_cast<ssize_t>(aaArray.size());
   // Done if empty or begin position is invalid
-  if(aArray.empty() || sstBegin >= sstSize) return {};
+  if(aaArray.empty() || sstBegin >= sstSize) return {};
   // Create output only string stream which stays cached (safe in c++11)
   StdOStringStream osS;
   // Get first iterator (penultimate from the end in the array)
-  typedef typename AnyArray::const_iterator AnyArrayConstIt;
-  AnyArrayConstIt aaciStart{ StdNext(aArray.cbegin(), sstBegin) };
+  using AnyArrayConstIt = typename AnyArray::const_iterator;
+  AnyArrayConstIt aaciStart{ StdNext(aaArray.cbegin(), sstBegin) };
   // How many items do we have? Have more than 1?
   if(sstSize - sstBegin != 1)
   { // Get ending iterator (penultimate from the beginning in the array)
-    const AnyArrayConstIt aaciEnd{ StdPrev(aArray.cend()) };
+    const AnyArrayConstIt aaciEnd{ StdPrev(aaArray.cend()) };
     // Build command string from vector
-    while(aaciStart != aaciEnd) osS << *(aaciStart++) << strSep;
+    while(aaciStart != aaciEnd) osS << *(aaciStart++) << sstSep;
     // Add final item
     osS << *aaciStart;
   } // Just access the one directly
@@ -606,37 +581,22 @@ template<class AnyArray, class CtrType = typename AnyArray::value_type>
   // Done
   return osS.str();
 }
-/* -- Converts the key/value pairs to a stringvector ----------------------- */
-static StdString ImplodeMap[[maybe_unused]](const StrNCStrMap &ssmSrc,
-  const StdString &strLineSep=cCommon->CommonSpace(),
-  const StdString &strKeyValSep=cCommon->CommonEquals(),
-  const StdString &strValEncaps="\"")
-{ // Done if empty
-  if(ssmSrc.empty()) return {};
-  // Make string vector to implode and reserve memory for items.
-  // Insert each value in the map with the appropriate seperators.
-  StdReserved<StrVector> svRet{ ssmSrc.size() };
-  StdTransformNXP(ssmSrc.cbegin(), ssmSrc.cend(), StdBackInserter(svRet),
-    [&strKeyValSep, &strValEncaps](const StrNCStrMapPair &sncsmpPair)
-      { return StrAppend(sncsmpPair.first, strKeyValSep,
-          strValEncaps, sncsmpPair.second, strValEncaps); });
-  // Return vector imploded into a string
-  return StrImplode(svRet, 0, strLineSep);
-}
 /* ------------------------------------------------------------------------- */
-template<typename AnyType>
-  static StdString StrPrefixPosNeg(const AnyType atVal, const int iPrecision)
-{ return StrAppend(StdIOSShowPos, StdIOSFixed, StdIOSSetPrecision(iPrecision),
-    atVal); }
+template<typename IntType>
+  requires StdIsIntegral<IntType> || StdIsFloat<IntType>
+static StdString StrPrefixPosNeg(const IntType itVal, const int iPrecision)
+  { return StrAppend(StdIOSShowPos, StdIOSFixed,
+      StdIOSSetPrecision(iPrecision), itVal); }
 /* ------------------------------------------------------------------------- */
-template<typename AnyType>
-  static StdString StrPrefixPosNegReadable(const AnyType atVal,
-    const int iPrecision)
+template<typename IntType>
+  requires StdIsIntegral<IntType> || StdIsFloat<IntType>
+static StdString StrPrefixPosNegReadable(const IntType itVal,
+  const int iPrecision)
 { return StrAppendImbue(StdIOSShowPos, StdIOSFixed,
-    StdIOSSetPrecision(iPrecision), atVal); }
+    StdIOSSetPrecision(iPrecision), itVal); }
 /* ------------------------------------------------------------------------- */
 template<typename OutType, typename InType, class SuffixClass>
-  requires StdIsFloat<OutType> && StdIsInteger<InType> &&
+  requires StdIsFloat<OutType> && StdIsIntegral<InType> &&
     StdIsClass<SuffixClass>
 static OutType StrToReadableSuffix(const InType itValue,
   const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup,
@@ -685,7 +645,6 @@ template<typename IntType>
       { 0x0000010000000000ULL, "TB" }, { 0x0000000040000000ULL, "GB" },
       { 0x0000000000100000ULL, "MB" }, { 0x0000000000000400ULL, "KB" }
     } };
-    // Return result
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // If input value is 32-bit?
@@ -694,28 +653,25 @@ template<typename IntType>
     static const StdArray<const ByteValue,3> bvLookup{ {
       { 0x40000000UL, "GB" }, { 0x00100000UL, "MB" }, { 0x00000400UL, "KB" }
     } };
-    // Return result
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer
     static const StdArray<const ByteValue,1> bvLookup{ { { 0x0400, "KB" } } };
-    // Return result
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
     static const StdArray<const ByteValue,0> bvLookup{ {} };
-    // Show error
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   }
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
-  static StdString StrToBytes(const IntType itBytes, int iPrecision=2)
+  static StdString StrToBytes(const IntType itBytes, int iPrecision = 2)
 { // Process a human readable value for the specified number of bytes
   const char *cpSuffix = nullptr;
   const double dVal =
@@ -726,7 +682,8 @@ template<typename IntType>
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
-  static StdString StrToReadableBytes(const IntType itBytes, int iPrecision=2)
+  static StdString StrToReadableBytes(const IntType itBytes,
+    int iPrecision = 2)
 { // Process a human readable value for the specified number of bytes
   const char *cpSuffix = nullptr;
   const double dVal =
@@ -737,8 +694,9 @@ template<typename IntType>
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
-  static double StrToReadableBitsHelper(const IntType itBits,
-    const char**const cpSuffix, int &iPrecision)
+  requires StdIsIntegral<IntType>
+static double StrToReadableBitsHelper(const IntType itBits,
+  const char**const cpSuffix, int &iPrecision)
 { // A test to perform
   struct BitValue { const IntType vValue; const char*const cpSuf; };
   // If input value is 64-bit?
@@ -779,7 +737,7 @@ template<typename IntType>
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
-  static StdString StrToBits(const IntType itBits, int iPrecision=2)
+  static StdString StrToBits(const IntType itBits, int iPrecision = 2)
 { // Process a human readable value for the specified number of bits
   const char *cpSuffix = nullptr;
   const double dVal =
@@ -837,8 +795,26 @@ template<typename IntType>
   }
 }
 /* ------------------------------------------------------------------------- */
+template<typename IntType, typename StrTypeSing, typename StrTypePlur>
+  requires StdIsIntegral<IntType> &&
+           StdIsStrOrCStr<StrTypeSing> &&
+           StdIsStrOrCStr<StrTypePlur>
+StdString StrToGroupedPluralise(const IntType itValue,
+  StrTypeSing &&stsSingular, StrTypePlur &&stpPlural, int iPrecision = 2)
+{ // Process a human readable value for the specified number of bits
+  const char *cpSuffix = nullptr;
+  const double dVal =
+    StrToReadableHelper<IntType>(itValue, &cpSuffix, iPrecision);
+  // Move the stringstreams output string into the return value.
+  return StrAppend(StdIOSFixed, StdIOSSetPrecision(iPrecision), dVal, cpSuffix,
+    StrPluraliseRef<IntType, StrTypeSing, StrTypePlur>
+      (itValue, StdForward<StrTypeSing>(stsSingular),
+                StdForward<StrTypePlur>(stpPlural)));
+}
+/* ------------------------------------------------------------------------- */
 template<typename IntType>
-  static StdString StrToGrouped(const IntType itValue, int iPrecision=2)
+  requires StdIsIntegral<IntType> || StdIsFloat<IntType>
+static StdString StrToGrouped(const IntType itValue, int iPrecision = 2)
 { // Process a human readable value for the specified number of bits
   const char *cpSuffix = nullptr;
   const double dVal =
@@ -849,7 +825,8 @@ template<typename IntType>
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
-  static StdString StrToReadableGrouped(const IntType itValue, int iPrecision)
+  requires StdIsIntegral<IntType> || StdIsFloat<IntType>
+static StdString StrToReadableGrouped(const IntType itValue, int iPrecision)
 { // Process a human readable value for the specified number of bits
   const char *cpSuffix = nullptr;
   const double dVal =
@@ -859,131 +836,108 @@ template<typename IntType>
     cpSuffix);
 }
 /* ------------------------------------------------------------------------- */
-static size_t StrFindCharForwards(const StdString &strS, size_t stStart,
-  const size_t stEnd, const char cpChar)
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static size_t StrFindCharForwards(StrType &&strStr, size_t stStart,
+  const size_t stEnd, const char cpChar = ' ')
 { // Until we've reached the limit
   while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find the character
-    if(strS[stStart] == cpChar) return stStart;
+    if(strStr[stStart] == cpChar) return stStart;
     // Goto next index and try again
     ++stStart;
   } // Failed so return so
   return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
-static size_t StrFindCharBackwards[[maybe_unused]](const StdString &strS,
-  size_t stStart, const size_t stEnd, const char cpChar)
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static size_t StrFindCharBackwards[[maybe_unused]](StrType &&strStr,
+  size_t stStart, const size_t stEnd, const char cpChar = ' ')
 { // Until we've reached the limit
   while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find the character
-    if(strS[stStart] == cpChar) return stStart;
+    if(strStr[stStart] == cpChar) return stStart;
     // Goto next index and try again
     --stStart;
   } // Failed so return so
   return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
-static size_t StrFindCharNotForwards[[maybe_unused]](const StdString &strS,
-  size_t stStart, const size_t stEnd, const char cpChar)
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static size_t StrFindCharNotForwards(StrType &strStr,
+  size_t stStart, const size_t stEnd, const char cpChar = ' ')
 { // Until we've reached the limit
   while(stStart < stEnd && stStart != StdNPos)
   { // Return position if we find the character
-    if(strS[stStart] != cpChar) return stStart;
+    if(strStr[stStart] != cpChar) return stStart;
     // Goto next index and try again
     ++stStart;
   } // Failed so return so
   return StdNPos;
 }
 /* ------------------------------------------------------------------------- */
-static size_t StrFindCharNotForwards(const StdString &strS, size_t stStart,
-  const size_t stEnd)
-{ // Until we've reached the limit
-  while(stStart < stEnd && stStart != StdNPos)
-  { // Return position if we find a non-control character
-    if(strS[stStart] > ' ') return stStart;
-    // We could not match any character
-    ++stStart;
-  } // Failed so return so
-  return StdNPos;
-}
-/* ------------------------------------------------------------------------- */
-static size_t StrFindCharNotBackwards[[maybe_unused]](const StdString &strS,
-  size_t stStart, const size_t stEnd, const char cpChar)
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static size_t StrFindCharNotBackwards(StrType &&strStr,
+  size_t stStart, const size_t stEnd, const char cpChar = ' ')
 { // Until we've reached the limit
   while(stStart >= stEnd && stStart != StdNPos)
   { // Return position if we find the character
-    if(strS[stStart] != cpChar) return stStart;
+    if(strStr[stStart] != cpChar) return stStart;
     // Goto next index and try again
     --stStart;
   } // Failed so return so
   return StdNPos;
-}
-/* ------------------------------------------------------------------------- */
-static size_t StrFindCharNotBackwards(const StdString &strS, size_t stStart,
-  const size_t stEnd)
-{ // Until we've reached the limit
-  while(stStart >= stEnd && stStart != StdNPos)
-  { // Return position if we find a non-control character
-    if(strS[stStart] > ' ') return stStart;
-    // We could not match any character
-    --stStart;
-  } // Failed so return so
-  return StdNPos;
-}
-/* -- Do convert the specified structure to string ------------------------= */
-static StdString StrFromTimeTM(const StdTMStruct &tmData, const char*const cpF)
-  { return StrAppend(StrPutTime(&tmData, cpF)); }
-/* -- Convert specified timestamp to string -------------------------------- */
-static StdString StrFromTimeTT(const StdTimeT ttTimestamp,
-  const char*const cpFormat = cpTimeFormat)
-{ // Convert it to local time in a structure
-  StdTMStruct tmData; StdLocalTime(&tmData, &ttTimestamp);
-  // Do the parse and return the string
-  return StrFromTimeTM(tmData, cpFormat);
 }
 /* -- Remove suffixing carriage return and line feed ----------------------- */
-static StdString &StrChop(StdString &strStr)
-{ // Find the pos of the last char that is not a carriage return or line feed
-  const size_t stEndPos = strStr.find_last_not_of(cCommon->CommonCrLf());
-  // If all characters are removed, set the string to empty else erase the part
-  if(stEndPos == StdNPos) strStr.clear();
-  else strStr.erase(stEndPos + 1);
-  // Return the modified string
+static StdString &StrChopRef(StdString &strStr)
+{ // If string is not empty?
+  if(!strStr.empty())
+  { // Find the pos of the last char that is not a carriage return or line feed
+    const size_t stEndPos = strStr.find_last_not_of(cCommon->CommonCrLf());
+    // If all characters are removed, set the string to empty else erase part
+    if(stEndPos == StdNPos) strStr.clear();
+    else strStr.erase(stEndPos + 1);
+  } // Return the modified string
   return strStr;
 }
-/* -- Convert specified timestamp to string (UTC) -------------------------- */
-static StdString StrFromTimeTTUTC(const StdTimeT ttTimestamp,
-  const char*const cpFormat = cpTimeFormat)
-{ // Convert it to local time
-  StdTMStruct tmData; StdGMTime(&tmData, &ttTimestamp);
-  // Do the parse and return the string
-  return StrFromTimeTM(tmData, cpFormat);
+/* -- Remove suffixing carriage return and line feed ----------------------- */
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static StdString StrChop(StrType &&strStr)
+{ // Copy to a new string and remove the required characters
+  StdString strOut{ strStr };
+  return StrChopRef(strOut);
 }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
-  StdString StrFromRatio(const IntType itAntecedent,
-    const IntType itConsequent)
+  requires StdIsFloat<IntType> || StdIsIntegral<IntType>
+static StdString StrFromRatio(const IntType itAntecedent,
+  const IntType itConsequent)
 { // Return failure if parameters negative or zero
   if(itAntecedent <= 0 || itConsequent <= 0) return "0:0";
   // If we're a number, we need to convert it to an integer or gcd() fails
   if constexpr(StdIsFloat<IntType>)
-    return StrFromRatio(static_cast<unsigned int>(itAntecedent),
-                        static_cast<unsigned int>(itConsequent));
+    return StrFromRatio(static_cast<unsigned>(itAntecedent),
+      static_cast<unsigned>(itConsequent));
   // Integral?
   else
   { // Calculate the greatest common divisor
     const IntType itGCD = ::std::gcd(itAntecedent, itConsequent),
-    // Calculate the simplified ratio
-                  itNum = itAntecedent / itGCD,
-                  itDen = itConsequent / itGCD;
+      // Calculate the simplified ratio
+      iitNum = itAntecedent / itGCD,
+      itDen = itConsequent / itGCD;
     // Return the ratio as a string
-    return StrAppend(itNum, ':', itDen);
+    return StrAppend(iitNum, ':', itDen);
   }
 }
 /* -- Convert list to exploded string -------------------------------------- */
-template<class ListType>
-  static StdString StrExplodeEx(const ListType &lType, const StdString &strSep,
-    const StdString &strLast)
+template<class ListType, class StrSepType, class StrLastType>
+  requires StdIsStrOrCStr<StrSepType> && StdIsStrOrCStr<StrLastType>
+static StdString StrExplodeEx(const ListType &lType, StrSepType &&sstSep,
+  StrLastType &&sltLast)
 { // String to return
   StdOStringStream osS;
   // What is the size of this string
@@ -991,20 +945,20 @@ template<class ListType>
   { // Empty list? Just break to return empty string
     case 0: break;
     // Only one? Just return the string directly
-    case 1: return *lType.cbegin();
+    case 1: return StdString{ *lType.begin() };
     // Two? Return a simple appendage.
-    case 2: osS << *lType.cbegin() << strLast << *lType.crbegin(); break;
+    case 2: osS << *lType.begin() << sltLast << *lType.crbegin(); break;
     // More than two? Write the first item first
-    default: osS << *lType.cbegin();
+    default: osS << *lType.begin();
              // Container type
-             typedef typename ListType::value_type ListTypeValue;
+             using ListTypeValue = typename ListType::value_type;
              // Write the rest but one prefixed with the separator
              StdForEach(seq,
-               StdNext(lType.cbegin()), StdNext(lType.crbegin()).base(),
-                 [&osS, &strSep](const ListTypeValue &strStr)
-                   { osS << strSep << strStr; });
+               StdNext(lType.begin()), StdNext(lType.rbegin()).base(),
+                 [&osS, &sstSep](const ListTypeValue &ltvStr)
+                   { osS << sstSep << ltvStr; });
              // and now append the last separator and string from list
-             osS << strLast << *lType.crbegin();
+             osS << sltLast << *lType.rbegin();
              // Done
              break;
   } // Return the compacted string
@@ -1049,6 +1003,34 @@ static StdString StrCompact(const char*cpStr)
   StdString strOut{ cpStr };
   StrCompactRef(strOut);
   return strOut;
+}
+/* -- Get return character format of text string --------------------------- */
+template<class StrType>
+  static StdStringView StrGetReturnFormat(StrType &&strStr)
+{ // Normalise to StringView if not a string
+  using StdNormString = StdNormalisedString<StrType>;
+  StdNormString snsStr{ StdForward<StrType>(strStr) };
+  using StdNormStringConstIt =
+    typename StdDecay<StdNormString>::const_iterator;
+   // String is not empty?
+  if(!snsStr.empty())
+    // Enumerate each character...
+    for(StdNormStringConstIt snsciIt{ snsStr.cbegin() };
+                             snsciIt != snsStr.cend();
+                           ++snsciIt)
+      // Test character
+      switch(*snsciIt)
+      { // Carriage-return found
+        case '\r': return StdFind(par_unseq, snsciIt, snsStr.cend(), '\n') !=
+          snsStr.cend() ? cCommon->CommonCrLf() : cCommon->CommonCr();
+        // Line-feed found
+        case '\n': return StdFind(par_unseq, snsciIt, snsStr.cend(), '\r') !=
+          snsStr.cend() ? cCommon->CommonLfCr() : cCommon->CommonLf();
+        // Anything else is ignored
+        default: break;
+      }
+  // Nothing was found
+  return {};
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

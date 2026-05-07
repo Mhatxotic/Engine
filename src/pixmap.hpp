@@ -9,7 +9,16 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Windows file mapping class =========================================== */
+/* ------------------------------------------------------------------------- */
+namespace ISysMap {                    // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IFStream::P;           using namespace ILog::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace ISysUtil::P;           using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysMap :
   /* -- Base classes ------------------------------------------------------- */
   public FStreamBase                   // File stream base class
@@ -22,21 +31,21 @@ class SysMap :
     if(SysMapIsAvailable() && SysMapIsNotEmpty() && munmap(SysMapGetMemory(),
       static_cast<size_t>(SysMapGetSize())))
       cLog->LogWarningExSafe("Failed to unmap '$' from 0x$$[$$]: $!",
-        IdentGet(), SysMapGetMemory<void>(), SysMapGetSize(), SysError());
+        NameGet(), SysMapGetMemory<void>(), SysMapGetSize(), SysError());
     // ~FStream() will close the file
   }
   /* -- Setup handle ------------------------------------------------------- */
-  static FStreamBase SysMapSetupFile(const StdString &strF)
+  static FStreamBase SysMapSetupFile(const StdStringView &strvF)
   { // Open file and return it if opened else show error
-    if(FStream fsFile{ strF, FM_R_B }) return fsFile;
-    XCS("Open file for file mapping failed!", "File", strF);
+    if(FStream fsFile{ strvF, FM_R_B }) return fsFile;
+    XCS("Open file for file mapping failed!", "File", strvF);
   }
   /* -- Setup file information --------------------------------------------- */
   StdFStatStruct SysMapSetupInfo()
   { // Get informationa about file and return it else show error
     StdFStatStruct sNewData;
     if(FStreamStat(sNewData)) return sNewData;
-    XCS("Failed to read file information!", "File", IdentGet());
+    XCS("Failed to read file information!", "File", NameGet());
   }
   /* -- Setup memory pointer ----------------------------------------------- */
   char *SysMapSetupMemory()
@@ -46,7 +55,7 @@ class SysMap :
 #if defined(X86)
     if(SysMapGetSize() > 0xFFFFFFFF)
       XC("File too big to map into address space!",
-        "File", IdentGet(), "Size", SysMapGetSize());
+        "File", NameGet(), "Size", SysMapGetSize());
 #endif
     // If the file is not empty?
     if(SysMapGetSize())
@@ -55,22 +64,24 @@ class SysMap :
       cpNewMem = StdMMap<char>(nullptr, SysMapGetSize(),
         PROT_READ, MAP_PRIVATE, FStreamGetFdSafe(), 0);
       if(cpNewMem == MAP_FAILED)
-        XCS("Map view of file failed!", "File", IdentGet());
+        XCS("Map view of file failed!", "File", NameGet());
     } // File is empty
     else
     { // Set no data available
       cpNewMem = const_cast<char*>(cCommon->CommonCBlank());
       // Close the file. Whats the point in keeping it open?
       if(!FStreamClose())
-        XCS("Failed to close empty file!", "File", IdentGet());
+        XCS("Failed to close empty file!", "File", NameGet());
     } // Return memory
     return cpNewMem;
   }
   /* -- Clear variables ---------------------------------------------------- */
   void SysMapClearVarsInternal() { cpMem = nullptr; sData = {}; }
   /* -- Get members ------------------------------------------------ */ public:
-  template<typename RT=char>RT *SysMapGetMemory() const
-    { return reinterpret_cast<RT*>(cpMem); }
+  template<typename PtrType = char>
+    requires (!StdIsPointer<PtrType>)
+  PtrType *SysMapGetMemory() const
+    { return reinterpret_cast<PtrType*>(cpMem); }
   bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
   bool SysMapIsAvailable() const { return SysMapGetMemory() != nullptr; }
@@ -83,8 +94,8 @@ class SysMap :
   void SysMapSwap(SysMap &smOther)
   { // Swap members
     FStreamSwap(smOther);
-    swap(cpMem, smOther.cpMem);
-    swap(sData, smOther.sData);
+    StdSwap(cpMem, smOther.cpMem);
+    StdSwap(sData, smOther.sData);
   }
   /* -- Assign constructor ------------------------------------------------- */
   void SysMapDeInit()
@@ -95,12 +106,12 @@ class SysMap :
     // Clear the variables
     SysMapClearVarsInternal();
     // Clear the name
-    IdentClear();
+    NameClear();
   }
   /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const StdString &strF, const StdTimeT tC, const StdTimeT tM) :
+  SysMap(const StdStringView &strvF, const StdTimeT tC, const StdTimeT tM) :
     /* -- Initialisers------------------------------------------------------ */
-    FStreamBase{ strF },               // Open specified file
+    FStreamBase{ strvF },              // Open specified file
 #if defined(LINUX)                     // Using Linux?
     // Note that all these zeros cause an error for other systems because
     // the structure may contain padding values so this needs to be changed to
@@ -143,9 +154,9 @@ class SysMap :
     /* -- So other class doesn't destruct ---------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit SysMap(const StdString &strF) :
+  explicit SysMap(const StdStringView &strvF) :
     /* -- Initialisers ----------------------------------------------------- */
-    FStreamBase{ SysMapSetupFile(strF) }, // Iniitalise file handle
+    FStreamBase{ SysMapSetupFile(strvF) }, // Iniitalise file handle
     sData{ SysMapSetupInfo() },        // Initialise file data
     cpMem(SysMapSetupMemory())         // Initialise file pointer
     /* -- No code ---------------------------------------------------------- */
@@ -160,4 +171,8 @@ class SysMap :
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~SysMap, SysMapDeInitInternal())
 };/* -- End ---------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */
+

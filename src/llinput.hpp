@@ -131,7 +131,7 @@ LLFUNC(JoyExists, 1,
 // < Name:string=The name of the joystick.
 // ? Returns the name of the specified joystick as reported by the OS.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetJoyName, 1, LuaUtilPushVar(lS, AgJoystickData{lS, 1}().IdentGet()))
+LLFUNC(GetJoyName, 1, LuaUtilPushVar(lS, AgJoystickData{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Input.GetNumJoyButtons
 // > Id:integer=The joystick id.

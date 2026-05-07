@@ -10,23 +10,32 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
+namespace ISysMutex {                  // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IError::P;             using namespace ILog::P;
+using namespace IName::P;              using namespace IStd::P;
+using namespace IStdLib::P;            using namespace ISysUtil::P;
+using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysMutex                         // Need this before of System init order
 { /* -- Shared memory ------------------------------------------------------ */
-  Ident            idMutex;            // Mutex identifier
+  NameStr          nsMutex;            // Mutex identifier
   const pid_t     &ptPId;              // Reference to process id
   pid_t           *pipProcessId;       // Process id (OS level memory)
   constexpr static size_t stPidSize = sizeof(pid_t); // Size of a pid
-  typedef bool (CbFunc)(const pid_t,const pid_t); // Callback return type
+  using CbFunc = bool(const pid_t,const pid_t); // Callback return type
   /* -- Initialise global mutex ------------------------------------ */ public:
   bool SysDoInitGlobalMutex(const StdStringView &strvTitle, CbFunc cbCb)
   { // Initialise mutex ident
-    idMutex.IdentSet(strvTitle);
+    nsMutex.NameSet(strvTitle);
     // Shared memory file descriptor helper
     class Shm
     { /* -- Private variables ---------------------------------------------- */
-      const StdStringView &strvTitle; // Filename of shm object
-      int               iFd,        // The file descriptor of the shm object
-                        iMode;      // Requested mode for the shm object
+      const StdStringView &strvTitle;  // Filename of shm object
+      int               iFd,           // The file descriptor of the shm object
+                        iMode;         // Requested mode for the shm object
       /* -- Return mode -------------------------------------------- */ public:
       int Mode() const { return iMode; }
       /* -- Get file descriptor -------------------------------------------- */
@@ -132,12 +141,15 @@ class SysMutex                         // Need this before of System init order
       cLog->LogWarningExSafe("System failed to unmap shared memory of size "
         "$ bytes! $", stPidSize, SysError());
     // Unlink the mutex and show warning in log if failed
-    if(idMutex.IdentIsSet() && shm_unlink(idMutex.IdentGetData()))
+    if(nsMutex.NameIsSet() && shm_unlink(nsMutex.NameGetData()))
       cLog->LogWarningExSafe("System could not delete old mutex '$': $",
-        idMutex.IdentGet(), SysError());
+        nsMutex.NameGet(), SysError());
   )
   /* -- Apparently due to 'dynamic memory/resource management' (CppCheck) -- */
   SysMutex(SysMutex &) = delete;           // Even though we don't use
   SysMutex operator=(SysMutex &) = delete; // these at all
 };/* ----------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

@@ -7,26 +7,25 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* -- Classes -------------------------------------------------------------- */
-#include "pixbase.hpp"                 // Base system class
-#include "pixcon.hpp"                  // Console terminal window class
-#include "pixmod.hpp"                  // Module information class
-#include "pixmap.hpp"                  // File mapping class
-#include "pixpip.hpp"                  // Process output piping class
-#include "pixmutex.hpp"                // Mutex class
-/* == System intialisation helper ========================================== **
-** ######################################################################### **
-** ## Because we want to try and statically init const data as much as    ## **
-** ## possible, we need this class to derive by the System class so we    ## **
-** ## can make sure these functions are initialised first. Also making    ## **
-** ## this private prevents us from accessing these functions because     ## **
-** ## again - they are only for initialisation.                           ## **
-** ######################################################################### **
-** ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+namespace ISysCore {                   // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace ICmdLine::P;           using namespace ICommon::P;
+using namespace IEndian::P;            using namespace IError::P;
+using namespace IFStream::P;           using namespace ILog::P;
+using namespace IParser::P;            using namespace IPSplit::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISysCon::P;
+using namespace ISysInfo::P;           using namespace ISysMod::P;
+using namespace ISysMutex::P;          using namespace ISysPosix::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtil::P;              using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysProcess                       // Need this before of System init order
 { /* -- Streams ------------------------------------------------- */ protected:
-  FStream          fsDevRandom,        // Handle to dev/random (rng)
-                   fsProcStat,         // Handle to proc/stat (cpu)
+  FStream          fsProcStat,         // Handle to proc/stat (cpu)
                    fsProcStatM;        // Handle to proc/statm (memory)
   /* -- Processor ---------------------------------------------------------- */
   clock_t          ctUser,             // Last user cpu time
@@ -36,21 +35,9 @@ class SysProcess                       // Need this before of System init order
                    ctProc,             // Last process cpu time
                    ctProcUser,         // Last process user cpu time
                    ctProcSys;          // Last process system cpu time
-  /* -- Process ------------------------------------------------------------ */
-  const size_t     stPageSize;         // Memory page size
-  /* ----------------------------------------------------------------------- */
-  const pid_t      piProcessId;        // Process id
-  const pthread_t  vpThreadId;         // Thread id
-  /* -- Return process and thread id --------------------------------------- */
-  template<typename IntType=decltype(piProcessId)>IntType GetPid() const
-    { return static_cast<IntType>(piProcessId); }
-  template<typename IntType=decltype(vpThreadId)>IntType GetTid() const
-    { return static_cast<IntType>(vpThreadId); }
   /* -- Constructor -------------------------------------------------------- */
   SysProcess() :
     /* -- Initialisers ----------------------------------------------------- */
-    fsDevRandom{ "/dev/random",        // Open dev random garbage stream
-                 FM_R_B },             // - Read/Binary mode
     fsProcStat{ "/proc/stat",          // Open proc cpu stats stream
                 FM_R_B },              // - Read/Binary mode
     fsProcStatM{ "/proc/self/statm",   // Open proc memory stats stream
@@ -61,22 +48,18 @@ class SysProcess                       // Need this before of System init order
     ctIdle(0),                         // Init idle cpu time
     ctProc(0),                         // Init process cpu time
     ctProcUser(0),                     // Init user process cpu time
-    ctProcSys(0),                      // Init system process cpu time
-    stPageSize(sysconf(_SC_PAGESIZE)), // Get memory page size
-    piProcessId(getpid()),             // Get native process id
-    vpThreadId(pthread_self())         // Get native thread id
+    ctProcSys(0)                       // Init system process cpu time
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* == Class ============================================================== */
 class SysCore :
   /* -- Base classes ------------------------------------------------------- */
+  public SysCorePosix,                 // Posix function class
   public SysProcess,                   // System process object
   public SysMutex,                     // System mutex object
   public SysCon,                       // Defined in 'pixcon.hpp"
-  public SysCommon                     // Common system object
-{ /* -- Variables ---------------------------------------------------------- */
-  bool             bWindowInitialised; // Is window initialised?
-  /* --------------------------------------------------------------- */ public:
+  public SysInfo                       // Common system object
+{ /* --------------------------------------------------------------- */ public:
   void UpdateMemoryUsageData()
   { // If the stat file is opened
     if(fsProcStatM.FStreamIsReadyRead())
@@ -89,10 +72,10 @@ class SysCore :
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // Grab tokens and if we have enough?
-          const TokenListNC tStats{ strStat, cCommon->CommonSpace(), 8 };
-          if(tStats.size() >= 3)
+          const TokenStrView tsvStats{ strStat, cCommon->CommonSpaceV(), 8 };
+          if(tsvStats.size() >= 3)
           { // We're only interested in the first value
-            memData.stMProcUse = StrToNum<size_t>(tStats[1]) * stPageSize;
+            memData.stMProcUse = StrToNum<size_t>(tsvStats[1]) * stPageSize;
             // Check for new process peak
             if(memData.stMProcUse > memData.stMProcPeak)
               memData.stMProcPeak = memData.stMProcUse;
@@ -127,26 +110,8 @@ class SysCore :
     // Return as time_t (future ref, also has t.tv_nsec)
     return static_cast<time_t>(tsData.tv_sec);
   }
-  /* -- Terminate a process ------------------------------------------------ */
-  bool TerminatePid(const unsigned int uiPid) const
-    { return !kill(uiPid, SIGTERM); }
-  /* -- Check if specified process id is running --------------------------- */
-  bool IsPidRunning(const unsigned int uiPid) const
-    { return !kill(uiPid, 0); }
-  /* -- GLFW handles the icons on this ------------------------------------- */
-  void UpdateIcons() {}
   /* ----------------------------------------------------------------------- */
-  static bool LibFree(void*const vpModule)
-    { return vpModule && !dlclose(vpModule); }
-  /* ----------------------------------------------------------------------- */
-  template<typename T>static T LibGetAddr(void*const vpModule,
-    const char *cpName) { return vpModule ?
-      reinterpret_cast<T>(dlsym(vpModule, cpName)) : nullptr; }
-  /* ----------------------------------------------------------------------- */
-  static void *LibLoad(const char*const cpName)
-    { return dlopen(cpName, RTLD_LAZY | RTLD_LOCAL); }
-  /* ----------------------------------------------------------------------- */
-  const StdString LibGetName(void*const vpModule, const char *cpAltName) const
+  StdString LibGetName(void*const vpModule, const char *cpAltName) const
   { // Return nothing if no module
     if(!vpModule) return {};
     // Get information about the shared object
@@ -171,13 +136,13 @@ class SysCore :
           // First item must be cpu and second should be empty. We created the
           // string so this tokeniser class is allowed to modify it for
           // increased performance of processing it.
-          const TokenListNC tStats{ strStat, cCommon->CommonSpace(), 6 };
-          if(tStats.size() >= 5)
+          const TokenStrView tsvStats{ strStat, cCommon->CommonSpaceV(), 6 };
+          if(tsvStats.size() >= 5)
           { // Get idle time
-            const clock_t cUserNow = StrToNum<clock_t>(tStats[2]),
-                          cLowNow = StrToNum<clock_t>(tStats[3]),
-                          cSystemNow = StrToNum<clock_t>(tStats[4]),
-                          cIdleNow = StrToNum<clock_t>(tStats[5]);
+            const clock_t cUserNow = StrToNum<clock_t>(tsvStats[2]),
+                          cLowNow = StrToNum<clock_t>(tsvStats[3]),
+                          cSystemNow = StrToNum<clock_t>(tsvStats[4]),
+                          cIdleNow = StrToNum<clock_t>(tsvStats[5]);
             // Check for valid time
             if(cUserNow < ctUser || cLowNow < ctLow ||
                cSystemNow < ctSystem || cIdleNow < ctIdle)
@@ -228,13 +193,14 @@ class SysCore :
   }
   /* -- Seek to position in specified handle ------------------------------- */
   template<typename IntType>
-    static IntType SeekFile(int iFp, const IntType itP)
-      { return static_cast<IntType>
-          (lseek64(iFp, static_cast<off64_t>(itP), SEEK_SET)); }
+    requires StdIsIntegral<IntType>
+  static IntType SeekFile(int iFp, const IntType itP)
+    { return static_cast<IntType>
+        (lseek64(iFp, static_cast<off64_t>(itP), SEEK_SET)); }
   /* -- Get executable size from header (N/A on Linux) --------------------- */
   static size_t GetExeSize(const StdString &strFile)
   { // Machine byte order magic
-    constexpr const unsigned int uiELFDataNative =
+    constexpr const unsigned uELFDataNative =
 #if defined(LITTLEENDIAN)         // Intel, ARM, etc.
       ELFDATA2LSB;
 #elif defined(BIGENDIAN)          // PPC, etc.
@@ -254,13 +220,13 @@ class SysCore :
         if(!fExe.FStreamRewind())
           XCL("Failed to rewind executable file!", "File", strFile);
         // Get ELF data order type and throw if not correct byte order
-        const unsigned int uiType = ehData.e_ident[EI_DATA];
-        if(uiType != ELFDATA2LSB && uiType != ELFDATA2MSB)
+        const unsigned uType = ehData.e_ident[EI_DATA];
+        if(uType != ELFDATA2LSB && uType != ELFDATA2MSB)
           XC("Invalid ELF executable type!",
             "Requested", ELFDATA2LSB, "OrRequested", ELFDATA2MSB,
-            "Actual",    uiType,      "File",        strFile);
+            "Actual",    uType,      "File",        strFile);
         // Check bits-type
-        switch(const unsigned int uiClass = ehData.e_ident[EI_CLASS])
+        switch(const unsigned uClass = ehData.e_ident[EI_CLASS])
         { // Is a 32-bit executable?
           case ELFCLASS32:
           { // Read in 32-bit header
@@ -273,10 +239,10 @@ class SysCore :
                   "Requested", sizeof(ehData32), "Actual", stRead,
                   "File",      strFile);
               // Reverse bytes if not native
-              if(uiType != uiELFDataNative)
-                ehData.e_shoff = SWAP_U32(ehData32.e_shoff),
-                ehData.e_shentsize = SWAP_U16(ehData32.e_shentsize),
-                ehData.e_shnum = SWAP_U16(ehData32.e_shnum);
+              if(uType != uELFDataNative)
+                ehData.e_shoff = EndianSwap32(ehData32.e_shoff),
+                ehData.e_shentsize = EndianSwap16(ehData32.e_shentsize),
+                ehData.e_shnum = EndianSwap16(ehData32.e_shnum);
               else ehData.e_shoff = ehData32.e_shoff,
                    ehData.e_shentsize = ehData32.e_shentsize,
                    ehData.e_shnum = ehData32.e_shnum;
@@ -297,10 +263,10 @@ class SysCore :
                   "Requested", sizeof(ehData64), "Actual", stRead,
                   "File",      strFile);
               // Reverse bytes if not native
-              if(uiType != uiELFDataNative)
-                ehData.e_shoff = SWAP_U64(ehData64.e_shoff),
-                ehData.e_shentsize = SWAP_U16(ehData64.e_shentsize),
-                ehData.e_shnum = SWAP_U16(ehData64.e_shnum);
+              if(uType != uELFDataNative)
+                ehData.e_shoff = EndianSwap64(ehData64.e_shoff),
+                ehData.e_shentsize = EndianSwap16(ehData64.e_shentsize),
+                ehData.e_shnum = EndianSwap16(ehData64.e_shnum);
               else ehData.e_shoff = ehData64.e_shoff,
                    ehData.e_shentsize = ehData64.e_shentsize,
                    ehData.e_shnum = ehData64.e_shnum;
@@ -312,7 +278,7 @@ class SysCore :
           } // Unknown executable type
           default: XC("Invalid ELF header architecture!",
                      "Requested", ELFCLASS32, "OrRequested", ELFCLASS64,
-                     "Actual",    uiClass,    "File",        strFile);
+                     "Actual",    uClass,    "File",        strFile);
         } // Now we can return the size
         return ehData.e_shoff + (ehData.e_shentsize * ehData.e_shnum);
       } // Failed to read elf ident
@@ -322,7 +288,7 @@ class SysCore :
     else XCL("Failed to open executable!", "File", strFile);
   }
   /* -- Get executable file name ------------------------------------------- */
-  const StdString GetExeName()
+  StdString GetExeName()
   { // Storage for executable name
     StdResized<StdString> strName{ PATH_MAX };
     strName.resize(readlink("/proc/self/exe",
@@ -342,20 +308,21 @@ class SysCore :
     return smmMap;
   }
   /* ----------------------------------------------------------------------- */
-  OSData GetOperatingSystememData()
+  OSData GetOperatingSystemData()
   { // Get operating system name
     struct utsname utsnData;
     if(uname(&utsnData)) XCS("Failed to read operating system information!");
+    const StdStringView strvRelease{ utsnData.release };
     // Tokenize version numbers
-    const Token tVersion{ utsnData.release, cCommon->CommonPeriod() };
+    const TokenStrView tsvVersion{ strvRelease, cCommon->CommonPeriod() };
     // Process and activate locale code
     StdString strCode{ cCmdLine->CmdLineGetEnv("LANG") };
     ProcessAndActivateLocale(strCode);
     // Return operating system info
     return { utsnData.sysname, cCommon->CommonBlank(),
-      tVersion.empty()    ? 0 : StrToNum<unsigned int>(tVersion[0]),
-      tVersion.size() < 2 ? 0 : StrToNum<unsigned int>(tVersion[1]),
-      tVersion.size() < 3 ? 0 : StrToNum<unsigned int>(tVersion[2]),
+      tsvVersion.empty()    ? 0 : StrToNum<unsigned>(tsvVersion[0]),
+      tsvVersion.size() < 2 ? 0 : StrToNum<unsigned>(tsvVersion[1]),
+      tsvVersion.size() < 3 ? 0 : StrToNum<unsigned>(tsvVersion[2]),
       sizeof(void*)<<3, StdMove(strCode), DetectElevation(), false };
   }
   /* ----------------------------------------------------------------------- */
@@ -365,25 +332,17 @@ class SysCore :
   {  // Open cpu information file
     if(FStream fsCpuInfo{ "/proc/cpuinfo", FM_R_B })
     { // Read file and if we got data?
-      const StdString strFile{ fsCpuInfo.FStreamReadStringChunked() };
+      StdString strFile{ fsCpuInfo.FStreamReadStringChunked() };
       if(!strFile.empty())
       { // Parse the variables and if we got some?
-        ParserConst<> pcParser{ strFile, cCommon->CommonLf(), ':' };
-        if(!pcParser.empty())
-        { // Move stirngs from loaded variables
-          StdString strCpuId{ StdMove(pcParser.ParserGet("model name")) },
-                    strSpeed{ StdMove(pcParser.ParserGet("cpu MHz")) },
-                    strVendor{ StdMove(pcParser.ParserGet("vendor_id")) },
-                    strFamily{ StdMove(pcParser.ParserGet("cpu family")) },
-                    strModel{ StdMove(pcParser.ParserGet("model")) },
-                    strStepping{ StdMove(pcParser.ParserGet("stepping")) };
-          // Remove excessive whitespaces from strings
-          StrCompactRef(strCpuId);
-          StrCompactRef(strSpeed);
-          StrCompactRef(strVendor);
-          StrCompactRef(strFamily);
-          StrCompactRef(strModel);
-          StrCompactRef(strStepping);
+        if(ParserStringVC psvParser{ strFile, cCommon->CommonLf(), ':' })
+        { // Move strings from loaded variables
+          StdString strCpuId{ StdMove(psvParser.ParserGet("model name")) },
+                    strSpeed{ StdMove(psvParser.ParserGet("cpu MHz")) },
+                    strVendor{ StdMove(psvParser.ParserGet("vendor_id")) },
+                    strFamily{ StdMove(psvParser.ParserGet("cpu family")) },
+                    strModel{ StdMove(psvParser.ParserGet("model")) },
+                    strStepping{ StdMove(psvParser.ParserGet("stepping")) };
           // Fail-safe any empty strings
           if(strSpeed.empty()) strSpeed = cCommon->CommonZero();
           if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
@@ -393,12 +352,9 @@ class SysCore :
           if(strStepping.empty()) strStepping = cCommon->CommonZero();
           // Make processor id so it is consistent with the other platforms
           // Return strings
-          return { StdThreadMax(),
-                   StrToNum<unsigned int>(strSpeed),
-                   StrToNum<unsigned int>(strFamily),
-                   StrToNum<unsigned int>(strModel),
-                   StrToNum<unsigned int>(strStepping),
-                   StdMove(strCpuId) };
+          return { StdThreadMax(), StrToNum<unsigned>(strSpeed),
+            StrToNum<unsigned>(strFamily), StrToNum<unsigned>(strModel),
+            StrToNum<unsigned>(strStepping), StdMove(strCpuId) };
         } // Failed to parse cpu variables
         else cLog->LogWarningSafe("Could not parse cpu information file!");
       } // Failed to read cpu info failed
@@ -439,20 +395,6 @@ class SysCore :
     // Return priority
     return iNice;
    }
-  /* -- Return if running as root ------------------------------------------ */
-  bool DetectElevation() { return getuid() == 0; }
-  /* -- Return data from /dev/urandom -------------------------------------- */
-  Memory GetEntropy()
-    { return fsDevRandom.FStreamReadBlockSafe(stPageSize); }
-  /* ----------------------------------------------------------------------- */
-  void *GetWindowHandle() const { return nullptr; }
-  /* -- A window was created ----------------------------------------------- */
-  void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
-    { bWindowInitialised = !!gwWindow; }
-  /* -- Window was destroyed, nullify handles ------------------------------ */
-  void SetWindowDestroyed() { bWindowInitialised = false; }
-  /* ----------------------------------------------------------------------- */
-  int LastSocketOrSysError() const { return StdGetError(); }
   /* -- Initialise global mutex -------------------------------------------- */
   bool InitGlobalMutex(const StdStringView &strvTitle)
   { // Initialise the mutex and return the result
@@ -465,18 +407,20 @@ class SysCore :
     });
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const StdString BuildRoamingDir() const
+  StdString BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("HOME", "/.local"); }
   /* -- Constructor -------------------------------------------------------- */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
     SysMutex{ piProcessId },           // Send pid to mutex vlass
-    SysCon{ EnumModules(), 0 },
-    SysCommon{ GetExecutableData(),
-               GetOperatingSystememData(),
-               GetProcessorData() },
-    bWindowInitialised(false)
+    SysCon{ EnumModules(), 0 },        // Build system module dependencies
+    SysInfo{ GetExecutableData(),      // Build data about the executable
+             GetOperatingSystemData(), // Build data about the OS
+             GetProcessorData() }      // Build data about the CPU
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

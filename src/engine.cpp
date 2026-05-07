@@ -19,25 +19,31 @@
 namespace E {                          // Start of engine namespace
 /* ------------------------------------------------------------------------- */
 #include "engine.hpp"                  // Engine version information header
-#include "stdtypes.hpp"                // Engine STL type aliases header
+#include "stddef.hpp"                  // Engine STL type aliases header
 #include "common.hpp"                  // Common constant variables header
-#include "flags.hpp"                   // Flags helper utility header
+#include "endian.hpp"                  // Endian functions header
+#include "std.hpp"                     // Standard utility functions header
 #include "utf.hpp"                     // UTF strings utility header
-#include "std.hpp"                     // StdLib function helpers header
+#include "stdlib.hpp"                  // X platform C funcs header
+#include "flags.hpp"                   // Flags helper utility header
 #include "string.hpp"                  // String utilities header
+#include "time.hpp"                    // String time utilities header
 #include "error.hpp"                   // Error handling utility header
 #include "token.hpp"                   // String tokenisation utility header
 #include "parser.hpp"                  // String parsing utility header
 #include "psplit.hpp"                  // Path handling utilities header
-#include "ident.hpp"                   // Identifier utility header
+#include "name.hpp"                    // Name utility header
+#include "lukarray.hpp"                // Safe lookup array utility header
+#include "lukmap.hpp"                  // Safe lookup map utility header
 #include "cvardef.hpp"                 // CVar definitions header
+#include "serial.hpp"                  // Serial number object header
 #include "dir.hpp"                     // Directory handling utility header
 #include "util.hpp"                    // Miscellenious utilities header
 #include "sysutil.hpp"                 // System utilities header
 #include "clock.hpp"                   // Clock manager header
 #include "interval.hpp"                // Clock interval header
 #include "chrono.hpp"                  // Clock chronometer header
-#include "timer.hpp"                   // Timing utilities header
+#include "frame.hpp"                   // Frame control class header
 #include "args.hpp"                    // Arguments handling header
 #include "cmdline.hpp"                 // Command-line class header
 #include "bit.hpp"                     // Utility bit access functions
@@ -66,6 +72,11 @@ namespace E {                          // Start of engine namespace
 #include "glfw.hpp"                    // GLFW utilities header
 #include "glfwmon.hpp"                 // GLFW monitor class header
 #include "condef.hpp"                  // Console definitions header
+#include "format.hpp"                  // Utf code formatting
+#include "sysmod.hpp"                  // Common shared object info header
+#include "sysinfo.hpp"                 // Common sysinfo and exe header
+#include "syspipe.hpp"                 // Terminal pipe interface header
+#include "syscon.hpp"                  // Terminal console interface header
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
 #include "refctr.hpp"                  // Reference counter class header
@@ -134,6 +145,7 @@ namespace E {                          // Start of engine namespace
 #include "input.hpp"                   // Input handling class header
 #include "display.hpp"                 // Window handling class header
 #include "mask.hpp"                    // BitMask system header
+#include "mixer.hpp"                   // Mixer source class header
 #include "source.hpp"                  // Audio source class header
 #include "stream.hpp"                  // Audio stream class header
 #include "sample.hpp"                  // Audio sample class header
@@ -148,9 +160,13 @@ namespace E {                          // Start of engine namespace
 };                                     // End of engine namespace
 /* == The main entry point ================================================= */
 int ENTRYFUNC                          // Macro defined in 'setup.hpp'
-{ // Includes required to build the engine
+{ // Override environment variable with an ASAN friendly version on MacOS
+#if defined(MACOS)
+  _wenviron = *Lib::OS::_NSGetEnviron();
+#endif
+  // Includes required to build the engine
   using namespace E;                   using namespace ISysUtil::P;
-  using namespace IStd::P;
+  using namespace IStd::P;             using namespace IStdLib::P;
   // Initialise and label the main thread
   SysInitThread("main", STP_MAIN);
   // Capture exceptions

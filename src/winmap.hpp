@@ -7,12 +7,21 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Windows file mapping class =========================================== */
+/* ------------------------------------------------------------------------- */
+namespace ISysMap {                    // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace ICommon::P;            using namespace IError::P;
+using namespace ILog::P;               using namespace IName::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace ISysUtil::P;           using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysMap :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  public virtual Ident                 // File name to the map
+  public virtual NameStr               // File name to the map
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef StdArray<StdTimeT,2> TwoTime; // For holding two unix timestamps
+  using TwoTime = StdArray<StdTimeT, 2>; // For holding two unix timestamps
   /* -- Private variables (don't change order!) ---------------------------- */
   HANDLE           hFile;              // Handle to the file
   uint64_t         ullSize;            // Size of file
@@ -24,17 +33,17 @@ class SysMap :                         // Members initially private
   { // Have mapped file in memory and if it is not a zero sized map then unmap
     // the file
     if(SysMapIsAvailable() && SysMapIsNotEmpty() &&
-      !UnmapViewOfFile(SysMapGetMemory<LPCVOID>()))
+      !UnmapViewOfFile(SysMapGetMemory<VOID>()))
         cLog->LogWarningExSafe("System failed to unmap view of '$': $!",
-          IdentGet(), SysError());
+          NameGet(), SysError());
     // Have map handle? Unmap the file and clear the pointer
     if(hMap && !CloseHandle(hMap))
       cLog->LogWarningExSafe("System failed to close file mapping for '$': $!",
-        IdentGet(), SysError());
+        NameGet(), SysError());
     // Have file handle? Unmap the file and clear the pointer
     if(hFile != INVALID_HANDLE_VALUE && !CloseHandle(hFile))
       cLog->LogWarningExSafe("System failed to close file '$': $!",
-        IdentGet(), SysError());
+        NameGet(), SysError());
   }
   /* -- Clear variables ---------------------------------------------------- */
   void SysMapClearVarsInternal()
@@ -47,12 +56,11 @@ class SysMap :                         // Members initially private
   }
   /* -- Get file handle ---------------------------------------------------- */
   HANDLE SysMapSetupFile()
-  { // Open file and return if opened
-    HANDLE hF = CreateFile(UTFtoS16(IdentGetData()).data(), GENERIC_READ,
+  { // Open file and return if opened else throw exception on error
+    HANDLE hF = CreateFile(UTFtoS16(NameGet()).data(), GENERIC_READ,
       FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, nullptr);
     if(hF != INVALID_HANDLE_VALUE) return hF;
-    // Failed
-    XCS("Open file for mapping failed!", "File", IdentGet());
+    XCS("Open file for mapping failed!", "File", NameGet());
   }
   /* -- Get size of file --------------------------------------------------- */
   uint64_t SysMapSetupSize()
@@ -60,7 +68,7 @@ class SysMap :                         // Members initially private
     LARGE_INTEGER liSize;
     if(GetFileSizeEx(hFile, &liSize))
       return *reinterpret_cast<uint64_t*>(&liSize);
-    XCS("Failed to query file size!", "File", IdentGet(), "Handle", hFile);
+    XCS("Failed to query file size!", "File", NameGet(), "Handle", hFile);
   }
   /* -- Get handle to map -------------------------------------------------- */
   HANDLE SysMapSetupMap()
@@ -70,10 +78,10 @@ class SysMap :                         // Members initially private
       if(HANDLE hM = CreateFileMapping(hFile,
         nullptr, PAGE_READONLY, 0, 0, nullptr))
           return hM;
-      XCS("Create file mapping failed!", "File", IdentGet(), "Handle", hFile);
+      XCS("Create file mapping failed!", "File", NameGet(), "Handle", hFile);
     } // Empty so close the file. Whats the point in keeping it open?
     if(!CloseHandle(hFile))
-      XCS("Failed to close empty file!", "File", IdentGet(), "Handle", hFile);
+      XCS("Failed to close empty file!", "File", NameGet(), "Handle", hFile);
     // Reset the handle
     hFile = INVALID_HANDLE_VALUE;
     // Return nothing
@@ -87,7 +95,7 @@ class SysMap :                         // Members initially private
     if(char*const cpM =
       reinterpret_cast<char*>(MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)))
         return cpM;
-    XCS("Map view of file failed!", "File", IdentGet(), "Handle", hMap);
+    XCS("Map view of file failed!", "File", NameGet(), "Handle", hMap);
   }
   /* -- Get file creation time --------------------------------------------- */
   TwoTime SysMapSetupTimes()
@@ -97,11 +105,13 @@ class SysMap :                         // Members initially private
       return { StdBruteCast<StdTimeT>(ftC) / 100000000,
                StdBruteCast<StdTimeT>(ftM) / 100000000 };
     XCS("Failed to query file creation time!",
-      "File", IdentGet(), "Handle", hFile);
+      "File", NameGet(), "Handle", hFile);
   }
   /* -- Get members ------------------------------------------------ */ public:
-  template<typename RT=char>RT *SysMapGetMemory() const
-    { return reinterpret_cast<RT*>(cpMem); }
+  template<typename PtrType = char>
+    requires (!StdIsPointer<PtrType>)
+  PtrType *SysMapGetMemory() const
+    { return reinterpret_cast<PtrType*>(cpMem); }
   bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
   bool SysMapIsAvailable() const { return !!SysMapGetMemory(); }
@@ -112,10 +122,10 @@ class SysMap :                         // Members initially private
   /* -- Init object from class --------------------------------------------- */
   void SysMapSwap(SysMap &smOther)
   { // Swap members
-    swap(hFile, smOther.hFile);
-    swap(hMap, smOther.hMap);
-    swap(cpMem, smOther.cpMem);
-    swap(ullSize, smOther.ullSize);
+    StdSwap(hFile, smOther.hFile);
+    StdSwap(hMap, smOther.hMap);
+    StdSwap(cpMem, smOther.cpMem);
+    StdSwap(ullSize, smOther.ullSize);
     atTime.swap(smOther.atTime);
   }
   /* -- Assign constructor ------------------------------------------------- */
@@ -125,12 +135,12 @@ class SysMap :                         // Members initially private
     // Clear the variables
     SysMapClearVarsInternal();
     // Clear the name
-    IdentClear();
+    NameClear();
   }
   /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const StdString &strIn, const StdTimeT tC, const StdTimeT tM) :
+  SysMap(const StdStringView &strvIn, const StdTimeT tC, const StdTimeT tM) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strIn },                    // Initialise file name
+    Name{ strvIn },                    // Initialise file name
     hFile(INVALID_HANDLE_VALUE),       // No file handle
     ullSize(0),                        // No file size
     hMap(nullptr),                     // No map handle
@@ -151,7 +161,7 @@ class SysMap :                         // Members initially private
   /* -- Move constructor --------------------------------------------------- */
   SysMap(SysMap &&smOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ StdMove(smOther) },         // Move other identifier
+    Name{ StdMove(smOther) },          // Move other identifier
     hFile(smOther.hFile),              // Move other file handle
     ullSize(smOther.ullSize),          // Move other size
     hMap(smOther.hMap),                // Move other file map
@@ -160,9 +170,9 @@ class SysMap :                         // Members initially private
     /* -- Clear other variables -------------------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
   /* -- Constructor with actual initialisation ----------------------------- */
-  explicit SysMap(const StdString &strIn) :
+  explicit SysMap(const StdStringView &strvIn) :
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strIn },                    // Set file name
+    Name{ strvIn },                    // Set file name
     hFile(SysMapSetupFile()),          // Get file handle from file on disk
     ullSize(SysMapSetupSize()),        // Get file size on disk
     hMap(SysMapSetupMap()),            // Get map handle
@@ -173,4 +183,7 @@ class SysMap :                         // Members initially private
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~SysMap, SysMapDeInitInternal())
 };/* -- End ---------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

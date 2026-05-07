@@ -8,7 +8,14 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == Windows Registry Class =============================================== */
+/* ------------------------------------------------------------------------- */
+namespace ISysReg {                    // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IUtf::P;               using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysReg                           // Members initially private
 { /* ----------------------------------------------------------------------- */
   HKEY             hkKey;              // Key handle
@@ -18,19 +25,19 @@ class SysReg                           // Members initially private
   bool Opened() const { return GetHandle() != nullptr; }
   bool NotOpened() const { return !Opened(); }
   /* -- Query sub keys ----------------------------------------------------- */
-  const StrVector QuerySubKeys() const
+  StrVector QuerySubKeys() const
   { // Key opened? Return nothing
     if(NotOpened()) return {};
     // Create key list
     StrVector klData;
     // Until there are no more items
-    for(unsigned int uiIndex = 0;; ++uiIndex)
+    for(unsigned uIndex = 0;; ++uIndex)
     { // Create memory to hold string
       StdResized<StdWideString> wstrData{ MAX_PATH };
       // Set size
       DWORD dwSize = static_cast<DWORD>(wstrData.capacity() * sizeof(wchar_t));
       // Enumerate. Add to list if succeeded
-      switch(RegEnumKeyEx(GetHandle(), uiIndex,
+      switch(RegEnumKeyEx(GetHandle(), uIndex,
         const_cast<wchar_t*>(wstrData.data()),
           &dwSize, nullptr, nullptr, nullptr, nullptr))
       { // Succeeded?
@@ -47,7 +54,7 @@ class SysReg                           // Members initially private
     } // Never gets here
   }
   /* -- Query value as string----------------------------------------------- */
-  const StdString QueryString(const StdString &strV) const
+  StdString QueryString(const StdString &strV) const
   { // Key opened? Return nothing
     if(NotOpened()) return {};
     // Initialise size and type
@@ -66,24 +73,21 @@ class SysReg                           // Members initially private
     return WS16toUTF(wstrBuffer);
   }
   /* -- Query value -------------------------------------------------------- */
-  unsigned int Query(const StdString &strV, void **vpD, const DWORD dwS) const
-  { // Bail if key not opened
+  LSTATUS Query(const StdString &strV, void **vpD, const DWORD dwS) const
+  { // Ignore if key not opened else query registry value and return status
     if(NotOpened()) return ERROR_NO_TOKEN;
-    // Set size
     DWORD dwSize = dwS, dwType = 0;
-    // Query value and return status
     return RegQueryValueEx(GetHandle(), UTFtoS16(strV).data(), nullptr,
       &dwType, reinterpret_cast<LPBYTE>(vpD), &dwSize);
   }
   /* -- Query integer ------------------------------------------------------ */
-  template<typename StorageType>
-    const StorageType Query(const StdString &strV) const
-  { // Storage for value
-    StorageType tValue{ 0 };
-    // Query the key value and store it in the integer
-    Query(strV, reinterpret_cast<void**>(&tValue), sizeof(StorageType));
-    // We are done! Return the value
-    return tValue;
+  template<typename AnyType>
+    requires StdIsIntegral<AnyType>
+  AnyType Query(const StdString &strV) const
+  { // Query the key value and store it in the integer
+    AnyType atValue{ 0 };
+    Query(strV, reinterpret_cast<void**>(&atValue), sizeof(AnyType));
+    return atValue;
   }
   /* -- Direct access to return if handle is opened ------------------------ */
   operator bool() const { return Opened(); }
@@ -102,4 +106,7 @@ class SysReg                           // Members initially private
   /* -- Destructor --------------------------------------------------------- */
   ~SysReg() { if(Opened()) RegCloseKey(GetHandle()); }
 };/* ----------------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

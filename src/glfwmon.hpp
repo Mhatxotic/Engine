@@ -54,8 +54,8 @@ class GlFWRes                          // Members initially private
     /* -- Update unique identifier of monitor ------------------------------ */
     {}
 };/* ----------------------------------------------------------------------- */
-typedef StdVector<GlFWRes> GlFWResList; // Vector of resolution classes
-typedef GlFWResList::const_iterator GlFWResListConstIt;
+using GlFWResList        = StdVector<GlFWRes>; // Vector of resolution classes
+using GlFWResListConstIt = GlFWResList::const_iterator;
 /* ------------------------------------------------------------------------- */
 class GlFWMonitor :                    // Members initially private
   /* -- Base classes ------------------------------------------------------- */
@@ -105,8 +105,8 @@ class GlFWMonitor :                    // Members initially private
   /* -- Resolution list access --------------------------------------------- */
   const GlFWRes &Get(const size_t stIndex) const { return (*this)[stIndex]; }
   const GlFWRes *GetPtr(const size_t stIndex) const { return &Get(stIndex); }
-  const GlFWResListConstIt Begin() const { return cbegin(); }
-  const GlFWResListConstIt End() const { return cend(); }
+  GlFWResListConstIt Begin() const { return cbegin(); }
+  GlFWResListConstIt End() const { return cend(); }
   size_t Count() const { return size(); }
   /* -- Constructor -------------------------------------------------------- */
   GlFWMonitor(const int iId, GLFWmonitor*const mC) :
@@ -171,8 +171,8 @@ class GlFWMonitor :                    // Members initially private
     else XC("Could not detect primary video mode!", "Monitor", strName);
   }
 };/* ----------------------------------------------------------------------- */
-typedef StdVector<GlFWMonitor> GlFWMonitorList; // Vector of monitor classes
-typedef GlFWMonitorList::const_iterator GlFWMonitorListConstIt;
+using GlFWMonitorList        = StdVector<GlFWMonitor>; // Vector of monitors
+using GlFWMonitorListConstIt = GlFWMonitorList::const_iterator;
 /* ------------------------------------------------------------------------- */
 class GlFWMonitors :
   /* -- Base classes ------------------------------------------------------- */

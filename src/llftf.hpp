@@ -67,7 +67,7 @@ LLFUNC(Family, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetFamily()))
 // < Id:integer=The id number of the Ftf object.
 // ? Returns the unique id of the Ftf object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Ftf:Glyphs
 // < Count:integer=Number of glyphs available.
@@ -79,7 +79,7 @@ LLFUNC(Glyphs, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetGlyphCount()))
 // < Name:string=The name of the freetype font
 // ? Returns the name of the specified object when it was created.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Ftf:Style
 // < Name:string=The internal style name of the freetype font
@@ -113,14 +113,14 @@ LLRSEND                                // Ftf:* member functions end
 // ? with the Font.Create() function.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Asset, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgDimension aWidth{lS, 3},
                     aHeight{lS, 4};
   const AgDpiDimension aDpiWidth{lS, 5},
                        aDpiHeight{lS, 6};
   const AgOutline aOutline{lS, 7};
-  AcFtf{lS}().InitArray(aIdentifier, aAsset, aWidth, aHeight, aDpiWidth,
+  AcFtf{lS}().InitArray(aName(), aAsset, aWidth, aHeight, aDpiWidth,
     aDpiHeight, aOutline))
 /* ========================================================================= */
 // $ Ftf.AssetAsync
@@ -140,7 +140,7 @@ LLFUNC(Asset, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(AssetAsync, 0,
   LuaUtilCheckParams(lS, 10);
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgDimension aWidth{lS, 3},
                     aHeight{lS, 4};
@@ -148,7 +148,7 @@ LLFUNC(AssetAsync, 0,
                        aDpiHeight{lS, 6};
   const AgOutline aOutline{lS, 7};
   LuaUtilCheckFunc(lS, 8, 9, 10);
-  AcFtf{lS}().InitAsyncArray(lS, aIdentifier, aAsset, aWidth, aHeight,
+  AcFtf{lS}().InitAsyncArray(lS, aName(), aAsset, aWidth, aHeight,
     aDpiWidth, aDpiHeight, aOutline))
 /* ========================================================================= */
 // $ Ftf.Count

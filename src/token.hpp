@@ -9,168 +9,94 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IToken {                     // Start of module namespace
-/* ------------------------------------------------------------------------- */
-using namespace IStd::P;
+/* -- Dependencies --------------------------------------------------------- */
+using namespace ICommon::P;            using namespace IStd::P;
+/* -- Picks the appropriate type for a string argument parameter ----------- */
+template<class StrConType, typename StrArgType>
+  using StdPickStrTypeForContainer = StdConditional<
+    StdIsSame<StdDecay<StrConType>, StdString> &&
+    StdIsSame<StdDecay<StrArgType>, StdString>,
+    StdString,
+    StdStringView>;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Simple constructor with no restriction on token count ---------------- */
-template<class StrType, class StrSepType>
-  static void Tokeniser(const StrType &strStr, const StrSepType &strSep,
-    auto &&fFunc)
-{ // Return if string or separator is empty
-  if(strStr.empty() || strSep.empty()) return;
+template<class StrConType, class StrType, class StrSepType>
+  static void Tokeniser(StrType &&strStr, StrSepType &&sstSep, auto &&fFunc)
+{ // Force parameters to StringView if not of a string type
+  StdPickStrTypeForContainer<StrConType, StrType>
+    snsStr{ StdForward<StrType>(strStr) };
+  StdNormalisedString<StrSepType> snsSep{ StdForward<StrSepType>(sstSep) };
+  // Return if string or separator is empty
+  if(snsStr.empty() || snsSep.empty()) return;
   // Get length of separator
-  const size_t stSepLen = strSep.length();
+  const size_t stSepLen = snsSep.size();
   size_t stStart = 0;
   // Extract each word and emplace it into our vector of strings
-  for(size_t stLoc; (stLoc = strStr.find(strSep, stStart)) != StdNPos;
+  for(size_t stLoc; (stLoc = snsStr.find(snsSep, stStart)) != StdNPos;
         stStart = stLoc + stSepLen)
-    fFunc({ strStr.data() + stStart, stLoc - stStart });
+    fFunc(snsStr.substr(stStart, stLoc - stStart));
   // Theres one left? Make sure it's inserted
-  if(stStart <= strStr.length())
-    fFunc({ strStr.data() + stStart, strStr.size() - stStart });
+  if(stStart <= snsStr.size())
+    fFunc(snsStr.substr(stStart, snsStr.size() - stStart));
 };
-/* -- Token class with permission to modify the original string ------------ */
-struct TokenListNC :
-  /* -- Base classes ------------------------------------------------------- */
-  public CStrVector                    // Vector of C-Strings
-{ /* -- Constructor with maximum token count ------------------------------- */
-  TokenListNC(StdString &strStr, const StdString &strSep, const size_t stMax)
-  { // Ignore if either string is empty
-    if(strStr.empty() || strSep.empty()) return;
-    // What is the maximum number of tokens allowed?
-    switch(stMax)
-    { // None? Return nothing
-      case 0: return;
-      // One? Return original string.
-      case 1: emplace_back(strStr.data()); return;
-      // Something else?
-      default:
-      { // Reserve memory for all the specified items that are expected
-        reserve(stMax);
-        // Get length of separator and maximum items minus one
-        const size_t stSepLen = strSep.length(), stMaxM1 = stMax - 1;
-        // Location of separator
-        size_t stStart = 0;
-        // Until there are no more occurences of separator or maximum reached
-        // Move the tokenised part into a new list item
-        for(size_t stLoc;
-            (stLoc = strStr.find(strSep, stStart)) != StdNPos &&
-              size() < stMaxM1;
-            stStart += stLoc - stStart + stSepLen)
-        { // Zero the character
-          strStr[stLoc] = '\0';
-          // Add it to the list
-          emplace_back(&strStr[stStart]);
-        } // Push remainder of string if there is a remainder
-        if(stStart < strStr.length()) emplace_back(&strStr[stStart]);
-        // Compact memory
-        shrink_to_fit();
-        // Done
-        break;
-      }
-    }
-  }
-  /* -- Direct conditional access ------------------------------------------ */
-  operator bool() const { return !empty(); }
-  /* -- MOVE assignment constructor ---------------------------------------- */
-  TokenListNC(TokenListNC &&tlOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    CStrVector{ StdMove(tlOther) }     // Move vector of C-Strings over
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* ----------------------------------------------------------------------- */
-struct TokenList :                     // Token class with line limit
-  /* -- Base classes ------------------------------------------------------- */
-  public StrList                       // List of strings
-{ /* -- Simple constructor with no restriction on line count --------------- */
-  TokenList(const StdString &strStr, const StdString &strSep,
-    const size_t stMax)
-  { // Ignore if either string is empty
-    if(strStr.empty() || strSep.empty()) return;
-    // What is the maximum number of tokens allowed?
-    switch(stMax)
-    { // None? Return nothing
-      case 0: return;
-      // One? Return original string.
-      case 1: emplace_back(strStr); return;
-      // Something else?
-      default:
-      { // Get length of separator
-        const size_t stSepLen = strSep.length();
-        // Location of separator
-        size_t stStart = strStr.size() - 1;
-        // Until there are no more occurences of separator
-        for(size_t stLoc; stStart != StdNPos &&
-              (stLoc = strStr.find_last_of(strSep, stStart)) != StdNPos;
-              stStart = stLoc - 1)
-        { // Get location plus length
-          const size_t stLocPlusLength = stLoc + stSepLen;
-          // Move the tokenised part into a new list item
-          emplace_front(
-            strStr.substr(stLocPlusLength, stStart - stLocPlusLength + 1));
-          // If we're over the limit
-          if(size() >= stMax) return;
-        } // Push remainder of string if there is a remainder
-        if(stStart != StdNPos) emplace_front(strStr.substr(0, stStart + 1));
-        // Done
-        return;
-      }
-    }
-  }
-  /* -- Direct conditional access ------------------------------------------ */
-  operator bool() const { return !empty(); }
-  /* -- MOVE assignment constructor ---------------------------------------- */
-  TokenList(TokenList &&tlOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    StrList{ StdMove(tlOther) }        // Move list of strings over
-    /* -- No code ---------------------------------------------------------- */
-    {}
-}; /* ---------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+template<class VecStrType,
+         class StrVecType = StdVector<VecStrType>>
+  requires StdIsString<VecStrType>
 struct Token :                         // Tokeniser class
   /* -- Base classes ------------------------------------------------------- */
-  public StrVector                     // Vector of strings
+  public StrVecType                    // Container type for strings
 { /* -- Constructor with maximum token count ------------------------------- */
-  Token(const StdString &strStr, const StdString &strSep, const size_t stMax)
-  { // Return if string or separator is empty
-    if(strStr.empty() || strSep.empty()) return;
+  template<class StrType, class StrSepType>
+    Token(StrType &&strStr, StrSepType &&sstSep, const size_t stMax)
+  { // Force parameters to StringView if not of a string type
+    StdPickStrTypeForContainer<VecStrType, StrType>
+      snsStr{ StdForward<StrType>(strStr) };
+    StdNormalisedString<StrSepType>
+      snsSep{ StdForward<StrSepType>(sstSep) };
+    // Return if string or separator is empty
+    if(snsStr.empty() || snsSep.empty()) return;
     // What is the maximum number of tokens allowed?
     switch(stMax)
     { // None? Return nothing
       case 0: break;
       // One? Return original string.
-      case 1: emplace_back(strStr); break;
+      case 1: this->emplace_back(VecStrType{ snsStr }); break;
       // Something else?
       default:
-      { // Reserve memory for specified number of items
-        reserve(stMax);
+      { // Reserve memory for specified number of items if available
+        constexpr const bool bHasReserve = StdHasReserve<StrVecType>;
+        if constexpr(bHasReserve) this->reserve(stMax);
         // Get length of separator and maximum items minus one
-        const size_t stSepLen = strSep.length(), stMaxM1 = stMax - 1;
+        const size_t stSepLen = snsSep.size(), stMaxM1 = stMax - 1;
         // Position in string
         size_t stStart = 0;
         // Enumerate the string through each separator and extract each string
         for(size_t stLoc;
-            (stLoc = strStr.find(strSep, stStart)) != StdNPos &&
-              size() < stMaxM1;
+            (stLoc = snsStr.find(snsSep, stStart)) != StdNPos &&
+              this->size() < stMaxM1;
             stStart = stLoc + stSepLen)
-          emplace_back(strStr.substr(stStart, stLoc - stStart));
+          this->emplace_back(VecStrType{
+            snsStr.substr(stStart, stLoc - stStart) });
         // More text left? Make sure to insert that
-        if(stStart < strStr.length()) emplace_back(strStr.substr(stStart));
-        // Compact memory
-        shrink_to_fit();
-        // Done
+        if(stStart < snsStr.size())
+          this->emplace_back(VecStrType{ snsStr.substr(stStart) });
+        // Compact memory if available and break to finish
+        if constexpr(bHasReserve) this->shrink_to_fit();
         break;
       }
     }
   }
   /* -- Simple constructor with no restriction on token count -------------- */
-  Token(const StdString &strStr, const StdString &strSep)
+  Token(auto &&aStr, auto &&aSep)
   { // Run the generic tokeniser function to split apart the stirng
-    Tokeniser(strStr, strSep, [this](StdString &&svStr)
-      { emplace_back(StdMove(svStr)); });
+    Tokeniser<VecStrType>(StdForward<decltype(aStr)>(aStr),
+      StdForward<decltype(aSep)>(aSep), [this](const VecStrType &vstStr)
+        { this->emplace_back(vstStr); });
   }
   /* -- Direct conditional access ------------------------------------------ */
-  operator bool() const { return !empty(); }
+  operator bool() const { return !this->empty(); }
   /* -- MOVE constructor --------------------------------------------------- */
   Token(Token &&tlOther) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -178,6 +104,12 @@ struct Token :                         // Tokeniser class
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
+using TokenList           = Token<StdStringView, StdList<StdStringView>>;
+using TokenStrView        = Token<StdStringView>;
+using TokenStrViewConstIt = TokenStrView::const_iterator;
+using TokenStr            = Token<StdString>;
+using TokenStrConstIt     = TokenStr::const_iterator;
+/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of module namespace

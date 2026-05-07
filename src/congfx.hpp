@@ -33,50 +33,43 @@ class ConGfx :                         // Members initially private
 { /* -- Private variables -------------------------------------------------- */
   const uint32_t   ulFontColour;       // Console input text colour
   uint32_t         ulTexColour;        // Console background texture colour
-  GLfloat          fFontScale,         // Console font scale
-                   fConsoleHeight,     // Console height
-                   fFontLetterSpacing, // Console text letter spacing
-                   fFontLineSpacing,   // Console text line spacing
-                   fFontWidth,         // Console text width
-                   fFontHeight;        // Console text height
-  Texture          ctConsole;          // Console background texture
-  Font             cfConsole;          // Console font
+  GLfloat          glfFontScale,       // Console font scale
+                   glfConHeight,       // Console height
+                   glfLetterSpacing,   // Console text letter spacing
+                   glfLineSpacing,     // Console text line spacing
+                   glfFontWidth,       // Console text width
+                   glfFontHeight;      // Console text height
+  Texture          texConsole;         // Console background texture
+  Font             fonConsole;         // Console font
   char             cCursor;            // Cursor character to use
   /* -- Return console and main FBO from FboCore class --------------------- */
   Fbo &ConGfxGetFBO() { return cFboCore->FboCoreGetConsole(); }
-  const CoordsFloat &ConGfxGetFBOStage() const
+  const CoordsGLFloat &ConGfxGetFBOStage() const
     { return cFboCore->FboCoreGetConsoleStage(); }
   Fbo &ConGfxGetMainFBO() { return cFboCore->FboCoreGetMain(); }
-  const CoordsFloat &ConGfxGetMainFBOStage() const
+  const CoordsGLFloat &ConGfxGetMainFBOStage() const
     { return cFboCore->FboCoreGetMainStage(); }
-  /* -- Toggle insert and overwrite mode ----------------------------------- */
-  void ConGfxToggleCursorMode()
-  { // Toggle cursor mode, set new cursor to display and redraw the console
-    cConsole->ToggleCursorMode();
-    cCursor = cConsole->FlagIsSet(CF_INSERT) ? '|' : '_';
-    cConsole->SetRedraw();
-  }
   /* -- Init console font -------------------------------------------------- */
   void ConGfxInitFont()
   { // Load font. Cvars won't set the font size initially so we have to do
     // it manually. If we init cvars after, then destructor will crash because
     // the cvars havn't been initialised
     Ftf fFTFont;
-    fFTFont.InitFile(cCVars->GetStrInternal(CON_FONT), fFontWidth,
-      fFontHeight, 96, 96, 0.0f);
+    fFTFont.InitFile(cCVars->GetStrInternal(CON_FONT), glfFontWidth,
+      glfFontHeight, 96, 96, 0.0f);
     ConGfxGetFontRef().InitFontFtf(fFTFont,
       cCVars->CVarsGetInternal<GLuint>(CON_FONTTEXSIZE),
       cCVars->CVarsGetInternal<GLuint>(CON_FONTPADDING), OF_L_L_MM_L,
-        ConGfxGetFontRef());
+      ConGfxGetFontRef());
     // Get minimum precache range and if valid?
     if(const Codepoint cCharMin =
-      cCVars->CVarsGetInternal<unsigned int>(CON_FONTPCMIN))
+         cCVars->CVarsGetInternal<unsigned>(CON_FONTPCMIN))
       // Get maximum precache range and return if valid?
       if(const Codepoint cCharMax =
-        cCVars->CVarsGetInternal<unsigned int>(CON_FONTPCMAX))
-          // If maximum is above the minimum? Pre-cache the characters range
-          if(cCharMax >= cCharMin)
-            ConGfxGetFontRef().InitFTCharRange(cCharMin, cCharMax);
+           cCVars->CVarsGetInternal<unsigned>(CON_FONTPCMAX))
+        // If maximum is above the minimum? Pre-cache the characters range
+        if(cCharMax >= cCharMin)
+          ConGfxGetFontRef().InitFTCharRange(cCharMin, cCharMax);
     // Set default font parameters
     ConGfxRestoreDefaultProperties();
     // LUA not allowed to deallocate this font!
@@ -100,13 +93,13 @@ class ConGfx :                         // Members initially private
   }
   /* -- Commit default text scale ------------------------------------------ */
   void ConGfxCommitScale()
-    { ConGfxGetFontRef().SetSize(fFontScale); }
+    { ConGfxGetFontRef().SetSize(glfFontScale); }
   /* -- Commit default letter spacing -------------------------------------- */
   void ConGfxCommitLetterSpacing()
-    { ConGfxGetFontRef().SetCharSpacing(fFontLetterSpacing); }
+    { ConGfxGetFontRef().SetCharSpacing(glfLetterSpacing); }
   /* -- Commit default line spacing ---------------------------------------- */
   void ConGfxCommitLineSpacing()
-    { ConGfxGetFontRef().SetLineSpacing(fFontLineSpacing); }
+    { ConGfxGetFontRef().SetLineSpacing(glfLineSpacing); }
   /* -- Reset defaults (for lreset) ---------------------------------------- */
   void ConGfxRestoreDefaultProperties()
   { // Restore default settings from cvar registry
@@ -115,8 +108,8 @@ class ConGfx :                         // Members initially private
     ConGfxCommitLineSpacing();
   }
   /* -- Get console textures --------------------------------------- */ public:
-  Texture &ConGfxGetTextureRef() { return ctConsole; }
-  Font &ConGfxGetFontRef() { return cfConsole; }
+  Texture &ConGfxGetTextureRef() { return texConsole; }
+  Font &ConGfxGetFontRef() { return fonConsole; }
   Texture *ConGfxGetTexture() { return &ConGfxGetTextureRef(); }
   Font *ConGfxGetFont() { return &ConGfxGetFontRef(); }
   /* -- Do set visibility -------------------------------------------------- */
@@ -170,16 +163,22 @@ class ConGfx :                         // Members initially private
     // Move console if moving down
     else if(dY < 0.0) cConsole->MoveLogDown();
   }
-  /* -- Keyboard key pressed event ----------------------------------------- */
-  void ConGfxOnKeyPress(const int iKey, const int iAction, const int iMods)
-  { // Key released? Ignore
-    if(iAction == GLFW_RELEASE) return;
+  /* -- Check if console key pressed in console ---------------------------- */
+  bool ConGfxIsKeyHandled(const int iKey, const int iState, const int iMod)
+  { // Return unhandled if console not visible or a key was released
+    if(cConsole->IsNotVisible() || iState == GLFW_RELEASE) return false;
     // Control key, which key?
-    if(iMods & GLFW_MOD_CONTROL) switch(iKey)
+    if(iMod & GLFW_MOD_CONTROL) switch(iKey)
     { // Test keys with control held
 #if defined(MACOS)
       // Because MacOS keyboards don't have an 'insert' key.
-      case GLFW_KEY_DELETE: return ConGfxToggleCursorMode();
+      case GLFW_KEY_DELETE:
+        // Toggle cursor mode, set new cursor to display and redraw the console
+        cConsole->ToggleCursorMode();
+        cCursor = cConsole->FlagIsSet(CF_INSERT) ? '|' : '_';
+        cConsole->SetRedraw();
+        // Key is handled
+        return true;
 #endif
       // Copy text from clipboard?
       case GLFW_KEY_C:
@@ -197,27 +196,16 @@ class ConGfx :                         // Members initially private
     else switch(iKey)
     { // Test keys with no modifiers held
       case GLFW_KEY_ESCAPE:
-      { // If there is no text in the input buffer?
-        if(cConsole->InputEmpty())
-        { // Hide the console and set to ignore an escape keypress if succeeded
-          if(ConGfxSetVisible(false)) cConsole->FlagSet(CF_IGNOREESC);
-        } // Let console class clear the input
-        else break;
+        // Break if there is input
+        if(cConsole->InputNotEmpty()) break;
+        // Hide the console and set to ignore an escape keypress if succeeded
+        if(ConGfxSetVisible(false)) cConsole->FlagSet(CF_IGNOREESC);
         // Do not do anything else
-        return;
-      } // Nothing interesting break to pass to console class
+        return true;
+      // Nothing interesting break to pass to console class
       default: break;
     } // We didnt handle any keys so let the actual console handle them
-    cConsole->OnKeyPress(iKey, iAction, iMods);
-  }
-  /* -- Check if console key pressed in console ---------------------------- */
-  bool ConGfxIsKeyHandled(const int iKey, const int iState, const int iMod)
-  { // Return if console not visible
-    if(cConsole->IsNotVisible()) return false;
-    // Add normal key pressed. Since GLFW inconveniently gives us 3 int
-    // parameters, we need to pack 2 ints together. Luckily, GLFW_RELEASE etc
-    // is only 8-bit, we'll pack the modifiers with this value.
-    ConGfxOnKeyPress(iKey, iState, iMod);
+    cConsole->OnKeyPress(iKey, iState, iMod);
     // We handled this key so do not dispatch it to scripts
     return true;
   }
@@ -225,6 +213,8 @@ class ConGfx :                         // Members initially private
   void ConGfxRender()
   { // Shift queued console lines
     cConsole->MoveQueuedLines();
+    // Return if console is not visible
+    if(cConsole->IsNotVisible()) return;
     // Return if theres nothing to redraw else clear redraw flag
     if(cConsole->GetRedrawFlags().FlagIsClear(RD_GRAPHICS)) return;
     cConsole->GetRedrawFlags().FlagClear(RD_GRAPHICS);
@@ -232,57 +222,54 @@ class ConGfx :                         // Members initially private
     ConGfxGetFBO().FboSetActive();
     // Update matrix same as the main FBO
     ConGfxGetFBO().FboSetMatrix(0.0f, 0.0f,
-      ConGfxGetMainFBO().CoordsGetRight(),
-      ConGfxGetMainFBO().CoordsGetBottom());
+      ConGfxGetMainFBO().CoordsGetX2(),
+      ConGfxGetMainFBO().CoordsGetY2());
     // Set drawing position
     const GLfloat fYAdj =
-      ConGfxGetMainFBOStage().CoordsGetBottom() * (1.0f - fConsoleHeight);
+      ConGfxGetMainFBOStage().CoordsGetY2() * (1.0f - glfConHeight);
     ConGfxGetFBO().FboItemSetVertex(
-      ConGfxGetMainFBOStage().CoordsGetLeft(),
-      ConGfxGetMainFBOStage().CoordsGetTop() - fYAdj,
-      ConGfxGetMainFBOStage().CoordsGetRight(),
-      ConGfxGetMainFBOStage().CoordsGetBottom() - fYAdj);
+      ConGfxGetMainFBOStage().CoordsGetX1(),
+      ConGfxGetMainFBOStage().CoordsGetY1() - fYAdj,
+      ConGfxGetMainFBOStage().CoordsGetX2(),
+      ConGfxGetMainFBOStage().CoordsGetY2() - fYAdj);
     // Set console texture colour and blit the console background
     ConGfxGetTextureRef().FboItemSetQuadRGBAInt(ulTexColour);
     ConGfxGetTextureRef().BlitLTRB(0, 0,
-      ConGfxGetFBOStage().CoordsGetLeft(),
-      ConGfxGetFBOStage().CoordsGetTop(),
-      ConGfxGetFBOStage().CoordsGetRight(),
-      ConGfxGetFBOStage().CoordsGetBottom());
+      ConGfxGetFBOStage().CoordsGetX1(),
+      ConGfxGetFBOStage().CoordsGetY1(),
+      ConGfxGetFBOStage().CoordsGetX2(),
+      ConGfxGetFBOStage().CoordsGetY2());
     // Set console input text colour
     ConGfxGetFontRef().FboItemSetQuadRGBAInt(ulFontColour);
     // Restore spacing and scale as well
     ConGfxRestoreDefaultProperties();
     // Get below baseline height
-    const GLfloat fBL = (ConGfxGetFBOStage().CoordsGetBottom() -
+    const GLfloat glfBL = (ConGfxGetFBOStage().CoordsGetY2() -
       ConGfxGetFontRef().GetBaselineBelow('g')) +
-      ConGfxGetFontRef().fLineSpacing;
+      ConGfxGetFontRef().GetLineSpacing();
     // Draw input text and subtract the height drawn from Y position
-    GLfloat fY = fBL -
-      ConGfxGetFontRef().PrintWU(
-        ConGfxGetFBOStage().CoordsGetLeft(), fBL,
-        ConGfxGetFBOStage().CoordsGetRight(),
-        ConGfxGetFontRef().dfScale.DimGetWidth(),
-        reinterpret_cast<const GLubyte*>(StrFormat(">$\rc000000ff$\rr$",
-        cConsole->GetConsoleBegin(), cCursor,
-        cConsole->GetConsoleEnd()).data()));
+    GLfloat glfY = glfBL -
+      ConGfxGetFontRef().PrintWU(ConGfxGetFBOStage().CoordsGetX1(), glfBL,
+        ConGfxGetFBOStage().CoordsGetX2(),
+        ConGfxGetFontRef().gldfScale.DimGetWidth(),
+        StrFormat(">$\rc000000ff$\rr$", cConsole->GetConsoleBegin(), cCursor,
+          cConsole->GetConsoleEnd()));
     // For each line or until we clip the top of the screen, print the text
-    for(ConLinesConstRevIt clI{ cConsole->GetConBufPos() };
-                           clI != cConsole->GetConBufPosEnd() && fY > 0.0f;
-                         ++clI)
+    for(ConLinesConstRevIt
+          clcriIt{ cConsole->GetConBufPos() };
+          clcriIt != cConsole->GetConBufPosEnd() && glfY > 0.0f;
+        ++clcriIt)
     { // Get reference to console line data structure
-      const ConLine &clD = *clI;
+      const ConLine &clD = *clcriIt;
       // Set text foreground colour with opaqueness already set above
       ConGfxGetFontRef().FboItemSetQuadRGBInt(ConColourToRGB(clD.ccColour));
       // Draw the text and move upwards of the height that was used
-      fY -= ConGfxGetFontRef().PrintWU(
-        ConGfxGetFBOStage().CoordsGetLeft(), fY,
-        ConGfxGetFBOStage().CoordsGetRight(),
-          ConGfxGetFontRef().dfScale.DimGetWidth(),
-          reinterpret_cast<const GLubyte*>(clD.strLine.data()));
+      glfY -= ConGfxGetFontRef().PrintWU(ConGfxGetFBOStage().CoordsGetX1(),
+        glfY, ConGfxGetFBOStage().CoordsGetX2(),
+        ConGfxGetFontRef().gldfScale.DimGetWidth(), clD.strLine);
     } // Finish and render
     ConGfxGetFBO().FboFinishAndRender();
-    // Make sure the main FBO is updated
+    // Make sure the main FBO is updated if it is visible
     cFboCore->FboCoreSetDraw();
   }
   /* -- Render the console to main FBO if visible -------------------------- */
@@ -298,18 +285,19 @@ class ConGfx :                         // Members initially private
   /* -- Estimate number of triangles needed to fill screen ----------------- */
   size_t ConGfxGetTrianglesEstimate()
   { // Calculate characters per row
-    const GLfloat fMainWidth     = ConGfxGetMainFBO().DimGetWidth<GLfloat>(),
-                  fFoScWidth     = fFontWidth * fFontScale,
-                  fSpacingWidth  = ConGfxGetFontRef().fCharSpacingScale,
-                  fFoSpWidth     = fFoScWidth + fSpacingWidth,
-                  fCharRow       = fMainWidth / fFoSpWidth * 2.0f,
-                  fMainHeight    = ConGfxGetMainFBO().DimGetHeight<GLfloat>(),
-                  fFoScHeight    = fFontHeight * fFontScale,
-                  fSpacingHeight = ConGfxGetFontRef().fLineSpacing,
-                  fFoSpHeight    = fFoScHeight + fSpacingHeight,
-                  fCharColumn    = fMainHeight / fFoSpHeight * 2.0f;
+    const GLfloat
+      glfMainWidth     = ConGfxGetMainFBO().DimGetWidth<GLfloat>(),
+      glfFoScWidth     = glfFontWidth * glfFontScale,
+      glfSpacingWidth  = ConGfxGetFontRef().GetCharSpacingScale(),
+      glfFoSpWidth     = glfFoScWidth + glfSpacingWidth,
+      glfCharRow       = glfMainWidth / glfFoSpWidth * 2.0f,
+      glfMainHeight    = ConGfxGetMainFBO().DimGetHeight<GLfloat>(),
+      glfFoScHeight    = glfFontHeight * glfFontScale,
+      glfSpacingHeight = ConGfxGetFontRef().GetLineSpacing(),
+      glfFoSpHeight    = glfFoScHeight + glfSpacingHeight,
+      glfCharColumn    = glfMainHeight / glfFoSpHeight * 2.0f;
     // Then return total number of triangles on screen
-    return static_cast<size_t>(fCharColumn * fCharRow);
+    return static_cast<size_t>(glfCharColumn * glfCharRow);
   }
   /* -- Init framebuffer object -------------------------------------------- */
   void ConGfxInitFBO()
@@ -361,14 +349,14 @@ class ConGfx :                         // Members initially private
       ConColourToRGB(COLOUR_YELLOW) |  // - Lookup RGB value for yellow
       0xFF000000),                     // - Force opaqueness
     ulTexColour(0x00000000),           // No background colour
-    fFontScale(0.0f),                  // No font scale
-    fConsoleHeight(0.0f),              // No console height
-    fFontLetterSpacing(0.0f),          // No text letter spacing
-    fFontLineSpacing(0.0f),            // No text line spacing
-    fFontWidth(0.0f),                  // No text width
-    fFontHeight(0.0f),                 // No text height
-    ctConsole{ IP_TEXTURE },           // Console texture on stand-by
-    cfConsole{ IP_FONT },              // Console font on stand-by
+    glfFontScale(0.0f),                // No font scale
+    glfConHeight(0.0f),                // No console height
+    glfLetterSpacing(0.0f),            // No text letter spacing
+    glfLineSpacing(0.0f),              // No text line spacing
+    glfFontWidth(0.0f),                // No text width
+    glfFontHeight(0.0f),               // No text height
+    texConsole{ IP_TEXTURE },          // Console texture on stand-by
+    fonConsole{ IP_FONT },             // Console font on stand-by
     cCursor('|')                       // Cursor shape
     /* -- Set global pointer to static class ------------------------------- */
     { cConGfx = this; }
@@ -376,10 +364,10 @@ class ConGfx :                         // Members initially private
   CVarReturn ConGfxTextBackgroundColourModified(const uint32_t ulNewColour)
     { return CVarSimpleSetInt(ulTexColour, ulNewColour); }
   /* -- Set console text scale --------------------------------------------- */
-  CVarReturn ConGfxTextScaleModified(const GLfloat fNewScale)
+  CVarReturn ConGfxTextScaleModified(const GLfloat glfNScale)
   { // Failed if supplied scale is not in range
-    if(!CVarToBoolReturn(CVarSimpleSetIntNLG(fFontScale,
-      fNewScale, 0.01f, 16.0f))) return DENY;
+    if(!CVarToBoolReturn(CVarSimpleSetIntNLG(glfFontScale,
+      glfNScale, 0.01f, 16.0f))) return DENY;
     // If font initialised?
     if(ConGfxGetFontRef().IsInitialised())
     { // Set console text size so the scaled size is properly calculated
@@ -390,31 +378,31 @@ class ConGfx :                         // Members initially private
     return ACCEPT;
   }
   /* -- Set text letter spacing -------------------------------------------- */
-  CVarReturn ConGfxTextLetterSpacingModified(const GLfloat fNewSpacing)
+  CVarReturn ConGfxTextLetterSpacingModified(const GLfloat glfNSpacing)
   { // Failed if supplied spacing is not in range
-    if(!CVarToBoolReturn(CVarSimpleSetIntNLG(fFontLetterSpacing,
-      fNewSpacing, -256.0f, 256.0f))) return DENY;
+    if(!CVarToBoolReturn(CVarSimpleSetIntNLG(glfLetterSpacing,
+      glfNSpacing, -256.0f, 256.0f))) return DENY;
     // Set console text line spacing if texture available
     ConGfxCommitLetterSpacing();
     // Succeeded reglardless of font availability
     return ACCEPT;
   }
   /* -- Set text line spacing ---------------------------------------------- */
-  CVarReturn ConGfxTextLineSpacingModified(const GLfloat fNewSpacing)
+  CVarReturn ConGfxTextLineSpacingModified(const GLfloat glfNSpacing)
   { // Failed if supplied spacing is not in range
-    if(!CVarToBoolReturn(CVarSimpleSetIntNLG(fFontLineSpacing,
-      fNewSpacing, -256.0f, 256.0f))) return DENY;
+    if(!CVarToBoolReturn(CVarSimpleSetIntNLG(glfLineSpacing,
+      glfNSpacing, -256.0f, 256.0f))) return DENY;
     // Set console text line spacing if texture available
     ConGfxCommitLineSpacing();
     // Succeeded reglardless of font availability
     return ACCEPT;
   }
   /* -- Set text width ----------------------------------------------------- */
-  CVarReturn ConGfxTextWidthModified(const GLfloat fNewWidth)
-    { return CVarSimpleSetIntNG(fFontWidth, fNewWidth, 4096.0f); }
+  CVarReturn ConGfxTextWidthModified(const GLfloat glfNWidth)
+    { return CVarSimpleSetIntNG(glfFontWidth, glfNWidth, 4096.0f); }
   /* -- Set text height ---------------------------------------------------- */
-  CVarReturn ConGfxTextHeightModified(const GLfloat fNewHeight)
-    { return CVarSimpleSetIntNG(fFontHeight, fNewHeight, 4096.0f); }
+  CVarReturn ConGfxTextHeightModified(const GLfloat glfNHeight)
+    { return CVarSimpleSetIntNG(glfFontHeight, glfNHeight, 4096.0f); }
   /* -- Console font flags modfiied ---------------------------------------- */
   CVarReturn ConGfxFontFlagsModified(const ImageFlagsType iftFlags)
   { // Return failure if invalid flags else set flags and return success
@@ -430,8 +418,8 @@ class ConGfx :                         // Members initially private
     return ACCEPT;
   }
   /* -- Set console height ------------------------------------------------- */
-  CVarReturn ConGfxSetHeight(const GLfloat fHeight)
-    { return CVarSimpleSetIntNLG(fConsoleHeight, fHeight, 0.1f, 1.0f); }
+  CVarReturn ConGfxSetHeight(const GLfloat glfNHeight)
+    { return CVarSimpleSetIntNLG(glfConHeight, glfNHeight, 0.1f, 1.0f); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

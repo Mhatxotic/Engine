@@ -35,10 +35,11 @@ namespace IPcmLib {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IDataFormat::P;
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IIdent::P;             using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IPcmDef::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace IPcmDef::P;            using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Pcm formats collector class as a vector for direct access ------------ */
@@ -56,7 +57,7 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -69,7 +70,7 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     DataFormat{ pfNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -83,7 +84,7 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
@@ -100,20 +101,19 @@ static void PcmLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
   { // Load the image, log and return if loaded successfully
     if(plRef.GetDecoder()(fmData, pdData))
       return cLog->LogInfoExSafe(
-        "Pcm loaded '$' directly as $<$>! ($;$;$;$$;$;$;$$)",
-        fmData.IdentGet(), plRef.GetExt(), pfId, pdData.GetRate(),
-        pdData.GetChannels(), pdData.GetBits(), StdIOSHex, pdData.GetFormat(),
-        pdData.GetSFormat(), StrFromBoolTF(pdData.IsDynamic()), StdIOSHex,
-        pdData.GetAlloc());
+        "Pcm loaded '$' directly as $<$>! ($;$;$;$)",
+        fmData.NameGet(), plRef.GetExt(), pfId, pdData.GetRate(),
+        pdData.GetChannels(), pdData.GetBits(),
+        StrFromBoolTF(pdData.IsDynamic()), pdData.GetAlloc());
     // Could not detect format so throw error
     throw StdRunTimeError{ "Unable to load sound!" };
   } // Error occured. Error used as title
   catch(const StdException &eReason)
   { // Throw an error with the specified reason
     XC(eReason,
-      "Identifier", fmData.IdentGet(),    "Size",     fmData.MemSize(),
-      "Position",   fmData.FileMapTell(), "FormatId", pfId,
-      "Plugin",     plRef.GetName());
+      "Name",     fmData.NameGet(),     "Size",     fmData.MemSize(),
+      "Position", fmData.FileMapTell(), "FormatId", pfId,
+      "Plugin",   plRef.GetName());
   }
 }
 /* -- Load a bitmap and automatically detect type -------------------------- */
@@ -126,22 +126,22 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
     try
     { // Load the bitmap, log and return if we loaded successfully
       if(plRef.GetDecoder()(fmData, pdData))
-        return cLog->LogInfoExSafe("Pcm loaded '$' as $! ($;$;$;$$;$;$;$$)",
-          fmData.IdentGet(), plRef.GetExt(), pdData.GetRate(),
-          pdData.GetChannels(), pdData.GetBits(), StdIOSHex,
-          pdData.GetFormat(), pdData.GetSFormat(),
+        return cLog->LogInfoExSafe("Pcm loaded '$' as $! ($;$;$;$)",
+          fmData.NameGet(), plRef.GetExt(), pdData.GetRate(),
+          pdData.GetChannels(), pdData.GetBits(),
           StrFromBoolTF(pdData.IsDynamic()), StdIOSDec, pdData.GetAlloc());
     } // Error occured. Error used as title
     catch(const StdException &eReason)
     { // Throw an error with the specified reason
       XC(eReason,
-        "Identifier", fmData.IdentGet(),    "Size",   fmData.MemSize(),
-        "Position",   fmData.FileMapTell(), "Plugin", plRef.GetName());
+        "Name",     fmData.NameGet(),     "Size",   fmData.MemSize(),
+        "Position", fmData.FileMapTell(), "Plugin", plRef.GetName());
     } // Rewind stream position and reset all pcm data read to load again
     fmData.FileMapRewind();
     pdData.ResetAllData();
   } // Could not detect so throw error
-  XC("Unable to determine sound format!", "Identifier", fmData.IdentGet());
+  XC("Unable to determine sound format!",
+    "Name", fmData.NameGet(), "Size", fmData.MemSize());
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

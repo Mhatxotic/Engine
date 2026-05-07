@@ -20,7 +20,8 @@ namespace LLUtil {                     // Util namespace
 using namespace IArgs::P;              using namespace IAsset::P;
 using namespace IClock::P;             using namespace ICrypt::P;
 using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IUrl::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ITime::P;              using namespace IUrl::P;
 using namespace IUtf::P;               using namespace IUtil::P;
 using namespace IUuId::P;              using namespace Common;
 /* ========================================================================= **
@@ -28,9 +29,9 @@ using namespace IUuId::P;              using namespace Common;
 ** ## Util common helper classes                                          ## **
 ** ######################################################################### **
 ** -- Get argument for more specific type ---------------------------------- */
-typedef AgNumberL<double> AgDoubleL;
-typedef AgInteger<uint16_t> AgUInt16;
-typedef AgInteger<StdTimeT> AgTimeT;
+using AgDoubleL = AgNumberL<double>;
+using AgUInt16 = AgInteger<uint16_t>;
+using AgTimeT = AgInteger<StdTimeT>;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Util.* namespace functions                                          ## **
@@ -59,7 +60,7 @@ LLFUNC(AscNTimeUTC, 1, LuaUtilPushVar(lS, cmSys.FormatTimeUTC()))
 // ? There maybe a slight differences across different operating systems.
 // ? Note that time will be in local time format.
 /* ------------------------------------------------------------------------- */
-LLFUNC(AscTime, 1, LuaUtilPushVar(lS, StrFromTimeTT(AgTimeT{lS, 1})))
+LLFUNC(AscTime, 1, LuaUtilPushVar(lS, TimeLocalTTtoStr(AgTimeT{lS, 1})))
 /* ========================================================================= */
 // $ Util.AscTimeUTC
 // > Timestamp:integer=The timestamp to convert to string
@@ -68,14 +69,14 @@ LLFUNC(AscTime, 1, LuaUtilPushVar(lS, StrFromTimeTT(AgTimeT{lS, 1})))
 // ? There maybe a slight differences across different operating systems.
 // ? Note that time will be in UTC time format.
 /* ------------------------------------------------------------------------- */
-LLFUNC(AscTimeUTC, 1, LuaUtilPushVar(lS, StrFromTimeTTUTC(AgTimeT{lS, 1})))
+LLFUNC(AscTimeUTC, 1, LuaUtilPushVar(lS, TimeUTCTTtoStr(AgTimeT{lS, 1})))
 /* ========================================================================= */
 // $ Util.B64D
 // > Text:string=The string to decode.
 // < Text:string=The base64 decoded string.
 // ? Decodes the specified string from base64.
 /* ------------------------------------------------------------------------- */
-LLFUNC(B64D, 1, LuaUtilPushVar(lS, CryptB64toS(AgString{lS, 1})))
+LLFUNC(B64D, 1, LuaUtilPushVar(lS, CryptB64toS(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.B64DA
 // > Text:string=The string to decode.
@@ -86,14 +87,14 @@ LLFUNC(B64D, 1, LuaUtilPushVar(lS, CryptB64toS(AgString{lS, 1})))
 /* ------------------------------------------------------------------------- */
 LLFUNC(B64DA, 1,
   const AgString aString{lS, 1};
-  AcAsset{lS}().MemSwap({ CryptB64toMB(aString) }))
+  AcAsset{lS}().MemSwap({ CryptB64toMB(aString()) }))
 /* ========================================================================= */
 // $ Util.B64E
 // > Data:string=The string to encode.
 // < Hash:string=The return string encoded to base64.
 // ? Encodes the specified string to base64.
 /* ------------------------------------------------------------------------- */
-LLFUNC(B64E, 1, LuaUtilPushVar(lS, CryptStoB64(AgString{lS, 1})))
+LLFUNC(B64E, 1, LuaUtilPushVar(lS, CryptStoB64(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.B64EA
 // > Data:Asset=The data to encode.
@@ -138,7 +139,7 @@ LLFUNC(Bytes, 1,
 // ? hashing of insignificant strings. The benefit of CRC hashing though is
 // ? that the function returns an integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CRC, 1, LuaUtilPushVar(lS, CryptToCRC32(AgString{lS, 1})))
+LLFUNC(CRC, 1, LuaUtilPushVar(lS, CryptStrToCRC32(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.CRCA
 // > Data:Asset=The data to hash.
@@ -147,21 +148,21 @@ LLFUNC(CRC, 1, LuaUtilPushVar(lS, CryptToCRC32(AgString{lS, 1})))
 // ? fast hashing of insignificant strings. The benefit of CRC hashing though
 // ? is that the function returns an integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CRCA, 1, LuaUtilPushVar(lS, CryptToCRC32(AgAsset{lS, 1})))
+LLFUNC(CRCA, 1, LuaUtilPushVar(lS, CryptMemToCRC32(AgAsset{lS, 1})))
 /* ========================================================================= */
 // $ Util.Capitalise
 // > String:string=The string to capitalise
 // < Result:string=The same string in memory capitalised
 // ? Returns the same string capitalised
 /* ------------------------------------------------------------------------- */
-LLFUNC(Capitalise, 1, LuaUtilPushVar(lS, StrCapitalise(AgString{lS, 1})))
+LLFUNC(Capitalise, 1, LuaUtilPushVar(lS, StrCapitalise(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.Chop
 // > String:string=The string to modify
 // < Result:string=The chopped string
 // ? Removes carriage returns from the beginning and end of the string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Chop, 1, LuaUtilPushVar(lS, StrChop(AgNcString{lS, 1})))
+LLFUNC(Chop, 1, LuaUtilPushVar(lS, StrChop(AgNcString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.Clamp
 // > Value:number=The current number.
@@ -220,7 +221,47 @@ LLFUNC(CountOf, 1,
 LLFUNC(Duration, 1,
   const AgDouble aSeconds{lS, 1};
   const AgInt aPrecision{lS, 2};
-  LuaUtilPushVar(lS, StrShortFromDuration(aSeconds, aPrecision)))
+  LuaUtilPushVar(lS, TimeToShortDuration(aSeconds, aPrecision)))
+/* ========================================================================= */
+// $ Util.DurationL
+// > Seconds:integer=The number of seconds.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds into a human readable duration
+// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DurationL, 1, LuaUtilPushVar(lS, durLong.Parse(AgTimeT{lS, 1})))
+/* ========================================================================= */
+// $ Util.DurationLEx
+// > Seconds:integer=The number of seconds.
+// > Components:integer=The maximum number of components
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds into a human readable duration
+// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DurationLEx, 1,
+  const AgTimeT aTimestamp{lS, 1};
+  const AgUInt aComponents{lS, 2};
+  LuaUtilPushVar(lS, durLong.Parse(aTimestamp, aComponents)))
+/* ========================================================================= */
+// $ Util.DurationS
+// > Seconds:integer=The number of seconds.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds into a human readable duration
+// ? string in the format of e.g. 0y0w0d0h0m0s.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DurationS, 1, LuaUtilPushVar(lS, durShort.Parse(AgTimeT{lS, 1})))
+/* ========================================================================= */
+// $ Util.DurationSEx
+// > Seconds:integer=The number of seconds.
+// > Components:integer=The maximum number of components
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds into a human readable duration
+// ? string in the format of e.g. 0y0w0d0h0m0s.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DurationSEx, 1,
+  const AgTimeT aTimestamp{lS, 1};
+  const AgUInt aComponents{lS, 2};
+  LuaUtilPushVar(lS, durShort.Parse(aTimestamp, aComponents)))
 /* ========================================================================= */
 // $ Util.EntDecode
 // > Text:string=The URL string to remove HTML entities from.
@@ -228,14 +269,14 @@ LLFUNC(Duration, 1,
 // ? Decodes HTML entities from the spcified string.
 /* ------------------------------------------------------------------------- */
 LLFUNC(EntDecode, 1,
-  LuaUtilPushVar(lS, cCrypt->CryptEntDecode(AgString{lS, 1})))
+  LuaUtilPushVar(lS, cCrypt->CryptEntDecode(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.EntEncode
 // > Text:string=The URL string to insert HTML entities into.
 // < Text:string=The URL encoded string.
 // ? Encodes HTML entities into the spcified string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(EntEncode, 1, LuaUtilPushVar(lS, CryptEntEncode(AgString{lS, 1})))
+LLFUNC(EntEncode, 1, LuaUtilPushVar(lS, CryptEntEncode(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.Explode
 // > Text:string=The text to tokenise.
@@ -326,7 +367,7 @@ LLFUNC(FormatNTimeUTC, 1,
 LLFUNC(FormatNumber, 1,
   const AgDouble aValue{lS, 1};
   const AgInt aDigits{lS, 2};
-  LuaUtilPushVar(lS, StrReadableFromNum(aValue, aDigits)))
+  LuaUtilPushVar(lS, StrReadableFromNum(aValue(), aDigits)))
 /* ========================================================================= */
 // $ Util.FormatNumberI
 // > Value:integer=A integer value, it will be converted to a string.
@@ -336,7 +377,7 @@ LLFUNC(FormatNumber, 1,
 // ? thousand separators.
 /* ------------------------------------------------------------------------- */
 LLFUNC(FormatNumberI, 1,
-  LuaUtilPushVar(lS, StrReadableFromNum(AgUInt64{lS, 1}, 0)))
+  LuaUtilPushVar(lS, StrReadableFromNum(AgUInt64{lS, 1}(), 0)))
 /* ========================================================================= */
 // $ Util.FormatTime
 // > Timestamp:integer=The timestamp to convert to string
@@ -349,7 +390,7 @@ LLFUNC(FormatNumberI, 1,
 LLFUNC(FormatTime, 1,
   const AgTimeT aTimestamp{lS, 1};
   const AgCStringChar aFormat{lS, 2};
-  LuaUtilPushVar(lS, StrFromTimeTT(aTimestamp, aFormat)))
+  LuaUtilPushVar(lS, TimeLocalTTtoStr(aTimestamp, aFormat)))
 /* ========================================================================= */
 // $ Util.FormatTimeUTC
 // > Timestamp:integer=The timestamp to convert to string
@@ -362,7 +403,7 @@ LLFUNC(FormatTime, 1,
 LLFUNC(FormatTimeUTC, 1,
   const AgTimeT aTimestamp{lS, 1};
   const AgCStringChar aFormat{lS, 2};
-  LuaUtilPushVar(lS, StrFromTimeTTUTC(aTimestamp, aFormat)))
+  LuaUtilPushVar(lS, TimeUTCTTtoStr(aTimestamp, aFormat)))
 /* ========================================================================= */
 // $ Util.GetRatio
 // > Width:integer=The width integer.
@@ -461,19 +502,20 @@ LLFUNC(Grouped, 1,
 // ? - Hash:string = SHA512SSS(Salt:string, Data:string).
 /* -- Macro to create a function that creates a string hash ---------------- */
 #define HASH_FUNC_NOSALT_STR(pf, af, cf, ty) \
-  LLFUNC(pf ## af, 1, LuaUtilPushVar(lS, pf ## functions::H ## cf(ty{lS, 1})))
+  LLFUNC(pf ## af, 1, \
+    LuaUtilPushVar(lS, pf ## functions::H ## cf(ty{lS, 1}())))
 /* -- Macro to create a function that creates a raw hash ------------------- */
 #define HASH_FUNC_NOSALT_ASSET(pf, af, cf, ty) \
   LLFUNC(pf ## af, 1, \
-    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(ty{lS, 1})))
+    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(ty{lS, 1}())))
 /* -- Macro to create a function that creates a salted string hash --------- */
 #define HASH_FUNC_SALT_STR(pf, af, cf, t1, t2) \
   LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
-    LuaUtilPushVar(lS, pf ## functions::H ## cf(aKey, aData)))
+    LuaUtilPushVar(lS, pf ## functions::H ## cf(aKey(), aData())))
 /* -- Macro to create a function that creates a salted raw hash ------------ */
 #define HASH_FUNC_SALT_ASSET(pf, af, cf, t1, t2) \
   LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
-    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(aKey, aData)))
+    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(aKey(), aData())))
 /* -- Macro to create a bunch of functions with different rets/params ------ */
 #define HASH_FUNC_PACK(pf) \
   HASH_FUNC_NOSALT_ASSET(pf, AA, MM, AgAsset) \
@@ -506,14 +548,14 @@ HASH_FUNC_PACK(SHA512)                 // 512-bit function pack
 // < Value:string=Same number but in hexadecimal
 // ? Convert integer to hexadecimal in uppercase
 /* ------------------------------------------------------------------------- */
-LLFUNC(Hex, 1, LuaUtilPushVar(lS, StrHexUFromInt(AgLuaInteger{lS, 1})))
+LLFUNC(Hex, 1, LuaUtilPushVar(lS, StrHexUFromInt(AgLuaInteger{lS, 1}())))
 /* ========================================================================= */
 // $ Util.HexDecode
 // > Text:string=The hex encoded string to decode.
 // < Text:Asset=The text decoded string.
 // ? Encodes the specified text to uppercase hexadecimal.
 /* ------------------------------------------------------------------------- */
-LLFUNC(HexDecode, 1, LuaUtilPushVar(lS, CryptHexDecodeStr(AgString{lS, 1})))
+LLFUNC(HexDecode, 1, LuaUtilPushVar(lS, CryptHexDecodeStr(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.HexDecodeA
 // > Text:string=The hex encoded string to decode.
@@ -522,14 +564,14 @@ LLFUNC(HexDecode, 1, LuaUtilPushVar(lS, CryptHexDecodeStr(AgString{lS, 1})))
 /* ------------------------------------------------------------------------- */
 LLFUNC(HexDecodeA, 1,
   const AgString aString{lS, 1};
-  AcAsset{lS}().MemSwap({ CryptHexDecodeA(aString) }))
+  AcAsset{lS}().MemSwap({ CryptHexDecodeA(aString()) }))
 /* ========================================================================= */
 // $ Util.HexEncode
 // > Text:string=The string.
 // < Text:string=The hex encoded string.
 // ? Encodes the specified text to uppercase hexadecimal.
 /* ------------------------------------------------------------------------- */
-LLFUNC(HexEncode, 1, LuaUtilPushVar(lS, CryptStoHEX(AgString{lS, 1})))
+LLFUNC(HexEncode, 1, LuaUtilPushVar(lS, CryptStoHEX(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.HexEncodeA
 // > Data:Asset=The data array class to encode.
@@ -543,7 +585,7 @@ LLFUNC(HexEncodeA, 1, LuaUtilPushVar(lS, CryptBin2Hex(AgAsset{lS, 1})))
 // < Text:string=The hex encoded string.
 // ? Encodes the specified text to lowercase hexadecimal.
 /* ------------------------------------------------------------------------- */
-LLFUNC(HexEncodeL, 1, LuaUtilPushVar(lS, CryptStoHEXL(AgString{lS, 1})))
+LLFUNC(HexEncodeL, 1, LuaUtilPushVar(lS, CryptStoHEXL(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.HexEncodeLA
 // > Data:Asset=The data array class to encode.
@@ -557,7 +599,7 @@ LLFUNC(HexEncodeLA, 1, LuaUtilPushVar(lS, CryptBin2HexL(AgAsset{lS, 1})))
 // < Value:string=Same number but in hexadecimal
 // ? Convert integer to hexadecimal in lowercase
 /* ------------------------------------------------------------------------- */
-LLFUNC(HexL, 1, LuaUtilPushVar(lS, StrHexFromInt(AgLuaInteger{lS, 1})))
+LLFUNC(HexL, 1, LuaUtilPushVar(lS, StrHexFromInt(AgLuaInteger{lS, 1}())))
 /* ========================================================================= */
 // $ Util.HighByte
 // > Value:integer=The 16-bit ranged value to extract the highest 8-bit value
@@ -578,7 +620,7 @@ LLFUNC(HighDWord, 1, LuaUtilPushVar(lS, UtilHighDWord(AgUInt64{lS, 1}())))
 // < Result:integer=The resulting 16-bit ranged value
 // ? Extracts the highest 16-bits from a 32-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt32{lS, 1}())))
+LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt{lS, 1}())))
 /* ========================================================================= */
 // $ Util.Implode
 // > Table:table=The table to convert to a string.
@@ -675,25 +717,13 @@ LLFUNC(IsTable, 1, LuaUtilPushVar(lS, LuaUtilIsTable(lS, 1)))
 /* ------------------------------------------------------------------------- */
 LLFUNC(IsUserdata, 1, LuaUtilPushVar(lS, LuaUtilIsUserData(lS, 1)))
 /* ========================================================================= */
-// $ Util.LDuration
-// > Seconds:integer=The number of seconds.
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds into a human readable duration
-// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
+// $ Util.LineType
+// > String:string=The string to check
+// < Result:string=The line type detected
+// ? Determines the line return type in the specified string. It will return
+// ? either CRLF, CR, LF, LFCR or blank if unable to detect it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(LDuration, 1, LuaUtilPushVar(lS, StrLongFromDuration(AgTimeT{lS, 1})))
-/* ========================================================================= */
-// $ Util.LDurationEx
-// > Seconds:integer=The number of seconds.
-// > Components:integer=The maximum number of components
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds into a human readable duration
-// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
-/* ------------------------------------------------------------------------- */
-LLFUNC(LDurationEx, 1,
-  const AgTimeT aTimestamp{lS, 1};
-  const AgUInt aComponents{lS, 2};
-  LuaUtilPushVar(lS, StrLongFromDuration(aTimestamp, aComponents)))
+LLFUNC(LineType, 1, LuaUtilPushVar(lS, StrGetReturnFormat(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.LowByte
 // > Value:integer=The 16-bit ranged value to extract the lowest 8-bit value
@@ -714,7 +744,7 @@ LLFUNC(LowDWord, 1, LuaUtilPushVar(lS, UtilLowDWord(AgUInt64{lS, 1}())))
 // < Result:integer=The resulting 16-bit ranged value
 // ? Extracts the lowest 16-bits from a 32-bit ranged integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(LowWord, 1, LuaUtilPushVar(lS, UtilLowWord(AgUInt32{lS, 1}())))
+LLFUNC(LowWord, 1, LuaUtilPushVar(lS, UtilLowWord(AgUInt{lS, 1}())))
 /* ========================================================================= */
 // $ Util.MakeDWord
 // > High:integer=The high-order 16-bit range integer
@@ -748,8 +778,8 @@ LLFUNC(MakeWord, 1,
 // ? range.
 /* ------------------------------------------------------------------------- */
 LLFUNC(MakeQWord, 1,
-  const AgUInt32 aHigh{lS, 1},
-                 aLow{lS, 2};
+  const AgUInt aHigh{lS, 1},
+               aLow{lS, 2};
   LuaUtilPushVar(lS, UtilMakeQWord(aHigh(), aLow())))
 /* ========================================================================= */
 // $ Util.ParseArgs
@@ -758,7 +788,7 @@ LLFUNC(MakeQWord, 1,
 // ? Treats the specified string as a command line and returns a table entry
 // ? for each argument.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ParseArgs, 1, LuaUtilToTable(lS, ArgsBuildSafe(AgString{lS, 1})))
+LLFUNC(ParseArgs, 1, LuaUtilToTable(lS, ArgsBuildSafe(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.ParseTime
 // > Format:string=The ISO 8601 formatted string.
@@ -766,7 +796,7 @@ LLFUNC(ParseArgs, 1, LuaUtilToTable(lS, ArgsBuildSafe(AgString{lS, 1})))
 // ? Converts the specified ISO 8601 formatted string to a numerical timestamp.
 // ? Only the format '2015-09-04T14:26:16Z' is supported at the moment.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ParseTime, 1, LuaUtilPushVar(lS, StrParseTime(AgNeString{lS, 1})))
+LLFUNC(ParseTime, 1, LuaUtilPushVar(lS, TimeParseStr(AgNeString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.ParseTime2
 // > String:string=The specially formatted date string.
@@ -775,7 +805,7 @@ LLFUNC(ParseTime, 1, LuaUtilPushVar(lS, StrParseTime(AgNeString{lS, 1})))
 // ? timestamp. Only the format 'Mon May 04 00:05:00 +0000 2009' is supported
 // ? at the moment.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ParseTime2, 1, LuaUtilPushVar(lS, StrParseTime2(AgNeString{lS, 1})))
+LLFUNC(ParseTime2, 1, LuaUtilPushVar(lS, TimeParseStr2(AgNeString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.ParseTimeEx
 // > Timestamp:string=The specially formatted date string.
@@ -787,7 +817,7 @@ LLFUNC(ParseTime2, 1, LuaUtilPushVar(lS, StrParseTime2(AgNeString{lS, 1})))
 LLFUNC(ParseTimeEx, 1,
   const AgNeString aTimestamp{lS, 1};
   const AgCStringChar aFormat{lS, 2};
-  LuaUtilPushVar(lS, StrParseTime(aTimestamp, aFormat)))
+  LuaUtilPushVar(lS, TimeParseStr(aTimestamp(), aFormat())))
 /* ========================================================================= */
 // $ Util.Pluralise
 // > Count:integer=The number to check
@@ -801,7 +831,7 @@ LLFUNC(Pluralise, 1,
   const AgUInt64 aValue{lS, 1};
   const AgCStringChar aSingular{lS, 2},
                       aPlural{lS, 3};
-  LuaUtilPushVar(lS, StrCPluraliseNum(aValue(), aSingular, aPlural)))
+  LuaUtilPushVar(lS, StrPluraliseNum(aValue(), aSingular(), aPlural())))
 /* ========================================================================= */
 // $ Util.PluraliseEx
 // > Count:integer=The number to check
@@ -816,7 +846,23 @@ LLFUNC(PluraliseEx, 1,
   const AgUInt64 aValue{lS, 1};
   const AgCStringChar aSingular{lS, 2},
                       aPlural{lS, 3};
-  LuaUtilPushVar(lS, StrCPluraliseNumEx(aValue(), aSingular, aPlural)))
+  LuaUtilPushVar(lS, StrPluraliseNumEx(aValue(), aSingular(), aPlural())))
+/* ========================================================================= */
+// $ Util.PluraliseGrouped
+// > Count:integer=The number to check
+// > Singular:string=The word to suffix if the number is singular
+// > Plural:string=The word to suffix if the number is plural
+// > Precision:integer=The amount of precision required on the nu,ber
+// < Result:string=Returns only the suffixed text whether it is singular or
+// ? plural.
+/* ------------------------------------------------------------------------- */
+LLFUNC(PluraliseGrouped, 1,
+  const AgUInt64 aValue{lS, 1};
+  const AgInt aPrecision{lS, 2};
+  const AgCStringChar aSingular{lS, 3},
+                      aPlural{lS, 4};
+  LuaUtilPushVar(lS, StrAppend(StrToGroupedPluralise(aValue(),
+    aSingular(), aPlural(), aPrecision()))))
 /* ========================================================================= */
 // $ Util.PlusOrMinus
 // > Count:number=The number to convert.
@@ -826,7 +872,7 @@ LLFUNC(PluraliseEx, 1,
 LLFUNC(PlusOrMinus, 1,
   const AgDouble aValue{lS, 1};
   const AgInt aPrecision{lS, 2};
-  LuaUtilPushVar(lS, StrPrefixPosNeg(aValue, aPrecision)))
+  LuaUtilPushVar(lS, StrPrefixPosNeg(aValue(), aPrecision())))
 /* ========================================================================= */
 // $ Util.PlusOrMinusEx
 // > Count:number=The number to convert.
@@ -836,7 +882,7 @@ LLFUNC(PlusOrMinus, 1,
 LLFUNC(PlusOrMinusEx, 1,
   const AgDouble aValue{lS, 1};
   const AgInt aPrecision{lS, 2};
-  LuaUtilPushVar(lS, StrPrefixPosNegReadable(aValue, aPrecision)))
+  LuaUtilPushVar(lS, StrPrefixPosNegReadable(aValue(), aPrecision())))
 /* ========================================================================= */
 // $ Util.Position
 // > Position:integer=The position to convert to human readable form.
@@ -894,8 +940,10 @@ LLFUNC(RelTimeEx, 1,
 // ? class functions for functionality.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Replace, 1,
-  const AgString aValue{lS, 1}, aSearch{lS, 2}, aReplace{lS, 3};
-  LuaUtilPushVar(lS, StrReplace(aValue, aSearch, aReplace)))
+  const AgString aValue{lS, 1},
+                 aSearch{lS, 2},
+                 aReplace{lS, 3};
+  LuaUtilPushVar(lS, StrReplace(aValue(), aSearch(), aReplace())))
 /* ========================================================================= */
 // $ Util.ReplaceEx
 // > String:string=The string to search from
@@ -957,9 +1005,12 @@ LLFUNC(RoundPow2, 1,
 // $ Util.Sanitise
 // > Text:string=The string to sanitise.
 // < Text:string=The modified string.
-// ? Tries to remove repetitions in the specified string.
+// ? A powerful function that tries to remove repetitions in the specified
+// ? string and decodes lookalike homoglyph utf-8 letters into standard ASCII
+// ? letters.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Sanitise, 1, LuaUtilPushVar(lS, CryptSanitise(AgString{lS, 1}())))
+LLFUNC(Sanitise, 1,
+  LuaUtilPushVar(lS, cCrypt->CryptSanitise(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.Sign
 // > Value:integer=The value to sign.
@@ -1031,7 +1082,7 @@ LLFUNC(TableSize, 1, LuaUtilPushVar(lS, LuaUtilGetKeyValTableSize(lS)))
 LLFUNC(Trim, 1,
   const AgString aString{lS, 1};
   const AgUInt8 aChar{lS, 2};
-  LuaUtilPushVar(lS, StrTrim(aString, static_cast<char>(aChar))))
+  LuaUtilPushVar(lS, StrTrim(aString(), static_cast<char>(aChar))))
 /* ========================================================================= */
 // $ Util.UTF8Char
 // > Value:integer=Value to cast to a string
@@ -1040,7 +1091,7 @@ LLFUNC(Trim, 1,
 // ? different from 'utf8.char' as you specify the integer with the actual
 // ? utf8 encoded bytes in them.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt32{lS, 1})))
+LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt{lS, 1}())))
 /* ========================================================================= */
 // $ Util.UUIDDecode
 // > High64:integer=The high-order 128-bit integer.
@@ -1061,7 +1112,8 @@ LLFUNC(UUIDDecode, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(UUIDEncode, 2,
   const UuId uuidData{ AgString{lS, 1} };
-  LuaUtilPushVar(lS, uuidData.d.ullRandom[0], uuidData.d.ullRandom[1]))
+  LuaUtilPushVar(lS, uuidData.d.aqwRandom.front(),
+                     uuidData.d.aqwRandom.back()))
 /* ========================================================================= */
 // $ Util.UUIDRandom
 // < High64:integer=The high-order 128-bit integer
@@ -1070,21 +1122,22 @@ LLFUNC(UUIDEncode, 2,
 /* ------------------------------------------------------------------------- */
 LLFUNC(UUIDRandom, 2,
   const UuId uuidData;
-  LuaUtilPushVar(lS, uuidData.d.ullRandom[0], uuidData.d.ullRandom[1]))
+  LuaUtilPushVar(lS, uuidData.d.aqwRandom.front(),
+                     uuidData.d.aqwRandom.back()))
 /* ========================================================================= */
 // $ Util.UrlDecode
 // > Text:string=The URL string to decode.
 // < Text:string=The URL decoded string.
 // ? URL decodes the specified string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UrlDecode, 1, LuaUtilPushVar(lS, CryptURLDecode(AgString{lS, 1})))
+LLFUNC(UrlDecode, 1, LuaUtilPushVar(lS, CryptURLDecode(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.UrlEncode
 // > Text:string=The URL string to encode.
 // < Text:string=The URL encoded string.
 // ? URL encodes the specified string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UrlEncode, 1, LuaUtilPushVar(lS, CryptURLEncode(AgString{lS, 1})))
+LLFUNC(UrlEncode, 1, LuaUtilPushVar(lS, CryptURLEncode(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Util.WordWrap
 // > Text:string=The text to word wrap
@@ -1095,68 +1148,98 @@ LLFUNC(UrlEncode, 1, LuaUtilPushVar(lS, CryptURLEncode(AgString{lS, 1})))
 /* ------------------------------------------------------------------------- */
 LLFUNC(WordWrap, 1,
   const AgNeString aText{lS, 1};
-  const AgSizeT aWidth{lS, 2}, aIndent{lS, 3};
-  LuaUtilToTable(lS, UtfWordWrap(aText, aWidth, aIndent)))
+  const AgSizeT aWidth{lS, 2},
+                aIndent{lS, 3};
+  LuaUtilToTable(lS, UtfWordWrap(aText(), aWidth(), aIndent())))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Util.* namespace functions structure                                ## **
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Util.* namespace functions begin
-  LLRSFUNC(AscNTime),      LLRSFUNC(AscNTimeUTC),    LLRSFUNC(AscTime),
-  LLRSFUNC(AscTimeUTC),    LLRSFUNC(B64D),           LLRSFUNC(B64DA),
-  LLRSFUNC(B64E),          LLRSFUNC(B64EA),          LLRSFUNC(Bits),
-  LLRSFUNC(Blank),         LLRSFUNC(Bytes),          LLRSFUNC(Capitalise),
-  LLRSFUNC(Chop),          LLRSFUNC(Clamp),          LLRSFUNC(ClampInt),
-  LLRSFUNC(Compact),       LLRSFUNC(CountOf),        LLRSFUNC(CRC),
-  LLRSFUNC(CRCA),          LLRSFUNC(Duration),       LLRSFUNC(EntDecode),
-  LLRSFUNC(EntEncode),     LLRSFUNC(Explode),        LLRSFUNC(ExplodeEx),
-  LLRSFUNC(FlushArray),    LLRSFUNC(FlushObject),    LLRSFUNC(FlushTable),
-  LLRSFUNC(FlushArrays),   LLRSFUNC(FlushObjects),   LLRSFUNC(FlushTables),
-  LLRSFUNC(FormatNTime),   LLRSFUNC(FormatNTimeUTC), LLRSFUNC(FormatNumber),
-  LLRSFUNC(FormatNumberI), LLRSFUNC(FormatTime),     LLRSFUNC(FormatTimeUTC),
-  LLRSFUNC(GetRatio),      LLRSFUNC(Grouped),        LLRSFUNC(Hex),
-  LLRSFUNC(HexDecode),     LLRSFUNC(HexDecodeA),     LLRSFUNC(HexEncode),
-  LLRSFUNC(HexEncodeA),    LLRSFUNC(HexEncodeL),     LLRSFUNC(HexEncodeLA),
-  LLRSFUNC(HexL),          LLRSFUNC(HighByte),       LLRSFUNC(HighDWord),
-  LLRSFUNC(HighWord),      LLRSFUNC(IfBlank),        LLRSFUNC(Implode),
-  LLRSFUNC(ImplodeEx),     LLRSFUNC(IsASCII),        LLRSFUNC(IsBoolean),
-  LLRSFUNC(IsExtASCII),    LLRSFUNC(IsFunction),     LLRSFUNC(IsInteger),
-  LLRSFUNC(IsNumber),      LLRSFUNC(IsString),       LLRSFUNC(IsTable),
-  LLRSFUNC(IsUserdata),    LLRSFUNC(LDuration),      LLRSFUNC(LDurationEx),
-  LLRSFUNC(LowByte),       LLRSFUNC(LowDWord),       LLRSFUNC(LowWord),
-  LLRSFUNC(MakeDWord),     LLRSFUNC(MakeQWord),      LLRSFUNC(MakeWord),
-  LLRSFUNC(ParseArgs),     LLRSFUNC(ParseTime),      LLRSFUNC(ParseTime2),
-  LLRSFUNC(ParseTimeEx),   LLRSFUNC(Pluralise),      LLRSFUNC(PluraliseEx),
-  LLRSFUNC(PlusOrMinus),   LLRSFUNC(PlusOrMinusEx),  LLRSFUNC(Position),
-  LLRSFUNC(Random),        LLRSFUNC(RandomA),        LLRSFUNC(RelTime),
-  LLRSFUNC(RelTimeEx),     LLRSFUNC(Replace),        LLRSFUNC(ReplaceEx),
-  LLRSFUNC(Round),         LLRSFUNC(RoundInt),       LLRSFUNC(RoundMul),
-  LLRSFUNC(RoundPow2),     LLRSFUNC(SHA1AA),         LLRSFUNC(SHA1AAA),
-  LLRSFUNC(SHA1AAS),       LLRSFUNC(SHA1AS),         LLRSFUNC(SHA1ASA),
-  LLRSFUNC(SHA1ASS),       LLRSFUNC(SHA1SA),         LLRSFUNC(SHA1SAA),
-  LLRSFUNC(SHA1SAS),       LLRSFUNC(SHA1SS),         LLRSFUNC(SHA1SSA),
-  LLRSFUNC(SHA1SSS),       LLRSFUNC(SHA224AA),       LLRSFUNC(SHA224AAA),
-  LLRSFUNC(SHA224AAS),     LLRSFUNC(SHA224AS),       LLRSFUNC(SHA224ASA),
-  LLRSFUNC(SHA224ASS),     LLRSFUNC(SHA224SA),       LLRSFUNC(SHA224SAA),
-  LLRSFUNC(SHA224SAS),     LLRSFUNC(SHA224SS),       LLRSFUNC(SHA224SSA),
-  LLRSFUNC(SHA224SSS),     LLRSFUNC(SHA256AA),       LLRSFUNC(SHA256AAA),
-  LLRSFUNC(SHA256AAS),     LLRSFUNC(SHA256AS),       LLRSFUNC(SHA256ASA),
-  LLRSFUNC(SHA256ASS),     LLRSFUNC(SHA256SA),       LLRSFUNC(SHA256SAA),
-  LLRSFUNC(SHA256SAS),     LLRSFUNC(SHA256SS),       LLRSFUNC(SHA256SSA),
-  LLRSFUNC(SHA256SSS),     LLRSFUNC(SHA384AA),       LLRSFUNC(SHA384AAA),
-  LLRSFUNC(SHA384AAS),     LLRSFUNC(SHA384AS),       LLRSFUNC(SHA384ASA),
-  LLRSFUNC(SHA384ASS),     LLRSFUNC(SHA384SA),       LLRSFUNC(SHA384SAA),
-  LLRSFUNC(SHA384SAS),     LLRSFUNC(SHA384SS),       LLRSFUNC(SHA384SSA),
-  LLRSFUNC(SHA384SSS),     LLRSFUNC(SHA512AA),       LLRSFUNC(SHA512AAA),
-  LLRSFUNC(SHA512AAS),     LLRSFUNC(SHA512AS),       LLRSFUNC(SHA512ASA),
-  LLRSFUNC(SHA512ASS),     LLRSFUNC(SHA512SA),       LLRSFUNC(SHA512SAA),
-  LLRSFUNC(SHA512SAS),     LLRSFUNC(SHA512SS),       LLRSFUNC(SHA512SSA),
-  LLRSFUNC(SHA512SSS),     LLRSFUNC(Sanitise),       LLRSFUNC(Sign),
-  LLRSFUNC(StretchInner),  LLRSFUNC(StretchOuter),   LLRSFUNC(TableSize),
-  LLRSFUNC(Trim),          LLRSFUNC(UrlDecode),      LLRSFUNC(UrlEncode),
-  LLRSFUNC(UTF8Char),      LLRSFUNC(UUIDDecode),     LLRSFUNC(UUIDEncode),
-  LLRSFUNC(UUIDRandom),    LLRSFUNC(WordWrap),
+  LLRSFUNC(AscNTime),                  LLRSFUNC(AscNTimeUTC),
+  LLRSFUNC(AscTime),                   LLRSFUNC(AscTimeUTC),
+  LLRSFUNC(B64D),                      LLRSFUNC(B64DA),
+  LLRSFUNC(B64E),                      LLRSFUNC(B64EA),
+  LLRSFUNC(Bits),                      LLRSFUNC(Blank),
+  LLRSFUNC(Bytes),                     LLRSFUNC(Capitalise),
+  LLRSFUNC(Chop),                      LLRSFUNC(Clamp),
+  LLRSFUNC(ClampInt),                  LLRSFUNC(Compact),
+  LLRSFUNC(CountOf),                   LLRSFUNC(CRC),
+  LLRSFUNC(CRCA),                      LLRSFUNC(Duration),
+  LLRSFUNC(DurationL),                 LLRSFUNC(DurationLEx),
+  LLRSFUNC(DurationS),                 LLRSFUNC(DurationSEx),
+  LLRSFUNC(EntDecode),                 LLRSFUNC(EntEncode),
+  LLRSFUNC(Explode),                   LLRSFUNC(ExplodeEx),
+  LLRSFUNC(FlushArray),                LLRSFUNC(FlushObject),
+  LLRSFUNC(FlushTable),                LLRSFUNC(FlushArrays),
+  LLRSFUNC(FlushObjects),              LLRSFUNC(FlushTables),
+  LLRSFUNC(FormatNTime),               LLRSFUNC(FormatNTimeUTC),
+  LLRSFUNC(FormatNumber),              LLRSFUNC(FormatNumberI),
+  LLRSFUNC(FormatTime),                LLRSFUNC(FormatTimeUTC),
+  LLRSFUNC(GetRatio),                  LLRSFUNC(Grouped),
+  LLRSFUNC(Hex),                       LLRSFUNC(HexDecode),
+  LLRSFUNC(HexDecodeA),                LLRSFUNC(HexEncode),
+  LLRSFUNC(HexEncodeA),                LLRSFUNC(HexEncodeL),
+  LLRSFUNC(HexEncodeLA),               LLRSFUNC(HexL),
+  LLRSFUNC(HighByte),                  LLRSFUNC(HighDWord),
+  LLRSFUNC(HighWord),                  LLRSFUNC(IfBlank),
+  LLRSFUNC(Implode),                   LLRSFUNC(ImplodeEx),
+  LLRSFUNC(IsASCII),                   LLRSFUNC(IsBoolean),
+  LLRSFUNC(IsExtASCII),                LLRSFUNC(IsFunction),
+  LLRSFUNC(IsInteger),                 LLRSFUNC(IsNumber),
+  LLRSFUNC(IsString),                  LLRSFUNC(IsTable),
+  LLRSFUNC(IsUserdata),                LLRSFUNC(LineType),
+  LLRSFUNC(LowByte),                   LLRSFUNC(LowDWord),
+  LLRSFUNC(LowWord),                   LLRSFUNC(MakeDWord),
+  LLRSFUNC(MakeQWord),                 LLRSFUNC(MakeWord),
+  LLRSFUNC(ParseArgs),                 LLRSFUNC(ParseTime),
+  LLRSFUNC(ParseTime2),                LLRSFUNC(ParseTimeEx),
+  LLRSFUNC(Pluralise),                 LLRSFUNC(PluraliseEx),
+  LLRSFUNC(PluraliseGrouped),          LLRSFUNC(PlusOrMinus),
+  LLRSFUNC(PlusOrMinusEx),             LLRSFUNC(Position),
+  LLRSFUNC(Random),                    LLRSFUNC(RandomA),
+  LLRSFUNC(RelTime),                   LLRSFUNC(RelTimeEx),
+  LLRSFUNC(Replace),                   LLRSFUNC(ReplaceEx),
+  LLRSFUNC(Round),                     LLRSFUNC(RoundInt),
+  LLRSFUNC(RoundMul),                  LLRSFUNC(RoundPow2),
+  LLRSFUNC(SHA1AA),                    LLRSFUNC(SHA1AAA),
+  LLRSFUNC(SHA1AAS),                   LLRSFUNC(SHA1AS),
+  LLRSFUNC(SHA1ASA),                   LLRSFUNC(SHA1ASS),
+  LLRSFUNC(SHA1SA),                    LLRSFUNC(SHA1SAA),
+  LLRSFUNC(SHA1SAS),                   LLRSFUNC(SHA1SS),
+  LLRSFUNC(SHA1SSA),                   LLRSFUNC(SHA1SSS),
+  LLRSFUNC(SHA224AA),                  LLRSFUNC(SHA224AAA),
+  LLRSFUNC(SHA224AAS),                 LLRSFUNC(SHA224AS),
+  LLRSFUNC(SHA224ASA),                 LLRSFUNC(SHA224ASS),
+  LLRSFUNC(SHA224SA),                  LLRSFUNC(SHA224SAA),
+  LLRSFUNC(SHA224SAS),                 LLRSFUNC(SHA224SS),
+  LLRSFUNC(SHA224SSA),                 LLRSFUNC(SHA224SSS),
+  LLRSFUNC(SHA256AA),                  LLRSFUNC(SHA256AAA),
+  LLRSFUNC(SHA256AAS),                 LLRSFUNC(SHA256AS),
+  LLRSFUNC(SHA256ASA),                 LLRSFUNC(SHA256ASS),
+  LLRSFUNC(SHA256SA),                  LLRSFUNC(SHA256SAA),
+  LLRSFUNC(SHA256SAS),                 LLRSFUNC(SHA256SS),
+  LLRSFUNC(SHA256SSA),                 LLRSFUNC(SHA256SSS),
+  LLRSFUNC(SHA384AA),                  LLRSFUNC(SHA384AAA),
+  LLRSFUNC(SHA384AAS),                 LLRSFUNC(SHA384AS),
+  LLRSFUNC(SHA384ASA),                 LLRSFUNC(SHA384ASS),
+  LLRSFUNC(SHA384SA),                  LLRSFUNC(SHA384SAA),
+  LLRSFUNC(SHA384SAS),                 LLRSFUNC(SHA384SS),
+  LLRSFUNC(SHA384SSA),                 LLRSFUNC(SHA384SSS),
+  LLRSFUNC(SHA512AA),                  LLRSFUNC(SHA512AAA),
+  LLRSFUNC(SHA512AAS),                 LLRSFUNC(SHA512AS),
+  LLRSFUNC(SHA512ASA),                 LLRSFUNC(SHA512ASS),
+  LLRSFUNC(SHA512SA),                  LLRSFUNC(SHA512SAA),
+  LLRSFUNC(SHA512SAS),                 LLRSFUNC(SHA512SS),
+  LLRSFUNC(SHA512SSA),                 LLRSFUNC(SHA512SSS),
+  LLRSFUNC(Sanitise),                  LLRSFUNC(Sign),
+  LLRSFUNC(StretchInner),              LLRSFUNC(StretchOuter),
+  LLRSFUNC(TableSize),                 LLRSFUNC(Trim),
+  LLRSFUNC(UrlDecode),                 LLRSFUNC(UrlEncode),
+  LLRSFUNC(UTF8Char),                  LLRSFUNC(UUIDDecode),
+  LLRSFUNC(UUIDEncode),                LLRSFUNC(UUIDRandom),
+  LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

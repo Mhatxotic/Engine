@@ -27,12 +27,12 @@ template<class DataType,               // Data storage type
 /* ------------------------------------------------------------------------- */
 class DataFormat                       // Image libraries format object class
 { /* -- Protected typedefs -------------------------------------- */ protected:
-  typedef bool (CbFuncDecoderT)(FileMap&, DataType&);
-  typedef bool (CbFuncEncoderT)(const FStream&, const DataType&,
+  using CbFuncDecoderT = bool(FileMap&, DataType&);
+  using CbFuncEncoderT = bool(const FStream&, const DataType&,
     const SlotType&);
   /* -- Public typedefs -------------------------------------------- */ public:
-  typedef function<CbFuncDecoderT> CbFuncDecoder;
-  typedef function<CbFuncEncoderT> CbFuncEncoder;
+  using CbFuncDecoder = function<CbFuncDecoderT>;
+  using CbFuncEncoder = function<CbFuncEncoderT>;
   /* -- Private variables ----------------------------------------- */ private:
   const StdStringView strvName,        // Name of plugin
                       strvExt;         // Default extension of plugin type

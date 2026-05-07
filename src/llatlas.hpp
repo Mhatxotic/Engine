@@ -46,13 +46,13 @@ LLFUNC(Destroyed, 1,
 // < Id:integer=The id number of the Atlas object.
 // ? Returns the unique id of the Atlas object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Atlas:Name
 // < Name:string=The name of the Atlas object.
 // ? Returns the name of the specified object when it was created.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().NameGet()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Atlas:* member functions structure                                  ## **

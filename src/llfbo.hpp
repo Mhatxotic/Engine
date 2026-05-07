@@ -111,7 +111,7 @@ LLFUNC(GetFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTrisNow()))
 // < Id:integer=The id number of the Fbo object.
 // ? Returns the unique id of the Fbo object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().CtrGet()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Fbo:GetLFloatCount
 // < Count:integer=Number of floats in display lists.
@@ -131,16 +131,16 @@ LLFUNC(GetLFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTris()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetMatrix, 6,
   const Fbo &fboCref = AgFbo{lS, 1}();
-  const CoordsFloat &cfRef = fboCref.cfStage;
+  const CoordsGLFloat &cglfRef = fboCref.FboGetStageConst();
   LuaUtilPushVar(lS, fboCref.DimGetWidth(), fboCref.DimGetHeight(),
-    cfRef.CoordsGetLeft(), cfRef.CoordsGetTop(), cfRef.CoordsGetRight(),
-    cfRef.CoordsGetBottom()))
+    cglfRef.CoordsGetX1(), cglfRef.CoordsGetY1(), cglfRef.CoordsGetX2(),
+    cglfRef.CoordsGetY2()))
 /* ========================================================================= */
 // $ Fbo:GetName
 // < Id:string=The video identifier
 // ? Returns the identifier of the Fbo object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().IdentGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Fbo:Reserve
 // > Triangles:integer=How many triangles to reserve in GPU float list
@@ -237,12 +237,12 @@ LLFUNC(SetCRGBA, 0,
 LLFUNC(SetCX, 0,
   const AgFbo aFbo{lS, 1};
   const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriColData tcdColour{
+  const FboBase::TriIntData tidColour{
     AgGLfloat{lS,  3}, AgGLfloat{lS,  4}, AgGLfloat{lS,  5}, AgGLfloat{lS,  6},
     AgGLfloat{lS,  7}, AgGLfloat{lS,  8}, AgGLfloat{lS,  9}, AgGLfloat{lS, 10},
     AgGLfloat{lS, 11}, AgGLfloat{lS, 12}, AgGLfloat{lS, 13}, AgGLfloat{lS, 14}
   };
-  aFbo().FboItemSetColourEx(aTriangleId, tcdColour))
+  aFbo().FboItemSetColourEx(aTriangleId, tidColour))
 /* ========================================================================= */
 // $ Fbo:SetMatrix
 // > Left:number=The left co-ordinate.
@@ -306,11 +306,11 @@ LLFUNC(SetTCLTWH, 0,
 LLFUNC(SetTCX, 0,
   const AgFbo aFbo{lS, 1};
   const AgTriangleId aTriangleId{lS, 2};
-  const FboBase::TriCoordData tcdCoords{
+  const FboBase::TriTexData ttdCoords{
     AgGLfloat{lS, 3}, AgGLfloat{lS, 4}, AgGLfloat{lS, 5},
     AgGLfloat{lS, 6}, AgGLfloat{lS, 7}, AgGLfloat{lS, 8},
   };
-  aFbo().FboItemSetTexCoordEx(aTriangleId, tcdCoords))
+  aFbo().FboItemSetTexCoordEx(aTriangleId, ttdCoords))
 /* ========================================================================= */
 // $ Fbo:SetVLTRB
 // > Left:number=The destination left co-ordinate.
@@ -421,7 +421,7 @@ LLFUNC(Main, 1,
   LuaUtilClassCreateStaticPtr<Fbo>(lS, cFbos, &cFboCore->FboCoreGetMain()))
 /* ========================================================================= */
 // $ Fbo.Create
-// > Identifier:string=Reference only user-defined identifier.
+// > Name:string=Reference only user-defined identifier.
 // > Width:integer=Width of the FBO.
 // > Height:integer=Height of the FBO.
 // > Triangles:integer=How many triangles to reserve in GPU float list
@@ -431,12 +431,12 @@ LLFUNC(Main, 1,
 // ? number of triangles and commands.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
-  const AgNeString aIdentifier{lS, 1};
+  const AgNeString aName{lS, 1};
   const AgTextureDimension aWidth{lS, 2},
                            aHeight{lS, 3};
   const AgSizeTLG aVertexes{lS, 2, 2, 1000000},
                   aCommands{lS, 3, 1, 1000000};
-  AcFbo{lS}().FboInit(aIdentifier, aWidth, aHeight, aVertexes, aCommands))
+  AcFbo{lS}().FboInit(aName(), aWidth, aHeight, aVertexes, aCommands))
 /* ========================================================================= */
 // $ Fbo.Draw
 // ? When the UI mode is set to 3 which is fully manual mode, you need to call

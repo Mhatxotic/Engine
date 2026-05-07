@@ -16,15 +16,17 @@ namespace IFont {                      // Start of private namespace
 using namespace IAsset::P;             using namespace IAtlas::P;
 using namespace ICollector::P;         using namespace ICoords::P;
 using namespace IDim::P;               using namespace IError::P;
-using namespace IFileMap::P;           using namespace IFreeType::P;
+using namespace IFileMap::P;           using namespace IFlags::P;
+using namespace IFormat::P;            using namespace IFreeType::P;
 using namespace IFtf::P;               using namespace IImageDef::P;
 using namespace IJson::P;              using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::FreeType;         using namespace Lib::OS::GlFW::Types;
+using namespace IStd::P;               using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace ITexture::P;           using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::FreeType;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */
@@ -41,71 +43,75 @@ class FontBase :                       // Members initially private
   class Glyph :                        // Members initially private
     /* -- Dependencies ----------------------------------------------------- */
     public DimGLFloat,                 // Dimension of floats
-    public CoordsFloat                 // Glyph bounding co-ordinates
-  { /* --------------------------------------------------------------------- */
+    public CoordsGLFloat               // Glyph bounding co-ordinates
+  { /* -- Private variables ------------------------------------------------ */
     bool           bLoaded;            // 0=ft unloaded or 1=ft loaded
-    GLfloat        fAdvance;           // Width, height and advance of glyph
+    GLfloat        glfAdvance;         // Width, height and advance of glyph
     /* -- Returns character advance -------------------------------- */ public:
-    GLfloat GlyphGetAdvance() const { return fAdvance; }
+    GLfloat GlyphGetAdvance() const { return glfAdvance; }
     /* -- Sets character advance ------------------------------------------- */
-    void GlyphSetAdvance(const GLfloat fNewAdv) { fAdvance = fNewAdv; }
+    void GlyphSetAdvance(const GLfloat glfNAdvance)
+      { glfAdvance = glfNAdvance; }
     /* -- Returns if this glyph has been loaded ---------------------------- */
     bool GlyphIsLoaded() const { return bLoaded; }
     /* -- Set glyph as loaded ---------------------------------------------- */
     void GlyphSetLoaded() { bLoaded = true; }
     /* -- Constructor that initialises all members ------------------------- */
-    Glyph(const GLfloat fWidth,        // Width of glyph in pixels for opengl
-          const GLfloat fHeight,       // Height of glyph in pixels for opengl
+    Glyph(const GLfloat glfWidth,      // Width of glyph in pixels for opengl
+          const GLfloat glfHeight,     // Height of glyph in pixels for opengl
           const bool    bNLoaded,      // Is the glyph loaded?
-          const GLfloat fNAdvance,     // Specified glyph advance in pixels
-          const GLfloat fX1,           // Top-left co-ordinate of glyph
-          const GLfloat fY1,           // Bottom-left co-ordinate of glyph
-          const GLfloat fX2,           // Top-right co-ordinate of glyph
-          const GLfloat fY2) :         // Bottom-right co-ordinate of glyph
+          const GLfloat glfNAdvance,   // Specified glyph advance in pixels
+          const GLfloat glfX1,         // Top-left co-ordinate of glyph
+          const GLfloat glfY1,         // Bottom-left co-ordinate of glyph
+          const GLfloat glfX2,         // Top-right co-ordinate of glyph
+          const GLfloat glfY2) :       // Bottom-right co-ordinate of glyph
       /* -- Initialisers --------------------------------------------------- */
-      DimGLFloat{ fWidth, fHeight },   // Initialise glpyh size
-      CoordsFloat{ fX1,fY1,fX2,fY2 },  // Init adjustment co-ordinates
+      DimGLFloat{ glfWidth,            // Init glpyh base size width
+                  glfHeight },         // Init glpyh base size height
+      CoordsGLFloat{ glfX1, glfY1,     // Init adjustment src co-ordinates
+                     glfX2, glfY2 },   // Init adjustment dest co-ordinates
       bLoaded(bNLoaded),               // Init specified loaded value
-      fAdvance(fNAdvance)              // Init specified advance value
+      glfAdvance(glfNAdvance)          // Init specified advance value
       /* -- No code -------------------------------------------------------- */
       {}
     /* -- Default Constructor ---------------------------------------------- */
     Glyph() :                          // No arguments
       /* -- Initialisers --------------------------------------------------- */
       bLoaded(false),                  // Character not loaded yet
-      fAdvance(0.0f)                   // Character advance value
+      glfAdvance(0.0f)                 // Character advance value
       /* -- No code -------------------------------------------------------- */
       {}
   };/* -- Variables -------------------------------------------------------- */
-  typedef StdVector<Glyph>      GlyphVector;   // Vector of Glyphs
-  typedef GlyphVector::iterator GlyphVectorIt; // Iterator to GlyphVector
+  using GlyphVector   = StdVector<Glyph>;      // Vector of Glyphs
+  using GlyphVectorIt = GlyphVector::iterator; // Iterator to GlyphVector
   /* --------------------------------------------------------------- */ public:
   GlyphVector      gvData;             // Glyph and outline data
-  DimGLFloat       dfScale,            // Scaled font width and height
-                   dfFont;             // Requested font size for OpenGL
+  DimGLFloat       gldfScale,          // Scaled font width and height
+                   gldfFont;           // Requested font size for OpenGL
   size_t           stMultiplier;       // 1 if no outline, 2 if outline
-  GLfloat          fCharSpacing,       // Character spacing adjustment
-                   fCharSpacingScale,  // Character spacing scaled size
-                   fLineSpacing,       // Text line spacing
-                   fLineSpacingHeight, // Height of line spacing plus height
-                   fGSize,             // Scaled font texture glyph size
-                   fScale,             // Font scale
-                   fGPad, fGPadScaled; // Glyph position adjustment
+  GLfloat          glfCSpacing,        // Character spacing adjustment
+                   glfCSpacingScale,   // Character spacing scaled size
+                   glfLSpacing,        // Text line spacing
+                   glfLSpacingHeight,  // Height of line spacing plus height
+                   glfGlyphSize,       // Scaled font texture glyph size
+                   glfScale,           // Font scale
+                   glfGPad,            // Glyph position adjustment
+                   glfGPadScaled;      // Glyph position adjustment scaled
   Texture         *tGlyphs;            // Texture for print calls only
   FboItem          fiOutline;          // Outline colour
   /* -- Freetype handles --------------------------------------------------- */
   Ftf              ftfData;            // FT font data
-  FT_ULong         ulDefaultChar;      // Default fallback character
+  FT_ULong         fulDefaultChar;     // Default fallback character
   /* -- Default constructor ------------------------------------------------ */
   explicit FontBase(const ImageFlagsConst ifcPurpose = IP_FONT) :
     /* --------------------------------------------------------------------- */
     Atlas{ ifcPurpose },               stMultiplier(1),
-    fCharSpacing(0.0f),                fCharSpacingScale(0.0f),
-    fLineSpacing(0.0f),                fLineSpacingHeight(0.0f),
-    fGSize(0.0f),                      fScale(0.0f),
-    fGPad(0.0f),                       fGPadScaled(0.0f),
+    glfCSpacing(0.0f),                 glfCSpacingScale(0.0f),
+    glfLSpacing(0.0f),                 glfLSpacingHeight(0.0f),
+    glfGlyphSize(0.0f),                glfScale(0.0f),
+    glfGPad(0.0f),                     glfGPadScaled(0.0f),
     tGlyphs(nullptr),                  fiOutline{ 0xFF000000 },
-    ulDefaultChar('?')
+    fulDefaultChar('?')
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -116,51 +122,51 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
 { /* -- Stroker functors for DoInitFTChar() -------------------------------- */
 #include "fontglph.hpp"                // Include glyph loading members inline
 #include "fontblit.hpp"                // Include glyph blitting members inline
+  /* -- Recalculate line spacing ------------------------------------------- */
+  GLfloat GetLineSpacingHeight() const { return glfLSpacingHeight; }
+  void UpdateHeightPlusLineSpacing()
+    { glfLSpacingHeight = GetLineSpacing() + gldfScale.DimGetHeight(); }
+  /* -- Update character spacing of the font ------------------------------- */
+  GLfloat GetCharSpacingScale() const { return glfCSpacingScale; }
+  void UpdateCharSpacingTimesScale()
+    { glfCSpacingScale = GetCharSpacing() * glfScale; }
+  /* -- Return text height plus line spacing ------------------------------- */
+  void UpdateGlyphPaddingTimesScale() { glfGPadScaled = glfGPad * glfScale; }
   /* -- Set glyph size --------------------------------------------- */ public:
-  void SetGlyphSize(const GLfloat fSize)
-    { fGSize = fSize; UpdateGlyphPaddingTimesScale(); }
+  void SetGlyphSize(const GLfloat glfSize)
+    { glfGlyphSize = glfSize; UpdateGlyphPaddingTimesScale(); }
   /* -- Get character count ------------------------------------------------ */
   size_t GetCharCount() const { return gvData.size() / stMultiplier; }
   /* -- Get character scale ------------------------------------------------ */
-  GLfloat GetCharScale() const { return fScale; }
+  GLfloat GetCharScale() const { return glfScale; }
   /* -- Get bin occupancy -------------------------------------------------- */
   double GetTexOccupancy() const { return ipData.Occupancy(); }
   /* -- Get below baseline height of specified character ------------------- */
   GLfloat GetBaselineBelow(const Codepoint cChar)
   { // Now get character info and return data
     const Glyph &gRef = gvData[CheckGlyph(cChar)];
-    return (gRef.CoordsGetBottom() - gRef.DimGetHeight()) * fScale;
+    return (gRef.CoordsGetY2() - gRef.DimGetHeight()) * glfScale;
   }
-  /* -- Set line spacing of the font --------------------------------------- */
-  void SetLineSpacing(const GLfloat fNewLineSpacing)
-  { // Set line spacing
-    fLineSpacing = fNewLineSpacing;
-    // Update line spacing plus height
-    UpdateHeightPlusLineSpacing();
-  }
+  /* -- Get/set line spacing ----------------------------------------------- */
+  GLfloat GetLineSpacing() const { return glfLSpacing; }
+  void SetLineSpacing(const GLfloat glfNLSpacing)
+    { glfLSpacing = glfNLSpacing; UpdateHeightPlusLineSpacing(); }
   /* -- Set new glyph Y padding and the new scaling value ------------------ */
-  void SetGlyphPadding(const GLfloat fNewGPad)
-  { // Set new glyph padding
-    fGPad = fNewGPad;
-    // Update glyph padding times scale
-    UpdateGlyphPaddingTimesScale();
-  }
+  void SetGlyphPadding(const GLfloat glfNGPad)
+    { glfGPad = glfNGPad; UpdateGlyphPaddingTimesScale(); }
   /* -- Set character spacing of the font ---------------------------------- */
-  void SetCharSpacing(const GLfloat fNewCharSpacing)
-  { // Update character spacing value
-    fCharSpacing = fNewCharSpacing;
-    // Update new character spacing times scale value
-    UpdateCharSpacingTimesScale();
-  }
+  GLfloat GetCharSpacing() const { return glfCSpacing; }
+  void SetCharSpacing(const GLfloat glfNCSpacing)
+    { glfCSpacing = glfNCSpacing; UpdateCharSpacingTimesScale(); }
   /* -- Set size of the font ----------------------------------------------- */
-  void SetSize(const GLfloat fNScale)
+  void SetSize(const GLfloat glfNScale)
   { // Set scale
-    fScale = UtilClamp(fNScale, 0.0f, 1024.0f);
+    glfScale = UtilClamp(glfNScale, 0.0f, 1024.0f);
     // Update scaled dimensions
-    dfScale.DimSet(GetTileWidthFloat() * fScale,
-                   GetTileHeightFloat() * fScale);
+    gldfScale.DimSet(GetTileWidthFloat() * glfScale,
+      GetTileHeightFloat() * glfScale);
     // Update glyph size
-    SetGlyphSize(dfScale.DimGetHeight());
+    SetGlyphSize(gldfScale.DimGetHeight());
     // Update frequently used values
     UpdateCharSpacingTimesScale();
     UpdateHeightPlusLineSpacing();
@@ -171,7 +177,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     if(!ftfData.IsLoaded()) return;
     // Log pre-cache progress
     cLog->LogDebugExSafe("Font '$' pre-caching character range $ to $...",
-      IdentGet(), cStart, cEnd);
+      NameGet(), cStart, cEnd);
     // Load the specified character range
     DoInitFTCharRangeApplyStroker<HandleGlyphFunc::FreeType>(cStart, cEnd);
     // Check if any textures need reloading
@@ -179,30 +185,31 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Log success
     cLog->LogDebugExSafe(
       "Font '$' finished pre-caching character range $ to $.",
-      IdentGet(), cStart, cEnd);
+      NameGet(), cStart, cEnd);
   }
   /* -- Do initialise all freetype characters in specified string ---------- */
-  void InitFTCharString(const GLubyte*const ucpPtr)
+  void InitFTCharString(const StdStringView strvString)
   { // Ignore if string not valid or font not loaded
-    if(UtfIsCStringNotValid(ucpPtr) || !ftfData.IsLoaded()) return;
+    if(strvString.empty() || !ftfData.IsLoaded()) return;
     // Do load string characters
-    DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(ucpPtr);
+    DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(strvString);
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
   }
   /* -- Do initialise freetype font ---------------------------------------- */
-  void InitFontFtf(Ftf &ftfSrc, const GLuint uiISize, const GLuint _uiPadding,
-    const OglFilterEnum ofeNFilter, const ImageFlagsConst &ifcFlags)
+  void InitFontFtf(Ftf &ftfSrc, const GLuint gluISize,
+    const GLuint gluNPadding, const OglFilterEnum ofeNFilter,
+    const ImageFlagsConst &ifcFlags)
   { // Show that we're loading the file
     cLog->LogDebugExSafe("Font loading '$' (IS:$;P:$;F:$;FL:$$)...",
-      ftfSrc.IdentGet(), uiISize, _uiPadding, ofeNFilter, StdIOSHex,
+      ftfSrc.NameGet(), gluISize, gluNPadding, ofeNFilter, StdIOSHex,
       ifcFlags.FlagGet());
     // If source and destination ftf class are not the same?
     if(&ftfData != &ftfSrc)
     { // Take ownership of specified freetype identifier and handles
-      IdentSwap(ftfSrc);
+      NameSwap(ftfSrc);
       ftfData.SwapFtf(ftfSrc);
-      ftfData.IdentSet(IdentGet());
+      ftfData.NameSet(NameGet());
     } // Initialise load flags
     FlagSet(ifcFlags);
     SetFontFreeType();
@@ -211,54 +218,53 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // multiplier is already 1 by default so this just makes it equal 2.
     if(ftfData.IsOutline()) stMultiplier = 2;
     // Initialise the atlas texture
-    AtlasInit<ImageTypeGrayAlpha>(IdentGet(),
+    AtlasInit<ImageTypeGrayAlpha>(NameGet(),
       static_cast<GLuint>(ceil(ftfData.DimGetWidth())),
       static_cast<GLuint>(ceil(ftfData.DimGetHeight())),
-      uiISize, _uiPadding, ofeNFilter);
+      gluISize, gluNPadding, ofeNFilter);
     // Set requested font size for opengl
-    dfFont.DimSet(ftfData);
+    gldfFont.DimSet(ftfData);
     // Set default scaled font size and line spacing adjust
     SetSize(1.0f);
-    fLineSpacingHeight = ftfData.DimGetHeight();
+    glfLSpacingHeight = ftfData.DimGetHeight();
     // Update tile size as GLfloat for opengl
-    dfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
+    dglfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
     // Make enough space for initial tex coords set
     clTiles.resize(1);
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded FT font (IS:$;P:$;F:$;FL:$$)...",
-      IdentGet(), uiISize, uiPadding, ofeFilter, StdIOSHex,
-      ifcFlags.FlagGet());
+      NameGet(), gluISize, uPadding, ofeFilter, StdIOSHex, ifcFlags.FlagGet());
   }
   /* -- Init a pre-rendered font directly ---------------------------------- */
-  void InitFontImage(Image &imSrc, const GLuint uiTWidth,
-    const GLuint uiTHeight, const GLuint uiPWidth, const GLuint uiPHeight,
+  void InitFontImage(Image &imSrc, const GLuint gluTWidth,
+    const GLuint gluTHeight, const GLuint gluPWidth, const GLuint gluPHeight,
     const OglFilterEnum ofeNFilter, const size_t stCharCount,
     const size_t stCharBegin, const size_t stCharDefault,
-    const GLFloatVector &fvWidths)
+    const GLFloatVector &vglfWidths)
   { // Show filename
-    cLog->LogDebugExSafe("Font loading bitmap '$'...", imSrc.IdentGet());
+    cLog->LogDebugExSafe("Font loading bitmap '$'...", imSrc.NameGet());
     // Set Font's role as a Bitmap font.
     SetFontBitmap();
     // Set ending character
     const size_t stCharEnd = stCharBegin + stCharCount;
     // Set default character
-    ulDefaultChar = static_cast<decltype(ulDefaultChar)>(stCharDefault);
+    fulDefaultChar = static_cast<decltype(fulDefaultChar)>(stCharDefault);
     // Set filter
     ofeFilter = ofeNFilter;
     // Convert tile width and height to float
-    const GLfloat fW = static_cast<GLfloat>(uiTWidth),
-                  fH = static_cast<GLfloat>(uiTHeight);
+    const GLfloat fW = static_cast<GLfloat>(gluTWidth),
+                  fH = static_cast<GLfloat>(gluTHeight);
     // If no values were specified?
-    if(fvWidths.empty())
+    if(vglfWidths.empty())
     { // Add the starting unused characters
       gvData.resize(stCharBegin);
       // Add all the characters to the default with automatically
       gvData.resize(stCharEnd, { fW, fH, true, fW, 0.0f, 0.0f, fW, fH });
     } // Error if we do not have the correct number of items
-    else if(fvWidths.size() != stCharCount)
+    else if(vglfWidths.size() != stCharCount)
       XC("Unexpected number of widths specified!",
-        "Identifier", imSrc.IdentGet(), "Required", stCharCount,
-        "Actual",     fvWidths.size());
+        "Name",   imSrc.NameGet(), "Required", stCharCount,
+        "Actual", vglfWidths.size());
     // We have the correct number of items
     else
     { // Reserve memory for all the requested character space
@@ -266,7 +272,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       // Add the starting unused characters
       gvData.resize(stCharBegin);
       // Set all the specified widths in the widths array
-      StdTransformNXP(fvWidths.cbegin(), fvWidths.cend(),
+      StdTransformNXP(vglfWidths.cbegin(), vglfWidths.cend(),
         StdBackInserter(gvData), [fW, fH](const GLfloat fvWidth)->const Glyph{
           return { fW, fH, true, fvWidth, 0.0f, 0.0f, fW, fH };
         });
@@ -288,7 +294,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     clFirst.reserve(stCharEnd);
     clFirst.resize(stCharBegin);
     // Init texture with custom parameters and generate tileset
-    InitTextureImage(imSrc, uiTWidth, uiTHeight, uiPWidth, uiPHeight,
+    InitTextureImage(imSrc, gluTWidth, gluTHeight, gluPWidth, gluPHeight,
       ofeFilter);
     // Initialise the left uninitialised texcoords with the default character
     const CoordData &cdRef = clFirst[stCharDefault];
@@ -301,31 +307,31 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
     // Initialise default font scale and line spacing to height
     SetSize(1.0f);
-    fLineSpacingHeight = fH;
+    glfLSpacingHeight = fH;
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
-      IdentGet(), uiTWidth, uiTHeight, ofeFilter);
+      NameGet(), gluTWidth, gluTHeight, ofeFilter);
   }
   /* -- Init a pre-rendered font with manifest ----------------------------- */
   void InitFontImageManifest(Image &imSrc, const Json &jsDoc)
   { // Show filename
     cLog->LogDebugExSafe("Font loading bitmap '$' with manifest '$'...",
-      imSrc.IdentGet(), jsDoc.IdentGet());
+      imSrc.NameGet(), jsDoc.NameGet());
     // Set Font's role as a Bitmap font.
     SetFontBitmap();
     // Make sure correct version
-    const unsigned int uiVersionRequired = 1;
-    const unsigned int uiVersion = jsDoc.GetInteger("Version");
-    if(uiVersion != uiVersionRequired)
+    const unsigned uVersionRequired = 1,
+                   uVersion = jsDoc.GetInteger("Version");
+    if(uVersion != uVersionRequired)
       XC("Invalid version in manifest!",
-        "Identifier", imSrc.IdentGet(),  "Manfiest", jsDoc.IdentGet(),
-        "Required",   uiVersionRequired, "Actual",   uiVersion);
+        "Name",     imSrc.NameGet(),  "Manfiest", jsDoc.NameGet(),
+        "Required", uVersionRequired, "Actual",   uVersion);
     // Number of characters supported cannot be zero!
     const size_t stCharCount = jsDoc.GetInteger("CharCount");
     if(stCharCount < 1)
       XC("Invalid character count in manifest!",
-        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-        "Value",      stCharCount);
+        "Name",  imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
+        "Value", stCharCount);
     // Get beginning glyph id and calculate ending id
     const size_t stCharBegin = jsDoc.GetInteger("CharBegin"),
                  stCharEnd = stCharBegin + stCharCount;
@@ -333,43 +339,43 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Check if it's a literal number as prefixed by a hash sign? Convert as a
     // literal number else convert as an a literal character then verify it is
     // in the specified range.
-    ulDefaultChar = jsDoc.GetInteger("Default");
-    if(ulDefaultChar < stCharBegin || ulDefaultChar >= stCharEnd)
+    fulDefaultChar = jsDoc.GetInteger("Default");
+    if(fulDefaultChar < stCharBegin || fulDefaultChar >= stCharEnd)
       XC("Default character index out of range in manifest!",
-        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-        "Default",    ulDefaultChar,    "Minimum",  stCharBegin,
-        "Maximum",    stCharEnd,        "Count",    stCharCount);
+        "Name",    imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
+        "Default", fulDefaultChar,  "Minimum",  stCharBegin,
+        "Maximum", stCharEnd,       "Count",    stCharCount);
     // Get filter
     ofeFilter = static_cast<decltype(ofeFilter)>(jsDoc.GetInteger("Filter"));
     if(ofeFilter >= OF_MAX)
       XC("Invalid filter index specified in manifest!",
-        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-        "Filter",     ofeFilter);
+        "Name",   imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
+        "Filter", ofeFilter);
     // Look for widths and throw if there are none then report them in log
     using Lib::RapidJson::Value;
     const Value &rjvWidths = jsDoc.GetValue("Widths");
     if(!rjvWidths.IsArray())
       XC("Widths array not valid!",
-        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
+        "Name", imSrc.NameGet(), "Manfiest", jsDoc.NameGet());
     if(rjvWidths.Size() != stCharCount)
       XC("Unexpected number of widths specified in manifest!",
-        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-        "Expect",     stCharCount,      "Actual",   rjvWidths.Size());
+        "Name",   imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
+        "Expect", stCharCount,     "Actual",   rjvWidths.Size());
     // Reserve memory for all the requested character space
     gvData.reserve(stCharEnd);
     // Add the starting unused characters
     gvData.resize(stCharBegin);
     // Read size of tile. Texture init will clamp this if needed.
-    const GLuint uiTW = jsDoc.GetInteger("TileWidth"),
-                 uiTH = jsDoc.GetInteger("TileHeight");
-    if(uiTW > cOgl->MaxTexSize() || uiTH > cOgl->MaxTexSize())
+    const GLuint uTW = jsDoc.GetInteger("TileWidth"),
+                 uTH = jsDoc.GetInteger("TileHeight");
+    if(uTW > cOgl->MaxTexSize() || uTH > cOgl->MaxTexSize())
       XC("Invalid tile dimensions in manifest!",
-        "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet(),
-        "Width",      uiTW,             "Height",   uiTH,
-        "Maximum",    cOgl->MaxTexSize());
+        "Name",    imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
+        "Width",   uTW,             "Height",   uTH,
+        "Maximum", cOgl->MaxTexSize());
     // Convert to float as we need a float version of this in the next loop
-    const GLfloat fW = static_cast<GLfloat>(uiTW),
-                  fH = static_cast<GLfloat>(uiTH);
+    const GLfloat fW = static_cast<GLfloat>(uTW),
+                  fH = static_cast<GLfloat>(uTH);
     // Add the characters the manifest file cares about
     StdTransformNXP(rjvWidths.Begin(), rjvWidths.End(),
       StdBackInserter(gvData),
@@ -378,12 +384,12 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
           return { fW, fH, true, static_cast<GLfloat>(rjvItem.GetUint()),
             0.0f, 0.0f, fW, fH };
         XC("Invalid element type from widths array in manifest!",
-          "Identifier", imSrc.IdentGet(), "Manfiest", jsDoc.IdentGet());
+          "Name", imSrc.NameGet(), "Manfiest", jsDoc.NameGet());
       });
     // Calculate the beginning character minus one
     const size_t stCharBeginM1 = stCharBegin - 1;
     // Get the default character width data
-    const Glyph &gRef = gvData[ulDefaultChar];
+    const Glyph &gRef = gvData[fulDefaultChar];
     // Initialise the left uninitialised glyph widths
     GlyphVectorIt gviLeftEnd{ gvData.begin() };
     StdAdvance(gviLeftEnd, stCharBeginM1);
@@ -398,12 +404,12 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     clFirst.reserve(stCharEnd);
     clFirst.resize(stCharBegin);
     // Get extra tile padding dimensions. Also clamped by texture class
-    const unsigned int uiPX = jsDoc.GetInteger("TileSpacingWidth"),
-                       uiPY = jsDoc.GetInteger("TileSpacingHeight");
+    const unsigned uPX = jsDoc.GetInteger("TileSpacingWidth"),
+                   uPY = jsDoc.GetInteger("TileSpacingHeight");
     // Init texture with custom parameters and generate tileset
-    InitTextureImage(imSrc, uiTW, uiTH, uiPX, uiPY, ofeFilter);
+    InitTextureImage(imSrc, uTW, uTH, uPX, uPY, ofeFilter);
     // Get the texture coords for the default character
-    const CoordData &cdRef = clFirst[ulDefaultChar];
+    const CoordData &cdRef = clFirst[fulDefaultChar];
     // Initialise the left uninitialised texcoords with the default character
     CoordListIt cliItLeftEnd{ clFirst.begin() };
     StdAdvance(cliItLeftEnd, stCharBeginM1);
@@ -418,7 +424,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     SetCharSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LetterSpacing")));
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
-      IdentGet(), uiTW, uiTH, ofeFilter);
+      NameGet(), uTW, uTH, ofeFilter);
   }
   /* -- Constructor (Initialisation then registration) --------------------- */
   Font() :

@@ -50,13 +50,13 @@ LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSShots)))
 // < Id:integer=The id number of the SShot object.
 // ? Returns the unique id of the SShot object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().CtrGet()))
+LLFUNC(Id, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ SShot:Name
 // < Name:string=The name of the SShot object.
 // ? Returns the filename generated on this screenshot object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().IdentGet()))
+LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().NameGet()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## SShot:* member functions structure                                  ## **
@@ -86,12 +86,12 @@ LLFUNC(Screen, 1, AcSShot{lS}().DumpMain())
 // > Dest:Fbo=The frame buffer to dump.
 // > File:string=(Optional) File to save to.
 // < Object:SShot=The screenshot object created.
-// ? Takes a screenshot of the specified FBO. You must completely omit the
-// ? 'file' parameter to use an engine generated file.
+// ? Takes a screenshot of the specified Fbo. You must completely omit the
+// ? 'file' parameter to use an engine generated filename.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Fbo, 1, const AgFbo aFbo{lS,1};
-  AcSShot{lS}().DumpFBO(aFbo,
-    LuaUtilStackSize(lS) < 3 ? cCommon->CommonBlank() : AgFilename{lS,2}))
+  AcSShot{lS}().DumpFbo(aFbo, // cCommon->CommonBlank()
+    LuaUtilStackSize(lS) < 3 ? "" : AgFilename{lS,2}()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## SShot.* namespace functions structure                               ## **

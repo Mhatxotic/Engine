@@ -11,15 +11,18 @@ namespace ILuaDef {                    // Start of module namespace
 /* == Typedefs ============================================================= */
 struct LuaKeyInt                       // Lua key/value pairs C
 { /* ----------------------------------------------------------------------- */
-  const char*const  cpName;            // Name of const table
-  const lua_Integer liValue;           // Integer value for this const
+  const StdStringView strvName;        // Name of const table
+  const lua_Integer   liValue;         // Integer value for this const
 };/* ----------------------------------------------------------------------- */
+using LuaKeyIntSpan = StdSpan<const LuaKeyInt>; // Refs array of LuaKeyInts
+/* ------------------------------------------------------------------------- */
 struct LuaTable                        // Lua table as C
 { /* ----------------------------------------------------------------------- */
   const char*const      cpName;        // Name of const table
-  const LuaKeyInt*const kiList;        // Key value list
-  const int             iCount;        // Number of items in this list
+  const LuaKeyIntSpan   lkisList;      // Key value list
 };/* ----------------------------------------------------------------------- */
+using LuaTableSpan = StdSpan<const LuaTable>; // Refs array of LuaTables
+/* ------------------------------------------------------------------------- */
 };                                     // End of module namespace
 /* == LibLua interface namespace =========================================== */
 namespace ILuaLib {                    // Start of private module namespace
@@ -41,7 +44,7 @@ enum LuaClassId : size_t {
   /* ----------------------------------------------------------------------- */
   LMT_TOTAL                            // Maximum number of classes
 };/* -- LUA class reference ids (ref'd in luaident.hpp, lua.hpp) ----------- */
-typedef StdArray<int, LMT_TOTAL> LuaLibClassIdReferences;
+using LuaLibClassIdReferences = StdArray<int, LMT_TOTAL>;
 static LuaLibClassIdReferences llcirAPI
   { FillConGeneric<LuaLibClassIdReferences>(LUA_REFNIL) };
 /* -- Information about a LUA API namespace -------------------------------- */
@@ -51,15 +54,14 @@ struct LuaLibStatic
   const StdStringView &strvName;       // Name of library
   const CoreFlagsConst cfcRequired;    // Required core flags to register
   const luaL_Reg*const libList;        // Library functions
-  const int            iLLCount;       // Size of library functions
+  const size_t         stLLCount;      // Size of library functions
   const luaL_Reg*const libmfList;      // Member library functions
-  const int            iLLMFCount;     // Size of member library functions
+  const size_t         stLLMFCount;    // Size of member library functions
   const lua_CFunction  lcfpDestroy;    // Destruction function
-  const LuaTable*const lkiList;        // Table of key/values to define
-  const int            iLLKICount;     // Size of key/values library functions
-  const int            iLLTotal;       // Total number of entries
+  const LuaTableSpan   ltsList;        // Table of const key/values to define
+  const size_t         stLLTotal;      // Total number of entries
 };/* -- Lua API namespace descriptor list (ref'd in collect, lua, lualib) -- */
-typedef StdArray<const LuaLibStatic, LMT_TOTAL> LuaLibStaticArray;
+using LuaLibStaticArray = StdArray<const LuaLibStatic, LMT_TOTAL>;
 extern const LuaLibStaticArray llsaAPI;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

@@ -8,9 +8,9 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IGlFWUtil {                  // Start of private module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IIdent::P;             using namespace ILog::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -23,8 +23,8 @@ static bool GlFWGBooleanToBoolean(const int iR)
 /* ------------------------------------------------------------------------- */
 class GlFWUtil                         // Members initially private
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef IdMap<const int> HintList;   // List of glfw hints
-  const HintList   hsStrings;          // Hint strings
+  using HintList = LookupMap<const int>; // List of glfw hints
+  const HintList   hsStrings;            // Hint strings
   /* -- Convert window hint id to string --------------------------- */ public:
   const StdStringView &GlFWGetHintAttribStr(const int iTarget) const
     { return hsStrings.Get(iTarget); }
@@ -169,17 +169,20 @@ class GlFWUtil                         // Members initially private
   {}
 };/* ----------------------------------------------------------------------- */
 /* -- Get monitor data pointer --------------------------------------------- */
-template<typename AnyCast=void*>
-  static AnyCast GlFWGetMonitorUserPointer(GLFWmonitor*const mC)
-    { return reinterpret_cast<AnyCast>(glfwGetMonitorUserPointer(mC)); }
+template<typename AnyType = void*>
+  requires StdIsPointer<AnyType>
+static AnyType GlFWGetMonitorUserPointer(GLFWmonitor*const mC)
+  { return reinterpret_cast<AnyType>(glfwGetMonitorUserPointer(mC)); }
 /* -- Get window data pointer ---------------------------------------------- */
-template<typename AnyCast=void*>
-  static AnyCast GlFWGetWindowUserPointer(GLFWwindow*const wC)
-    { return reinterpret_cast<AnyCast>(glfwGetWindowUserPointer(wC)); }
+template<typename AnyType = void*>
+  requires StdIsPointer<AnyType>
+static AnyType GlFWGetWindowUserPointer(GLFWwindow*const wC)
+  { return reinterpret_cast<AnyType>(glfwGetWindowUserPointer(wC)); }
 /* -- Set window data pointer ---------------------------------------------- */
-template<typename AnyCast=void*const>
-  static void GlFWSetWindowUserPointer(GLFWwindow*const wC, AnyCast acData)
-    { glfwSetWindowUserPointer(wC, reinterpret_cast<void*>(acData)); }
+template<typename AnyType = void*const>
+  requires StdIsPointer<AnyType>
+static void GlFWSetWindowUserPointer(GLFWwindow*const wC, AnyType acData)
+  { glfwSetWindowUserPointer(wC, reinterpret_cast<void*>(acData)); }
 /* ------------------------------------------------------------------------- */
 static void GlFWForceEventHack() { glfwPostEmptyEvent(); }
 /* -- Joystick axes -------------------------------------------------------- */
@@ -238,16 +241,7 @@ static void GlFWSetCursor(GLFWwindow*const gwCtx, GLFWcursor*const gcCtx)
   { glfwSetCursor(gwCtx, gcCtx); }
 /* ------------------------------------------------------------------------- */
 static GLFWglproc GlFWGetProcAddress(const char*const cpFunction)
-{ // Get function and return it if we have it
-  if(GLFWglproc fCB = glfwGetProcAddress(cpFunction)) return fCB;
-  // No function so return error
-  XC("The specified OpenGL ICD function could not be found from your video "
-    "card manufacturers display driver. Try upgrading your graphics "
-    "drivers to the latest version from your manufacturers or OEM "
-    "website and make sure your operating system is up to date. If all "
-    "else fails, you will need to upgrade your graphics hardware!",
-    "Function", cpFunction);
-}
+  { return glfwGetProcAddress(cpFunction); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

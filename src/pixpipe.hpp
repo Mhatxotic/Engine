@@ -8,17 +8,27 @@
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
-/* == System pipe class ==================================================== */
+/* ------------------------------------------------------------------------- */
+namespace ISysPipe {                   // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IArgs::P;              using namespace ICmdLine::P;
+using namespace IDir::P;               using namespace IError::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace Lib::OS;
+/* ------------------------------------------------------------------------- */
+namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
 class SysPipe :
   /* -- Base classes ------------------------------------------------------- */
   public SysPipeBase                   // Base SysPipe class
 { /* ----------------------------------------------------------------------- */
-  unsigned int     uiPid;              // Readable process id
+  unsigned         uPid;               // Readable process id
   pid_t            pPid;               // Internal process id
   /* -- Types -------------------------------------------------------------- */
   enum Handle : size_t { READ_HANDLE, WRITE_HANDLE, MAX_HANDLE };
   /* ----------------------------------------------------------------------- */
-  typedef StdArray<int,MAX_HANDLE> HandlesArray; // Handles array type
+  using HandlesArray = StdArray<int, MAX_HANDLE>; // Handles array type
   /* ----------------------------------------------------------------------- */
   class Handles :
     /* --------------------------------------------------------------------- */
@@ -118,7 +128,7 @@ class SysPipe :
       XCS("Executable not valid!", "Program", strApp);
     // This is the arguments list, it will be allocated manually. We need the
     // extra one pointer for nullptr which is the last argument.
-    typedef StdVector<char*> CharVector;
+    using CharVector = StdVector<char*>;
     CharVector cvArgs{ aList.size() + 1 };
     // Enumerate through strings
     char**const cpaArgV = cvArgs.data(), **cpaArgVPtr = cpaArgV;
@@ -168,9 +178,9 @@ class SysPipe :
         haParentToChild.CloseReadFd();
         // Set pid
         pPid = pForkedPid;
-        uiPid = static_cast<unsigned int>(pForkedPid);
+        uPid = static_cast<unsigned>(pForkedPid);
         // Store name of executable
-        IdentSet(StdMove(strApp));
+        NameSet(StdMove(strApp));
         // Report pid
         cLog->LogInfoExSafe("System forked '$' to pid $.", strApp, pPid);
         // Done
@@ -213,14 +223,11 @@ class SysPipe :
     switch(const size_t stRead = static_cast<size_t>
       (read(haChildToParent.GetReadFd(), vpDest, stToRead)))
     { // Success? Report the read and return number of bytes read
-      default:
-        cLog->LogDebugExSafe("System fork at pid $ read $ bytes.",
-          pPid, stRead);
-        return stRead;
+      default: return stRead;
       // Error? Report it!
       case StdMaxSizeT:
         XCS("Error reading from pipe!",
-          "Executable", IdentGet(), "Bytes", stToRead);
+          "Executable", NameGet(), "Bytes", stToRead);
     } // Don't get here
   }
   /* -- Read data into memory block ---------------------------------------- */
@@ -240,22 +247,19 @@ class SysPipe :
     switch(const size_t stWritten = static_cast<size_t>
       (write(haParentToChild.GetWriteFd(), vpDest, stToWrite)))
     { // Success? Report write and return bytes written
-      default:
-        cLog->LogDebugExSafe("System fork at pid $ wrote $ bytes.",
-          pPid, stWritten);
-        return stWritten;
+      default: return stWritten;
       // Error? Report it!
       case StdMaxSizeT:
         XCS("Error writing to pipe!",
-          "Executable", IdentGet(), "Bytes", stToWrite);
+          "Executable", NameGet(), "Bytes", stToWrite);
     } // Don't get here
   }
   /* -- Return pid --------------------------------------------------------- */
-  unsigned int GetPid() { return uiPid; }
+  unsigned GetPid() { return uPid; }
   /* -- Constructor with init ---------------------------------------------- */
   SysPipe() :
     /* -- Initialisers ----------------------------------------------------- */
-    uiPid(0),                          // No external pid
+    uPid(0),                           // No external pid
     pPid(0)                            // No internal pid
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -268,4 +272,7 @@ class SysPipe :
   /* -- Destructor to kill and wait for process to exit -------------------- */
   DTORHELPER(~SysPipe, DeInit())
 };/* -- End ---------------------------------------------------------------- */
+}                                      // End of public module namespace
+/* ------------------------------------------------------------------------- */
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

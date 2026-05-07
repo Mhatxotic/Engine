@@ -11,11 +11,13 @@
 namespace IThread {                    // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICollector::P;
-using namespace IError::P;             using namespace IIdent::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace IError::P;             using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IMutex::P;
+using namespace IName::P ;             using namespace ISerial::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using ::std::thread;
+using namespace ITime::P;        using namespace ISysUtil::P;
+using ::std::thread;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -32,15 +34,15 @@ enum ThreadStatus : int                // Thread status codes
 };/* == Thread collector class with global thread id counter =============== */
 CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
-  AtomicSizeT      astRunning;         // Number of threads running
-  const IdMap<ThreadStatus> imCodes;   // Thread status codes
+  AtomicSizeT      astRunning;           // Number of threads running
+  const LookupMap<ThreadStatus> imCodes; // Thread status codes
 )/* ------------------------------------------------------------------------ */
-typedef ThreadStatus (CbThFuncT)(Thread&); // Thread callback function
-typedef function<CbThFuncT> CbThFunc;  // Wrapped inside a function class
+using CbThFuncT = ThreadStatus(Thread&); // Thread callback function
+using CbThFunc = function<CbThFuncT> ;   // Wrapped inside a function class
 /* ------------------------------------------------------------------------- */
 class ThreadBase                       // Thread variables class
 { /* -- Private variables --------------------------------------- */ protected:
-  typedef StdAtomic<ThreadStatus> AtomicThreadStatus;
+  using AtomicThreadStatus = StdAtomic<ThreadStatus> ;
   AtomicThreadStatus atsCode;          // Callback exit code
   void            *vpParam;            // User parameter
   CbThFunc         ctfFunc;            // Thread callback function
@@ -81,7 +83,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Incrememt thread running count
     ++cParent->astRunning;
     // Thread starting up in log
-    cLog->LogDebugExSafe("Thread $<$> started.", CtrGet(), IdentGet());
+    cLog->LogDebugExSafe("Thread $<$> started.", Serial(), NameGet());
     // Set the start time and initialise the end time
     acdStart = cmHiRes.GetEpochTime();
     scdEnd = cd0;
@@ -99,8 +101,8 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     --cParent->astRunning;
     // Log if thread didn't signal to exit
     cLog->LogDebugExSafe("Thread $<$> finished in $ with $.",
-      CtrGet(), IdentGet(),
-      StrShortFromDuration(ClockTimePointRangeToClampedDouble(
+      Serial(), NameGet(),
+      TimeToShortDuration(ClockTimePointRangeToClampedDouble(
         ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString());
     // Reset exit code to waiting for acknowledgement by engine thread
     ThreadSetExitCode(TS_FINISHED);
@@ -112,8 +114,8 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     scdEnd = cmHiRes.GetEpochTime();
     // Log if thread didn't signal to exit
     cLog->LogErrorExSafe("Thread $<$> finished in $ due to exception: $!",
-      CtrGet(), IdentGet(),
-      StrShortFromDuration(ClockTimePointRangeToClampedDouble(
+      Serial(), NameGet(),
+      TimeToShortDuration(ClockTimePointRangeToClampedDouble(
         ThreadGetEndTime(), ThreadGetStartTime())), eReason);
     // Return error and set thread to exit
     ThreadSetExitCode(TS_EXCEPTION);
@@ -123,9 +125,9 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   { // Get pointer to thread class and if valid?
     if(Thread*const tPtr = reinterpret_cast<Thread*>(vpPtr))
     { // Set thread name and priority in system
-      if(!SysInitThread(tPtr->IdentGetData(), tPtr->stPerf))
+      if(!SysInitThread(tPtr->NameGetData(), tPtr->stPerf))
         cLog->LogWarningExSafe("Thread '$' update priority to $ failed: $!",
-          tPtr->IdentGet(), tPtr->ThreadGetPerf(), StrFromErrNo());
+          tPtr->NameGet(), tPtr->ThreadGetPerf(), StrFromErrNo());
       // Run the thread callback
       tPtr->ThreadHandler();
     } // Report the problem
@@ -136,26 +138,29 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   void ThreadSetExitFlag(const bool bState) { abShouldExit = bState; }
   /* ----------------------------------------------------------------------- */
   void ThreadDoSetExit() { ThreadSetExitFlag(true); }
-  /* --------------------------------------------------------------- */ public:
-  template<typename ReturnType>ReturnType ThreadGetParam() const
-    { return reinterpret_cast<ReturnType>(vpParam); }
-  template<typename ReturnType>void ThreadSetParam(const ReturnType rtParam)
-    { vpParam = reinterpret_cast<void*>(rtParam); }
+  /* -- Get stored user parameter ---------------------------------- */ public:
+  template<typename PtrType = void>
+    requires (!StdIsPointer<PtrType>)
+  PtrType *ThreadGetParam() const
+    { return reinterpret_cast<PtrType*>(vpParam); }
+  /* -- Return if user parameter is set ------------------------------------ */
+  bool ThreadIsParamSet() const { return ThreadGetParam() != nullptr; }
+  /* -- Set stored user parameter ------------------------------------------ */
+  template<typename PtrType>
+    requires (!StdIsPointer<PtrType>)
+  void ThreadSetParam(PtrType*const ptParam)
+    { vpParam = reinterpret_cast<void*>(ptParam); }
   /* ----------------------------------------------------------------------- */
-  const ClkTimePoint ThreadGetStartTime() const
-    { return ClkTimePoint{ acdStart }; }
-  const ClkTimePoint ThreadGetEndTime() const
-    { return ClkTimePoint{ scdEnd }; }
+  ClkTimePoint ThreadGetStartTime() const { return ClkTimePoint{ acdStart }; }
+  ClkTimePoint ThreadGetEndTime() const { return ClkTimePoint{ scdEnd }; }
   /* ----------------------------------------------------------------------- */
   ThreadStatus ThreadGetExitCode() const { return atsCode; }
   void ThreadSetExitCode(const ThreadStatus tsNew) { atsCode = tsNew; }
-  const StdStringView ThreadGetExitCodeString() const
+  StdStringView ThreadGetExitCodeString() const
     { return cParent->imCodes.Get(ThreadGetExitCode()); }
   /* ----------------------------------------------------------------------- */
   const CbThFunc &ThreadGetCallback() const { return ctfFunc; }
   bool ThreadHaveCallback() const { return !!ThreadGetCallback(); }
-  /* ----------------------------------------------------------------------- */
-  bool ThreadIsParamSet() const { return !!vpParam; }
   /* ----------------------------------------------------------------------- */
   void ThreadCancelExit() { ThreadSetExitFlag(false); }
   /* ----------------------------------------------------------------------- */
@@ -166,7 +171,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     ThreadDoSetExit();
     // Log signal to exit if sent from the thread
     cLog->LogDebugExSafe("Thread $<$> exit signalled by $.",
-      CtrGet(), IdentGet(), ThreadIsCurrent() ? "itself" : "another");
+      Serial(), NameGet(), ThreadIsCurrent() ? "itself" : "another");
   }
   /* ----------------------------------------------------------------------- */
   void ThreadWait()
@@ -194,7 +199,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // If is this thread then this is a bad idea
     if(ThreadIsCurrent())
       return cLog->LogWarningExSafe(
-        "Thread '$' tried to join from the same thread!", IdentGet());
+        "Thread '$' tried to join from the same thread!", NameGet());
     // Proceed with termination
     ThreadStopNoCheck();
   }
@@ -204,7 +209,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     if(ThreadIsNotJoinable()) return;
     // If is this thread then this is a bad idea
     if(ThreadIsCurrent())
-      XC("Tried to join from the same thread!", "Identifier", IdentGet());
+      XC("Tried to join from the same thread!", "Name", NameGet());
     // Proceed with termination
     ThreadStopNoCheck();
   }
@@ -212,8 +217,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   bool ThreadIsCurrent() const { return StdThreadId() == get_id(); }
   bool ThreadIsNotCurrent() const { return !ThreadIsCurrent(); }
   /* ----------------------------------------------------------------------- */
-  unsigned int ThreadGetPerf() const
-    { return static_cast<unsigned int>(stPerf); }
+  unsigned ThreadGetPerf() const { return static_cast<unsigned>(stPerf); }
   /* ----------------------------------------------------------------------- */
   bool ThreadShouldExit() const { return abShouldExit; }
   bool ThreadShouldNotExit() const { return !ThreadShouldExit(); }
@@ -246,7 +250,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     { ctfFunc = cbfC; this->CollectorRegister(); }
   /* -- Initialise with name and callback ---------------------------------- */
   void ThreadInit(const StdString &strN, const CbThFunc &cbfC)
-    { IdentSet(strN); ThreadInit(cbfC); }
+    { NameSet(strN); ThreadInit(cbfC); }
   /* -- Initialise with name, callback, parameter and start execute -------- */
   void ThreadInit(const StdString &strN, const CbThFunc &cbfC,
     void*const vpPtr)
@@ -260,9 +264,9 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
          const CbThFunc &cbfC,         // Requested callback function
          void*const vpPtr) :           // User parameter to store
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strN },                     // Initialise requested thread name
+    Name{ strN },                      // Initialise requested thread name
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     ThreadBase{ sP, vpPtr, cbfC },     // Set perf, parameter and callback
     thread{ ThreadMain, this }         // Start the thread straight away
     /* -- No code ---------------------------------------------------------- */
@@ -272,9 +276,9 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
          const SysThread sP,           // Thread needs high performance?
          const CbThFunc &cbfC) :       // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strN },                     // Set requested identifier
+    Name{ strN },                      // Set requested identifier
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     ThreadBase{ sP, nullptr, cbfC }    // Just set callback function
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -282,9 +286,9 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   Thread(const StdString &strN,        // Requested Thread name
          const SysThread sP) :         // Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
-    Ident{ strN },                     // Set requested identifer
+    Name{ strN },                      // Set requested identifer
     ICHelperThread{ cThreads },        // No automatic registration
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() },  // Initialise identification number
     ThreadBase{ sP, nullptr, nullptr } // Initialise nothing else
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -292,7 +296,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   explicit Thread(const SysThread sP) :// Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads },        // No automatic registration
-    IdentCSlave{ cParent->CtrNext() }, // Initialise identification number
+    SerialSlave{ cParent->Serial() } , // Initialise identification number
     ThreadBase{ sP, nullptr, nullptr } // Initialise only thread priority
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -306,7 +310,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
       ThreadDoSetExit();
       // Log signalled to exit in destructor
       cLog->LogWarningExSafe("Thread $<$> signalled to exit in destructor.",
-        CtrGet(), IdentGet());
+        Serial(), NameGet());
     } // Wait to synchronise
     ThreadJoin();
   )

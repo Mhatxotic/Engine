@@ -10,38 +10,42 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IUtil {                      // Start of private module namespace
-/* ------------------------------------------------------------------------- */
-using namespace IStd::P;
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IStd::P;               using namespace IEndian::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Number is divisible by specified number ============================== */
 static bool UtilIsDivisible(const double dNumber)
   { double dDummy; return modf(dNumber, &dDummy) == 0; }
 /* -- Return -1 or 1 depending wether the value is positive or negative ---- */
-template<typename T> requires StdIsSigned<T> static T UtilSign(const T tValue)
-  { return static_cast<T>(tValue > 0) - static_cast<T>(tValue < 0); }
+template<typename IntType>
+  requires StdIsSigned<IntType>
+static IntType UtilSign(const IntType itValue)
+  { return static_cast<IntType>(itValue > 0) -
+      static_cast<IntType>(itValue < 0); }
 /* ------------------------------------------------------------------------- */
-template<typename IT=double, typename FT=double>
-  requires StdIsArithmatic<IT> && StdIsFloat<FT>
-static IT UtilRound(const FT ftValue, const int iPrecision)
+template<typename IntType = double, typename FloatType = double>
+  requires StdIsArithmatic<IntType> && StdIsFloat<FloatType>
+static IntType UtilRound(const FloatType ftValue, const int iPrecision)
 { // Is 32-bit floating point?
-  if constexpr(StdIsSame<FT, float>)
+  if constexpr(StdIsSame<FloatType, float>)
   { // Non-zero?
     if(ftValue != 0.0f)
     { // Round as float and return result
-      const FT ftAmount = powf(10.0f, static_cast<float>(iPrecision));
-      return static_cast<IT>(floorf(ftValue * ftAmount + 0.5f) / ftAmount);
+      const FloatType ftAmount = powf(10.0f, static_cast<float>(iPrecision));
+      return static_cast<IntType>
+        (floorf(ftValue * ftAmount + 0.5f) / ftAmount);
     }
   } // Is 64-bit floating point?
-  else if constexpr(StdIsSame<FT, double>)
+  else if constexpr(StdIsSame<FloatType, double>)
   { // Non-zero?
     if(ftValue != 0.0)
     { // Round as double and return result
-      const FT ftAmount = pow(10.0, static_cast<double>(iPrecision));
-      return static_cast<IT>(floor(ftValue * ftAmount + 0.5) / ftAmount);
+      const FloatType ftAmount = pow(10.0, static_cast<double>(iPrecision));
+      return static_cast<IntType>(floor(ftValue * ftAmount + 0.5) / ftAmount);
     }
   } // Zero or invalid type
-  return static_cast<IT>(0);
+  return static_cast<IntType>(0);
 }
 /* -- Expand dimensions to specified outer bounds keeping aspect ----------- */
 static void UtilStretchToOuter(double &dOW, double &dOH, double &dIW,
@@ -111,62 +115,16 @@ static void UtilStretchToInner(double &dOW, double &dOH, double &dIW,
   }
 }
 /* -- Try to reserve items in a list --------------------------------------- */
-template<class ListType> requires StdIsClass<ListType>
-  static bool UtilReserveList(ListType &ltList, const size_t stCount)
+template<class ListType>
+  requires StdIsClass<ListType>
+static bool UtilReserveList(ListType &ltList, const size_t stCount)
 { // Return if specified value is outrageous!
   if(stCount > ltList.max_size()) return false;
-  // Reserve room for this many flaots
+  // Reserve room for this many floats
   ltList.reserve(stCount);
   // Success
   return true;
 }
-/* -- Helper functions to force integer byte ordering ---------------------- */
-template<typename IT>
-  requires (sizeof(IT) == sizeof(uint16_t)) && StdIsInteger<IT>
-static IT UtilToI16LE(const IT itV)
-  { return static_cast<IT>(STRICT_U16LE(itV)); }
-/* ------------------------------------------------------------------------- */
-template<typename IT>
-  requires (sizeof(IT) == sizeof(uint16_t)) && StdIsInteger<IT>
-static IT UtilToI16BE(const IT itV)
-  { return static_cast<IT>(STRICT_U16BE(itV)); }
-/* ------------------------------------------------------------------------- */
-template<typename IT>
-  requires (sizeof(IT) == sizeof(uint32_t)) && StdIsInteger<IT>
-static IT UtilToI32LE(const IT itV)
-  { return static_cast<IT>(STRICT_U32LE(itV)); }
-/* ------------------------------------------------------------------------- */
-template<typename IT>
-  requires (sizeof(IT) == sizeof(uint32_t)) && StdIsInteger<IT>
-static IT UtilToI32BE(const IT itV)
-  { return static_cast<IT>(STRICT_U32BE(itV)); }
-/* ------------------------------------------------------------------------- */
-template<typename IT>
-  requires (sizeof(IT) == sizeof(uint64_t)) && StdIsInteger<IT>
-static IT UtilToI64LE(const IT itV)
-  { return static_cast<IT>(STRICT_U64LE(itV)); }
-/* ------------------------------------------------------------------------- */
-template<typename IT>
-  requires (sizeof(IT) == sizeof(uint64_t)) && StdIsInteger<IT>
-static IT UtilToI64BE(const IT itV)
-  { return static_cast<IT>(STRICT_U64BE(itV)); }
-/* -- Swap class functors -------------------------------------------------- */
-struct UtilSwap32LEFunctor             // Swap 32-bit little <-> big integer
-  { uint32_t v;                        // Output value (32-bit)
-    explicit UtilSwap32LEFunctor(uint32_t dwV) :
-      v(UtilToI32LE(dwV)) {} };
-struct UtilSwap32BEFunctor             // Swap 32-bit big <-> little integer
-  { uint32_t v;                        // Output value (32-bit)
-    explicit UtilSwap32BEFunctor(uint32_t dwV) :
-      v(UtilToI32BE(dwV)) {} };
-struct UtilSwap64LEFunctor             // Swap 64-bit little <-> big integer
-  { uint64_t v;                        // Output value (64-bit)
-    explicit UtilSwap64LEFunctor(uint64_t ullV) :
-      v(UtilToI64LE(ullV)) {} };
-struct UtilSwap64BEFunctor             // Swap 64-bit big <-> little integer
-  { uint64_t v;                        // Output value (64-bit)
-    explicit UtilSwap64BEFunctor(uint64_t ullV) :
-      v(UtilToI64BE(ullV)) {} };
 /* -- Convert const object to non-const ------------------------------------ */
 template<typename Type>static Type &UtilToNonConst(const Type &tSrc)
   { return const_cast<Type&>(tSrc); }
@@ -184,44 +142,45 @@ static uint64_t UtilCastDoubleToInt64(const double dV)
   { return StdBruteCast<uint64_t>(dV); }
 /* -- Helper functions to force float byte ordering ------------------------ */
 static float UtilToF32LE(const float fV)
-  { return UtilCastInt32ToFloat(UtilToI32LE(UtilCastFloatToInt32(fV))); }
+  { return UtilCastInt32ToFloat(EndianTo32LE(UtilCastFloatToInt32(fV))); }
 /* ------------------------------------------------------------------------- */
 static float UtilToF32BE(const float fV)
-  { return UtilCastInt32ToFloat(UtilToI32BE(UtilCastFloatToInt32(fV))); }
+  { return UtilCastInt32ToFloat(EndianTo32BE(UtilCastFloatToInt32(fV))); }
 /* ------------------------------------------------------------------------- */
 static double UtilToF64LE(const double dV)
-  { return UtilCastInt64ToDouble(UtilToI64LE(UtilCastDoubleToInt64(dV))); }
+  { return UtilCastInt64ToDouble(EndianTo64LE(UtilCastDoubleToInt64(dV))); }
 /* ------------------------------------------------------------------------- */
 static double UtilToF64BE(const double dV)
-  { return UtilCastInt64ToDouble(UtilToI64BE(UtilCastDoubleToInt64(dV))); }
+  { return UtilCastInt64ToDouble(EndianTo64BE(UtilCastDoubleToInt64(dV))); }
 /* -- Convert to little endian integer ------------------------------------- */
-template<typename IT>
-  requires StdIsInteger<IT>
-static IT UtilToLittleEndian(const IT itValue)
+template<typename IntType>
+  requires StdIsIntegral<IntType>
+static IntType UtilToLittleEndian(const IntType itValue)
 { // Convert 16-bit big-endian integer to little-endian
-  if constexpr(sizeof(IT) == sizeof(uint16_t))
-    return UtilToI16LE<IT>(itValue);
+  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+    return EndianTo16LE<IntType>(itValue);
   // Convert 32-bit big-endian integer to little-endian
-  else if constexpr(sizeof(IT) == sizeof(uint32_t))
-    return UtilToI32LE<IT>(itValue);
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
+    return EndianTo32LE<IntType>(itValue);
   // Convert 64-bit big-endian integer to little-endian
-  else if constexpr(sizeof(IT) == sizeof(uint64_t))
-    return UtilToI64LE<IT>(itValue);
+  else if constexpr(sizeof(IntType) == sizeof(uint64_t))
+    return EndianTo64LE<IntType>(itValue);
   // Don't convert anything else
   else return itValue;
 }
 /* -- Convert to big endian integer ---------------------------------------- */
-template<typename IT> requires StdIsInteger<IT>
-  static IT UtilToBigEndian(const IT itValue)
+template<typename IntType>
+  requires StdIsIntegral<IntType>
+static IntType UtilToBigEndian(const IntType itValue)
 { // Convert 16-bit big-endian integer to big-endian
-  if constexpr(sizeof(IT) == sizeof(uint16_t))
-    return UtilToI16BE<IT>(itValue);
+  if constexpr(sizeof(IntType) == sizeof(uint16_t))
+    return EndianTo16BE<IntType>(itValue);
   // Convert 32-bit big-endian integer to big-endian
-  else if constexpr(sizeof(IT) == sizeof(uint32_t))
-    return UtilToI32BE<IT>(itValue);
+  else if constexpr(sizeof(IntType) == sizeof(uint32_t))
+    return EndianTo32BE<IntType>(itValue);
   // Convert 64-bit big-endian integer to big-endian
-  else if constexpr(sizeof(IT) == sizeof(uint64_t))
-    return UtilToI64BE<IT>(itValue);
+  else if constexpr(sizeof(IntType) == sizeof(uint64_t))
+    return EndianTo64BE<IntType>(itValue);
   // Don't convert anything else
   else return itValue;
 }
@@ -229,8 +188,8 @@ template<typename IT> requires StdIsInteger<IT>
 template<typename IntTypeRet,
          typename IntTypeInternal=uint8_t,
          typename IntTypeParam>
-requires StdIsInteger<IntTypeRet> &&
-         StdIsInteger<IntTypeInternal> &&
+requires StdIsIntegral<IntTypeRet> &&
+         StdIsIntegral<IntTypeInternal> &&
          StdIsFloat<IntTypeParam>
 static IntTypeRet UtilDenormalise(const IntTypeParam itpVal)
 { // Do the conversion and return it
@@ -238,26 +197,26 @@ static IntTypeRet UtilDenormalise(const IntTypeParam itpVal)
 }
 /* -- Convert integer to float between 0 and 1 ----------------------------- */
 template<typename IntTypeRet, typename IntTypeParam>
-  requires StdIsFloat<IntTypeRet> || StdIsInteger<IntTypeParam>
+  requires StdIsFloat<IntTypeRet> || StdIsIntegral<IntTypeParam>
 static IntTypeRet UtilNormalise(const IntTypeParam itpVal)
   { return static_cast<IntTypeRet>(itpVal) / StdLimits<IntTypeParam>::max(); }
 /* -- Extract a part of an integer ----------------------------------------- */
 template<typename IntTypeRet,
-         size_t stShift=0,
-         typename IntTypeInternal=uint8_t,
-         typename IntTypeExternal=unsigned int>
+         size_t stShift = 0,
+         typename IntTypeInternal = uint8_t,
+         typename IntTypeExternal = unsigned>
 requires (stShift <= sizeof(IntTypeExternal) * 8) &&
-          StdIsInteger<IntTypeInternal>
+          StdIsIntegral<IntTypeInternal>
 static IntTypeRet UtilExtract(const IntTypeExternal iteV)
   { return static_cast<IntTypeInternal>(iteV >> stShift); }
 /* -- Grab part of an integer and normalise it between 0 and 1 ------------- */
-template<typename IntTypeRet=float,
-         size_t stShift=0,
-         typename IntTypeInternal=uint8_t,
-         typename IntTypeExternal=unsigned int>
+template<typename IntTypeRet = float,
+         size_t stShift = 0,
+         typename IntTypeInternal = uint8_t,
+         typename IntTypeExternal = unsigned>
 requires StdIsFloat<IntTypeRet> &&
          (stShift <= sizeof(IntTypeExternal) * 8) &&
-         StdIsInteger<IntTypeInternal>
+         StdIsIntegral<IntTypeInternal>
 static IntTypeRet UtilNormaliseEx(const IntTypeExternal iteV)
   { return UtilNormalise<IntTypeRet>(UtilExtract<IntTypeInternal,
       stShift, IntTypeInternal>(iteV)); }
@@ -271,8 +230,8 @@ static DestIntType UtilScaleValue(const DestIntType itV,
     itPMax * static_cast<DestIntType>(itVMax); }
 /* -- Returns if specified integer would overflow specified type ----------- */
 template<typename IntTypeTarget, typename IntTypeSource>
-  requires (StdIsInteger<IntTypeSource> || StdIsEnum<IntTypeSource>) &&
-           (StdIsInteger<IntTypeTarget> || StdIsEnum<IntTypeTarget>)
+  requires (StdIsIntegral<IntTypeSource> || StdIsEnum<IntTypeSource>) &&
+           (StdIsIntegral<IntTypeTarget> || StdIsEnum<IntTypeTarget>)
 constexpr static bool UtilIntWillOverflow(const IntTypeSource itsValue)
 { // If both types are signed?
   if constexpr(StdIsSigned<IntTypeSource> == StdIsSigned<IntTypeTarget>)
@@ -281,115 +240,147 @@ constexpr static bool UtilIntWillOverflow(const IntTypeSource itsValue)
       return false;
     // Return true if overflowed, false if not
     else return itsValue <
-        static_cast<IntTypeSource>(StdLimits<IntTypeTarget>::min()) ||
+      static_cast<IntTypeSource>(StdLimits<IntTypeTarget>::min()) ||
       itsValue > static_cast<IntTypeSource>(StdLimits<IntTypeTarget>::max());
   } // Both types aren't signed so if source is signed?
   else if constexpr(StdIsSigned<IntTypeSource>)
     // Source is signed, target is unsigned so return if negative or overflow
     return itsValue < 0 ||
-           static_cast<make_unsigned_t<IntTypeSource>>(itsValue) >
-             StdLimits<IntTypeTarget>::max();
+      static_cast<StdMakeUnsigned<IntTypeSource>>(itsValue) >
+        StdLimits<IntTypeTarget>::max();
   // Source is unsigned, target is signed so return if overflow
-  else return itsValue > static_cast<make_unsigned_t<IntTypeTarget>>
+  else return itsValue > static_cast<StdMakeUnsigned<IntTypeTarget>>
     (StdLimits<IntTypeTarget>::max());
 }
 /* -- Join two integers to make a bigger integer --------------------------- */
-template<typename HT,typename LT> requires StdIsInteger<HT> && StdIsInteger<LT>
-  static uint16_t UtilMakeWord(const HT htV, const LT ltV)
-{ return static_cast<uint16_t>((static_cast<uint16_t>(htV) << 8) |
-   (static_cast<uint16_t>(ltV) & 0xff)); }
+template<typename RIntType = uint16_t, typename HighType, typename LowType>
+  requires StdIsIntegral<RIntType> &&
+    StdIsIntegral<HighType> && (sizeof(HighType) >= sizeof(uint8_t)) &&
+    StdIsIntegral<LowType> && (sizeof(LowType) >= sizeof(uint8_t))
+static RIntType UtilMakeWord(const HighType htV, const LowType ltV)
+  { return static_cast<RIntType>
+      ((static_cast<uint16_t>(htV) << 8) | (ltV & 0xff)); }
 /* ------------------------------------------------------------------------- */
-template<typename HT,typename LT> requires StdIsInteger<HT> && StdIsInteger<LT>
-  static uint32_t UtilMakeDWord(const HT htV, const LT ltV)
-{ return static_cast<uint32_t>((static_cast<uint32_t>(htV) << 16) |
-    (static_cast<uint32_t>(ltV) & 0xffff)); }
+template<typename RIntType = uint32_t, typename HighType, typename LowType>
+  requires StdIsIntegral<RIntType> &&
+    StdIsIntegral<HighType> && (sizeof(HighType) >= sizeof(uint16_t)) &&
+    StdIsIntegral<LowType> && (sizeof(LowType) >= sizeof(uint16_t))
+static RIntType UtilMakeDWord(const HighType htV, const LowType ltV)
+  { return static_cast<RIntType>
+      ((static_cast<uint32_t>(htV) << 16) | (ltV & 0xffff)); }
 /* ------------------------------------------------------------------------- */
-template<typename HT,typename LT> requires StdIsInteger<HT> && StdIsInteger<LT>
-  static uint64_t UtilMakeQWord(const HT htV, const LT ltV)
-{ return static_cast<uint64_t>((static_cast<uint64_t>(htV) << 32) |
-    (static_cast<uint64_t>(ltV) & 0xffffffff)); }
+template<typename RIntType = uint64_t, typename HighType, typename LowType>
+  requires StdIsIntegral<RIntType> &&
+    StdIsIntegral<HighType> && (sizeof(HighType) >= sizeof(uint32_t)) &&
+    StdIsIntegral<LowType> && (sizeof(LowType) >= sizeof(uint32_t))
+static RIntType UtilMakeQWord(const HighType htV, const LowType ltV)
+  { return static_cast<RIntType>
+      ((static_cast<uint64_t>(htV) << 32) | (ltV & 0xffffffff)); }
 /* -- Return lowest and highest 8-bits of integer -------------------------- */
-template<typename T> requires StdIsInteger<T>
-  static uint8_t UtilLowByte(const T tVal)
-{ return static_cast<uint8_t>(tVal & 0x00ff); }
+template<typename RIntType = uint8_t, typename IntType>
+  requires StdIsIntegral<RIntType> && StdIsIntegral<IntType> &&
+    (sizeof(IntType) >= sizeof(uint16_t))
+static RIntType UtilLowByte(const IntType itVal)
+  { return static_cast<RIntType>(itVal & 0x00ff); }
 /* ------------------------------------------------------------------------- */
-template<typename T> requires StdIsInteger<T>
-  static uint8_t UtilHighByte(const T tVal)
-{ return static_cast<uint8_t>((tVal & 0xff00) >> 8); }
+template<typename RIntType = uint8_t, typename IntType>
+  requires StdIsIntegral<RIntType> && StdIsIntegral<IntType> &&
+    (sizeof(IntType) >= sizeof(uint16_t))
+static RIntType UtilHighByte(const IntType itVal)
+  { return static_cast<RIntType>((itVal & 0xff00) >> 8); }
 /* -- Return lowest and highest 16-bits of integer ------------------------- */
-template<typename T> requires StdIsInteger<T>
-  static uint16_t UtilLowWord(const T tVal)
-{ return static_cast<uint16_t>(tVal & 0x0000ffff); }
+template<typename RIntType = uint16_t, typename IntType>
+  requires StdIsIntegral<RIntType> && StdIsIntegral<IntType> &&
+    (sizeof(IntType) >= sizeof(uint32_t))
+static RIntType UtilLowWord(const IntType itVal)
+  { return static_cast<RIntType>(itVal & 0x0000ffff); }
 /* ------------------------------------------------------------------------- */
-template<typename T> requires StdIsInteger<T>
-  static uint16_t UtilHighWord(const T tVal)
-{ return static_cast<uint16_t>((tVal & 0xffff0000) >> 16); }
+template<typename RIntType = uint16_t, typename IntType>
+  requires StdIsIntegral<RIntType> && StdIsIntegral<IntType> &&
+    (sizeof(IntType) >= sizeof(uint32_t))
+static RIntType UtilHighWord(const IntType itVal)
+  { return static_cast<RIntType>((itVal & 0xffff0000) >> 16); }
 /* -- Return lowest and highest 32-bits of integer ------------------------- */
-template<typename T> requires StdIsInteger<T>
-  static uint32_t UtilLowDWord(const T tVal)
-{ return static_cast<uint32_t>(tVal & 0x00000000ffffffff); }
+template<typename RIntType = uint32_t, typename IntType>
+  requires StdIsIntegral<RIntType> && StdIsIntegral<IntType> &&
+    (sizeof(IntType) >= sizeof(uint64_t))
+static RIntType UtilLowDWord(const IntType itVal)
+  { return static_cast<RIntType>(itVal & 0x00000000ffffffff); }
 /* ------------------------------------------------------------------------- */
-template<typename T> requires StdIsInteger<T>
-  static uint32_t UtilHighDWord(const T tVal)
-{ return static_cast<uint32_t>((tVal & 0xffffffff00000000) >> 32); }
+template<typename RIntType = uint32_t, typename IntType>
+  requires StdIsIntegral<RIntType> && StdIsIntegral<IntType> &&
+    (sizeof(IntType) >= sizeof(uint64_t))
+static RIntType UtilHighDWord(const IntType itVal)
+  { return static_cast<RIntType>((itVal & 0xffffffff00000000) >> 32); }
 /* -- Return lowest or highest number out of two --------------------------- */
-template<typename T1,typename T2>
-  requires StdIsArithmatic<T1> && StdIsArithmatic<T2> && StdIsSame<T1, T2>
-static T1 UtilMinimum(const T1 tOne, const T2 tTwo)
-  { return tOne < static_cast<T1>(tTwo) ? tOne : static_cast<T1>(tTwo); }
+template<typename IntType1, typename IntType2>
+  requires StdIsArithmatic<IntType1> && StdIsArithmatic<IntType2> &&
+    StdIsSame<IntType1, IntType2>
+static IntType1 UtilMinimum(const IntType1 itOne, const IntType2 itTwo)
+  { return itOne < static_cast<IntType1>(itTwo) ?
+      itOne : static_cast<IntType1>(itTwo); }
 /* ------------------------------------------------------------------------- */
-template<typename T1, typename T2>
-  requires StdIsArithmatic<T1> && StdIsArithmatic<T2> && StdIsSame<T1, T2>
-static T1 UtilMaximum(const T1 tOne, const T2 tTwo)
-  { return tOne > static_cast<T1>(tTwo) ? tOne : static_cast<T1>(tTwo); }
+template<typename IntType1, typename IntType2>
+  requires StdIsArithmatic<IntType1> && StdIsArithmatic<IntType2> &&
+    StdIsSame<IntType1, IntType2>
+static IntType1 UtilMaximum(const IntType1 itOne, const IntType2 itTwo)
+  { return itOne > static_cast<IntType1>(itTwo) ?
+      itOne : static_cast<IntType1>(itTwo); }
 /* -- Clamp a number between two values ------------------------------------ */
-template<typename TVAL, typename TMIN, typename TMAX>
-  requires StdIsArithmatic<TVAL> && StdIsArithmatic<TMIN> &&
-    StdIsArithmatic<TMAX>
-static TVAL UtilClamp(const TVAL tVal, const TMIN tMin, const TMAX tMax)
-{ return UtilMaximum(static_cast<TVAL>(tMin),
-    UtilMinimum(static_cast<TVAL>(tMax), tVal)); }
+template<typename IntType, typename IntTypeMin, typename IntTypeMax>
+  requires StdIsArithmatic<IntType> && StdIsArithmatic<IntTypeMin> &&
+    StdIsArithmatic<IntTypeMax>
+static IntType UtilClamp(const IntType itVal, const IntTypeMin itMin,
+  const IntTypeMax itMax)
+{ return UtilMaximum(static_cast<IntType>(itMin),
+    UtilMinimum(static_cast<IntType>(itMax), itVal)); }
 /* -- Make a percentage ---------------------------------------------------- */
-template<typename T1, typename T2, typename RT=double>
-  requires StdIsArithmatic<T1> && StdIsArithmatic<T2> && StdIsFloat<RT>
-static RT UtilMakePercentage(const T1 tCurrent, const T2 tMaximum,
-  const RT rMulti=100)
-{ return static_cast<RT>(tCurrent) / static_cast<RT>(tMaximum) * rMulti; }
+template<typename IntType1, typename IntType2, typename RIntType = double>
+  requires StdIsArithmatic<IntType1> && StdIsArithmatic<IntType2> &&
+    StdIsFloat<RIntType>
+static RIntType UtilMakePercentage(const IntType1 itCurrent,
+  const IntType2 itMaximum, const RIntType ritMulti = 100)
+{ return static_cast<RIntType>(itCurrent) /
+    static_cast<RIntType>(itMaximum) * ritMulti; }
 /* -- Calculate distance between two values -------------------------------- */
-template<typename T>
-  requires StdIsArithmatic<T>
-static T UtilDistance(const T tX, const T tY)
-  { return tX > tY ? tX - tY : tY - tX; }
+template<typename IntType>
+  requires StdIsArithmatic<IntType>
+static IntType UtilDistance(const IntType itX, const IntType itY)
+  { return itX > itY ? itX - itY : itY - itX; }
 /* -- Round to nearest value ----------------------------------------------- */
-template<typename IT>
-  requires StdIsArithmatic<IT>
-static IT UtilNearest(const IT itValue,
-  const IT itMultiple)
+template<typename IntType>
+  requires StdIsArithmatic<IntType>
+static IntType UtilNearest(const IntType itValue,
+  const IntType itMultiple)
 { return (itValue + itMultiple / 2) / itMultiple * itMultiple; }
 /* -- Returns the nearest power of two to specified number ----------------- */
-template<typename RT, typename IT>
-  requires StdIsArithmatic<RT> && StdIsArithmatic<IT>
-static RT UtilNearestPow2(const IT itValue)
-  { return static_cast<RT>(pow(2, ceil(log2(itValue)))); }
+template<typename RIntType, typename IntType>
+  requires StdIsArithmatic<RIntType> && StdIsArithmatic<IntType>
+static RIntType UtilNearestPow2(const IntType itValue)
+  { return static_cast<RIntType>(pow(2, ceil(log2(itValue)))); }
 /* -- If variable would overflow another type then return its maximum ------ */
-template<typename RT, typename IT>
-  requires StdIsArithmatic<RT> && (StdIsArithmatic<IT> || StdIsEnum<IT>)
-static RT UtilIntOrMax(const IT itValue)
-  { return UtilIntWillOverflow<RT, IT>(itValue) ?
-      StdLimits<RT>::max() : static_cast<RT>(itValue); }
+template<typename RIntType, typename IntType>
+  requires StdIsArithmatic<RIntType> && (StdIsArithmatic<IntType> ||
+    StdIsEnum<IntType>)
+static RIntType UtilIntOrMax(const IntType itValue)
+  { return UtilIntWillOverflow<RIntType, IntType>(itValue) ?
+      StdLimits<RIntType>::max() : static_cast<RIntType>(itValue); }
 /* -- Convert millimetres to inches ---------------------------------------- */
-template<typename T> requires StdIsArithmatic<T>
-  static double UtilMillimetresToInches(const T tValue)
-{ return static_cast<double>(tValue) * 0.0393700787; }
+template<typename IntType>
+  requires StdIsArithmatic<IntType>
+static double UtilMillimetresToInches(const IntType itValue)
+  { return static_cast<double>(itValue) * 0.0393700787; }
 /* -- Calculate times per second based on an interval ---------------------- */
 constexpr static double UtilPerSec(const double dVal) { return 1.0 / dVal; }
 /* -- Smooth out a value (i.e. CPU usage) ---------------------------------- */
-template<typename T, T tAlpha=0.1> requires StdIsArithmatic<T>
-  static T UtilSmooth(const T tValue, T &tSmoothed)
+template<typename IntType, IntType itAlpha = 0.1>
+  requires StdIsArithmatic<IntType>
+static IntType UtilSmooth(const IntType itValue, IntType &tSmoothed)
 { // Calculate the new value and reset if it when invalid
-  tSmoothed = tAlpha * tValue + (static_cast<T>(1) - tAlpha) * tSmoothed;
+  tSmoothed = itAlpha * itValue +
+    (static_cast<IntType>(1) - itAlpha) * tSmoothed;
   // Return actual value
-  return tValue;
+  return itValue;
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

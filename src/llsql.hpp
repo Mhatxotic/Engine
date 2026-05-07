@@ -75,7 +75,7 @@ LLFUNC(Records, 1, AgSql{lS, 1}().RecordsToLuaTable(lS))
 // ? https://www.sqlite.org/docs.html for more information on the SQLlite API.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Exec, 1,
-  LuaUtilPushVar(lS, AgSql{lS, 1}().SqlExecuteFromLua(lS, AgString{lS, 2})))
+  LuaUtilPushVar(lS, AgSql{lS, 1}().SqlExecuteFromLua(lS, AgString{lS, 2}())))
 /* ========================================================================= */
 // $ Sql:Reset
 // ? Cleans up the last result, error and response.
@@ -143,7 +143,7 @@ LLFUNC(Main, 1, LuaUtilClassCreateStaticPtr<Sql>(lS, cSqls, cSql))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Open, 1,
   const AgFilename aFilename{lS, 1};
-  LuaUtilClassCreate<Sql>(lS, cSqls)->SqlInit(aFilename));
+  LuaUtilClassCreate<Sql>(lS, cSqls)->SqlInit(aFilename()));
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Sql:* namespace functions structure                                 ## **

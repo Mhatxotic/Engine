@@ -41,18 +41,22 @@ class CodecCAF :                       // CAF codec object
     HL_U64BE_DATA_SIZE   =          8, // (00) Size of data
     HL_U8ARR_DATA_BLOCK  =         16, // (08) Pcm data of size 'ullSize'
     // *** Header values ***
-    HL_U32LE_V_MAGIC     = 0x66666163, // Primary header magic
+    HL_U32LE_V_MAGIC     = 0x66666163, // 'caff' Primary header magic
     HL_U32BE_V_V1        = 0x00010000, // Allowed version
     HL_U32LE_V_DESC      = 0x63736564, // 'desc' chunk id
-    HL_U32LE_V_LPCM      = 0x6D63706C, // 'desc'->'LPCM' sub-chunk id
+    HL_U32LE_V_LPCM      = 0x6D63706C, // 'lpcm' chunk id
     HL_U32LE_V_DATA      = 0x61746164, // 'data' chunk id
   };
   /* -- Loader for CAF files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
   { // CAF data endian types
     BUILD_FLAGS(Header,
-      HF_NONE{ Flag(0) }, HF_ISFLOAT{ Flag(1) }, HF_ISPCMLE{ Flag(2) });
-    static_cast<void>(HF_ISFLOAT); // Unused
+      HF_NONE             { Flag(0) }, HF_ISFLOAT          { Flag(1) },
+      HF_ISPCMLE          { Flag(2) }, HF_SIGNEDINT        { Flag(3) },
+      HF_PACKED           { Flag(4) }, HF_HIGH             { Flag(5) },
+      HF_NONINTERLEAVE    { Flag(6) },
+      HF_MASK{ HF_ISFLOAT|HF_ISPCMLE|HF_SIGNEDINT|HF_PACKED|HF_HIGH|
+               HF_NONINTERLEAVE });
     // Check size at least 44 bytes for a file header, and 'desc' chunk and
     // a 'data' chunk of 0 bytes
     if(fmData.MemSize() < HL_MINIMUM ||
@@ -61,17 +65,19 @@ class CodecCAF :                       // CAF codec object
     // Check flags and bail if not version 1 CAF. Caf data is stored in reverse
     // byte order so we need to reverse it correctly. Although we should
     // reference the variable normally. We cannot because we have to modify it.
-    const unsigned int ulVersion = fmData.FileMapReadVar32BE();
-    if(ulVersion != HL_U32BE_V_V1)
-      XC("CAF version not supported!",
-        "Expected", HL_U32BE_V_V1, "Actual", ulVersion);
-    // Detected file flags
+    switch(const unsigned uVersion = fmData.FileMapReadVar32BE())
+    { // Ok if it's a version 1 CAF?
+      case HL_U32BE_V_V1: break;
+      // Anything else is unsupported
+      default: XC("CAF version not supported!",
+        "Expected", HL_U32BE_V_V1, "Actual", uVersion);
+    } // Detected file flags
     HeaderFlags hPcmFmtFlags{ HF_NONE };
     // The .caf file contains dynamic 'chunks' of data. We need to iterate
     // through each one until we hit the end-of-file.
     while(fmData.FileMapIsNotEOF())
     { // Get magic which we will test
-      const unsigned int uiMagic = fmData.FileMapReadVar32LE();
+      const unsigned uMagic = fmData.FileMapReadVar32LE();
       // Read size and if size is too big for machine to handle? Log warning.
       const uint64_t ullSize = fmData.FileMapReadVar64BE();
       if(UtilIntWillOverflow<size_t>(ullSize))
@@ -80,7 +86,7 @@ class CodecCAF :                       // CAF codec object
       // Accept maximum size the machine allows
       const size_t stSize = UtilIntOrMax<size_t>(ullSize);
       // test the header chunk
-      switch(uiMagic)
+      switch(uMagic)
       { // Is it the 'desc' chunk?
         case HL_U32LE_V_DESC:
         { // Check that the chunk is at least 32 bytes.
@@ -92,32 +98,68 @@ class CodecCAF :                       // CAF codec object
             XC("CAF sample rate invalid!", "Rate", dV);
           pdData.SetRate(static_cast<ALuint>(dV));
           // Check that FormatType(4) is 'lpcm'.
-          const unsigned int ulHdr = fmData.FileMapReadVar32LE();
-          if(ulHdr != HL_U32LE_V_LPCM)
-            XC("CAF data chunk type not supported!",
-              "Expected", HL_U32LE_V_LPCM, "Header", ulHdr);
-          // Check that FormatFlags(4) is valid
+          switch(const unsigned uHdr = fmData.FileMapReadVar32LE())
+          { // Only the correct format time is allowed
+            case HL_U32LE_V_LPCM: break;
+            // Anything else is unsupported
+            default: XC("CAF data chunk type not supported!",
+              "Expected", HL_U32LE_V_LPCM, "Header", uHdr);
+          } // Check that FormatFlags(4) is valid
           hPcmFmtFlags.FlagReset(
             static_cast<HeaderFlags>(fmData.FileMapReadVar32BE()));
-          // Check that BytesPerPacket(4) is valid
-          const unsigned int ulBPP = fmData.FileMapReadVar32BE();
-          if(ulBPP != 4)
-            XC("CAF bpp of 4 only supported!", "Bytes", ulBPP);
-          // Check that FramesPerPacket(4) is 1
-          const unsigned int ulFPP = fmData.FileMapReadVar32BE();
-          if(ulFPP != 1)
-            XC("CAF fpp of 1 only supported!", "Frames", ulFPP);
-          // Update settings
+          // Check flags
+          if(hPcmFmtFlags.FlagIsNotInMask(HF_MASK))
+            XC("Invalid flags specified!",
+              "Flags", hPcmFmtFlags.FlagGet(), "Mask", HF_MASK.FlagGet());
+          if(hPcmFmtFlags.FlagIsSet(HF_PACKED))
+            XC("Packed bits not supported!",
+              "Flags", hPcmFmtFlags.FlagGet());
+          if(hPcmFmtFlags.FlagIsSet(HF_NONINTERLEAVE))
+            XC("Non-interleave bits not supported!",
+              "Flags", hPcmFmtFlags.FlagGet());
+          if(hPcmFmtFlags.FlagIsSet(HF_HIGH))
+            XC("High bits not supported!",
+              "Flags", hPcmFmtFlags.FlagGet());
+          // Get bytes per packet and make sure it is valid
+          switch(const PcmByteType bptBPP =
+            static_cast<PcmByteType>(fmData.FileMapReadVar32BE()))
+          { // Only 1, 2 and 4 bytes supported right now
+            case PBY_BYTE: case PBY_SHORT: case PBY_LONG: break;
+            // Anything else is unsupported
+            case PBY_NONE: default:
+              XC("CAF bytes per packet not supported!", "Bytes", bptBPP);
+          } // Check that FramesPerPacket(4) is 1
+          switch(const unsigned uFPP = fmData.FileMapReadVar32BE())
+          { // Only 1 allowed
+            case 1: break;
+            // Anything else is unsupported
+            default: XC("CAF fpp of 1 only supported!", "Frames", uFPP);
+          } // Update settings
           if(!pdData.SetChannelsSafe(
                static_cast<PcmChannelType>(fmData.FileMapReadVar32BE())))
             XC("CAF format has invalid channel count!",
               "Channels", pdData.GetChannels());
           // Read bits per sample and check that format is supported in OpenAL
           pdData.SetBits(static_cast<PcmBitType>(fmData.FileMapReadVar32BE()));
-          if(!pdData.ParseOALFormat())
-            XC("CAF pcm data un-supported by AL!",
-              "Channels", pdData.GetChannels(), "Bits", pdData.GetBits());
-          // Done
+          switch(pdData.GetBits())
+          { // Only 8-bit, 16-bit and 32-bit allowed
+            case PBI_BYTE:
+              if(hPcmFmtFlags.FlagIsZero()) pdData.SetSigned();
+              break;
+            case PBI_SHORT:
+              if(hPcmFmtFlags.FlagIsClear(HF_ISPCMLE)) pdData.SetBigEndian();
+              if(hPcmFmtFlags.FlagIsSet(HF_SIGNEDINT)) pdData.SetSigned();
+              break;
+            case PBI_LONG:
+              if(hPcmFmtFlags.FlagIsSet(HF_ISFLOAT))
+                XC("Pcm data must be integer 32bps!",
+                  "Flags", hPcmFmtFlags.FlagGet());
+              if(hPcmFmtFlags.FlagIsClear(HF_ISPCMLE)) pdData.SetBigEndian();
+              if(hPcmFmtFlags.FlagIsSet(HF_SIGNEDINT)) pdData.SetSigned();
+              break;
+            case PBI_NONE: default:
+              XC("Invalid sample bit-depth!", "Depth", pdData.GetBits());
+          } // Done
           break;
         } // Is it the 'data' chunk?
         case HL_U32LE_V_DATA:
@@ -125,56 +167,19 @@ class CodecCAF :                       // CAF codec object
           pdData.aPcmL.MemInitData(stSize, fmData.FileMapReadPtr(stSize));
           break;
         } // Unknown header so ignore unknown channel and break
-        default: fmData.FileMapSeekCur(stSize); break;
+        default:
+        { // Report that we're ignoring it and goto next header
+          cLog->LogDebugExSafe(
+            "Pcm ignored unknown CAF header 0x$$<$$> in '$'!",
+            StdIOSHex, uMagic, StdIOSDec, uMagic, fmData.NameGet());
+          fmData.FileMapSeekCur(stSize);
+          break;
+        }
       }
-    } // Got \desc\ chunk?
+    } // Check that we got the chunks we care about?
     if(!pdData.GetRate()) XC("CAF has no 'desc' chunk!");
-    // Got 'data' chunk?
     if(pdData.aPcmL.MemIsEmpty()) XC("CAF has no 'data' chunk!");
-    // Type of endianness conversion required for log (if required)
-    const char *cpConversion;
-    // If data is in little-endian mode?
-    if(hPcmFmtFlags.FlagIsSet(HF_ISPCMLE))
-    { // ... and using a little-endian cpu?
-#ifdef LITTLEENDIAN
-      // No conversion needed
-      return true;
-#else
-      // Set conversion label
-      cpConversion = "little to big";
-#endif
-    } // If data is in big-endian mode?
-    else
-    { // ... and using big-endian cpu?
-#ifdef BIGENDIAN
-      // No conversion needed
-      return true;
-#else
-      // Set conversion label
-      cpConversion = "big to little";
-#endif
-    } // Compare bitrate
-    switch(pdData.GetBits())
-    { // No conversion required if 8-bits per channel
-      case 8: break;
-      // 16-bits per channel (2 bytes)
-      case 16:
-        // Log and perform byte swap
-        cLog->LogDebugExSafe(
-          "Pcm performing 16-bit $ byte-order conversion...", cpConversion);
-        pdData.aPcmL.MemByteSwap16();
-        break;
-      // 32-bits per channel (4 bytes)
-      case 32:
-        // Log and perform byte swap
-        cLog->LogDebugExSafe(
-          "Pcm performing 32-bit $ byte-order conversion...", cpConversion);
-        pdData.aPcmL.MemByteSwap32();
-        break;
-      // Not supported
-      default: XC("Pcm bit count not supported for endian conversion!",
-        "Bits", pdData.GetBits(), "Type", cpConversion);
-    } // Done
+    // Done
     return true;
   }
   /* -- Constructor --------------------------------------------- */ protected:
