@@ -11,7 +11,7 @@
 ** ######################################################################### **
 ** ## []       ## Denotes an optional argument.                           ## **
 ** ## Reason   ## The reason for the error.                               ## **
-** ## VarName  ## A user-defined idenifier to the value.                  ## **
+** ## VarName  ## A user-defined identifier to the value.                 ## **
 ** ## VarValue ## The variable to translate into the resulting message.   ## **
 ** ## ...      ## An infinite amount more of variables can be specified.  ## **
 ** ######################################################################### **

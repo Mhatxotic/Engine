@@ -37,9 +37,25 @@ Development is mainly focused by myself on the [MacOS](https://en.wikipedia.org/
 
 <sup><sub>[↑ Top](#contents)</sub></sup>
 ## Using…
-All the engine needs to run is an `app.cfg` file in the directory, a non-solid 7-zip archive (ending in `.adb` not `.7z`) in the directory or a `.7z` archive appended to the engine executable. This text file contains a list of CVars that configure the engine the way you want. It can be formatted as Windows, MacOS or Unix so it does not matter about the line ending format, but it does have to be UTF-8 (No BoM) formatted which is what all files, filenames and all strings are handled as in the engine. On Windows, Unicode filenames are automatically converted to and from UTF-8.
+All the engine needs to run is an `app.json` file in the directory, a non-solid 7-zip archive (ending in `.adb` not `.7z`) in the directory or a `.7z` archive appended to the engine executable. This [JSON](https://en.wikipedia.org/wiki/JSON) formatted text file contains a list of CVars that configure the engine the way you want. It has to be formatted as Windows, MacOS or Unix so it does not matter about the line ending format, but it does have to be UTF-8 (No BoM) formatted which is what all files, filenames and all strings are handled as in the engine. On Windows, Unicode filenames are automatically converted to and from UTF-8.
 
-You also need to set the `app_cflags` cvar properly in the `app.cfg` to specify which subsystems you want to enable. The default value is `0` which means the engine will only output only to your terminal standard output and will run forever until a `SIGINT` interrupt occurs or a `Core.Quit()` API call; and the resulting `Core.OnEnd()` callback has confirmed it. Otherwise the possible combination of flags you can specify are as follows…
+```
+{
+  "Version": <version>,
+  "Constants": { <cvars> },
+  "Sets": [
+    { <cvars> },
+    ...
+  ],
+  "ActiveSet": <set>,
+}
+```
+* `<version>` (required) = The app metadata version (currently `1`).
+* `<cvars>` (required) = An object of variables to override in the engine. (example: `"app_shortname": "MyApp"`). You can omit the quotations for integers/floats.
+* `Sets` (optional) = Custom variable sets which contain array of `<cvars>` objects.
+* `<set>` (optional) = Use specified index in `Sets`.
+
+You also need to set the `app_cflags` cvar properly in the `app.json` to specify which subsystems you want to enable. The default value is `0` which means the engine will only output only to your terminal standard output and will run forever until a `SIGINT` interrupt occurs or a `Core.Quit()` API call; and the resulting `Core.OnEnd()` callback has confirmed it. Otherwise the possible combination of flags you can specify are as follows…
 
 | Flag | Front-end | Purpose | Namespaces |
 | --- | --- | --- | --- |

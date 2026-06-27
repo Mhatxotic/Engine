@@ -118,20 +118,21 @@ class SysInfo                          // Common system structs and funcs
   double CPUUsage() const { return cpuUData.dProcess; }
   double CPUUsageSystem() const { return cpuUData.dSystem; }
   /* ----------------------------------------------------------------------- */
+  constexpr const double dBytesPerMeg = 1048576.0;
   uint64_t RAMTotal() const { return memData.ullMTotal; }
   double RAMTotalMegs() const
-    { return static_cast<double>(RAMTotal()) / 1048576; }
+    { return static_cast<double>(RAMTotal()) / dBytesPerMeg; }
   uint64_t RAMFree() const { return memData.ullMFree; }
   double RAMFreeMegs() const
-    { return static_cast<double>(RAMFree()) / 1048576; }
+    { return static_cast<double>(RAMFree()) / dBytesPerMeg; }
   uint64_t RAMUsed() const { return memData.ullMUsed; }
   size_t RAMFree32() const { return memData.stMFree; }
   double RAMFree32Megs() const
-    { return static_cast<double>(RAMFree32()) / 1048576; }
+    { return static_cast<double>(RAMFree32()) / dBytesPerMeg; }
   double RAMLoad() const { return memData.dMLoad; }
   size_t RAMProcUse() const { return memData.stMProcUse; }
   double RAMProcUseMegs() const
-    { return static_cast<double>(RAMProcUse()) / 1048576; }
+    { return static_cast<double>(RAMProcUse()) / dBytesPerMeg; }
   size_t RAMProcPeak() const { return memData.stMProcPeak; }
   /* -- Constructor --------------------------------------------- */ protected:
   SysInfo(ExeData &&edExe, OSData &&osdOS, CPUData &&cpudCPU) :
