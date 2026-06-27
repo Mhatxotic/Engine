@@ -20,13 +20,13 @@ using namespace ICVarDef::P;           using namespace ICVar::P;
 using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFlags::P;
 using namespace IFrame::P;             using namespace ILog::P;
-using namespace ILuaDef;               using namespace ILuaCode::P;
-using namespace ILuaFunc::P;           using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITime::P;              using namespace IUtil::P;
-using namespace Lib::Sqlite::Types;
+using namespace ILuaBase::P;           using namespace ILuaCode::P;
+using namespace ILuaDef::P;            using namespace ILuaFunc::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace ILuaVariable::P;       using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITime::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -62,7 +62,7 @@ class Lua :                            // Actual class body
                    lrMainEnd,          // End function callback
                    lrMainRedraw;       // Redraw function callback
   /* -- LUA state is set or not? ------------------------------------------- */
-  bool LuaStateIsSet() const { return !!LuaGetState(); }
+  bool LuaStateIsSet() const { return LuaGetState() != nullptr; }
   bool LuaStateIsNotSet() const { return !LuaStateIsSet(); }
   /* -- Resume execution --------------------------------------------------- */
   bool LuaResumeExecution()
@@ -139,8 +139,8 @@ class Lua :                            // Actual class body
   { // Return if timer is not timed out
     if(cFrame->FrameIsNotTimedOut()) [[likely]] return;
     // Push error message and throw error
-    LuaUtilPushExtStr(lS, cCommon->CommonTimeoutV());
-    LuaUtilErrThrow(lS);
+    LuaUtilPushExtStr(lS, cCommon->CommonTimeout());
+    LuaBaseError(lS);
   }
   /* -- Warning callback --------------------------------------------------- */
   static void LuaOnWarning(void*const, const char*const cpMsg, int)
@@ -211,7 +211,7 @@ class Lua :                            // Actual class body
     // Check we have the correct number of requested parameters
     LuaUtilCheckParams(lS, 1);
     // If is nil then clear it and return failure
-    if(LuaUtilIsNil(lS, 1)) { lrEvent.LuaFuncClearRef(); return false; }
+    if(LuaBaseIsNil(lS, 1)) { lrEvent.LuaFuncClearRef(); return false; }
     // Set the function if valid
     lrEvent.LuaFuncSet();
     // Return success
@@ -260,13 +260,15 @@ class Lua :                            // Actual class body
     // Compile the specified script from the command line
     LuaCodeCompileString(LuaGetState(), strWhat, {});
     // Move compiled function for LuaUtilPCall argument
-    lua_insert(LuaGetState(), 1);
+    LuaBaseInsert(LuaGetState(), 1);
     // Call the protected function. We don't know how many return values.
     LuaUtilPCall(LuaGetState(), 0, LUA_MULTRET);
     // Scan for results
     StrList slResults;
-    for(int iI = lssSaved.Value() + 1; !LuaUtilIsNone(LuaGetState(), iI); ++iI)
-      slResults.emplace_back(LuaUtilGetStackType(LuaGetState(), iI));
+    for(int iIndex = lssSaved.Value() + 1;
+        !LuaBaseIsNone(LuaGetState(), iIndex);
+        ++iIndex)
+      slResults.emplace_back(LuaUtilGetStackType(LuaGetState(), iIndex));
     // Print result
     return slResults.empty() ?
       StrFormat("Request took $.",
@@ -287,7 +289,7 @@ class Lua :                            // Actual class body
     lrMainEnd.LuaFuncSet();
     // Set initial size of stack
     cLog->LogDebugExSafe("Lua $ stack size to $.",
-      LuaUtilIsStackAvail(LuaGetState(), iStack) ?
+      LuaBaseCheckStack(LuaGetState(), iStack) ?
         "initialised" : "could not initialise", iStack);
     // Set garbage collector settings
     LuaGCSetGenerational(FlagIsSet(LUF_GCGENERATIONAL));
@@ -346,7 +348,8 @@ class Lua :                            // Actual class body
       stTables += ltsList.size();
       ++stGlobals;
       // Load class creation functions
-      LuaUtilPushTable(LuaGetState(), 0, llsRef.stLLTotal);
+      LuaUtilPushObject(LuaGetState(), llsRef.stLLTotal);
+      const int iTIndex = LuaBaseGetTop(LuaGetState());
       luaL_setfuncs(LuaGetState(), llsRef.libList, 0);
       // Number of static vars registered in this namespace
       size_t stStaticsNS = 0;
@@ -355,18 +358,19 @@ class Lua :                            // Actual class body
       { // Walk through the table
         for(const LuaTable &ltRef : ltsList)
         { // Create a table of the specified size
-          LuaUtilPushTable(LuaGetState(), 0, ltRef.lkisList.size());
+          LuaUtilPushObject(LuaGetState(), ltRef.lkisList.size());
+          const int iCTIndex = LuaBaseGetTop(LuaGetState());
           // Walk through the key/value pairs
           lua_Integer liIndex = 1;
           for(const LuaKeyInt &lkiRef : ltRef.lkisList)
           { // Get reference to key/value pair and it to LUA
-            LuaUtilPushInt(LuaGetState(), lkiRef.liValue);
-            LuaUtilSetField(LuaGetState(), -2, lkiRef.strvName.data());
+            LuaBasePushInt(LuaGetState(), lkiRef.liValue);
+            LuaBaseSetField(LuaGetState(), iCTIndex, lkiRef.ssvName.data());
             // Also set an array key index too
-            LuaUtilPushExtStr(LuaGetState(), lkiRef.strvName);
-            lua_rawseti(LuaGetState(), -2, liIndex++);
+            LuaUtilPushExtStr(LuaGetState(), lkiRef.ssvName);
+            LuaBaseRawSetI(LuaGetState(), iCTIndex, liIndex++);
           } // Set field name and finalise const table
-          LuaUtilSetField(LuaGetState(), -2, ltRef.cpName);
+          LuaBaseSetField(LuaGetState(), iTIndex, ltRef.cpName);
           // Add to total static variables registered for this namespace
           stStaticsNS += ltRef.lkisList.size();
         } // Add to total static variables registered
@@ -375,64 +379,89 @@ class Lua :                            // Actual class body
       } // If we have don't have member functions?
       if(!llsRef.libmfList)
       { // Set this current list to global
-        LuaUtilSetGlobal(LuaGetState(), llsRef.strvName.data());
+        LuaBaseSetGlobal(LuaGetState(), llsRef.ssvName.data());
         // Log progress
         cLog->LogDebugExSafe(
           "- $ with $ functions and $ tables with $ values.",
-          llsRef.strvName, llsRef.stLLCount, ltsList.size(), stStaticsNS);
+          llsRef.ssvName, llsRef.stLLCount, ltsList.size(), stStaticsNS);
         // Continue
         continue;
       } // Load members into this namespace too for possible aliasing.
       luaL_setfuncs(LuaGetState(), llsRef.libmfList, 0);
       // Set to global variable
-      LuaUtilSetGlobal(LuaGetState(), llsRef.strvName.data());
+      LuaBaseSetGlobal(LuaGetState(), llsRef.ssvName.data());
       // Pre-cache the metadata for the class and it's methods.
-      LuaUtilPushTable(LuaGetState(), 0, 4);
+      LuaUtilPushObject(LuaGetState(), 4);
+      const int iMTIndex = LuaBaseGetTop(LuaGetState());
       // Copy a reference to the table and set an internal reference to it.
-      LuaUtilCopyValue(LuaGetState(), -1);
-      const int iReference = LuaUtilRefInit(LuaGetState());
+      LuaBasePushValue(LuaGetState(), iMTIndex);
+      const int iReference = LuaBaseRef(LuaGetState());
       if(LuaUtilIsNotRefValid(iReference))
         XC("Could not create reference to metatable!",
-          "Name", llsRef.strvName);
+          "Name", llsRef.ssvName);
       llcirAPI[llsRef.lciId] = iReference;
       // Push the name of the object for 'tostring()' LUA function.
-      LuaUtilPushExtStr(LuaGetState(), llsRef.strvName);
-      LuaUtilSetField(LuaGetState(), -2, cCommon->CommonLuaNameV().data());
+      LuaUtilPushExtStr(LuaGetState(), llsRef.ssvName);
+      LuaBaseSetField(LuaGetState(), iMTIndex,
+        cCommon->CommonLuaName().data());
       // Set function methods so var:func() works.
-      LuaUtilPushTable(LuaGetState(), 0, llsRef.stLLMFCount);
+      LuaUtilPushObject(LuaGetState(), llsRef.stLLMFCount);
       luaL_setfuncs(LuaGetState(), llsRef.libmfList, 0);
-      LuaUtilSetField(LuaGetState(), -2, "__index");
+      LuaBaseSetField(LuaGetState(), iMTIndex, "__index");
       // Getmetatable(x) just returns the type name for now.
-      LuaUtilPushExtStr(LuaGetState(), llsRef.strvName);
-      LuaUtilSetField(LuaGetState(), -2, "__metatable");
+      LuaUtilPushExtStr(LuaGetState(), llsRef.ssvName);
+      LuaBaseSetField(LuaGetState(), iMTIndex, "__metatable");
       // Push garbage collector function.
-      LuaUtilPushCFunc(LuaGetState(), llsRef.lcfpDestroy);
-      LuaUtilSetField(LuaGetState(), -2, "__gc");
+      LuaBasePushCFunc(LuaGetState(), llsRef.lcfpDestroy);
+      LuaBaseSetField(LuaGetState(), iMTIndex, "__gc");
       // Register the table in the global namespace.
-      LuaUtilSetField(LuaGetState(), LUA_REGISTRYINDEX,
-        llsRef.strvName.data());
+      LuaBaseSetField(LuaGetState(), LUA_REGISTRYINDEX,
+        llsRef.ssvName.data());
       // Log progress
       cLog->LogDebugExSafe(
         "- $ ($:$) with $ methods, $ functions and $ tables with $ values.",
-        llsRef.strvName, llsRef.lciId, iReference, llsRef.stLLMFCount,
+        llsRef.ssvName, llsRef.lciId, iReference, llsRef.stLLMFCount,
         llsRef.stLLCount, ltsList.size(), stStaticsNS);
-    } // Report summary of API usage
+    } // Get variables namespace
+    LuaBaseGetGlobal(LuaGetState(), "Variable");
+    const int iTIndex = LuaBaseGetTop(LuaGetState());
+    // Create a table of the specified number of variables
+    LuaUtilPushObject(LuaGetState(), CVAR_MAX);
+    const int iCTIndex = iTIndex + 1;
+    // Enumerate cvars and if stored iterator is registered?
+    for(const CVarMapIt &cvmiIt : cCVars->GetInternalListConst())
+      if(cvmiIt != cCVars->GetVarListEnd())
+      { // Push internal id value name and assign the id to the cvar name. Note
+        // that these classes won't be registered in the 'cVariables' list so
+        // the guest/user doesn't see them (they can already see them in the
+        // normal cvars list thus Lua solely manages the allocation for it and
+        // frees it when destructed.
+        LuaUtilClassCreate<Variable>(LuaGetState(), cVariables)->
+          InitInternal(cvmiIt);
+        LuaBaseSetField(LuaGetState(), iCTIndex, cvmiIt->first.data());
+      } // Push cvar id table into the core namespace and remove the table
+    LuaBaseSetField(LuaGetState(), iTIndex, "Internal");
+    LuaBaseRemove(LuaGetState(), iTIndex);
+    // Report summary of API usage
     cLog->LogDebugExSafe(
       "Lua registered $ of $ global namespaces...\n"
       "- $ of $ method functions are registered.\n"
       "- $ of $ member functions are registered.\n"
       "- $ of $ static tables are registered.\n"
       "- $ of $ static values are registered.\n"
+      "- $ of $ engine cvars are exposed.\n"
       "- $ of $ functions are registered in total.\n"
       "- $ of $ variables are registered in total.",
-      stGlobals,           stTotalGlobals,
-      stMethods,           stTotalMethods,
-      stMembers,           stTotalMembers,
-      stTables,            stTotalTables,
-      stStatics,           stTotalStatics,
-      stMembers+stMethods,  stTotalMembers+stTotalMethods,
-      stMembers+stMethods+stTables+stStatics,
-      stTotalMembers+stTotalMethods+stTotalTables+stTotalStatics);
+      stGlobals, stTotalGlobals,
+      stMethods, stTotalMethods,
+      stMembers, stTotalMembers,
+      stTables, stTotalTables,
+      stStatics, stTotalStatics,
+      cCVars->GetVarCount(), CVAR_MAX,
+      stMembers + stMethods, stTotalMembers + stTotalMethods,
+      stMembers + stMethods + stTables + stStatics + cCVars->GetVarCount(),
+      stTotalMembers + stTotalMethods + stTotalTables + stTotalStatics +
+        CVAR_MAX);
     // Load default libraries and log progress
     cLog->LogDebugSafe("Lua registering core namespaces...");
     luaL_openlibs(LuaGetState());
@@ -441,41 +470,20 @@ class Lua :                            // Actual class body
     if(liSeed)
     { // Init pre-defined seed
       LuaUtilInitRNGSeed(LuaGetState(), liSeed);
-      // Warn developer/user that there is a pre-defined random seed
+      // Warn guest/user that there is a pre-defined random seed
       cLog->LogWarningExSafe("Lua using pre-defined random seed $ (0x$$)!",
         liSeed, StdIOSHex, liSeed);
     } // Use a random number instead
     else
-    { // Get the new random number seed
+    { // Get the new random number seed, set it and log it
       const lua_Integer liRandSeed = CryptRandom<lua_Integer>();
-      // Set the random number seed
       LuaUtilInitRNGSeed(LuaGetState(), liRandSeed);
-      // Log it
       cLog->LogDebugExSafe("Lua generated random seed $ (0x$$)!",
         liRandSeed, StdIOSHex, liRandSeed);
-    } // Get variables namespace
-    LuaUtilGetGlobal(LuaGetState(), "Variable");
-    // Create a table of the specified number of variables
-    LuaUtilPushTable(LuaGetState(), 0, CVAR_MAX);
-    // Enumerate cvars and if stored iterator is registered?
-    for(const CVarMapIt &cvmiIt : cCVars->GetInternalListConst())
-      if(cvmiIt != cCVars->GetVarListEnd())
-      { // Push internal id value name
-        LuaUtilClassCreate<Variable>(LuaGetState(), cVariables)->
-          InitInternal(cvmiIt);
-        // Assign the id to the cvar name
-        LuaUtilSetField(LuaGetState(), -2, cvmiIt->first.data());
-      }
-    // Push cvar id table into the core namespace
-    LuaUtilSetField(LuaGetState(), -2, "Internal");
-    // Remove the table
-    LuaUtilRmStack(LuaGetState());
-    // Log that we added the variables
-    cLog->LogDebugExSafe("Lua published $ engine cvars.",  CVAR_MAX);
-    // Use a timeout hook?
+    } // Use a timeout hook?
     if(iOperations > 0)
     { // Set the hook
-      LuaUtilSetHookCallback(LuaGetState(),
+      LuaBaseSetHookCb(LuaGetState(),
         LuaOnInstructionCount, iOperations);
       // Log that it was enabled
       cLog->LogDebugExSafe("Lua timeout set to $ sec for every $ operations.",
@@ -494,8 +502,8 @@ class Lua :                            // Actual class body
   { // Push and get error callback function id
     const int iParam = LuaUtilPushAndGetGenericErrId(LuaGetState());
     // Push function and parameters and user parameter from core class
-    LuaUtilPushCFunc(LuaGetState(), cFunc);
-    LuaUtilPushPtr(LuaGetState(), vpPtr);
+    LuaBasePushCFunc(LuaGetState(), cFunc);
+    LuaBasePushLightUData(LuaGetState(), vpPtr);
     // Call it! One parameter and no returns
     LuaUtilPCallSafe(LuaGetState(), 1, 0, iParam);
   }
@@ -511,7 +519,7 @@ class Lua :                            // Actual class body
     // Disable garbage collector
     LuaStopGC();
     // De-init instruction count hook?
-    LuaUtilSetHookCallback(LuaGetState(), nullptr, 0);
+    LuaBaseSetHookCb(LuaGetState(), nullptr, 0);
     // DeInit references
     LuaFuncDeInitRef();
     // Close state and reset var

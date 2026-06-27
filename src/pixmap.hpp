@@ -15,7 +15,7 @@ namespace ISysMap {                    // Start of private module namespace
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IFStream::P;           using namespace ILog::P;
 using namespace IStd::P;               using namespace IStdLib::P;
-using namespace ISysUtil::P;           using namespace Lib::OS;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -35,10 +35,10 @@ class SysMap :
     // ~FStream() will close the file
   }
   /* -- Setup handle ------------------------------------------------------- */
-  static FStreamBase SysMapSetupFile(const StdStringView &strvF)
+  static FStreamBase SysMapSetupFile(const StdStringView &ssvF)
   { // Open file and return it if opened else show error
-    if(FStream fsFile{ strvF, FM_R_B }) return fsFile;
-    XCS("Open file for file mapping failed!", "File", strvF);
+    if(FStream fsFile{ ssvF, FM_R_B }) return fsFile;
+    XCS("Open file for file mapping failed!", "File", ssvF);
   }
   /* -- Setup file information --------------------------------------------- */
   StdFStatStruct SysMapSetupInfo()
@@ -68,7 +68,7 @@ class SysMap :
     } // File is empty
     else
     { // Set no data available
-      cpNewMem = const_cast<char*>(cCommon->CommonCBlank());
+      cpNewMem = const_cast<char*>(caBlank);
       // Close the file. Whats the point in keeping it open?
       if(!FStreamClose())
         XCS("Failed to close empty file!", "File", NameGet());
@@ -82,7 +82,7 @@ class SysMap :
     requires (!StdIsPointer<PtrType>)
   PtrType *SysMapGetMemory() const
     { return reinterpret_cast<PtrType*>(cpMem); }
-  bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
+  bool SysMapIsEmpty() const { return cpMem == caBlank; }
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
   bool SysMapIsAvailable() const { return SysMapGetMemory() != nullptr; }
   bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }
@@ -109,9 +109,9 @@ class SysMap :
     NameClear();
   }
   /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const StdStringView &strvF, const StdTimeT tC, const StdTimeT tM) :
+  SysMap(const StdStringView &ssvF, const StdTimeT tC, const StdTimeT tM) :
     /* -- Initialisers------------------------------------------------------ */
-    FStreamBase{ strvF },              // Open specified file
+    FStreamBase{ ssvF },               // Open specified file
 #if defined(LINUX)                     // Using Linux?
     // Note that all these zeros cause an error for other systems because
     // the structure may contain padding values so this needs to be changed to
@@ -154,9 +154,9 @@ class SysMap :
     /* -- So other class doesn't destruct ---------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit SysMap(const StdStringView &strvF) :
+  explicit SysMap(const StdStringView &ssvF) :
     /* -- Initialisers ----------------------------------------------------- */
-    FStreamBase{ SysMapSetupFile(strvF) }, // Iniitalise file handle
+    FStreamBase{ SysMapSetupFile(ssvF) }, // Iniitalise file handle
     sData{ SysMapSetupInfo() },        // Initialise file data
     cpMem(SysMapSetupMemory())         // Initialise file pointer
     /* -- No code ---------------------------------------------------------- */
@@ -175,4 +175,3 @@ class SysMap :
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */
-

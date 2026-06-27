@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace ICoord {                     // Start of module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IIntPair::P;           using namespace Lib::OS::GlFW::Types;
+using namespace IIntPair::P;           using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -76,7 +76,8 @@ struct Coord :                         // Members initially public
   /* -- Default constructor that does not need to do anything -------------- */
   Coord() = default;
 };/* ----------------------------------------------------------------------- */
-using CoordInt = Coord<int>;           // Cordinates typedef
+using CoordInt   = Coord<int>;           // Cordinates int typedef
+using CoordSizeT = Coord<size_t>;        // Cordinates size_t typedef
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

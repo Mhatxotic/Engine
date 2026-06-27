@@ -19,7 +19,7 @@ using namespace IMemory::P;            using namespace IName::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IThread::P;            using namespace Lib::OS::GlFW::Types;
+using namespace IThread::P;            using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Begin collector class ------------------------------------------------ */
@@ -58,7 +58,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
   }
   /* -- Capture screenshot from Fbo -------------------------------- */ public:
   bool DumpFbo(const Fbo &fboRef,
-    const StdStringView &strvFile = cCommon->CommonBlankV())
+    const StdStringView &ssvFile = cCommon->CommonBlank())
   { // Cancel if thread is still running
     if(tThread.ThreadIsJoinable()) return false;
     // DeInit old thread, we need to reuse it
@@ -85,8 +85,8 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       "Failed to read Fbo pixel data!",
       "Name", fboRef.NameGet(), "Mode", ImageGetPixelFormat(ttMode));
     // Get new filename or original filename
-    NameSet(strvFile.empty() ? StrAppend(cSystem->SysGetGuestShortTitle(),
-      cmSys.FormatTime("-%Y%m%d-%H%M%S")) : strvFile);
+    NameSet(ssvFile.empty() ? StrAppend(cSystem->SysGetGuestShortTitle(),
+      cmSys.FormatTime("-%Y%m%d-%H%M%S")) : ssvFile);
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
       fboRef.NameGet(), NameGet(), fboRef.DimGetWidth(),

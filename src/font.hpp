@@ -26,7 +26,7 @@ using namespace IStd::P;               using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace ITexture::P;           using namespace IUtf::P;
 using namespace IUtil::P;              using namespace Lib::FreeType;
-using namespace Lib::OS::GlFW::Types;
+using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */
@@ -188,11 +188,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       NameGet(), cStart, cEnd);
   }
   /* -- Do initialise all freetype characters in specified string ---------- */
-  void InitFTCharString(const StdStringView strvString)
+  void InitFTCharString(const StdStringView ssvString)
   { // Ignore if string not valid or font not loaded
-    if(strvString.empty() || !ftfData.IsLoaded()) return;
+    if(ssvString.empty() || !ftfData.IsLoaded()) return;
     // Do load string characters
-    DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(strvString);
+    DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(ssvString);
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
   }

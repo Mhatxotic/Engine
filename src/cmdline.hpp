@@ -83,12 +83,12 @@ class CmdLine                          // Members initially public
     StdForEach(seq, alEnv.begin(), alEnv.end(),
       [&ssmRet](const ArgType*const atStr)
 #if defined(LINUX)
-    { if(TokenStr tsParam{ atStr, cCommon->CommonEqualsV(), 2 })
+    { if(TokenStr tsParam{ atStr, cCommon->CommonEquals(), 2 })
 #else
-    { if(TokenStr tsParam{ S16toUTF(atStr), cCommon->CommonEqualsV(), 2 })
+    { if(TokenStr tsParam{ S16toUTF(atStr), cCommon->CommonEquals(), 2 })
 #endif
         ssmRet.insert({ StdMove(tsParam.front()), tsParam.size() >= 2 ?
-          StdMove(tsParam.back()) : cCommon->CommonBlank() }); });
+          StdMove(tsParam.back()) : cCommon->CommonBlankStr() }); });
     // Unset unallowed variables
     SysUnSetEnv(
       // Operating system check
@@ -119,14 +119,15 @@ class CmdLine                          // Members initially public
   bool CmdLineIsHome() const { return !CmdLineIsNoHome(); }
   /* -- Return and move string into output string -------------------------- */
   const StdString &CmdLineGetHome() const { return strHD; }
-  StdString CmdLineGetHome(const StdStringView &strvSuf) const
-    { return StrAppend(CmdLineGetHome(), strvSuf); }
+  StdString CmdLineGetHome(const StdStringView &ssvSuf) const
+    { return StrAppend(CmdLineGetHome(), ssvSuf); }
   /* -- Get environment variable ------------------------------------------- */
   template<class StrType>
     const StdString &CmdLineGetEnv(const StrType &strEnv) const
   { // Find item and return it else return the default item
     const StrStrMapConstIt smciEnv{ ssmEnv.find(strEnv) };
-    return smciEnv != ssmEnv.cend() ? smciEnv->second : cCommon->CommonBlank();
+    return smciEnv != ssmEnv.cend() ?
+      smciEnv->second : cCommon->CommonBlankStr();
   }
   /* -- Get environment variable and check that it is a valid pathname ----- */
   StdString CmdLineMakeEnvPath(const StdString &strEnv,

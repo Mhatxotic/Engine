@@ -1,4 +1,4 @@
-/* == PCMFMOGG.HPP ========================================================= **
+/* == PFMTOGG.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -12,10 +12,11 @@ namespace ICodecOGG {                  // Start of private module namespace
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFlags::P;
 using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace IMemory::P;            using namespace IPcmDef::P;
-using namespace IPcmLib::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IUtil::P;
-using namespace Lib::OpenAL::Types;    using namespace Lib::Ogg;
+using namespace IMemory::P;            using namespace IPcmData::P;
+using namespace IPcmDef::P;            using namespace IPcmLib::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
+using namespace Lib::Ogg;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -72,10 +73,9 @@ class CodecOGG :                       // OGG codec object
       if(char*const cpPtr = strchr(cpStr, '='))
       { // Remove separator (safe), add key/value pair and readd separator
         *cpPtr = '\0';
-        ssMetaData.insert(ssMetaData.cend(), { cpStr, cpPtr+1 });
+        ssMetaData.insert(ssMetaData.cend(), { cpStr, cpPtr + 1 });
       } // We at least have a string so add it as key with empty value
-      else ssMetaData.insert(ssMetaData.cend(),
-        { cpStr, cCommon->CommonCBlank() });
+      else ssMetaData.insert(ssMetaData.cend(), { cpStr, caBlank });
     }); // Return built metadata
     return ssMetaData;
   }
@@ -102,23 +102,24 @@ class CodecOGG :                       // OGG codec object
     // Get info from ogg
     const vorbis_info*const vorbisInfo = ov_info(&vorbisFile, -1);
     // Assign members
-    pdData.SetRate(static_cast<unsigned>(vorbisInfo->rate));
-    if(!pdData.SetChannelsSafe(
+    pdData.PcmDataSetRate(static_cast<unsigned>(vorbisInfo->rate));
+    if(!pdData.PcmDataSetChannelsSafe(
           static_cast<PcmChannelType>(vorbisInfo->channels)))
-      XC("OGG channels not valid!", "Channels", pdData.GetChannels());
-    pdData.SetBits(PBI_SHORT);
+      XC("OGG channels not valid!", "Channels", pdData.PcmDataGetChannels());
+    pdData.PcmDataSetBits(PBI_SHORT);
     // Create PCM buffer (Not sure if multiplication is correct :[)
     const ogg_int64_t llSize =
       ov_pcm_total(&vorbisFile, -1) * (vorbisInfo->channels * 2);
     if(llSize < 0) XC("OGG has invalid pcm size!", "Size", llSize);
-    // Allocate memory
-    pdData.aPcmL.MemResize(static_cast<size_t>(llSize));
+    // Allocate memory for OGG decoded PCM data
+    const MemConst &mcData =
+      pdData.PcmDataPrepare(static_cast<size_t>(llSize));
     // Decompress until done
     for(ogg_int64_t llPos = 0; llPos < llSize; )
     { // Read ogg stream and if not end of file?
       const size_t stToRead = static_cast<size_t>(llSize - llPos);
       if(const long lBytesRead = ov_read(&vorbisFile,
-           pdData.aPcmL.MemRead(static_cast<size_t>(llPos), stToRead),
+           mcData.MemRead(static_cast<size_t>(llPos), stToRead),
         static_cast<int>(stToRead), 0, 2, 1, nullptr))
       { // Error occured? Bail out
         if(lBytesRead < 0)

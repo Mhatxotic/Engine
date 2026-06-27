@@ -12,7 +12,7 @@
 namespace ISysReg {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IUtf::P;               using namespace Lib::OS;
+using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -20,82 +20,98 @@ class SysReg                           // Members initially private
 { /* ----------------------------------------------------------------------- */
   HKEY             hkKey;              // Key handle
   /* -- Return handle ---------------------------------------------- */ public:
-  HKEY GetHandle() const { return hkKey; }
+  HKEY SysRegGetHandle() const { return hkKey; }
   /* -- Return if handle is opened or not ---------------------------------- */
-  bool Opened() const { return GetHandle() != nullptr; }
-  bool NotOpened() const { return !Opened(); }
+  bool SysRegOpened() const { return SysRegGetHandle() != nullptr; }
+  bool SysRegNotOpened() const { return !SysRegOpened(); }
   /* -- Query sub keys ----------------------------------------------------- */
-  StrVector QuerySubKeys() const
+  StrVector SysRegQuerySubKeys() const
   { // Key opened? Return nothing
-    if(NotOpened()) return {};
+    if(SysRegNotOpened()) return {};
     // Create key list
-    StrVector klData;
+    StrVector svKeys;
     // Until there are no more items
     for(unsigned uIndex = 0;; ++uIndex)
     { // Create memory to hold string
-      StdResized<StdWideString> wstrData{ MAX_PATH };
+      StdResized<StdWideString> swsKey{ MAX_PATH };
       // Set size
-      DWORD dwSize = static_cast<DWORD>(wstrData.capacity() * sizeof(wchar_t));
+      DWORD dwSize = static_cast<DWORD>(swsKey.capacity() * sizeof(wchar_t));
       // Enumerate. Add to list if succeeded
-      switch(RegEnumKeyEx(GetHandle(), uIndex,
-        const_cast<wchar_t*>(wstrData.data()),
+      switch(RegEnumKeyEx(SysRegGetHandle(), uIndex,
+        const_cast<wchar_t*>(swsKey.data()),
           &dwSize, nullptr, nullptr, nullptr, nullptr))
       { // Succeeded?
         case ERROR_SUCCESS:
           // Clean up string and add to list
-          wstrData.resize(static_cast<size_t>(dwSize));
-          wstrData.shrink_to_fit();
-          klData.emplace_back(WS16toUTF(wstrData)); break;
+          swsKey.resize(static_cast<size_t>(dwSize));
+          swsKey.shrink_to_fit();
+          svKeys.emplace_back(WS16toUTF(swsKey)); break;
         // No more items so return the list
-        case ERROR_NO_MORE_ITEMS: return klData;
+        case ERROR_NO_MORE_ITEMS: return svKeys;
         // Other error, just ignore it.
         default: break;
       }
     } // Never gets here
   }
   /* -- Query value as string----------------------------------------------- */
-  StdString QueryString(const StdString &strV) const
+  StdString SysRegQueryString(const StdStringView &ssvV) const
   { // Key opened? Return nothing
-    if(NotOpened()) return {};
+    if(SysRegNotOpened()) return {};
     // Initialise size and type
     DWORD dwSize = 0, dwType = 0;
-    // Query value into string
-    const StdWideString wstrV{ UTFtoS16(strV) };
-    if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
-      reinterpret_cast<LPBYTE>(&dwType), &dwSize) != ERROR_MORE_DATA ||
-        dwType != REG_SZ || !dwSize) return {};
-    // Create a pre-allocated stringAllocate buffer and query value again
-    StdResized<StdWideString> wstrBuffer{ dwSize / sizeof(wchar_t) };
-    if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
-      reinterpret_cast<LPBYTE>(wstrBuffer.data()), &dwSize) != ERROR_SUCCESS)
-        return {};
-    // Return as UTF string.
-    return WS16toUTF(wstrBuffer);
+    // Query length of registry value
+    const StdWideString wssvV{ UTFtoS16(ssvV) };
+    if(RegQueryValueEx(SysRegGetHandle(), wssvV.data(), nullptr, &dwType,
+      reinterpret_cast<LPBYTE>(&dwType), &dwSize) == ERROR_MORE_DATA)
+    { // Must be a string!
+      if(dwType == REG_SZ)
+      { // Compare size (size includes NULL terminator)
+        switch(dwSize)
+        { // Function failure (no null terminator?, should be impossible)
+          case 0: [[fallthrough]];
+          // Just a null terminator
+          case 1: break;
+          // Anything else?
+          default:
+          { // Grab the string value and return a UTF8 string version
+            StdResized<StdWideString> wstrBuffer{
+              (dwSize / sizeof(wchar_t)) - 1 };
+            if(RegQueryValueEx(SysRegGetHandle(), wssvV.data(), nullptr,
+                 &dwType, reinterpret_cast<LPBYTE>(wstrBuffer.data()), &dwSize)
+               == ERROR_SUCCESS) return WS16toUTF(wstrBuffer);
+            // Failed
+            break;
+          } // Size comparison
+        } // Invalid size
+      } // Invalid type
+    } // Query failed or something else so return empty string
+    return {};
   }
   /* -- Query value -------------------------------------------------------- */
-  LSTATUS Query(const StdString &strV, void **vpD, const DWORD dwS) const
+  LSTATUS SysRegQuery(const StdStringView &ssvV, void **vpD, const DWORD dwS)
+    const
   { // Ignore if key not opened else query registry value and return status
-    if(NotOpened()) return ERROR_NO_TOKEN;
+    if(SysRegNotOpened()) return ERROR_NO_TOKEN;
     DWORD dwSize = dwS, dwType = 0;
-    return RegQueryValueEx(GetHandle(), UTFtoS16(strV).data(), nullptr,
+    return RegQueryValueEx(SysRegGetHandle(), UTFtoS16(ssvV).data(), nullptr,
       &dwType, reinterpret_cast<LPBYTE>(vpD), &dwSize);
   }
   /* -- Query integer ------------------------------------------------------ */
   template<typename AnyType>
     requires StdIsIntegral<AnyType>
-  AnyType Query(const StdString &strV) const
+  AnyType SysRegQuery(const StdStringView &ssvV) const
   { // Query the key value and store it in the integer
     AnyType atValue{ 0 };
-    Query(strV, reinterpret_cast<void**>(&atValue), sizeof(AnyType));
+    SysRegQuery(ssvV, reinterpret_cast<void**>(&atValue), sizeof(AnyType));
     return atValue;
   }
   /* -- Direct access to return if handle is opened ------------------------ */
-  operator bool() const { return Opened(); }
+  operator bool() const { return SysRegOpened(); }
   /* -- Constructor with init ---------------------------------------------- */
-  SysReg(HKEY hkB, const StdString &strSK, const REGSAM rsA) :
+  SysReg(HKEY hkB, const StdStringView &ssvSK, const REGSAM rsA) :
     /* -- Initialisers ----------------------------------------------------- */
     hkKey(RegOpenKeyEx(hkB,            // Open registry key with specified root
-      UTFtoS16(strSK).data(),          // Specified subkey to open
+      UTFtoS16(ssvSK).data(),          // Specified subkey to open
       0,                               // No options
       rsA,                             // Specified security
       &hkB) == ERROR_SUCCESS ?         // Destination handle and if succeeded?
@@ -104,7 +120,7 @@ class SysReg                           // Members initially private
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  ~SysReg() { if(Opened()) RegCloseKey(GetHandle()); }
+  ~SysReg() { if(SysRegOpened()) RegCloseKey(SysRegGetHandle()); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -61,6 +61,7 @@ namespace E {                          // Start of engine namespace
 #include "thread.hpp"                  // Thread helper class header
 #include "evtcore.hpp"                 // Thread-safe event system core header
 #include "evtmain.hpp"                 // Main engine events system header
+#include "glfwbase.hpp"                // GLFW wrapper functions header
 #include "glfwutil.hpp"                // GLFW utility class header
 #include "evtwin.hpp"                  // Window thread events system header
 #include "glfwcrsr.hpp"                // GLFW cursor class header
@@ -80,6 +81,7 @@ namespace E {                          // Start of engine namespace
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
 #include "refctr.hpp"                  // Reference counter class header
+#include "luabase.hpp"                 // Lua base interface functions header
 #include "luautil.hpp"                 // Lua utility functions header
 #include "luaref.hpp"                  // Lua reference helper class header
 #include "luaevent.hpp"                // Lua event helper class header
@@ -103,6 +105,7 @@ namespace E {                          // Start of engine namespace
 #include "oal.hpp"                     // OpenAL audio header
 #include "dformat.hpp"                 // Plugin data format helper header
 #include "pcmdef.hpp"                  // Pcm definitions header
+#include "pcmdata.hpp"                 // Pcm data class header
 #include "pcmlib.hpp"                  // Pcm codecs handling header
 #include "pfmtwav.hpp"                 // PcmLib WAV file codec
 #include "pfmtcaf.hpp"                 // PcmLib CAF file codec
@@ -116,11 +119,13 @@ namespace E {                          // Start of engine namespace
 #include "colour.hpp"                  // Colour class definition header
 #include "ogl.hpp"                     // OpenGL graphics management header
 #include "imagedef.hpp"                // Image data definitions header
+#include "imagedata.hpp"               // Image metadata class header
 #include "imagelib.hpp"                // Image codecs handling header
 #include "ifmtdds.hpp"                 // ImageLib DDS file codec
 #include "ifmtgif.hpp"                 // ImageLib GIF file codec
 #include "ifmtpng.hpp"                 // ImageLib PNG file codec
 #include "ifmtjpg.hpp"                 // ImageLib JPG file codec
+#include "ifmtwebp.hpp"                // ImageLib WEBP file codec
 #include "bin.hpp"                     // Bin packing class header
 #include "image.hpp"                   // Image load and save handling header
 #include "shader.hpp"                  // OpenGL Shader handling header
@@ -159,10 +164,10 @@ namespace E {                          // Start of engine namespace
 /* ------------------------------------------------------------------------- */
 };                                     // End of engine namespace
 /* == The main entry point ================================================= */
-int ENTRYFUNC                          // Macro defined in 'setup.hpp'
+ENTRYFUNC                              // Macro defined in 'setup.hpp'
 { // Override environment variable with an ASAN friendly version on MacOS
 #if defined(MACOS)
-  _wenviron = *Lib::OS::_NSGetEnviron();
+  _wenviron = *_NSGetEnviron();
 #endif
   // Includes required to build the engine
   using namespace E;                   using namespace ISysUtil::P;

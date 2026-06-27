@@ -5,9 +5,13 @@
 !docs/*.html
 !docs/*.md
 !docs/*.ico
+!include/
+!include/*.md
 !licenses/
 !licenses/*.md
 !licenses/*.txt
+!lib/
+!lib/*.md
 !macos/
 !macos/engine.xcodeproj/
 !macos/engine.xcodeproj/project.pbxproj

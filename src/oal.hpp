@@ -80,7 +80,7 @@ class Oal :                            // Actual class body
                    stMaxMonoSources;   // Maximum number of mono sources
   /* ----------------------------------------------------------------------- */
   StdString        strVersion;         // String version of OpenAL
-  StdStringView    strvPlayback;       // String playback device
+  StdStringView    ssvPlayback;        // String playback device
   /* ----------------------------------------------------------------------- */
   ALCdevice       *alcDevice;          // OpenAL device
   ALCcontext      *alcContext;         // OpenAL context
@@ -145,7 +145,7 @@ class Oal :                            // Actual class body
   { LogErrorGeneric<AL_NO_ERROR>(
       []()->ALenum{ return GetError(); },
       [this](const ALenum aleError){ return GetALErr(aleError); },
-      cCommon->CommonCBlank(), StdForward<StrType>(strFormat),
+      caBlank, StdForward<StrType>(strFormat),
       StdForward<VarArgs>(vaArgs)...); }
   /* -- AL context error handler ------------------------------------------- */
   template<typename ...VarArgs>
@@ -160,7 +160,7 @@ class Oal :                            // Actual class body
   { CheckErrorGeneric<AL_NO_ERROR>(
       []()->ALenum{ return GetError(); },
       [this](const ALenum aleError) { return GetALErr(aleError); },
-      cCommon->CommonCBlank(), cpReason, StdForward<VarArgs>(vaArgs)...); }
+      caBlank, cpReason, StdForward<VarArgs>(vaArgs)...); }
   /* -- Upload data to audio device ---------------------------------------- */
   static void BufferData(const ALuint aluBuffer, const ALenum aleFormat,
     const ALvoid*const vpData, const ALsizei siSize,
@@ -436,17 +436,17 @@ class Oal :                            // Actual class body
   size_t GetMaxMonoSources() const { return stMaxMonoSources; }
   size_t GetMaxStereoSources() const { return stMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
-  const StdStringView &GetPlaybackDevice() const { return strvPlayback; }
+  const StdStringView &GetPlaybackDevice() const { return ssvPlayback; }
   /* -- Set system event callback ------------------------------------------ */
   void SetEventCallback(const ALCEVENTPROCTYPESOFT cbProc, void*const vpParam)
-  { // Keeping Ubuntu 24.04 compatibility for now until supported
+  { // Keeping Ubuntu 26.04 compatibility for now until supported
 #if !defined(LINUX)
     return alcEventCallbackSOFT(cbProc, vpParam);
 #endif
   }
   /* -- Enable or disable system events ------------------------------------ */
   ALenum SetEventState(const ALCenum alceEvent, const ALCboolean alcbEnabled)
-  { // Keeping Ubuntu 24.04 compatibility for now until supported
+  { // Keeping Ubuntu 26.04 compatibility for now until supported
 #if defined(LINUX)
     return AL_FALSE;
 #else
@@ -456,7 +456,7 @@ class Oal :                            // Actual class body
   /* -- Is system event supported ------------------------------------------ */
   ALenum IsEventSupported(const ALenum aleEventType,
     const ALenum aleDeviceType)
-  { // Keeping Ubuntu 24.04 compatibility for now until supported
+  { // Keeping Ubuntu 26.04 compatibility for now until supported
 #if defined(LINUX)
     return ALC_EVENT_NOT_SUPPORTED_SOFT;
 #else
@@ -480,7 +480,7 @@ class Oal :                            // Actual class body
   void UpdateDevice(ALCdevice*const alcNDevice) { alcDevice = alcNDevice; }
   /* -- Update playback device name ---------------------------------------- */
   void UpdatePlaybackDeviceName()
-    { strvPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
+    { ssvPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
         ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER); }
   /* -- Initialise HRTF override ------------------------------------------- */
   void InitHRTFOverride()
@@ -542,10 +542,10 @@ class Oal :                            // Actual class body
         stMaxStereoSources = 1;
       } // Failed because no stereo sources
       else XC("No mono source support on this device!",
-        "Device", strvPlayback);
+        "Device", ssvPlayback);
     } // Zero stereo sources? Failed because no mono sources
     else if(!stMaxStereoSources)
-      XC("No stereo source support on this device!", "Device", strvPlayback);
+      XC("No stereo source support on this device!", "Device", ssvPlayback);
     // Check playback system event capabilities
     struct EventCapItem { const ALenum aleEventType, aleDeviceType;
                           const OalFlagsConst &ofcFlag; };
@@ -602,8 +602,8 @@ class Oal :                            // Actual class body
     // Build context extensions list
     size_t stCount = 0;
     Tokeniser<StdStringView>(GetCString(ALC_EXTENSIONS),
-      cCommon->CommonSpaceV(), [&mExts, &stCount](const StdStringView &strvExt)
-        { mExts.insert({ StdMove(strvExt), stCount++ }); });
+      cCommon->CommonSpace(), [&mExts, &stCount](const StdStringView &ssvExt)
+        { mExts.insert({ StdMove(ssvExt), stCount++ }); });
     // Log context initialisation
     cLog->LogNLCDebugExSafe(
       "- Maximum mono sources: $.\n"
@@ -635,7 +635,7 @@ class Oal :                            // Actual class body
     DestroyContext();
     alcContext = nullptr;
     FlagClear(AFL_INITCONTEXT);
-    strvPlayback = cCommon->CommonNull();
+    ssvPlayback = cCommon->CommonNull();
     // Succeeded
     return true;
   }
@@ -666,9 +666,9 @@ class Oal :                            // Actual class body
     Map mExts;
     // Build extensions list
     size_t stCount = 0;
-    Tokeniser<StdStringView>(GetString(AL_EXTENSIONS), cCommon->CommonSpaceV(),
-      [&mExts, &stCount](const StdStringView &strvExt)
-        { mExts.insert({ StdMove(strvExt), stCount++ }); });
+    Tokeniser<StdStringView>(GetString(AL_EXTENSIONS), cCommon->CommonSpace(),
+      [&mExts, &stCount](const StdStringView &ssvExt)
+        { mExts.insert({ StdMove(ssvExt), stCount++ }); });
     // Log device info and basic capabilities
     cLog->LogNLCDebugExSafe(
       "- Head related transfer function: $.\n"
@@ -719,7 +719,7 @@ class Oal :                            // Actual class body
     /* -- Initialisers ----------------------------------------------------- */
     stMaxStereoSources(0),             // Stereo sources initialised later
     stMaxMonoSources(0),               // Mono sources initialised later
-    strvPlayback{                      // Blank playback device
+    ssvPlayback{                       // Blank playback device
       cCommon->CommonNull() },         // Initialise with "null" text
     alcDevice(nullptr),                // Device not initialised yet
     alcContext(nullptr),               // Context not initialised yet

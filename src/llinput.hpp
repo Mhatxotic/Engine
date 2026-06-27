@@ -17,7 +17,7 @@
 /* ========================================================================= */
 namespace LLInput {                    // Input namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IGlFW::P;              using namespace IGlFWUtil::P;
+using namespace IGlFW::P;              using namespace IGlFWBase::P;
 using namespace IInput::P;             using namespace IJoyInfo::P;
 using namespace IJoystick::P;          using namespace ILua::P;
 using namespace Common;

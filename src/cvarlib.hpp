@@ -1539,14 +1539,11 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 // ! VID_HIDPI
 // ? Enables or disables HiDPI support. Set to '0' to disable HiDPI, '1' to
-// ? (default) to enable it, or '2' to enable it with a fix for going from a
-// ? HiDPI window to non-HiDPI window to increase window size to match the
-// ? previous OpenGL frame-buffer size which is useful for video capturing and
-// ? maintaining capture quality. The cvar only applies to MacOS and can only
+// ? (default) to enable it. The cvar only applies to MacOS and can only
 // ? be set via command-line or the application manifest.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_hidpi", "1",
-  CB(cDisplay->DisplayHiDPIChanged, HiDPISetting), TUINTEGER|PNOUI },
+  CB(cDisplay->DisplayHiDPIChanged, bool), TBOOLEAN|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! VID_MONITOR
 // ? Specifies the monitor id to use. Use the 'mlist' console command to see

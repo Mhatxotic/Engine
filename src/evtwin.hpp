@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtWin {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IEvtCore::P;           using namespace IGlFWUtil::P;
+using namespace IEvtCore::P;           using namespace IGlFWBase::P;
 using namespace ILog::P;               using namespace ILookupArray::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace IThread::P;
@@ -28,31 +28,29 @@ enum EvtWinCmd : size_t                // Render thread event commands
   EWC_WIN_CURSET,                      // 05: Set cursor
   EWC_WIN_CURSETVIS,                   // 06: Set cursor visibility
   EWC_WIN_FOCUS,                       // 07: Focus window
-  EWC_WIN_HIDE,                        // 08: Hide the window
-  EWC_WIN_LIMITS,                      // 09: Window limits change
-  EWC_WIN_MAXIMISE,                    // 10: Maximise window
-  EWC_WIN_MINIMISE,                    // 11: Minimise window
-  EWC_WIN_MONITOR,                     // 12: Monitor changed
-  EWC_WIN_MONITORS,                    // 13: Monitors refresh
-  EWC_WIN_MOVE,                        // 14: Move window
-  EWC_WIN_RESET,                       // 15: Reset window position and size
-  EWC_WIN_RESIZE,                      // 16: Resize window
-  EWC_WIN_RESTORE,                     // 17: Restore window
-  EWC_WIN_SETICON,                     // 18: Set window icon
-  EWC_WIN_SETLKMODS,                   // 19: Set lock key mods state
-  EWC_WIN_SETRAWMOUSE,                 // 20: Set raw mouse motion
-  EWC_WIN_SETSTKKEYS,                  // 21: Set sticky keys state
-  EWC_WIN_SETSTKMOUSE,                 // 22: Set sticky mouse buttons state
-  EWC_WIN_SHOW,                        // 23: Show the window
-  EWC_WIN_TOGGLEFS,                    // 24: Toggle full-screen
+  EWC_WIN_LIMITS,                      // 08: Window limits change
+  EWC_WIN_MAXIMISE,                    // 09: Maximise window
+  EWC_WIN_MINIMISE,                    // 10: Minimise window
+  EWC_WIN_MONITOR,                     // 11: Monitor changed
+  EWC_WIN_MONITORS,                    // 12: Monitors refresh
+  EWC_WIN_MOVE,                        // 13: Move window
+  EWC_WIN_RESET,                       // 14: Reset window position and size
+  EWC_WIN_RESIZE,                      // 15: Resize window
+  EWC_WIN_RESTORE,                     // 16: Restore window
+  EWC_WIN_SETICON,                     // 17: Set window icon
+  EWC_WIN_SETLKMODS,                   // 18: Set lock key mods state
+  EWC_WIN_SETRAWMOUSE,                 // 19: Set raw mouse motion
+  EWC_WIN_SETSTKKEYS,                  // 20: Set sticky keys state
+  EWC_WIN_SETSTKMOUSE,                 // 21: Set sticky mouse buttons state
+  EWC_WIN_TOGGLEFS,                    // 22: Toggle full-screen
   /* -- Clipboard events --------------------------------------------------- */
-  EWC_CB_GET,                          // 25: Get clipboard (via Clip class)
-  EWC_CB_SET,                          // 26: Set clipboard (via Clip class)
-  EWC_CB_SETNR,                        // 27: " but no callback
+  EWC_CB_GET,                          // 23: Get clipboard (via Clip class)
+  EWC_CB_SET,                          // 24: Set clipboard (via Clip class)
+  EWC_CB_SETNR,                        // 25: " but no callback
   /* ----------------------------------------------------------------------- */
-  EWC_WIN_CURPOSSET,                   // 28: Set cursor position
+  EWC_WIN_CURPOSSET,                   // 26: Set cursor position
   /* ----------------------------------------------------------------------- */
-  EWC_MAX,                             // 29: Maximum number of async events
+  EWC_MAX,                             // 27: Maximum number of async events
   /* ----------------------------------------------------------------------- */
 #if defined(ALPHA)                     // Compiling debug version?
   EWC_NOLOG = EWC_MAX                  // Log all events
@@ -85,14 +83,13 @@ class EvtWin :                         // Event list for window thread
 #define EWC(x) STR(EWC_ ## x)          // Helper to define event id strings
       EWC(NONE),            EWC(WIN_ATTENTION),   EWC(WIN_CENTRE),
       EWC(WIN_CURPOSGET),   EWC(WIN_CURRESET),    EWC(WIN_CURSET),
-      EWC(WIN_CURSETVIS),   EWC(WIN_FOCUS),       EWC(WIN_HIDE),
-      EWC(WIN_LIMITS),      EWC(WIN_MAXIMISE),    EWC(WIN_MINIMISE),
-      EWC(WIN_MONITOR),     EWC(WIN_MONITORS),    EWC(WIN_MOVE),
-      EWC(WIN_RESET),       EWC(WIN_RESIZE),      EWC(WIN_RESTORE),
-      EWC(WIN_SETICON),     EWC(WIN_SETLKMODS),   EWC(WIN_SETRAWMOUSE),
-      EWC(WIN_SETSTKKEYS),  EWC(WIN_SETSTKMOUSE), EWC(WIN_SHOW),
-      EWC(WIN_TOGGLE_FS),   EWC(CB_GET),          EWC(CB_SET),
-      EWC(CB_SETNR),        EWC(WIN_CURPOSSET)
+      EWC(WIN_CURSETVIS),   EWC(WIN_FOCUS),       EWC(WIN_LIMITS),
+      EWC(WIN_MAXIMISE),    EWC(WIN_MINIMISE),    EWC(WIN_MONITOR),
+      EWC(WIN_MONITORS),    EWC(WIN_MOVE),        EWC(WIN_RESET),
+      EWC(WIN_RESIZE),      EWC(WIN_RESTORE),     EWC(WIN_SETICON),
+      EWC(WIN_SETLKMODS),   EWC(WIN_SETRAWMOUSE), EWC(WIN_SETSTKKEYS),
+      EWC(WIN_SETSTKMOUSE), EWC(WIN_TOGGLEFS),    EWC(CB_GET),
+      EWC(CB_SET),          EWC(CB_SETNR),        EWC(WIN_CURPOSSET)
 #undef EWC                             // Done with this macro
     }, "EWC_OTHER" },
     EvtCore{ "EvtWin", *this }         // Construct core

@@ -91,8 +91,8 @@ LLFUNC(FSType, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetFSType()))
 // < Y:integer=Current Y position of the window.
 // ? Gets the current position of the window on the desktop.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetPos, 2, LuaUtilPushVar(lS, cDisplay->DisplayGetWindowPosX(),
-  cDisplay->DisplayGetWindowPosY()))
+LLFUNC(GetPos, 2, LuaUtilPushVar(lS,
+  cDisplay->DisplayGetWinPosX(), cDisplay->DisplayGetWinPosY()))
 /* ========================================================================= */
 // $ Display.GetSize
 // < Width:integer=Width of the window.
@@ -211,7 +211,7 @@ LLFUNC(SetCursor, 0,
 // ? Sets the full-screen window state and resets the video subsystem.
 // ? This changes the cvar too.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetFullScreen, 0, cDisplay->DisplayRequestFSToggle(AgBoolean{lS, 1}))
+LLFUNC(SetFullScreen, 0, cInput->InputRequestFSToggle(AgBoolean{lS, 1}))
 /* ========================================================================= */
 // $ Display.SetPos
 // > X:integer=New X position of the window.

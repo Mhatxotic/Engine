@@ -20,7 +20,8 @@
 namespace LLSocket {                   // Socket namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ILog::P;
-using namespace ISocket::P;            using namespace Common;
+using namespace ISocket::P;            using namespace IString::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Socket common helper classes                                        ## **
@@ -68,7 +69,11 @@ LLFUNC(Callback, 0, AgSocket{lS, 1}().SetNewCallback(lS))
 // ? This function collects all the data in the 'read' queue and moves it all
 // ? into an array for you to manipulate as you desire.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CompactRecvQ, 1, AgSocket{lS, 1}().CompactRXSafe(AcAsset{lS}()))
+LLFUNC(CompactRecvQ, 1,
+  const AgSocket aSocket{lS, 1};
+  const AcAsset aAsset{lS};
+  aSocket().CompactRXSafe(aAsset());
+  aAsset().NameSet(StrAppend(aSocket().Serial(), ':', aSocket().GetRXpkt())))
 /* ========================================================================= */
 // $ Socket:CompactSendQ
 // < Data:Asset=An array of data that was waiting to be written to the queue.
@@ -76,7 +81,11 @@ LLFUNC(CompactRecvQ, 1, AgSocket{lS, 1}().CompactRXSafe(AcAsset{lS}()))
 // ? Removes all data from the pending write queue. If used as a HTTP socket
 // ? then this may contain return header information (use PopSendQT() instead).
 /* ------------------------------------------------------------------------- */
-LLFUNC(CompactSendQ, 1, AgSocket{lS, 1}().CompactTXSafe(AcAsset{lS}()))
+LLFUNC(CompactSendQ, 1,
+  const AgSocket aSocket{lS, 1};
+  const AcAsset aAsset{lS};
+  aSocket().CompactTXSafe(aAsset());
+  aAsset().NameSet(StrAppend(aSocket().Serial(), ':', aSocket().GetTXpkt())))
 /* ========================================================================= */
 // $ Socket:Destroy
 // ? Aborts, disconnects and destroys the socket object and frees all the
@@ -341,6 +350,7 @@ LLFUNC(Connected, 1, LuaUtilPushVar(lS, cSockets->astConnected.load()))
 LLFUNC(Count, 1, LuaUtilPushVar(lS, cSockets->CollectorCount()))
 /* ========================================================================= */
 // $ Socket.Create
+// > Name:string=Name to identify the socket.
 // > Address:string=The network destination address to connect to.
 // > Port:integer=The port to connect to (1-65535).
 // > Cipher:string=Make SSL connection and try this cipher.
@@ -356,14 +366,16 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cSockets->CollectorCount()))
 // ? make the thread consume 100% of a CPU core so be careful.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 0,
-  LuaUtilCheckParams(lS, 4);
-  AgAddress strAddress{ lS, 1 };
-  const AgPort uPort{ lS, 2 };
-  const AgString strCipher{ lS, 3 };
-  LuaUtilCheckFunc(lS, 4);
-  AcSocket{lS}().Connect(lS, strAddress(), uPort, strCipher()))
+  LuaUtilCheckParams(lS, 5);
+  const AgNeString strName{ lS, 1 };
+  AgAddress strAddress{ lS, 2 };
+  const AgPort uPort{ lS, 3 };
+  const AgString strCipher{ lS, 4 };
+  LuaUtilCheckFunc(lS, 5);
+  AcSocket{lS}().Connect(lS, strName, strAddress(), uPort, strCipher()))
 /* ========================================================================= */
 // $ Socket.CreateHTTP
+// > Name:string=Name to identify the socket.
 // > Cipher:string=Make SSL connection and try this cipher.
 // > Address:string=The network destination address to connect to.
 // > Port:integer=The port to connect to (1-65535).
@@ -377,16 +389,17 @@ LLFUNC(Create, 0,
 // ? immediately. The worker thread uses blocking socket operations.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CreateHTTP, 0,
-  LuaUtilCheckParams(lS, 8);
-  const AgString strCipher{ lS, 1 };
-  AgAddress strAddress{ lS, 2 };
-  const AgPort uPort{ lS, 3 };
-  const AgNeString strRequest{ lS, 4 };
-  AgMethod strMethod{ lS, 5 };
-  const AgString strHeaders{ lS, 6 };
-  const AgString strBody{ lS, 7 };
-  LuaUtilCheckFunc(lS, 8);
-  AcSocket{lS}().HTTPRequest(lS, strCipher(), strAddress(), uPort,
+  LuaUtilCheckParams(lS, 9);
+  const AgNeString strName{ lS, 1 };
+  const AgString strCipher{ lS, 2 };
+  AgAddress strAddress{ lS, 3 };
+  const AgPort uPort{ lS, 4 };
+  const AgNeString strRequest{ lS, 5 };
+  AgMethod strMethod{ lS, 6 };
+  const AgString strHeaders{ lS, 7 };
+  const AgString strBody{ lS, 8 };
+  LuaUtilCheckFunc(lS, 9);
+  AcSocket{lS}().HTTPRequest(lS, strName, strCipher(), strAddress(), uPort,
     strRequest(), strMethod(), strHeaders(), strBody()))
 /* ========================================================================= */
 // $ Socket.Flush

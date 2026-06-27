@@ -19,7 +19,7 @@ using namespace IString::P;            using namespace ISysCon::P;
 using namespace ISysInfo::P;           using namespace ISysMod::P;
 using namespace ISysMutex::P;          using namespace ISysPosix::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -72,10 +72,10 @@ class SysCore :
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // Grab tokens and if we have enough?
-          const TokenStrView tsvStats{ strStat, cCommon->CommonSpaceV(), 8 };
+          const TokenStrView tsvStats{ strStat, cCommon->CommonSpace(), 8 };
           if(tsvStats.size() >= 3)
           { // We're only interested in the first value
-            memData.stMProcUse = StrToNum<size_t>(tsvStats[1]) * stPageSize;
+            memData.stMProcUse = StrToNum<size_t>(tsvStats[1]) * GetPageSize();
             // Check for new process peak
             if(memData.stMProcUse > memData.stMProcPeak)
               memData.stMProcPeak = memData.stMProcUse;
@@ -115,7 +115,7 @@ class SysCore :
   { // Return nothing if no module
     if(!vpModule) return {};
     // Get information about the shared object
-    struct Lib::OS::link_map *lmData;
+    struct link_map *lmData;
     if(dlinfo(vpModule, RTLD_DI_LINKMAP, &lmData) || !lmData)
       XCL("Failed to read info about shared object!", "File", cpAltName);
     // Get full pathname of file
@@ -136,7 +136,7 @@ class SysCore :
           // First item must be cpu and second should be empty. We created the
           // string so this tokeniser class is allowed to modify it for
           // increased performance of processing it.
-          const TokenStrView tsvStats{ strStat, cCommon->CommonSpaceV(), 6 };
+          const TokenStrView tsvStats{ strStat, cCommon->CommonSpace(), 6 };
           if(tsvStats.size() >= 5)
           { // Get idle time
             const clock_t cUserNow = StrToNum<clock_t>(tsvStats[2]),
@@ -312,14 +312,14 @@ class SysCore :
   { // Get operating system name
     struct utsname utsnData;
     if(uname(&utsnData)) XCS("Failed to read operating system information!");
-    const StdStringView strvRelease{ utsnData.release };
+    const StdStringView ssvRelease{ utsnData.release };
     // Tokenize version numbers
-    const TokenStrView tsvVersion{ strvRelease, cCommon->CommonPeriod() };
+    const TokenStrView tsvVersion{ ssvRelease, cCommon->CommonPeriod() };
     // Process and activate locale code
     StdString strCode{ cCmdLine->CmdLineGetEnv("LANG") };
     ProcessAndActivateLocale(strCode);
     // Return operating system info
-    return { utsnData.sysname, cCommon->CommonBlank(),
+    return { utsnData.sysname, caBlank,
       tsvVersion.empty()    ? 0 : StrToNum<unsigned>(tsvVersion[0]),
       tsvVersion.size() < 2 ? 0 : StrToNum<unsigned>(tsvVersion[1]),
       tsvVersion.size() < 3 ? 0 : StrToNum<unsigned>(tsvVersion[2]),
@@ -337,24 +337,30 @@ class SysCore :
       { // Parse the variables and if we got some?
         if(ParserStringVC psvParser{ strFile, cCommon->CommonLf(), ':' })
         { // Move strings from loaded variables
-          StdString strCpuId{ StdMove(psvParser.ParserGet("model name")) },
-                    strSpeed{ StdMove(psvParser.ParserGet("cpu MHz")) },
-                    strVendor{ StdMove(psvParser.ParserGet("vendor_id")) },
-                    strFamily{ StdMove(psvParser.ParserGet("cpu family")) },
-                    strModel{ StdMove(psvParser.ParserGet("model")) },
-                    strStepping{ StdMove(psvParser.ParserGet("stepping")) };
+          StdString strCpuId{ psvParser.ParserGet("model name") },
+                    strSpeed{ psvParser.ParserGet("cpu MHz") },
+                    strVendor{ psvParser.ParserGet("vendor_id") },
+                    strFamily{ psvParser.ParserGet("cpu family") },
+                    strModel{ psvParser.ParserGet("model") },
+                    strStepping{ psvParser.ParserGet("stepping") };
           // Fail-safe any empty strings
           if(strSpeed.empty()) strSpeed = cCommon->CommonZero();
+          else StrCompactRef(strCpuId);
           if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
+          else StrCompactRef(strVendor);
           if(strCpuId.empty()) strCpuId = strVendor;
+          else StrCompactRef(strCpuId);
           if(strFamily.empty()) strFamily = cCommon->CommonZero();
+          else StrCompactRef(strFamily);
           if(strModel.empty()) strModel = cCommon->CommonZero();
+          else StrCompactRef(strModel);
           if(strStepping.empty()) strStepping = cCommon->CommonZero();
+          else StrCompactRef(strStepping);
           // Make processor id so it is consistent with the other platforms
           // Return strings
-          return { StdThreadMax(), StrToNum<unsigned>(strSpeed),
-            StrToNum<unsigned>(strFamily), StrToNum<unsigned>(strModel),
-            StrToNum<unsigned>(strStepping), StdMove(strCpuId) };
+          return { StrToNum<unsigned>(strSpeed), StrToNum<unsigned>(strFamily),
+            StrToNum<unsigned>(strModel), StrToNum<unsigned>(strStepping),
+            StdMove(strCpuId) };
         } // Failed to parse cpu variables
         else cLog->LogWarningSafe("Could not parse cpu information file!");
       } // Failed to read cpu info failed
@@ -364,7 +370,7 @@ class SysCore :
     else cLog->LogWarningExSafe("Could not open cpu information file: $!",
       StrFromErrNo());
     // Return default data we could not read
-    return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
+    return {};
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning() const { return false; }
@@ -396,9 +402,9 @@ class SysCore :
     return iNice;
    }
   /* -- Initialise global mutex -------------------------------------------- */
-  bool InitGlobalMutex(const StdStringView &strvTitle)
+  bool InitGlobalMutex(const StdStringView &ssvTitle)
   { // Initialise the mutex and return the result
-    return this->SysDoInitGlobalMutex(strvTitle,
+    return this->SysDoInitGlobalMutex(ssvTitle,
       [](const pid_t pMPid, const pid_t pOPid)->bool
     { // Put in log that another instance of this application is running and
       // return to caller that execution must cease.
@@ -412,7 +418,7 @@ class SysCore :
   /* -- Constructor -------------------------------------------------------- */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
-    SysMutex{ piProcessId },           // Send pid to mutex vlass
+    SysMutex{ GetPidRef() },           // Send pid to mutex vlass
     SysCon{ EnumModules(), 0 },        // Build system module dependencies
     SysInfo{ GetExecutableData(),      // Build data about the executable
              GetOperatingSystemData(), // Build data about the OS

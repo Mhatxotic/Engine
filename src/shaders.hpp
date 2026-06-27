@@ -12,7 +12,7 @@ using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IFboCmd::P;            using namespace ILog::P;
 using namespace IOgl::P;               using namespace IShader::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
-using namespace IString::P;            using namespace Lib::OS::GlFW::Types;
+using namespace IString::P;            using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Shader core class ==================================================== */
@@ -67,7 +67,7 @@ struct ShaderCore                      // Actual body
   /* -- Add vertex shader with template ------------------------------------ */
   static void AddVertexShaderWith3DTemplate(Shader &shS,
     const StdString &strName)
-  { AddVertexShaderWith3DTemplate(shS, strName, cCommon->CommonCBlank()); }
+  { AddVertexShaderWith3DTemplate(shS, strName, caBlank); }
   /* -- Add fragment shader with template ---------------------------------- */
   static void AddFragmentShaderWithTemplate(Shader &shS,
     const StdString &strName, const char*const cpCode,
@@ -91,13 +91,11 @@ struct ShaderCore                      // Actual body
   /* -- Add fragment shader with template ---------------------------------- */
   static void AddFragmentShaderWithTemplate(Shader &shS,
     const StdString &strName)
-  { AddFragmentShaderWithTemplate(shS, strName, cCommon->CommonCBlank(),
-      cCommon->CommonCBlank()); }
+  { AddFragmentShaderWithTemplate(shS, strName, caBlank, caBlank); }
   /* -- Add fragment shader with template ---------------------------------- */
   static void AddFragmentShaderWithTemplate(Shader &shS,
     const StdString &strName, const char*const cpCode)
-  { AddFragmentShaderWithTemplate(shS,
-      strName, cpCode, cCommon->CommonCBlank()); }
+  { AddFragmentShaderWithTemplate(shS, strName, cpCode, caBlank); }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const StdString &strName,
     const char*const cpCode)
@@ -109,7 +107,7 @@ struct ShaderCore                      // Actual body
   }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const StdString &strName)
-    { AddVertexShaderWith2DTemplate(shS, strName, cCommon->CommonCBlank()); }
+    { AddVertexShaderWith2DTemplate(shS, strName, caBlank); }
   /* ----------------------------------------------------------------------- */
   void Init3DShader()
   { // Add our basic 3D shader
@@ -210,9 +208,9 @@ struct ShaderCore                      // Actual body
     svKey = "abs(colourout.r-rgb.r)<=colourout.a&&"
             "abs(colourout.g-rgb.g)<=colourout.a&&"
             "abs(colourout.b-rgb.b)<=colourout.a?0:1",
-    // Rec.601 matrix code
+    // BT.601 matrix code
     sv601 = "1,1,1,0,-0.344,1.77,1.403,-0.714,0",
-    // Rec.709 matrix code
+    // BT.709 matrix code
     sv709 = "1.0,1.0,1.0,0.0,-0.18732,1.8556,1.5748,-0.46812,0.0",
     // Full-dynamic range code
     svFull =
@@ -230,35 +228,22 @@ struct ShaderCore                      // Actual body
       "ycbcr.x=texture(texY,vec2(texcoordout)).r;"
       "ycbcr.y=texture(texCb,vec2(texcoordout)).r-0.5;"
       "ycbcr.z=texture(texCr,vec2(texcoordout)).r-0.5;";
-    // 3D YCbCr shaders to comple
-    const struct ShaderList {
-      Shader              &shShader;   // Shader class destination
-      const StdString     &strName;    // Name of shader
-      const StdStringView &svRange,    // Shader dynamic range code
-                          &svMatrix,   // Shader colour range matrix code
-                          &svKey;      // RGB keying code
-    } slShaders[] = {
-      { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },
-      { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },
-      { sh3DYCbCr601PR, "FRAG-3D YCbCr>P601>RGB", svPartial, sv601, svNoKey },
-      { sh3DYCbCr601PR, "FRAG-3D YCbCr>P601>RGB", svPartial, sv601, svNoKey },
-      { sh3DYCbCr709FR, "FRAG-3D YCbCr>F709>RGB", svFull, sv709, svNoKey },
-      { sh3DYCbCr709FR, "FRAG-3D YCbCr>F709>RGB", svFull, sv709, svNoKey },
-      { sh3DYCbCr709PR, "FRAG-3D YCbCr>P709>RGB", svPartial, sv709, svNoKey },
-      { sh3DYCbCr709PR, "FRAG-3D YCbCr>P709>RGB", svPartial, sv709, svNoKey },
-      { sh3DYCbCrK601FR, "FRAG-3D YCbCr>F601>RGBK", svFull, sv601, svKey },
-      { sh3DYCbCrK601FR, "FRAG-3D YCbCr>F601>RGBK", svFull, sv601, svKey },
-      { sh3DYCbCrK601PR, "FRAG-3D YCbCr>P601>RGBK", svPartial, sv601, svKey },
-      { sh3DYCbCrK601PR, "FRAG-3D YCbCr>P601>RGBK", svPartial, sv601, svKey },
-      { sh3DYCbCrK709FR, "FRAG-3D YCbCr>F709>RGBK", svFull, sv709, svKey },
-      { sh3DYCbCrK709FR, "FRAG-3D YCbCr>F709>RGBK", svFull, sv709, svKey },
-      { sh3DYCbCrK709PR, "FRAG-3D YCbCr>P709>RGBK", svPartial, sv709, svKey },
-      { sh3DYCbCrK709PR, "FRAG-3D YCbCr>P709>RGBK", svPartial, sv709, svKey }
-    };
-    // Compile each of the above shaders
-    for(const ShaderList &slShader : slShaders)
-      Init3DYCbCrTemplate(slShader.shShader, slShader.strName,
-        slShader.svRange, slShader.svMatrix, slShader.svKey);
+    // 3D YCbCr shader helper macro
+#define SHDR(r,rn,c,k,kn) \
+    Init3DYCbCrTemplate(sh3DYCbCr ## k ## c ## r ## R, \
+      "FRAG-3D YCbCr>" STR(r) STR(c) ">RGB" STR(k), \
+      sv ## rn, sv ## c, sv ## kn);
+    // Initialise the YCbCr to RGBA conversion shaders
+    SHDR(F, Full,    601,  , NoKey);   // BT.601 (Full 0-255) unkeyed
+    SHDR(P, Partial, 601,  , NoKey);   // BT.601 (Partial 16-235) unkeyed
+    SHDR(F, Full,    709,  , NoKey);   // BT.709 (Full 0-255) unkeyed
+    SHDR(P, Partial, 709,  , NoKey);   // BT.709 (Partial 16-235) unkeyed
+    SHDR(F, Full,    601, K, Key);     // BT.601 (Full 0-255) keyed
+    SHDR(P, Partial, 601, K, Key);     // BT.601 (Partial 16-235) keyed
+    SHDR(F, Full,    709, K, Key);     // BT.709 (Full 0-255) keyed
+    SHDR(P, Partial, 709, K, Key);     // BT.709 (Partial 16-235) keyed
+    // Done with this helper macro
+#undef SHDR
   }
   /* -- Initialise built-in shaders -------------------------------- */ public:
   void ShadersInit()
@@ -310,7 +295,7 @@ struct ShaderCore                      // Actual body
     sh2D8Pal{ sh2DBuiltIns[3] },       sh2D16{ sh2DBuiltIns[4] },
     /* -- Rounding list ---------------------------------------------------- */
     rList{{                            // Initialise rounding strings list
-      cCommon->CommonBlank(),          // [0] No rounding
+      cCommon->CommonBlankStr(),          // [0] No rounding
       "floor",                         // [1] Floor rounding
       "ceil",                          // [2] Ceil rounding
       "round",                         // [3] Nearest whole number

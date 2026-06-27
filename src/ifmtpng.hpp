@@ -1,4 +1,4 @@
-/* == IMAGEPNG.HPP ========================================================= **
+/* == IFMTPNG.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -11,12 +11,12 @@ namespace ICodecPNG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace IDim::P;
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFStream::P;           using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace ILog::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ITexDef::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::Png;
+using namespace IFStream::P;           using namespace IImageData::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ITexDef::P;            using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::Png;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -90,19 +90,19 @@ class CodecPNG :                       // PNG codec object
         { Meta(cpK, cpV, strlen(cpV)); }
       void Meta(const char*const cpK, const StdString &strV)
         { Meta(cpK, strV.data(), strV.size()); }
-      void Meta(const char*const cpK, const StdStringView &strvV)
-        { Meta(cpK, strvV.data(), strvV.size()); }
+      void Meta(const char*const cpK, const StdStringView &ssvV)
+        { Meta(cpK, ssvV.data(), ssvV.size()); }
       // Constructor
       explicit PngWriter(const FStream &fsC) :
         // Initialisers
-        psData(png_create_write_struct(  // Create a write struct
-          PNG_LIBPNG_VER_STRING,         // Set version string
-          StdToNonConstCast<png_voidp>(  // Send user parameter
-            fsC.NameGetData()),         // Set filename as user parameter
-          PngError,                      // Set error callback function
-          PngWarning)),                  // Set warning callback function
-        piData(                          // We'll handle the info struct here
-          png_create_info_struct(psData))// Func checks if psData=NULL so safe
+        psData(png_create_write_struct(   // Create a write struct
+          PNG_LIBPNG_VER_STRING,          // Set version string
+          StdToNonConstCast<png_voidp>(   // Send user parameter
+            fsC.NameGetData()),           // Set filename as user parameter
+          PngError,                       // Set error callback function
+          PngWarning)),                   // Set warning callback function
+        piData(                           // We'll handle the info struct here
+          png_create_info_struct(psData)) // Func checks if psData=NULL so safe
       { // Check to make sure write struct is valid
         if(!psData) XC("Create PNG write struct failed!");
         // Check to make sure info struct is valid
@@ -194,14 +194,14 @@ class CodecPNG :                       // PNG codec object
       // Constructor
       explicit PngReader(FileMap &fmC) :
         // Initialisers
-        psData(png_create_read_struct(   // Create a read struct
-          PNG_LIBPNG_VER_STRING,         // Set version string
-          StdToNonConstCast<png_voidp>(  // Send user parameter
-            fmC.NameGetData()),         // Set filename as user parameter
-          PngError,                      // Set error callback function
-          PngWarning)),                  // Set warning callback function
-        piData(                          // We'll handle the info struct here
-          png_create_info_struct(psData))// Func checks if psData=NULL so safe
+        psData(png_create_read_struct(    // Create a read struct
+          PNG_LIBPNG_VER_STRING,          // Set version string
+          StdToNonConstCast<png_voidp>(   // Send user parameter
+            fmC.NameGetData()),           // Set filename as user parameter
+          PngError,                       // Set error callback function
+          PngWarning)),                   // Set warning callback function
+        piData(                           // We'll handle the info struct here
+          png_create_info_struct(psData)) // Func checks if psData=NULL so safe
       { // Check to make sure write struct is valid
         if(!psData) XC("Create PNG read struct failed!");
         // Check to make sure info struct is valid
@@ -221,7 +221,7 @@ class CodecPNG :                       // PNG codec object
     png_colorp palData = nullptr;
     int iPalette = 0;
     // Do we have alpha?
-    const bool bAlpha = !!png_get_valid(psData, piData, PNG_INFO_tRNS);
+    const bool bAlpha = png_get_valid(psData, piData, PNG_INFO_tRNS) != 0;
     // Get and check bits-per-CHANNEL (may change)
     switch(const unsigned uBPC = png_get_bit_depth(psData, piData))
     { // 1 bits-per-CHANNEL? (binary image)

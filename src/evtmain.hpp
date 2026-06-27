@@ -26,7 +26,7 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_QUIT_RESTART,                    // 03: Cleanly quit and restart app
   EMC_QUIT_RESTARTNP,                  // 04: Same as above but without args
   EMC_QUIT_THREAD,                     // 05: Thread loop should quit
-  EMC_QUIT_VREINIT,                    // 06: As above but reinit open gl
+  EMC_QUIT_VREINIT,                    // 06: As above but reinit window
   /* -- Lua events --------------------------------------------------------- */
   EMC_LUA_ASKEXIT,                     // 07: To LUA asking to clean up & exit
   EMC_LUA_CONFIRMEXIT,                 // 08: From LUA to confirm the exit
@@ -166,7 +166,7 @@ class EvtMain :                        // Event list for render thread
       IdToString(emcReason), emcReason);
   }
   /* -- Incase of error we need to update the exit code -------------------- */
-  bool ExitRequested() const { return !!uConfirm; }
+  bool ExitRequested() const { return uConfirm != 0; }
   /* -- Incase of error we need to update the exit code -------------------- */
   void UpdateConfirmExit()
   { // Ignore if not in a confirmation request
@@ -244,8 +244,6 @@ class EvtMain :                        // Event list for render thread
   void RequestQuit() { Add(EMC_QUIT); }
   /* -- Add event to quit thread and restart window manager ---------------- */
   void RequestQuitThread() { Add(EMC_QUIT_THREAD); }
-  /* -- Add event to quit thread and wait for it to complete --------------- */
-  void RequestQuitThreadWait() { Add(EMC_QUIT_THREAD); }
   /* -- Add event to quit thread and restart opengl ------------------------ */
   void RequestGLReInit() { Add(EMC_QUIT_VREINIT); }
   /* -- Add event to quit thread and restart opengl and wait --------------- */

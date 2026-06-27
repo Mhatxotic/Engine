@@ -88,20 +88,20 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   } // Exception occured? Cleanup and rethrow exception
   catch(const StdException &) { LuaEvtDeInit(); throw; }
   /* -- Initialise and set string ------------------------------------------ */
-  void ClipSetAsync(lua_State*const lS, const StdStringView &strvIdent,
-    const StdStringView &strvContent)
+  void ClipSetAsync(lua_State*const lS, const StdStringView &ssvIdent,
+    const StdStringView &ssvContent)
   { // Get and check parameters
-    NameSet(strvIdent);
-    strClipboard = strvContent;
+    NameSet(ssvIdent);
+    strClipboard = ssvContent;
     // Init LUA references
     LuaEvtInitEx(lS);
     // We're ready, so dispatch to the window thread with this class
     cEvtWin->Add(EWC_CB_SET, this);
   }
   /* -- Initialise and get string ------------------------------------------ */
-  void ClipGetAsync(lua_State*const lS, const StdStringView &strvIdent)
+  void ClipGetAsync(lua_State*const lS, const StdStringView &ssvIdent)
   { // Get and check parameters
-    NameSet(strvIdent);
+    NameSet(ssvIdent);
     // Init LUA references
     LuaEvtInitEx(lS);
     // We're ready, so dispatch to the window thread with this class

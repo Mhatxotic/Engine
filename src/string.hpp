@@ -12,12 +12,20 @@ namespace IString {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
 using namespace IUtf::P;
+/* -- Generic struct for human-readable formatted numbers ------------------ */
+template<typename IntType>
+  requires StdIsIntegral<IntType>
+struct GroupedValueBase {
+  const IntType    itValue;
+  const char*const cpSuf;
+  GroupedValueBase(const IntType itNValue, const char*const cpNSuf) :
+    itValue(itNValue), cpSuf(cpNSuf) {}
+};
 /* -- Process string format/append value into output string stream --------- */
 template<typename AnyType>
   static void StrFormatValue(StdOStringStream &osS, AnyType &&atVal)
 { // If is an exception object? Push the string of it
-  if constexpr(StdIsSame<StdDecay<AnyType>, StdException>)
-    osS << atVal.what();
+  if constexpr(StdIsSame<StdDecay<AnyType>, StdException>) osS << atVal.what();
   // Let ostringstream handle the value
   else osS << atVal;
 }
@@ -32,26 +40,26 @@ template<typename AnyType, typename ...VarArgs>
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Format final parameter to output string stream ----------------------- */
-static void StrFormatParam(StdOStringStream &osS, const StdStringView &strvPos,
-  const size_t stPos) { osS << strvPos.substr(stPos); }
+static void StrFormatParam(StdOStringStream &osS, const StdStringView &ssvPos,
+  const size_t stPos) { osS << ssvPos.substr(stPos); }
 /* -- Check for next limiter ----------------------------------------------- */
 static size_t StrFormatGetNextDelimiter(StdOStringStream &osS,
-  const StdStringView &strvPos, size_t stPos)
+  const StdStringView &ssvPos, size_t stPos)
 { // Find mark that will be replaced by this param and if no more tokens?
-  const size_t stNewPos = strvPos.find('$', stPos);
+  const size_t stNewPos = ssvPos.find('$', stPos);
   if(stNewPos == StdNPos)
   { // Return the rest of the string and return finished to the caller
-    StrFormatParam(osS, strvPos, stPos);
+    StrFormatParam(osS, ssvPos, stPos);
     return StdNPos;
   } // How far did we find the new position
   switch(const size_t sitNum = static_cast<size_t>(stNewPos - stPos))
   { // One character? Just copy one character and move ahead two to skip over
     // the '$' we just processed.
-    case 1: osS << strvPos[stPos];
+    case 1: osS << ssvPos[stPos];
             stPos += 2; break;
     // More than one character? Copy characters and stride over the '$' we
     // just processed. Better than storing single characters.
-    default: osS << strvPos.substr(stPos, sitNum);
+    default: osS << ssvPos.substr(stPos, sitNum);
              stPos += sitNum + 1;
              break;
     // Did not move? This can happen at the start of the string. Just move
@@ -63,15 +71,15 @@ static size_t StrFormatGetNextDelimiter(StdOStringStream &osS,
 /* -- Format any parameter to output string stream ------------------------- */
 template<typename AnyType, typename ...VarArgs>
   static void StrFormatParam(StdOStringStream &osS,
-    const StdStringView &strvPos, size_t stPos, AnyType &&atVal,
+    const StdStringView &ssvPos, size_t stPos, AnyType &&atVal,
     VarArgs &&...vaArgs)
 { // Find mark that will be replaced by this param and return if finished
-  const size_t stNewPos = StrFormatGetNextDelimiter(osS, strvPos, stPos);
+  const size_t stNewPos = StrFormatGetNextDelimiter(osS, ssvPos, stPos);
   if(stNewPos == StdNPos) return;
   // Push the value we are supposed to replace the matched '$' with.
   StrFormatValue(osS, StdForward<AnyType>(atVal));
   // Process more parameters if we can.
-  StrFormatParam(osS, strvPos, stNewPos, StdForward<VarArgs>(vaArgs)...);
+  StrFormatParam(osS, ssvPos, stNewPos, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Public functions ----------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -79,8 +87,8 @@ namespace P {                          // Start of public module namespace
 template<typename ...VarArgs>
   requires (sizeof...(VarArgs) > 0)
 static StdString StrAppend(VarArgs &&...vaArgs)
-{ // Create stream to write to, build it and return it
-  StdOStringStream osS;
+{ // Get stream to write to, build it and return it
+  StdOStringStream &osS = cCommon->o.StreamReset();
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
   return osS.str();
 }
@@ -88,13 +96,9 @@ static StdString StrAppend(VarArgs &&...vaArgs)
 template<typename ...VarArgs>
   requires (sizeof...(VarArgs) > 0)
 static StdString StrAppendImbue(VarArgs &&...vaArgs)
-{ // Stream to write to
-  StdOStringStream osS;
-  // Imbue current locale
-  osS.imbue(cCommon->CommonLocale());
-  // Build string
+{ // Get imbued stream to write to, build it and return it
+  StdOStringStream &osS = cCommon->o.StreamImbuedReset();
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
-  // Return appended string
   return osS.str();
 }
 /* -- Prepare message from a c-string pointer ------------------------------ */
@@ -121,7 +125,7 @@ static StdString StrFormat(StrType &&strFormat, VarArgs &&...vaArgs)
   else if constexpr(StdIsString<StrTypeDecayed>)
   { // Create stringstream to write to, format the text and return it
     if(strFormat.empty()) return {};
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     StrFormatParam(osS, StdForward<StrType>(strFormat), 0,
       StdForward<VarArgs>(vaArgs)...);
     return osS.str();
@@ -134,11 +138,11 @@ template<typename IntType>
 static StdString StrReadableFromNum(const IntType itVal, const int iPrec = 0)
   { return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrec), itVal); }
 /* -- Trim specified characters from end of string ------------------------- */
-static StdString StrTrimSuffix(const StdStringView &strvStr, const char cChar)
+static StdString StrTrimSuffix(const StdStringView &ssvStr, const char cChar)
 { // Return empty string if source string is empty or calculate ending
   // misoccurance of character then copy and return the string
-  return StdString{ strvStr.empty() ?
-    strvStr : strvStr.substr(0, strvStr.find_last_not_of(cChar) + 1) };
+  return StdString{ ssvStr.empty() ?
+    ssvStr : ssvStr.substr(0, ssvStr.find_last_not_of(cChar) + 1) };
 }
 /* -- Trim specified characters from end of string ------------------------- */
 template<class StrType>
@@ -451,10 +455,24 @@ template<class StrType>
 static StdString StrUrlEncodeSpaces(StrType &&strText)
   { return StrReplaceChar(StdForward<StrType>(strText), ' ', '+'); }
 /* ------------------------------------------------------------------------- */
-template<class StrTypeIn, class StrTypeAlt = StrTypeIn>
-  requires StdIsStrOrCStr<StrTypeIn> && StdIsSame<StrTypeIn, StrTypeAlt>
-static auto &StrIsBlank(StrTypeIn &&strIn, StrTypeAlt &&strAlt)
-  { return strIn.empty() ? strAlt : strIn; }
+template<class StrTypeIn, class StrTypeAlt>
+  requires StdIsString<StrTypeIn> && StdIsString<StrTypeAlt>
+static auto StrIsBlank(StrTypeIn &&strIn, StrTypeAlt &&strAlt)
+{ // If both types are not the same?
+  if constexpr(!StdIsSame<StrTypeIn, StrTypeAlt>)
+  { // Types differ: return a lightweight view of whichever is not blank.
+    // Note: Ensure both underlying data sources outlive the returned view.
+    return strIn.empty() ?
+      StdStringView{ std::forward<StrTypeAlt>(strAlt) } :
+      StdStringView{ std::forward<StrTypeIn>(strIn) };
+  } // Both types are the same?
+  else
+  { // Types are the same: preserve the exact reference category.
+    return strIn.empty() ?
+      StdForward<StrTypeAlt>(strAlt) :
+      StdForward<StrTypeIn>(strIn);
+  }
+}
 /* -- Pluralise (returns a reference to an lvalue argument) ---------------- */
 template<typename IntType, typename StrTypeSing, typename StrTypePlur>
   requires StdIsIntegral<IntType> &&
@@ -525,15 +543,19 @@ static StdString StrCapitalise(StrType &&strStr)
   { StdString strNew{ strStr }; return StrCapitaliseRef(strNew); }
 /* -- Evaluate a list of booleans and return a character value ------------- */
 static StdString StrFromEvalTokens(const BoolCharPairVector &bcpvList)
-  { return bcpvList.empty() ? cCommon->CommonBlank() :
-      StdAccumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->CommonBlank(),
-        [](const StdString &strOut, const BoolCharPair &bcpPair)
-          { return bcpPair.first ? StrAppend(strOut,
-            bcpPair.second) : strOut; }); }
-/* -- Return true of false ------------------------------------------------- */
-static const StdString &StrFromBoolTF(const bool bCondition)
+{ // Stream to build the token string from
+  StdOStringStream &osS = cCommon->o.StreamReset();
+  // Walk through the table that was sent and if it's evaluation is true then
+  // add the supplied token to the string
+  for(const BoolCharPair &bcpPair : bcpvList)
+    if(bcpPair.first) osS << bcpPair.second;
+  // Return the string generated
+  return osS.str();
+}
+/* -- Return true or false based on supplied condition --------------------- */
+static const StdStringView &StrFromBoolTF(const bool bCondition)
   { return bCondition ? cCommon->CommonTrue() : cCommon->CommonFalse(); }
-static const StdString &StrFromBoolYN(const bool bCondition)
+static const StdStringView &StrFromBoolYN(const bool bCondition)
   { return bCondition ? cCommon->CommonYes() : cCommon->CommonNo(); }
 /* -- Count occurence of string -------------------------------------------- */
 template<class StrType, class StrWhatType>
@@ -564,7 +586,7 @@ static StdString StrImplode(const AnyArray &aaArray,
   // Done if empty or begin position is invalid
   if(aaArray.empty() || sstBegin >= sstSize) return {};
   // Create output only string stream which stays cached (safe in c++11)
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // Get first iterator (penultimate from the end in the array)
   using AnyArrayConstIt = typename AnyArray::const_iterator;
   AnyArrayConstIt aaciStart{ StdNext(aaArray.cbegin(), sstBegin) };
@@ -609,11 +631,11 @@ static OutType StrToReadableSuffix(const InType itValue,
   if(!StdAnyOf(scLookup.cbegin(), scLookup.cend(),
     [&otReturn, itValue, &cpSuffix](const auto &aItem)
   { // Calculate best measurement to show
-    if(itValue < aItem.vValue) return false;
+    if(itValue < aItem.itValue) return false;
     // Set suffix that was sent and return success
     *cpSuffix = aItem.cpSuf;
     otReturn = static_cast<OutType>(itValue) /
-      static_cast<OutType>(aItem.vValue);
+      static_cast<OutType>(aItem.itValue);
     return true;
   }))
   { // Not found any matches so precision will now be zero
@@ -630,17 +652,17 @@ template<typename OutType, typename InType, class SuffixClass>
   static OutType StrToReadableSuffix(const InType itValue,
     const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup)
 { return StrToReadableSuffix<OutType, InType, SuffixClass>(itValue,
-    cpSuffix, iPrecision, scLookup, cCommon->CommonCBlank()); }
+    cpSuffix, iPrecision, scLookup, caBlank); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static double StrToBytesHelper(const IntType itBytes,
     const char**const cpSuffix, int &iPrecision)
-{ // A test to perform
-  struct ByteValue { const IntType vValue; const char*const cpSuf; };
+{ // Create grouped value type
+  using GroupedValue = GroupedValueBase<IntType>;
   // If input value is 64-bit?
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer
-    static const StdArray<const ByteValue,6> bvLookup{ {
+    static const StdArray<const GroupedValue,6> bvLookup{ {
       { 0x1000000000000000ULL, "EB" }, { 0x0004000000000000ULL, "PB" },
       { 0x0000010000000000ULL, "TB" }, { 0x0000000040000000ULL, "GB" },
       { 0x0000000000100000ULL, "MB" }, { 0x0000000000000400ULL, "KB" }
@@ -650,7 +672,7 @@ template<typename IntType>
   } // If input value is 32-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer
-    static const StdArray<const ByteValue,3> bvLookup{ {
+    static const StdArray<const GroupedValue,3> bvLookup{ {
       { 0x40000000UL, "GB" }, { 0x00100000UL, "MB" }, { 0x00000400UL, "KB" }
     } };
     return StrToReadableSuffix<double>(itBytes,
@@ -658,13 +680,14 @@ template<typename IntType>
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer
-    static const StdArray<const ByteValue,1> bvLookup{ { { 0x0400, "KB" } } };
+    static const StdArray<const GroupedValue,1>
+      bvLookup{ { { 0x0400, "KB" } } };
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const StdArray<const ByteValue,0> bvLookup{ {} };
+    static const StdArray<const GroupedValue,0> bvLookup{ {} };
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   }
@@ -697,12 +720,12 @@ template<typename IntType>
   requires StdIsIntegral<IntType>
 static double StrToReadableBitsHelper(const IntType itBits,
   const char**const cpSuffix, int &iPrecision)
-{ // A test to perform
-  struct BitValue { const IntType vValue; const char*const cpSuf; };
+{ // Create grouped value type
+  using GroupedValue = GroupedValueBase<IntType>;
   // If input value is 64-bit?
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const BitValue,6> bvLookup{ {
+    static const StdArray<const GroupedValue,6> bvLookup{ {
       { 1000000000000000000ULL, "Eb" }, { 1000000000000000ULL, "Pb" },
       {       1000000000000ULL, "Tb" }, {       1000000000ULL, "Gb" },
       {             1000000ULL, "Mb" }, {             1000ULL, "Kb" },
@@ -713,7 +736,7 @@ static double StrToReadableBitsHelper(const IntType itBits,
   } // If input value is 32-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer.
-    static const StdArray<const BitValue,3> bvLookup{ {
+    static const StdArray<const GroupedValue,3> bvLookup{ {
       { 1000000000UL, "Gb" }, { 1000000UL, "Mb" }, { 1000UL, "Kb" },
     } };
     // Return result
@@ -722,14 +745,14 @@ static double StrToReadableBitsHelper(const IntType itBits,
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer.
-    static const StdArray<const BitValue,6> bvLookup{ { { 1000, "Kb" } } };
+    static const StdArray<const GroupedValue,6> bvLookup{ { { 1000, "Kb" } } };
     // Return result
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const StdArray<const BitValue,0> bvLookup{ {} };
+    static const StdArray<const GroupedValue,0> bvLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
@@ -761,12 +784,12 @@ template<typename IntType>
 template<typename IntType>
   static double StrToReadableHelper(const IntType itValue,
     const char**const cpSuffix, int &iPrecision)
-{ // A test to perform
-  struct Value { const IntType vValue; const char*const cpSuf; };
+{ // Create grouped value type
+  using GroupedValue = GroupedValueBase<IntType>;
   // If input value is 64-bit?
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const Value,4> vLookup{ {
+    static const StdArray<const GroupedValue,4> vLookup{ {
       { 1000000000000ULL, "T" }, { 1000000000ULL, "B" },
       { 1000000ULL,       "M" }, { 1000ULL,       "K" }
     } };
@@ -775,7 +798,7 @@ template<typename IntType>
   } // If input value is 32-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const Value,3> vLookup{ {
+    static const StdArray<const GroupedValue,3> vLookup{ {
       { 1000000000UL, "B" }, { 1000000UL, "M" }, { 1000UL, "K" }
     } };
     // Return result
@@ -783,13 +806,13 @@ template<typename IntType>
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const Value,1> vLookup{ { { 1000, "K" } } };
+    static const StdArray<const GroupedValue,1> vLookup{ { { 1000, "K" } } };
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const StdArray<const Value,0> vLookup{ {} };
+    static const StdArray<const GroupedValue,0> vLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   }
@@ -939,7 +962,7 @@ template<class ListType, class StrSepType, class StrLastType>
 static StdString StrExplodeEx(const ListType &lType, StrSepType &&sstSep,
   StrLastType &&sltLast)
 { // String to return
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // What is the size of this string
   switch(lType.size())
   { // Empty list? Just break to return empty string

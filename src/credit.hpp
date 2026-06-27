@@ -24,26 +24,26 @@ class CreditLib :                      // Members initially private
   public MemConst                      // License data memory
 { /* ----------------------------------------------------------------------- */
   const size_t     stId;               // Unique identification umber
-  const StdStringView strvName,        // Name of library
-                   strvVersion,        // String version
-                   strvAuthor;         // Author of library
+  const StdStringView ssvName,         // Name of library
+                   ssvVersion,         // String version
+                   ssvAuthor;          // Author of library
   const bool       bCopyright;         // Is copyrighted library
   /* --------------------------------------------------------------- */ public:
   const size_t &GetID() const { return stId; }
-  const StdStringView &GetName() const { return strvName; }
-  const StdStringView &GetVersion() const { return strvVersion; }
-  const StdStringView &GetAuthor() const { return strvAuthor; }
+  const StdStringView &GetName() const { return ssvName; }
+  const StdStringView &GetVersion() const { return ssvVersion; }
+  const StdStringView &GetAuthor() const { return ssvAuthor; }
   bool IsCopyright() const { return bCopyright; }
   /* ----------------------------------------------------------------------- */
-  CreditLib(const size_t stCreditId, const StdStringView &strvNName,
-    const StdStringView &strvNVersion, const StdStringView &strvNAuthor,
+  CreditLib(const size_t stCreditId, const StdStringView &ssvNName,
+    const StdStringView &ssvNVersion, const StdStringView &ssvNAuthor,
     const bool bNCopyright, const void*const vpData, const size_t stSize) :
     /* -- Initialisers ----------------------------------------------------- */
     MemConst{ stSize, vpData },        // Init credit license data
     stId{ stCreditId },                // Init credit unique id
-    strvName{ strvNName },             // Init credit name
-    strvVersion{ strvNVersion },       // Init credit version
-    strvAuthor{ strvNAuthor },         // Init credit author
+    ssvName{ ssvNName },               // Init credit name
+    ssvVersion{ ssvNVersion },         // Init credit version
+    ssvAuthor{ ssvNAuthor },           // Init credit author
     bCopyright{ bNCopyright }          // Init credit copyright status
     /* -- Increment credit id counter -------------------------------------- */
     {}
@@ -68,6 +68,7 @@ enum CreditEnums : size_t              // Credit ids
   CL_AL,                               // Id for OpenALSoft credit data
   CL_SSL,                              // Id for OpenSSL credit data
   CL_JSON,                             // Id for RapidJson credit data
+  CL_SWP,                              // Id for SimpleWebP credit data
   CL_SQL,                              // Id for SqLite credit data
   CL_THEO,                             // Id for Theora credit data
   CL_ZLIB,                             // Id for ZLib credit data
@@ -120,7 +121,7 @@ class Credits                          // Members initially private
     for(const CreditLib &lD : CreditGetLibList())
       cLog->LogNLCInfoExSafe("- Using $ (v$) $$", lD.GetName(),
         lD.GetVersion(), lD.IsCopyright() ? "\xC2\xA9 " :
-          cCommon->CommonBlank(), lD.GetAuthor());
+          cCommon->CommonBlankStr(), lD.GetAuthor());
   }
   /* -- Dump credits to log (cvar version) --------------------------------- */
   CVarReturn CreditDumpList(const bool bDoIt) const
@@ -136,38 +137,42 @@ class Credits                          // Members initially private
       // t = Title of dependency         v = Version of dependency
       // n = license variable name       c = is dependency copyrighted?
       // a = Author of dependency
-#define LD(i,t,v,c,a,n) { CL_ ## i, t, v, c, a, l ## n.data(), l ## n.size() }
+#define LD(i,t,v,c,a,n) { i, t, v, c, a, l ## n.data(), l ## n.size() }
       // The credits data structure (Keep the engine credit as the first)
-      LD(MSE, cSystem->ENGName(), cSystem->ENGVersion(), cSystem->ENGAuthor(),
-        true, ENGINE),
-      LD(FT, "FreeType", STR(FREETYPE_MAJOR) "." STR(FREETYPE_MINOR) "."
+      LD(CL_MSE, cSystem->ENGName(), cSystem->ENGVersion(),
+        cSystem->ENGAuthor(), true, ENGINE),
+      LD(CL_FT, "FreeType", STR(FREETYPE_MAJOR) "." STR(FREETYPE_MINOR) "."
         STR(FREETYPE_PATCH), "The FreeType Project", true, FREETYPE),
-      LD(GLFW, "GLFW", cGlFW->GlFWGetInternalVersion(),
+      LD(CL_GLFW, "GLFW", cGlFW->GlFWGetInternalVersion(),
         "Marcus Geelnard & Camilla Löwy", true, GLFW),
-      LD(JPEG, "JPEGTurbo", STR(LIBJPEG_TURBO_VERSION),
+      LD(CL_JPEG, "JPEGTurbo", STR(LIBJPEG_TURBO_VERSION),
         "IJG/Contributing authors", true, LIBJPEGTURBO),
-      LD(GIF, "LibNSGif", "1.0.0", "Richard Wilson & Sean Fox", true,
+      LD(CL_GIF, "LibNSGif", "1.0.0", "Richard Wilson & Sean Fox", true,
         LIBNSGIF),
-      LD(PNG, "LibPNG", PNG_LIBPNG_VER_STRING, "Contributing authors", true,
+      LD(CL_PNG, "LibPNG", PNG_LIBPNG_VER_STRING, "Contributing authors", true,
         LIBPNG),
-      LD(LUA, "LUA", LUA_VDIR "." LUA_VERSION_RELEASE, "Lua.org, PUC-Rio",
-        true, LUA),
-      LD(LZMA, "LZMA", MY_VERSION, "Igor Pavlov", false, 7ZIP),
+      LD(CL_LUA, "LUA", LUA_VDIR "." LUA_VERSION_RELEASE,
+        "Lua.org, PUC-Rio", true, LUA),
+      LD(CL_LZMA, "LZMA", MY_VERSION, "Igor Pavlov", false, 7ZIP),
 #if !defined(WINDOWS)
-      LD(NCURSES, "NCurses", NCURSES_VERSION, "Free Software Foundation", true,
-        NCURSES),
+      LD(CL_NCURSES, "NCurses", NCURSES_VERSION,
+        "Free Software Foundation", true, NCURSES),
 #endif
-      LD(OGG, "OggVorbis", Lib::Ogg::vorbis_version_string()+19, "Xiph.Org",
+      LD(CL_OGG, "OggVorbis", Lib::Ogg::vorbis_version_string()+19, "Xiph.Org",
         false, OGGVORBISTHEORA),
-      LD(AL, "OpenALSoft", "1.24.3", "Chris Robinson", false, OPENALSOFT),
-      LD(SSL, "OpenSSL", STR(OPENSSL_VERSION_MAJOR) "."
+      LD(CL_AL, "OpenALSoft", "1.25.2", "Chris Robinson", false, OPENALSOFT),
+      LD(CL_SSL, "OpenSSL", STR(OPENSSL_VERSION_MAJOR) "."
         STR(OPENSSL_VERSION_MINOR) "." STR(OPENSSL_VERSION_PATCH),
         "OpenSSL Software Foundation", true, OPENSSL),
-      LD(JSON, "RapidJson", RAPIDJSON_VERSION_STRING,
+      LD(CL_JSON, "RapidJson", RAPIDJSON_VERSION_STRING,
         "THL A29 Ltd., Tencent co. & Milo Yip", true, RAPIDJSON),
-      LD(SQL, "SQLite", SQLITE_VERSION, "Contributing authors", false, SQLITE),
-      LD(THEO, "Theora", strTheoraVersion, "Xiph.Org", false, OGGVORBISTHEORA),
-      LD(ZLIB, "Z-Lib", STR(ZLIB_VER_MAJOR) "." STR(ZLIB_VER_MINOR) "."
+      LD(CL_SWP, "SimpleWebP", STR(SIMPLEWEBP_VERSION),
+        "Google Inc. & Miku AuahDark", true, SIMPLEWEBP),
+      LD(CL_SQL, "SQLite", SQLITE_VERSION,
+        "Contributing authors", false, SQLITE),
+      LD(CL_THEO, "Theora", strTheoraVersion,
+        "Xiph.Org", false, OGGVORBISTHEORA),
+      LD(CL_ZLIB, "Z-Lib", STR(ZLIB_VER_MAJOR) "." STR(ZLIB_VER_MINOR) "."
         STR(ZLIB_VER_REVISION) "." STR(ZLIB_VER_SUBREVISION),
         "Jean-loup Gailly & Mark Adler", true, ZLIB),
       // End of credits data structure

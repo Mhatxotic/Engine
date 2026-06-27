@@ -16,8 +16,8 @@ using namespace ILog::P;               using namespace IMemory::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::OpenSSL;
-using namespace Lib::OS::SevenZip;
+using namespace IUtil::P;              using namespace Lib::OpenSSL;
+using namespace Lib::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
@@ -424,7 +424,8 @@ static StdString CryptEntEncodePtr(const char*const cpPtr, const size_t stSize)
   // Create sting to return and reserve memory. We will use a ostringstream
   // because we do not know what the size is going to be and we can make
   // use of hex which will work with our utf8 decoder.
-  StdOStringStream osS; osS << StdIOSHex;
+  StdOStringStream &osS = cCommon->o.StreamReset();
+  osS << StdIOSHex;
   // For each entity. Find it in the string
   // Until null character. Which control token?
   for(UtfDecoder udSrc{ cpPtr, stSize };
@@ -451,7 +452,7 @@ static StdString CryptEntEncodePtr(const char*const cpPtr, const size_t stSize)
        // Any code point where low 16 bits are 0xFFFE or 0xFFFF?
        (cChar & 0xffff) >= 0xfffe)
       // Write the hexedecimal notation for the character instead
-      osS << cCommon->CommonEntV() << cChar << ';';
+      osS << cCommon->CommonEnt() << cChar << ';';
     // Character is usable as is
     else osS << static_cast<char>(cChar);
   } // Return string

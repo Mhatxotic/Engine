@@ -10,98 +10,142 @@
 namespace ICommon {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
+static const char caBlank[] = "";      // Blank C-String on the stack
 /* -- Common class with common objects ------------------------------------- */
 class Common;                          // Prototype
 static Common *cCommon = nullptr;      // Global access to class
 class Common                           // Common variables class
-{ /* -- Common string views ------------------------------------------------ */
-  const StdStringView strvDir, strvEnt, strvFs, strvHttp, strvHttps,
-    strvLuaName, strvTimeout, strvPipe, strvColon, strvSpace, strvQuote,
-    strvEquals, strvBlank, strvZero, strvOne, strvDblSpace, strvFSlash;
-  /* -- Common strings ----------------------------------------------------- */
-  const StdString strTrue, strFalse, strY, strN, strSpace, strBlank, strCr,
-    strLf, strCrLf, strCrLf2, strLfCr, strUnspec, strNull,
-    strPeriod, str2Period, strEllipsis, strPrivate, strProtected, strEmpty,
-    strInvalid, strAsterisk, strNil, strUnresolved, strZero, strOne;
-  /* -- Miscellaneous common variables ------------------------------------- */
-  const char*const cpBlank;            // Blank C-String
+{/* -- Common strings ------------------------------------------------------ */
+  const StdString strBlank;
+  /* -- Common string views ------------------------------------------------ */
+  const StdStringView ssv2Period, ssvAsterisk, ssvBlank, ssvColon, ssvCr,
+    ssvCrLf, ssvCrLf2, ssvDblSpace, ssvDir, ssvEllipsis, ssvEmpty, ssvEnt,
+    ssvEquals, ssvFalse, ssvFs, ssvFSlash, ssvHttp, ssvHttps, ssvInvalid,
+    ssvLf, ssvLfCr, ssvLuaName, ssvN, ssvNil, ssvNull, ssvOne, ssvPeriod,
+    ssvPipe, ssvQuote, ssvSpace, ssvTimeout, ssvTrue, ssvUnknown,
+    ssvUnresolved, ssvUnspec, ssvY, ssvZero;
+  /* -- StringStream manager class ----------------------------------------- */
+  template<class StringStreamType>     // It sets up a permanent StringStream
+    class StringStream                 // object for optimum speed.
+  { /* -- Private variables ------------------------------------------------ */
+    StdLocale       &lLocaleCurrent;   // Current locale
+    StringStreamType sstSd,            // Blank string stream to copy defaults
+                     sstSdi;           // " imbued
+    /* -- Get a thread localised string stream ----------------------------- */
+    // Note that although using thread_local still has an overhead, it's still
+    // faster to use this then having to recreate stringstreams. Just remember
+    // not to mix the calls with manual use of OStringStream << usage.
+    static StringStreamType &Stream()
+      { thread_local StringStreamType sstS; return sstS; }
+    /* -- Get a thread localised imbued string stream ---------------------- */
+    static StringStreamType &StreamImbued()
+      { thread_local StringStreamType sstSi; return sstSi; }
+    /* -- Partial init ----------------------------------------------------- */
+    static StringStreamType &StreamPartialReInit(StringStreamType &sstDst,
+      StringStreamType &sstDef)
+    { sstDst.clear(); sstDst.copyfmt(sstDef); return sstDst; }
+    /* -- Initialise the read-only imbued string stream ----------- -*/ public:
+    void InitImbuedStream() { sstSdi.imbue(lLocaleCurrent); }
+    /* -- Get a thread localised string stream that has been reset --------- */
+    StringStreamType &StreamReset()
+      { Stream().str(caBlank); return StreamPartialReInit(Stream(), sstSd); }
+    /* -- Same as above but initialise with specified storage -------------- */
+    StringStreamType &StreamReset(const StdString &strInit)
+      { Stream().str(strInit); return StreamPartialReInit(Stream(), sstSd); }
+    /* -- Get a thread localised imbued string stream that has been reset -- */
+    StringStreamType &StreamImbuedReset()
+      { StreamImbued().str(caBlank);
+        return StreamPartialReInit(StreamImbued(), sstSdi); }
+    /* -- Same as above but initialise with specified storage -------------- */
+    StringStreamType &StreamImbuedReset(const StdString &strInit)
+      { StreamImbued().str(strInit);
+        return StreamPartialReInit(StreamImbued(), sstSdi); }
+    /* -- Constructor ------------------------------------------------------ */
+    explicit StringStream(StdLocale &lNLocaleCurrent) :
+      /* -- Initialisers --------------------------------------------------- */
+      lLocaleCurrent(lNLocaleCurrent)
+      /* -- Initialise the localisation for the imbued stream -------------- */
+      { InitImbuedStream(); }
+  };/* -- Miscellaneous common variables --------------------------- */ public:
   StdLocale        lLocaleCurrent;     // Current locale
-  /* --------------------------------------------------------------- */ public:
-  const StdLocale &CommonLocale() const { return lLocaleCurrent; }
-  void CommonSetLocale(const StdString &strLocale)
-    { lLocaleCurrent = StdLocale{ strLocale }; }
+  StringStream<StdIStringStream> i;    // For reading strings
+  StringStream<StdOStringStream> o;    // For writing strings
   /* -- Return string view functions --------------------------------------- */
-  const StdStringView &CommonFsV() const { return strvFs; }
-  const StdStringView &CommonDirV() const { return strvDir; }
-  const StdStringView &CommonEntV() const { return strvEnt; }
-  const StdStringView &CommonHttpV() const { return strvHttp; }
-  const StdStringView &CommonHttpsV() const { return strvHttps; }
-  const StdStringView &CommonLuaNameV() const { return strvLuaName; }
-  const StdStringView &CommonTimeoutV() const { return strvTimeout; }
-  const StdStringView &CommonPipeV() const { return strvPipe; }
-  const StdStringView &CommonColonV() const { return strvColon; }
-  const StdStringView &CommonSpaceV() const { return strvSpace; }
-  const StdStringView &CommonQuoteV() const { return strvQuote; }
-  const StdStringView &CommonEqualsV() const { return strvEquals; }
-  const StdStringView &CommonBlankV() const { return strvBlank; }
-  const StdStringView &CommonZeroV() const { return strvZero; }
-  const StdStringView &CommonOneV() const { return strvOne; }
-  const StdStringView &CommonDblSpaceV() const { return strvDblSpace; }
-  const StdStringView &CommonFSlashV() const { return strvFSlash; }
+  const StdStringView &CommonAsterisk() const { return ssvAsterisk; }
+  const StdStringView &CommonBlank() const { return ssvBlank; }
+  const StdStringView &CommonColon() const { return ssvColon; }
+  const StdStringView &CommonCrLf2() const { return ssvCrLf2; }
+  const StdStringView &CommonCrLf() const { return ssvCrLf; }
+  const StdStringView &CommonCr() const { return ssvCr; }
+  const StdStringView &CommonDblSpace() const { return ssvDblSpace; }
+  const StdStringView &CommonDir() const { return ssvDir; }
+  const StdStringView &CommonEllipsis() const { return ssvEllipsis; }
+  const StdStringView &CommonEmpty() const { return ssvEmpty; }
+  const StdStringView &CommonEnt() const { return ssvEnt; }
+  const StdStringView &CommonEquals() const { return ssvEquals; }
+  const StdStringView &CommonFalse() const { return ssvFalse; }
+  const StdStringView &CommonFSlash() const { return ssvFSlash; }
+  const StdStringView &CommonFs() const { return ssvFs; }
+  const StdStringView &CommonHttps() const { return ssvHttps; }
+  const StdStringView &CommonHttp() const { return ssvHttp; }
+  const StdStringView &CommonInvalid() const { return ssvInvalid; }
+  const StdStringView &CommonLfCr() const { return ssvLfCr; }
+  const StdStringView &CommonLf() const { return ssvLf; }
+  const StdStringView &CommonLuaName() const { return ssvLuaName; }
+  const StdStringView &CommonNil() const { return ssvNil; }
+  const StdStringView &CommonNo() const { return ssvN; }
+  const StdStringView &CommonNull() const { return ssvNull; }
+  const StdStringView &CommonOne() const { return ssvOne; }
+  const StdStringView &CommonPeriod() const { return ssvPeriod; }
+  const StdStringView &CommonPipe() const { return ssvPipe; }
+  const StdStringView &CommonQuote() const { return ssvQuote; }
+  const StdStringView &CommonSpace() const { return ssvSpace; }
+  const StdStringView &CommonTimeout() const { return ssvTimeout; }
+  const StdStringView &CommonTrue() const { return ssvTrue; }
+  const StdStringView &CommonTwoPeriod() const { return ssv2Period; }
+  const StdStringView &CommonUnknown() const { return ssvUnknown; }
+  const StdStringView &CommonUnresolved() const { return ssvUnresolved; }
+  const StdStringView &CommonUnspec() const { return ssvUnspec; }
+  const StdStringView &CommonYes() const { return ssvY; }
+  const StdStringView &CommonZero() const { return ssvZero; }
   /* -- Return string functions -------------------------------------------- */
-  const StdString &CommonBlank() const { return strBlank; }
-  const StdString &CommonTrue() const { return strTrue; }
-  const StdString &CommonFalse() const { return strFalse; }
-  const StdString &CommonYes() const { return strY; }
-  const StdString &CommonNo() const { return strN; }
-  const StdString &CommonCr() const { return strCr; }
-  const StdString &CommonLf() const { return strLf; }
-  const StdString &CommonCrLf() const { return strCrLf; }
-  const StdString &CommonCrLf2() const { return strCrLf2; }
-  const StdString &CommonLfCr() const { return strLfCr; }
-  const StdString &CommonSpace() const { return strSpace; }
-  const StdString &CommonEllipsis() const { return strEllipsis; }
-  const StdString &CommonUnspec() const { return strUnspec; }
-  const StdString &CommonUnresolved() const { return strUnresolved; }
-  const StdString &CommonNull() const { return strNull; }
-  const StdString &CommonPeriod() const { return strPeriod; }
-  const StdString &CommonTwoPeriod() const { return str2Period; }
-  const StdString &CommonPrivate() const { return strPrivate; }
-  const StdString &CommonProtected() const { return strProtected; }
-  const StdString &CommonEmpty() const { return strEmpty; }
-  const StdString &CommonInvalid() const { return strInvalid; }
-  const StdString &CommonAsterisk() const { return strAsterisk; }
-  const StdString &CommonNil() const { return strNil; }
-  const StdString &CommonZero() const { return strZero; }
-  const StdString &CommonOne() const { return strOne; }
-  const char *CommonCBlank() const { return cpBlank; }
+  const StdString &CommonBlankStr() const { return strBlank; }
+  /* -- Set a new locale --------------------------------------------------- */
+  void CommonSetLocale(const StdString &strLocale)
+  { // Overwrite the old locale
+    lLocaleCurrent = StdLocale{ strLocale };
+    // Re-initialise the output and input stringstreams
+    o.InitImbuedStream();
+    i.InitImbuedStream();
+  }
   /* -- Default constructor ------------------------------------- */ protected:
   Common() :
     /* -- String view initialisers ----------------------------------------- */
-    strvDir{ "<DIR>" },                strvEnt{ "&#x" },
-    strvFs{ "<FS>" },                  strvHttp{ "http" },
-    strvHttps{ "https" },              strvLuaName{ "__name" },
-    strvTimeout{ "Frame timeout!" },   strvPipe{ "|" },
-    strvColon{ ":" },                  strvSpace{ " " },
-    strvQuote{ "\"" },                 strvEquals{ "=" },
-    strvZero{ "0" },                   strvOne{ "1" },
-    strvDblSpace{ "  " },              strvFSlash{ "/" },
-    /* -- String initialisers ---------------------------------------------- */
-    strTrue{ "true" },                 strFalse{ "false" },
-    strY{ "Y" },                       strN{ "N" },
-    strSpace{ strvSpace },             strCr{ "\r" },
-    strLf{ "\n" },                     strCrLf{ "\r\n" },
-    strCrLf2{ "\r\n\r\n" },            strLfCr{ "\n\r" },
-    strUnspec{ "<Unspecified>" },      strNull{ "<Null>" },
-    strPeriod{ "." },                  str2Period{ ".." },
-    strEllipsis{ "..." },              strPrivate{ "<Private>" },
-    strProtected{ "<Protected>" },     strEmpty{ "<Empty>" },
-    strInvalid{ "<Invalid>" },         strAsterisk{ "*" },
-    strNil{ "nil" },                   strUnresolved{ "<Unresolved>" },
-    strZero{ strvZero },               strOne{ strvOne },
-    /* -- Other initialisers ----------------------------------------------- */
-    cpBlank(strBlank.data()),          lLocaleCurrent{ strBlank }
-    /* -- Set global pointer to static class ------------------------------- */
+    ssv2Period{ ".." },                ssvAsterisk{ "*" },
+    ssvBlank{ caBlank },               ssvColon{ ":" },
+    ssvCr{ "\r" },                     ssvCrLf{ "\r\n" },
+    ssvCrLf2{ "\r\n\r\n" },            ssvDblSpace{ "  " },
+    ssvDir{ "<DIR>" },                 ssvEllipsis{ "..." },
+    ssvEmpty{ "<Empty>" },             ssvEnt{ "&#x" },
+    ssvEquals{ "=" },                  ssvFalse{ "false" },
+    ssvFs{ "<FS>" },                   ssvFSlash{ "/" },
+    ssvHttp{ "http" },                 ssvHttps{ "https" },
+    ssvInvalid{ "<Invalid>" },         ssvLf{ "\n" },
+    ssvLfCr{ "\n\r" },                 ssvLuaName{ "__name" },
+    ssvN{ "N" },                       ssvNil{ "nil" },
+    ssvNull{ "<Null>" },               ssvOne{ "1" },
+    ssvPeriod{ "." },                  ssvPipe{ "|" },
+    ssvQuote{ "\"" },                  ssvSpace{ " " },
+    ssvTimeout{ "Frame timeout!" },    ssvTrue{ "true" },
+    ssvUnknown{ "Unknown" },           ssvUnresolved{ "<Unresolved>" },
+    ssvUnspec{ "<Unspecified>" },      ssvY{ "Y" },
+    ssvZero{ "0" },
+    /* -- Locale and string stream initialisers ---------------------------- */
+    lLocaleCurrent{ strBlank },        // Initialise locale
+    i{ lLocaleCurrent },               // Initialise input string stream
+    o{ lLocaleCurrent }                // Initialise output string stream
+    /* -- Set global pointer to static class and init imbued stream -------- */
     { cCommon = this; }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace

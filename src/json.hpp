@@ -14,12 +14,12 @@ using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
 using namespace IFStream::P;           using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::RapidJson;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::RapidJson;
 /* ------------------------------------------------------------------------- */
 using Lib::RapidJson::Value;
 /* ------------------------------------------------------------------------- */
@@ -30,13 +30,30 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   public AsyncLoaderJson,              // Asynchronous loading of Json object
   public Lockable,                     // Lua garbage collector instruction
   public Document                      // RapidJson document class
-{ /* -- Build a json string from lua string ----------------------- */ private:
-  Value ToStr(lua_State*const lS, const int iId)
+{ /* -- Build a human readable string when we know the value is a string --- */
+  Value ToStrIsStr(lua_State*const lS, const int iIndex)
   { // Get string and length from LUA
-    size_t stStr; const char*const cpStr = LuaUtilToLString(lS, iId, stStr);
+    size_t stStr;
+    const char*const cpStr = LuaBaseToLStr(lS, iIndex, stStr);
     // Return as a json string. Unfortunately, ALL strings from LUA are
     // volatile so we need to copy the string.
-    return { cpStr, static_cast<SizeType>(stStr), GetAllocator() };
+    return Value{ cpStr, static_cast<SizeType>(stStr), GetAllocator() };
+  }
+  /* -- Build a human readable string when we know the value not a string -- */
+  Value ToStrNotStr(lua_State*const lS, const int iIndex)
+  { // Not a string so we need to convert it to human readable
+    LuaBaseToLStrTS(lS, iIndex);
+    const int iSIndex = LuaBaseGetTop(lS);
+    // Get string and length from LUA
+    size_t stStr;
+    const char*const cpStr = LuaBaseToLStr(lS, iSIndex, stStr);
+    // Return as a json string. Unfortunately, ALL strings from LUA are
+    // volatile so we need to copy the string.
+    Value vStr{ cpStr, static_cast<SizeType>(stStr), GetAllocator() };
+    // Remove the value we just created
+    LuaBaseRemove(lS, iSIndex);
+    // Return the value
+    return vStr;
   }
   /* -- Handle type value -------------------------------------------------- */
   template<typename Value>
@@ -45,64 +62,193 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     switch(vValue.GetType())
     { // Json entry is a number type?
       case kNumberType:
-        // Actually an integer or a number type?
-        if(vValue.IsInt()) LuaUtilPushInt(lS, vValue.GetInt());
-        else LuaUtilPushNum(lS, vValue.GetDouble());
+      { // Actually an integer or a number type?
+        if(vValue.IsInt()) LuaBasePushInt(lS, vValue.GetInt());
+        else LuaBasePushNum(lS, vValue.GetDouble());
         break;
-      // Json entry is a string type?
+      } // Json entry is a string type?
       case kStringType:
-        LuaUtilPushLStr(lS, vValue.GetString(), vValue.GetStringLength());
+      { // Push as string
+        LuaBasePushLStr(lS, vValue.GetString(), vValue.GetStringLength());
         break;
-      // Json entry is a boolean type?
+      } // Json entry is a boolean type?
       case kTrueType:
-        LuaUtilPushBool(lS, true);
+      { // Push as boolean
+        LuaUtilPushTrue(lS);
         break;
+      } // Json entry is a boolean type?
       case kFalseType:
-        LuaUtilPushBool(lS, false);
+      { // Push as boolean
+        LuaUtilPushFalse(lS);
         break;
-      // Json entry is an array[] type?
+      } // Json entry is an array[] type?
       case kArrayType:
+      { // Convert array to table
         ToTableArray(lS, vValue);
         break;
-      // Json entry is an object{} type?
+      } // Json entry is an object{} type?
       case kObjectType:
+      { // Convert object to table
         ToTableObject(lS, vValue);
         break;
-      // Json entry is a null type?
+      } // Json entry is a null type?
       case kNullType: [[fallthrough]];
       // Unknown type?
-      default:
-        LuaUtilPushNil(lS);
-        break;
+      default: LuaBasePushNil(lS); break;
     }
   }
   /* -- Sort entire json array --------------------------------------------- */
-  template<class SortType>void SortArray(Value &rjvVal)
-  { // For each table item, search for and sort all sub-tables
-    for(auto &rjvRef : rjvVal.GetArray())
-      switch(rjvRef.GetType())
+  template<class SortType>void SortArray(Value &vArray)
+  { // For each table item...
+    for(Value &vIndice : vArray.GetArray())
+    { // Search for and sort all sub-tables
+      switch(vIndice.GetType())
       { // Indexed array
-        case kArrayType: SortArray<SortType>(rjvRef); break;
+        case kArrayType: SortArray<SortType>(vIndice); break;
         // Key/value object
-        case kObjectType: SortObject<SortType>(rjvRef); break;
+        case kObjectType: SortObject<SortType>(vIndice); break;
         // Don't care about other types
         default: continue;
-      }
+      } // Next item
+    } // End of array
   }
   /* -- Sort entire json object -------------------------------------------- */
-  template<class SortType>void SortObject(Value &rjvVal)
-  { // For each table item, search for and sort all sub-tables
-    for(auto &rjvRef : rjvVal.GetObject())
-      switch(rjvRef.value.GetType())
+  template<class SortType>void SortObject(Value &vObject)
+  { // For each table item
+    for(Value::Member &vmMember : vObject.GetObject())
+    { // Search for and sort all sub-tables
+      switch(vmMember.value.GetType())
       { // Indexed array
-        case kArrayType: SortArray<SortType>(rjvRef.value); break;
+        case kArrayType: SortArray<SortType>(vmMember.value); break;
         // Key/value object
-        case kObjectType: SortObject<SortType>(rjvRef.value); break;
+        case kObjectType: SortObject<SortType>(vmMember.value); break;
         // Don't care about other types
         default: continue;
-      }
-    // Do the sort
-    StdSort(par_unseq, rjvVal.MemberBegin(), rjvVal.MemberEnd(), SortType());
+      } // Next item
+    } // Do the sort
+    StdSort(par_unseq, vObject.MemberBegin(), vObject.MemberEnd(), SortType());
+  }
+  /* -- Convert LUA table to rapidjson::Value ------------------------------ */
+  Value ParseTable(lua_State*const lS, const int iTIndex)
+  { // Get size of table and if we have length then we need to create an array
+    if(const lua_Integer liLen =
+      UtilIntOrMax<lua_Integer>(LuaBaseRawLen(lS, iTIndex)))
+    {  // Set this value is array
+      Value rjvRoot{ kArrayType };
+      // We need one more free item on the stack, leave empty if not
+      if(!LuaBaseCheckStack(lS, UtilIntOrMax<int>(liLen))) return rjvRoot;
+      // Until end of table
+      for(lua_Integer lI = 1; lI <= liLen; ++lI)
+      { // Get the value at the specified indice
+        LuaBaseRawGetI(lS, iTIndex, lI);
+        const int iIndex = LuaBaseGetTop(lS);
+        // This is the value to add
+        Value vValue;
+        // Append value if a string. Lua will convert any valid numbered
+        // string to a number if this is not checked before integral checks.
+        // Test with: lexec Console.Write(Json.Table({1,2,'3'}):ToHRString());
+        switch(LuaBaseType(lS, iIndex))
+        { // Variable is a number?
+          case LUA_TNUMBER:
+          { // Is an integer?
+            if(LuaBaseIsInt(lS, iIndex))
+            { // Get and set the number as quad word
+              const lua_Integer liValue = LuaBaseToInt(lS, iIndex);
+              vValue.SetInt64(liValue);
+            } // Is a number?
+            else
+            { // Get and set the number as double
+              const lua_Number lnValue = LuaBaseToNum(lS, iIndex);
+              vValue.SetDouble(lnValue);
+            } // Done
+            break;
+          } // Lua variable is a boolean?
+          case LUA_TBOOLEAN:
+          { // Get and set the value as boolean
+            const bool bValue = LuaBaseToBool(lS, iIndex);
+            vValue.SetBool(bValue);
+            break;
+          } // Lua variable is a table?
+          case LUA_TTABLE:
+          { // Parse the table and push it into the Json array
+            vValue = ParseTable(lS, iIndex);
+            break;
+          } // Lua variable is a string?
+          case LUA_TSTRING:
+          { // Set the new string
+            vValue = ToStrIsStr(lS, iIndex);
+            break;
+          } // Any other type
+          default:
+          { // Convert to human readable type and put it in the Json array
+            vValue = ToStrNotStr(lS, iIndex);
+            break;
+          }
+        } // Push the value into the Json array
+        rjvRoot.PushBack(vValue, GetAllocator());
+        // Remove the indice value
+        LuaBaseRemove(lS, iIndex);
+      } // Return new object
+      return rjvRoot;
+    } // Set this value as object
+    Value rjvRoot{ kObjectType };
+    // We need two more free item on the stack, leave empty if not
+    if(!LuaBaseCheckStack(lS, 2)) return rjvRoot;
+    // Key and value indexes. We do another stack size query because initially
+    // there could be a JSon object on the stack when called by the guest but
+    // subsequent calls to nested tables won't duplicate that value.
+    const int iKIndex = LuaBaseGetTop(lS) + 1, iVIndex = iKIndex + 1;
+    // Walk through all the object members
+    for(LuaBasePushNil(lS);
+        LuaBaseNext(lS, iTIndex);
+        LuaBaseRemove(lS, iVIndex))
+    { // Get keyname. It will be a number if array size was zero but still has
+      // array elements. We need to keep the keyname as is for lua_next();
+      Value vKey{ LuaBaseType(lS, iKIndex) == LUA_TSTRING ?
+                  ToStrIsStr(lS, iKIndex) :
+                  ToStrNotStr(lS, iKIndex) };
+      // What is the value type?
+      switch(LuaBaseType(lS, iVIndex))
+      { // Variable is a number?
+        case LUA_TNUMBER:
+        { // Is it actually an integer?
+          if(LuaBaseIsInt(lS, iVIndex))
+          { // Get the integer and write it to the array
+            const lua_Integer liValue = LuaBaseToInt(lS, iVIndex);
+            rjvRoot.AddMember(vKey, Value().SetInt64(liValue), GetAllocator());
+          } // Actually a number?
+          else
+          { // Get the number and write it to the array
+            const lua_Number lnValue = LuaBaseToNum(lS, iVIndex);
+            rjvRoot.AddMember(vKey, lnValue, GetAllocator());
+          } // Done
+          break;
+        } // Variable is a boolean?
+        case LUA_TBOOLEAN:
+        { // Get the boolean and write it to the array
+          const bool bValue = LuaBaseToBool(lS, iVIndex);
+          rjvRoot.AddMember(vKey, bValue, GetAllocator());
+          // Done
+          break;
+        } // Variable is a table?
+        case LUA_TTABLE:
+        { // Recurse into the table
+          rjvRoot.AddMember(vKey, ParseTable(lS, iVIndex), GetAllocator());
+          break;
+        } // Is strictly a string?
+        case LUA_TSTRING:
+        { // Recurse into the table
+          rjvRoot.AddMember(vKey, ToStrIsStr(lS, iVIndex), GetAllocator());
+          break;
+        } // Unknown type?
+        default:
+        { // Make it human readable
+          rjvRoot.AddMember(vKey, ToStrNotStr(lS, iVIndex), GetAllocator());
+          break;
+        }
+      } // Test: lexec return Json.Table({a=1,b={a=1},c={nil,1}}):ToHRString();
+    } // Return new object
+    return rjvRoot;
   }
   /* -- When file data has loaded ---------------------------------- */ public:
   void AsyncReady(const FileMap &fmData)
@@ -117,134 +263,71 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     // Parse the text and if there is a parse error? Break execution
     if(ParseStream(cswStream).HasParseError())
       XC(GetParseError_En(GetParseError()),
-        "Name", fmData.NameGet(), "Line", cswStream.GetLine(),
+        "Name",   fmData.NameGet(), "Line", cswStream.GetLine(),
         "Column", cswStream.GetColumn());
     // Write that we parsed this stream
     cLog->LogDebugExSafe("Json parsed $ bytes from '$' successfully.",
       fmData.MemSize(), fmData.NameGet());
   }
-  /* -- Convert LUA table to rapidjson::Value ------------------------------ */
-  Value ParseTable(lua_State*const lS, const int iId, const int iObjId)
+  /* -- Convert LUA table to rapidjson::Value and assign it as root key ---- */
+  void ParseTableSafe(lua_State*const lS, const int iTIndex)
   { // Check table
-    LuaUtilCheckTable(lS, iId);
-    // Test: lexec Console.Write(Json.Table({}):ToString());
-    // Get size of table and if we have length then we need to create an array
-    if(const lua_Integer liLen =
-      UtilIntOrMax<lua_Integer>(LuaUtilGetSize(lS, iId)))
-    {  // Set this value is array
-      Value rjvRoot{ kArrayType };
-      // We need one more free item on the stack, leave empty if not
-      if(!LuaUtilIsStackAvail(lS, UtilIntOrMax<int>(liLen))) return rjvRoot;
-      // Until end of table
-      for(lua_Integer lI = 1; lI <= liLen; ++lI)
-      { // Get first item
-        LuaUtilGetRefEx(lS, iId, lI);
-        // Append value if a string. Lua will convert any valid numbered
-        // string to a number if this is not checked before integral checks.
-        // Test with: lexec Console.Write(Json.Table({1,2,'3'}):ToHRString());
-        switch(lua_type(lS, -1))
-        { // Variable is a number
-          case LUA_TNUMBER:
-            if(LuaUtilIsInteger(lS, -1))
-              rjvRoot.PushBack(Value().
-                SetInt64(LuaUtilToInt(lS, -1)), GetAllocator());
-            else rjvRoot.PushBack(LuaUtilToNum(lS, -1), GetAllocator());
-            break;
-          // Variable is a boolean
-          case LUA_TBOOLEAN: rjvRoot.PushBack(LuaUtilToBool(lS, -1),
-            GetAllocator()); break;
-          // Variable is a table
-          case LUA_TTABLE: rjvRoot.PushBack(ParseTable(lS, -1, -2),
-            GetAllocator()); break;
-          // Unknown or a string, just add a string
-          case LUA_TSTRING:
-          default: rjvRoot.PushBack(ToStr(lS, -1), GetAllocator()); break;
-        } // Remove the last item
-        LuaUtilRmStack(lS);
-      } // Return new object
-      return rjvRoot;
-    } // Set this value as object
-    Value rjvRoot{ kObjectType };
-    // Save stack position so it can be restored on completion or exception
-    const LuaStackSaver lSS{ lS };
-    // We need two more free item on the stack, leave empty if not
-    if(!LuaUtilIsStackAvail(lS, 2)) return rjvRoot;
-    // Walk through all the object members
-    for(LuaUtilPushNil(lS); lua_next(lS, iObjId); LuaUtilRmStack(lS))
-    { // Get keyname
-      Value vKey{ ToStr(lS, -2) };
-      // Set the key->value for the LUA variable
-      switch(lua_type(lS, -1))
-      { // Variable is a number
-        case LUA_TNUMBER:
-          if(LuaUtilIsInteger(lS, -1))
-            rjvRoot.AddMember(vKey,
-              Value().SetInt64(LuaUtilToInt(lS, -1)),
-              GetAllocator());
-          else
-            rjvRoot.AddMember(vKey, LuaUtilToNum(lS, -1), GetAllocator());
-          break;
-        // Variable is a boolean
-        case LUA_TBOOLEAN:
-          rjvRoot.AddMember(vKey, LuaUtilToBool(lS, -1), GetAllocator());
-          break;
-        // Variable is a table
-        case LUA_TTABLE: rjvRoot.AddMember(vKey,
-          ParseTable(lS, -1, -2), GetAllocator()); break;
-        // Unknown or a string, just add as string
-        case LUA_TSTRING:
-        default: rjvRoot.AddMember(vKey, ToStr(lS, -1), GetAllocator());
-          break;
-      }
-    } // Return new object
-    return rjvRoot;
+    LuaUtilCheckTable(lS, iTIndex);
+    // Create the new root key
+    Value vRoot{ ParseTable(lS, iTIndex) };
+    // Make this the actual new root key
+    Swap(vRoot);
   }
   /* -- Convert json value to lua object table and put it on stack --------- */
-  static void ToTableObject(lua_State*const lS, const Value &rjvVal)
+  static void ToTableObject(lua_State*const lS, const Value &vObject)
   { // Create the table, we're creating non-indexed key/value pairs
-    LuaUtilPushTable(lS, 0, rjvVal.MemberCount());
+    LuaUtilPushObject(lS, vObject.MemberCount());
     // We need two more free item on the stack, leave empty if not
-    if(!LuaUtilIsStackAvail(lS, 2)) return;
+    if(!LuaBaseCheckStack(lS, 2)) return;
+    // Get index of object
+    const int iOIndex = LuaBaseGetTop(lS);
     // For each table item
-    for(const auto &rjvRef : rjvVal.GetObject())
+    for(const Value::Member &vmMember : vObject.GetObject())
     { // What type is the value?
-      ProcessValueType(lS, rjvRef.value);
+      ProcessValueType(lS, vmMember.value);
       // Push key name
-      LuaUtilSetField(lS, -2, rjvRef.name.GetString());
+      LuaBaseSetField(lS, iOIndex, vmMember.name.GetString());
     }
   }
   /* -- Convert json value to lua array table and put it on stack ---------- */
-  static void ToTableArray(lua_State*const lS, const Value &rjvVal)
+  static void ToTableArray(lua_State*const lS, const Value &vArray)
   { // Create the table, we're creating a indexed/value array
-    LuaUtilPushTable(lS, rjvVal.Size());
+    LuaUtilPushArray(lS, vArray.Size());
     // We need two more free items on the stack, leave empty if not
-    if(rjvVal.Empty() || !LuaUtilIsStackAvail(lS, 2)) return;
+    if(vArray.Empty() || !LuaBaseCheckStack(lS, 2)) return;
+    // Get index of array
+    const int iAIndex = LuaBaseGetTop(lS);
     // Index id
     lua_Integer liId = 0;
     // For each table item
-    for(const auto &rjvRef : rjvVal.GetArray())
+    for(const Value &vIndice : vArray.GetArray())
     { // Table index
-      LuaUtilPushInt(lS, ++liId);
+      LuaBasePushInt(lS, ++liId);
       // What type is the value?
-      ProcessValueType(lS, rjvRef);
+      ProcessValueType(lS, vIndice);
       // Push key pair as integer table
-      LuaUtilSetRaw(lS, -3);
+      LuaBaseRawSet(lS, iAIndex);
     }
   }
   /* -- Convert json value to lua table and put it on stack ---------------- */
   void ToLuaTable(lua_State*const lS)
   { // Get root object
-    const Value &rjvVal =
+    const Value &vRoot =
       reinterpret_cast<const Value&>(static_cast<const Document&>(*this));
     // What type is the value?
-    switch(rjvVal.GetType())
+    switch(vRoot.GetType())
     { // Indexed array
-      case kArrayType: ToTableArray(lS, rjvVal); break;
+      case kArrayType: ToTableArray(lS, vRoot); break;
       // Key/value object
-      case kObjectType: ToTableObject(lS, rjvVal); break;
+      case kObjectType: ToTableObject(lS, vRoot); break;
       // Unacceptable
       default: XC("Not array or object!",
-        "Name", NameGet(), "Type", rjvVal.GetType());
+        "Name", NameGet(), "Type", vRoot.GetType());
     }
   }
   /* -- Start sorting the entire array ------------------------------------- */
@@ -335,8 +418,8 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     return { rsbOut.GetString(), rsbOut.GetSize() };
   }
   /* ----------------------------------------------------------------------- */
-  template<typename WriterType>int ToFile(const StdStringView &strvFile) const
-    { return FStream{ strvFile, FM_W_T }.
+  template<typename WriterType>int ToFile(const StdStringView &ssvFile) const
+    { return FStream{ ssvFile, FM_W_T }.
         FStreamWriteStringSafe(ToString<WriterType>()) ? 0 : StdGetError(); }
   /* -- Default constructor ------------------------------------------------ */
   Json() :
@@ -348,11 +431,11 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor from a filename ---------------------------------------- */
-  explicit Json(const StdStringView &strvFile) :
+  explicit Json(const StdStringView &ssvFile) :
     /* -- Initialisers ----------------------------------------------------- */
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */
-    { SyncInitFileSafe(strvFile); }
+    { SyncInitFileSafe(ssvFile); }
   /* -- Destructor that tries to recover on exception ---------------------- */
   DTORHELPER(~Json, AsyncCancel())
 };/* -- End ---------------------------------------------------------------- */

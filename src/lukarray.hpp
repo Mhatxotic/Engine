@@ -17,7 +17,7 @@ namespace P {                          // Start of public module namespace
 /* ------------------------------------------=============================== */
 template<
   size_t stMaximum,                    // Maximum number of items
-  size_t stMinimum=0,                  // Minimum allowed value
+  size_t stMinimum = 0,                // Minimum allowed value
   class List =                         // List array type alias
     StdArray<const StdStringView,      // Use const type string
       stMaximum>>                      // Maximum number of strings in array
@@ -35,7 +35,7 @@ struct LookupArray :                   // Members initially public
   /* -- Constructor with blank alternative string -------------------------- */
   explicit LookupArray(const List &lNI) :
     /* -- Initialisers ----------------------------------------------------- */
-    LookupArray{ lNI, cCommon->CommonBlank() }
+    LookupArray{ lNI, cCommon->CommonBlankStr() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get name from id --------------------------------------------------- */

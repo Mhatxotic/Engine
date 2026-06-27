@@ -14,17 +14,11 @@ INCLUDE="-Iinclude \
          -Isrc"
 
 # Core operating system frameworks
-FRAMEWORKS="-framework AudioToolbox \
-            -framework AudioUnit \
-            -framework Cocoa \
-            -framework CoreAudio \
-            -framework CoreVideo \
-            -framework IOKit \
-            -framework OpenGL"
+FRAMEWORKS="-framework IOKit \
+            -framework Cocoa"
 
 # Make sure libraries are combined with x86_64 and arm64
-LIBS="lib/glfw64.ma \
-      lib/lzma64.ma \
+LIBS="lib/lzma64.ma \
       lib/lua64.ma \
       lib/nc64.ma \
       lib/ssl64.ma \

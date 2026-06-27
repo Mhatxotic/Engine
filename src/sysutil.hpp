@@ -13,7 +13,7 @@ namespace ISysUtil {                   // Start of private module namespace
 using namespace ICommon::P;            using namespace IDir::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -82,19 +82,19 @@ static bool SysSetThreadPriority(const SysThread stLevel)
     THREAD_PRIORITY_NORMAL,            // STP_HIGH
     THREAD_PRIORITY_LOWEST,            // STP_LOW
   }; // Set thread priorty and return result
-  return !!SetThreadPriority(GetCurrentThread(), aValues[stLevel]);
+  return static_cast<bool>(
+    SetThreadPriority(GetCurrentThread(), aValues[stLevel]));
 }
-/* ------------------------------------------------------------------------- */
+/* -- Set thread name in Windows Debugger ---------------------------------- */
 static void SysSetThreadName(const char*const cpName)
 { // Keep structure aligned
-#pragma pack(push, 8)
-  struct WinDBGThreadData {
-    DWORD  dwType;                     // Must be 0x1000.
+#pragma pack(push, 8)                  // Applies to both 32 and 64-bit
+  struct WinDBGThreadData {            // Data to send to Windows Debugger
+    DWORD  dwType;                     // Magic type, must be 0x1000.
     LPCSTR szName;                     // Pointer to name (in user addr space).
     DWORD  dwThreadID;                 // Thread ID (-1=caller thread).
     DWORD  dwFlags;                    // Reserved for future use, keep zero.
-  } // Initialiser
-  tInfo { 0x1000, cpName, static_cast<DWORD>(-1), 0 }; // Was ~DWORD{0}
+  } tInfo{ 0x1000, cpName, static_cast<DWORD>(-1), 0 };
 #pragma pack(pop)
   // This next bit of code is required for debugger which causes a warning but
   // on CLang-CL but however is still parsed and machine code emitted.
@@ -104,8 +104,7 @@ static void SysSetThreadName(const char*const cpName)
 #endif
   // Send message to debugger to name the thread
   __try {
-    RaiseException(0x406D1388, 0,
-      sizeof(tInfo) / sizeof(ULONG_PTR),
+    RaiseException(0x406D1388, 0, sizeof(tInfo) / sizeof(ULONG_PTR),
       reinterpret_cast<ULONG_PTR*>(&tInfo)); }
   __except(EXCEPTION_CONTINUE_EXECUTION) {}
   // Restore original warning
@@ -209,26 +208,25 @@ static unsigned SysMessage(void*const, StdString strTitle,
 { // Print the error in console
   fprintf(stderr, "%s: %s\n", strTitle.data(), strMessage.data());
   // Eligable directories for dialog box elf binaries
-  const StdArray<const StdStringView, 10> strvaDirPrefixes{
+  const StdArray<const StdStringView, 10> ssvaDirPrefixes{
     "/bin/",             "/usr/bin/",        "/usr/sbin/",
     "/usr/local/bin/",   "/usr/local/sbin/", "/usr/games/",
     "/usr/local/games/", "/snap/bin/",       "/var/lib/flatpak/exports/bin/",
     "/run/current-system/sw/bin/" };
   // Dialog box applications we can use
-  struct DlgBoxApplication {
-    const StdStringView strvElf, strvCompulsoryParam,
-                      strvTitleParam, strvMessageParam; };
+  struct DlgBoxApplication { const StdStringView ssvElf, ssvCompulsoryParam,
+   ssvTitleParam, ssvMessageParam; };
   // The dialog box elf binary database
   const StdArray<const DlgBoxApplication, 5> dbaaApps{ {
-    { "yad",                   cCommon->CommonBlank(),
-      "--title=",              "--text=" },
-    { "zenity",                "--info --no-markup",
-      "--title=",              "--text=" },
-    { "kdialog",               cCommon->CommonBlank(),
-      "--title ",              "--msgbox " },
-    { "gxmessage",             "-center -buttons OK:0",
+    { "yad",                    cCommon->CommonBlankStr(),
+      "--title=",               "--text=" },
+    { "zenity",                 "--info --no-markup",
+      "--title=",               "--text=" },
+    { "kdialog",                cCommon->CommonBlankStr(),
+      "--title ",               "--msgbox " },
+    { "gxmessage",              "-center -buttons OK:0",
       cCommon->CommonBlank(),  cCommon->CommonSpace() },
-    { "xmessage",              "-center",
+    { "xmessage",               "-center",
       cCommon->CommonBlank(),  cCommon->CommonSpace() }
   } }; // Command-line safety replacements
   const StrPairList splReplace
@@ -238,19 +236,19 @@ static unsigned SysMessage(void*const, StdString strTitle,
   // Search for one of these apps now
   for(const DlgBoxApplication &dbaApp : dbaaApps)
   { // In one of these directories
-    for(const StdStringView &strvDir : strvaDirPrefixes)
+    for(const StdStringView &ssvDir : ssvaDirPrefixes)
     { // Build filename and ignore if not exist, readable or executable
-      const StdString strPath{ StrAppend(strvDir, dbaApp.strvElf) };
+      const StdString strPath{ StrAppend(ssvDir, dbaApp.ssvElf) };
       if(!DirCheckFileAccess(strPath, F_OK|R_OK|X_OK)) continue;
       // Build command line
-      const StdString strCmdLine{ StrFormat("$ $ $ $",
-        strPath, dbaApp.strvCompulsoryParam,
-       (dbaApp.strvTitleParam.empty() ?
-          cCommon->CommonBlank() : StrFormat("$\"$\"",
-            dbaApp.strvTitleParam, strTitle)),
-       (dbaApp.strvMessageParam.empty() ?
-          cCommon->CommonBlank() : StrFormat("$\"$\"",
-            dbaApp.strvMessageParam, strMessage))) };
+      const StdString strCmdLine{
+        StrFormat("$ $ $ $", strPath, dbaApp.ssvCompulsoryParam,
+          (dbaApp.ssvTitleParam.empty() ?
+           cCommon->CommonBlankStr() :
+             StrFormat("$\"$\"", dbaApp.ssvTitleParam, strTitle)),
+          (dbaApp.ssvMessageParam.empty() ?
+           cCommon->CommonBlankStr() :
+             StrFormat("$\"$\"", dbaApp.ssvMessageParam, strMessage))) };
       // Now execute and break if successful
       if(!system(strCmdLine.data())) return 0;
     }

@@ -10,8 +10,8 @@
 namespace ILuaRef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IFillCon::P;           using namespace ILog::P;
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace IUtil::P;
+using namespace ILuaBase::P;           using namespace ILuaUtil::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -27,7 +27,7 @@ template<size_t Refs = 1>class LuaRef  // Lua easy reference class
   bool LuaRefDoDeInit(const int iReference) const
   { // Return failure if not valid else remove it and return success
     if(LuaUtilIsNotRefValid(iReference)) return false;
-    LuaUtilRmRef(LuaRefGetState(), iReference);
+    LuaBaseUnref(LuaRefGetState(), iReference);
     return true;
   }
   /* -- Release and reset specific reference ------------------------------- */
@@ -36,7 +36,7 @@ template<size_t Refs = 1>class LuaRef  // Lua easy reference class
   /* -- Initialise a specific reference ------------------------------------ */
   bool LuaRefDoInitEx(const size_t stIndex)
   { // Init the ref and return on failure else assign to the specifide ref ndx
-    const int iReference = LuaUtilRefInit(LuaRefGetState());
+    const int iReference = LuaBaseRef(LuaRefGetState());
     if(LuaUtilIsNotRefValid(iReference)) return false;
     aReferences[stIndex] = iReference;
     return true;
@@ -46,16 +46,31 @@ template<size_t Refs = 1>class LuaRef  // Lua easy reference class
   /* -- Get the state ---------------------------------------------- */ public:
   lua_State *LuaRefGetState() const { return lsState; }
   /* -- Returns the reference at the specified index ----------------------- */
-  int LuaRefGetId(const size_t stIndex=0) const
+  int LuaRefGetId(const size_t stIndex = 0) const
     { return aReferences[stIndex]; }
   /* -- Returns the function at the specified index ------------------------ */
-  bool LuaRefGetFunc(const size_t stIndex=0) const
+  bool LuaRefGetFunc(const size_t stIndex = 0) const
     { return LuaUtilGetRefFunc(LuaRefGetState(), LuaRefGetId(stIndex)); }
   /* -- Returns the userdata at the specified index ------------------------ */
-  bool LuaRefGetUData(const size_t stIndex=0) const
-    { return LuaUtilGetRefUsrData(LuaRefGetState(), LuaRefGetId(stIndex)); }
+  bool LuaRefGetUData(const size_t stIndex = 0) const
+  { // State is valid?
+    if(LuaRefGetState())
+    { // Return failure if reference is valid?
+      const int iReference = LuaRefGetId(stIndex);
+      if(LuaUtilIsRefValid(iReference))
+      { // Get the value pointed by the reference
+        LuaUtilGetRef(LuaRefGetState(), iReference);
+        // Get the id of the last item on the stack and return if it's userdata
+        const int iIndex = LuaBaseGetTop(LuaRefGetState());
+        if(LuaBaseIsUData(LuaRefGetState(), iIndex)) return true;
+        // Failed so remove whatever it was
+        LuaBaseRemove(LuaRefGetState(), iIndex);
+      } // Reference invalid
+    } // No state
+    return false;
+  }
   /* -- Returns the reference at the specified index ----------------------- */
-  void LuaRefGet(const size_t stIndex=0) const
+  void LuaRefGet(const size_t stIndex = 0) const
     { return LuaUtilGetRef(LuaRefGetState(), LuaRefGetId(stIndex)); }
   /* -- Returns if the state is equal to the specified state --------------- */
   bool LuaRefStateIsEqual(const lua_State*const lS) const
@@ -68,7 +83,7 @@ template<size_t Refs = 1>class LuaRef  // Lua easy reference class
   /* -- Returns if the state is NOT set ------------------------------------ */
   bool LuaRefStateIsNotSet() const { return !LuaRefStateIsSet(); }
   /* -- Returns if the specified reference is set -------------------------- */
-  bool LuaRefIsSet(const size_t stIndex=0) const
+  bool LuaRefIsSet(const size_t stIndex = 0) const
     { return LuaRefStateIsSet() && LuaUtilIsRefValid(LuaRefGetId(stIndex)); }
   /* -- De-initialise the reference ---------------------------------------- */
   bool LuaRefDeInit()

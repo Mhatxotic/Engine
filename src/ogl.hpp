@@ -15,13 +15,13 @@ using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IFboBlend::P;
 using namespace IFboCmd::P;            using namespace IColour::P;
 using namespace IFlags::P;             using namespace IGlFW::P;
-using namespace IGlFWUtil::P;          using namespace IHelper::P;
+using namespace IGlFWBase::P;          using namespace IHelper::P;
 using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::GlFW;
 /* ------------------------------------------------------------------------- */
 constexpr static const GLuint gluMax = StdLimits<GLuint>::max();
 /* ------------------------------------------------------------------------- */
@@ -155,9 +155,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                    glullTotalVRAM,     // Maximum VRAM supported
                    glullFreeVRAM;      // Current VRAM available
   ClkDuration      cdLimit;            // Frame limit based on refresh rate
-  StdStringView    strvRenderer,       // GL renderer string
-                   strvVersion,        // GL version string
-                   strvVendor;         // GL vendor string
+  StdStringView    ssvRenderer,        // GL renderer string
+                   ssvVersion,         // GL version string
+                   ssvVendor;          // GL vendor string
   VSyncMode        vsmSetting;         // VSync setting
   /* -- Delayed destruction ------------------------------------------------ */
   /* Because LUA garbage collection could zap a texture or Fbo class at any  */
@@ -257,13 +257,13 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   }
   /* -- Flag setter ----------------------------------------------- */ private:
   void SetFlagExt(const char*const cpName, const OglFlagsConst &ofcFlags)
-    { FlagSetOrClear(ofcFlags, HaveExtension(cpName)); }
+    { FlagSetOrClear(ofcFlags, GlFWBaseExtensionSupported(cpName)); }
   /* -- Load GL capabilities ----------------------------------------------- */
   void DetectCapabilities()
   { // Current current OpenGL strings
-    strvRenderer = GetString<char>(GL_RENDERER);
-    strvVersion = GetString<char>(GL_VERSION);
-    strvVendor = GetString<char>(GL_VENDOR);
+    ssvRenderer = GetString<char>(GL_RENDERER);
+    ssvVersion = GetString<char>(GL_VERSION);
+    ssvVendor = GetString<char>(GL_VENDOR);
     // Get vendor specific memory info extensions
     SetFlagExt("GL_NVX_gpu_memory_info", GFL_HAVENVMEM);
     SetFlagExt("GL_ATI_meminfo", GFL_HAVEATIMEM);
@@ -392,9 +392,6 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       sizeof(sAPI) / sizeof(void*));
   }
   /* == OpenGL features ============================================ */ public:
-  static bool HaveExtension(const char*const cpName)
-    { return !!glfwExtensionSupported(cpName); }
-  /* ----------------------------------------------------------------------- */
   template<typename IntType = decltype(gluTexSize)>
     requires StdIsIntegral<IntType>
   IntType MaxTexSize() const { return static_cast<IntType>(gluTexSize); }
@@ -880,7 +877,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // This locking code is required to fix a major crash bug in Ventura
     // 13.3+. See https://github.com/glfw/glfw/issues/1997 for more
     // information.
-    using namespace Lib::OS::GlFW::NSGL;
+    using namespace Lib::GlFW::NSGL;
     // Get the current NSGL context and lock it. Note there is nothing to
     // throw in this routine so it is safe to use this as-is.
     CGLContextObj cglcoLock = CGLGetCurrentContext();
@@ -1096,9 +1093,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { return reinterpret_cast<const char*>
         (sAPI.glGetStringi(GL_EXTENSIONS, gluIndex)); }
   /* -- Read OpenGL renderer data ------------------------------------------ */
-  const StdStringView &GetVendor() const { return strvVendor; }
-  const StdStringView &GetRenderer() const { return strvRenderer; }
-  const StdStringView &GetVersion() const { return strvVersion; }
+  const StdStringView &GetVendor() const { return ssvVendor; }
+  const StdStringView &GetRenderer() const { return ssvRenderer; }
+  const StdStringView &GetVersion() const { return ssvVersion; }
   /* -- Reset all binds ---------------------------------------------------- */
   void OglResetBinds()
   { // Unbind active texture, shader program, texture, fbo and select default
@@ -1137,7 +1134,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   double GetVRAMFreePC() const
     { return 100.0 - UtilMakePercentage(GetVRAMFree(), GetVRAMTotal()); }
   /* -- Get free memory on nvidia cards ------------------------------------ */
-  void UpdateVRAMAvailableNV()
+  void UpdateVRAMAvailableN()
   { // - https://www.khronos.org/registry/OpenGL/extensions/
     //     NVX/NVX_gpu_memory_info.txt
     glullFreeVRAM = GetInteger<GLuint64>(0x9049) * 1024;
@@ -1161,7 +1158,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Get memory information --------------------------------------------- */
   void UpdateVRAMAvailable()
   { // Have NVIDIA free memory?
-    if(FlagIsSet(GFL_HAVENVMEM)) UpdateVRAMAvailableNV();
+    if(FlagIsSet(GFL_HAVENVMEM)) UpdateVRAMAvailableN();
     // Have ATI free memory
     else if(FlagIsSet(GFL_HAVEATIMEM)) UpdateVRAMAvailableATI();
     // Have shared memory
@@ -1176,7 +1173,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       glullTotalVRAM =
         static_cast<GLuint64>(GetInteger<GLuint>(0x9048)) * 1024;
       // Update available VRAM
-      UpdateVRAMAvailableNV();
+      UpdateVRAMAvailableN();
       // Report VRAM information to log
       cLog->LogDebugSafe("- Using NVIDIA memory functions.");
     } // Have ATI memory info?
@@ -1361,9 +1358,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     gluPackAlign = gluTexUnits = gluMaxVertexAttr = 0;
     glePolyMode = GL_NONE;
     // Set blank generic text for strings
-    strvVendor = cCommon->CommonNull();
-    strvVersion = cCommon->CommonNull();
-    strvRenderer = cCommon->CommonNull();
+    ssvVendor = cCommon->CommonNull();
+    ssvVersion = cCommon->CommonNull();
+    ssvRenderer = cCommon->CommonNull();
     // Log class initialising
     cLog->LogInfoSafe("OGL subsystem de-initialised.");
   }
@@ -1457,11 +1454,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     glullTotalVRAM(0),                 // No total vram
     glullFreeVRAM(0),                  // No free vram
     cdLimit{ cd0 },                    // Init frame duration
-    strvRenderer{                      // Blank renderer
+    ssvRenderer{                       // Blank renderer
       cCommon->CommonNull() },         // Initialise with "<null>" text
-    strvVersion{                       // Blank version
+    ssvVersion{                        // Blank version
       cCommon->CommonNull() },         // Initialise with "<null>" text
-    strvVendor{                        // Blank vendor
+    ssvVendor{                         // Blank vendor
       cCommon->CommonNull() },         // Initialise with "<null>" text
     vsmSetting{ VSYNC_OFF }            // Set no VSync by default
     /* -- Set global pointer to static class ------------------------------- */

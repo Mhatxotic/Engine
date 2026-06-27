@@ -11,9 +11,9 @@ namespace IGlFWMonitor {               // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IDim::P;
 using namespace IDimCoord::P;          using namespace IError::P;
-using namespace IGlFWUtil::P;          using namespace ILog::P;
+using namespace IGlFWBase::P;          using namespace ILog::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IUtil::P;              using namespace Lib::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -83,9 +83,9 @@ class GlFWMonitor :                    // Members initially private
     { // If monitor name is blank return blank name
       if(*cpName) return cpName;
       // Return blank name
-      return cCommon->CommonUnspec();
+      return StdString{ cCommon->CommonUnspec() };
     } // Return null name
-    return cCommon->CommonNull();
+    return StdString{ cCommon->CommonNull() };
   }
   /* -- Get monitor context ---------------------------------------- */ public:
   GLFWmonitor *Context() const { return mContext; }

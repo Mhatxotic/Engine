@@ -97,7 +97,7 @@ struct Console :                       // Members initially private
                    ivInputRefresh;     // Time to wait before next peek
   StdString        strStatusLeft,      // Text-mode console left status text
                    strStatusRight;     // Text-mode console right status text
-  StdStringView    strvTimeFormat;     // Default time format
+  StdStringView    ssvTimeFormat;      // Default time format
   /* -- Autocomplete ------------------------------------------------------- */
   AutoCompleteFlags acFlags;           // Flags for autocomplete
   using AuComItSet        = StdSet<StdString>;
@@ -723,10 +723,10 @@ struct Console :                       // Members initially private
   ConLinesConstRevIt GetConBufPos() const { return clriPosition; }
   ConLinesConstRevIt GetConBufPosEnd() { return rend(); }
   /* -- Set console input status bar (left and right) ---------------------- */
-  void SetStatusLeft(const StdStringView &strvValue)
-    { strStatusLeft = strvValue; }
-  void SetStatusRight(const StdStringView &strvValue)
-    { strStatusRight = strvValue; }
+  void SetStatusLeft(const StdStringView &ssvValue)
+    { strStatusLeft = ssvValue; }
+  void SetStatusRight(const StdStringView &ssvValue)
+    { strStatusRight = ssvValue; }
   /* -- Clear both statuses ------------------------------------------------ */
   void ConsoleClearStatus()
   { // Clear left if empty
@@ -848,7 +848,7 @@ struct Console :                       // Members initially private
         StdIOSSetPrecision(0), cFrame->FrameGetFPS(),
         StrToBytes(cSystem->RAMProcUse(), 0), cSockets->astConnected.load(),
         TimeToShortDuration(cLog->CCDeltaToDouble(), 0)),
-        cmSys.FormatTime(strvTimeFormat.data()));
+        cmSys.FormatTime(ssvTimeFormat.data()));
       // Not redrawing?
       if(GetRedrawFlags().FlagIsClear(RD_TEXT))
       { // Redraw status if imput empty. Input redraw handled elseware.
@@ -877,8 +877,8 @@ struct Console :                       // Members initially private
     return size();
   }
   /* -- Command exists? ---------------------------------------------------- */
-  bool CommandIsRegistered(const StdStringView &strvName) const
-    { return cmMap.contains(strvName); }
+  bool CommandIsRegistered(const StdStringView &ssvName) const
+    { return cmMap.contains(ssvName); }
   /* -- Check that the console variable name is valid ---------------------- */
   template<class StrType>
     requires StdIsString<StrType>
@@ -897,28 +897,33 @@ struct Console :                       // Members initially private
   template<class StrType>
     requires StdIsString<StrType>
   CmdMapIt RegisterCommand(const StrType &strName, const unsigned uMin,
-    const unsigned uMax, const ConCbFunc ccfFunc)
-  { // Insert trusted command into commands list
-    return cmMap.insert({ StdString{ strName },
-      { StdString{ strName }, uMin, uMax, CFL_BASIC, ccfFunc } }).first;
+    const unsigned uMax, const ConCbFunc &ccfFunc)
+  { // Insert trusted command into commands list. Have to convert to string if
+    // it is a string_view.
+    if constexpr(StdIsSame<StrType, StdStringView>)
+      return cmMap.insert({ StdString{ strName },
+        { StdString{ strName }, uMin, uMax, CFL_BASIC, ccfFunc } }).first;
+    // If it is a normal string then insert as is
+    else return cmMap.insert({ strName,
+      { strName, uMin, uMax, CFL_BASIC, ccfFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
   /* -- Add line as string with specified text colour ---------------------- */
-  void ConsoleAddLine(const ConColour ccColour, const StdStringView &strvText)
+  void ConsoleAddLine(const ConColour ccColour, const StdStringView &ssvText)
   { // Tokenise lines into a list limited by the maximum number of lines.
-    if(const TokenList tlLines{ strvText, cCommon->CommonLf(),
+    if(const TokenList tlLines{ ssvText, cCommon->CommonLf(),
       GetOutputMaximum() })
     { // Add all the lines to the output queue
       const double dTime = cLog->CCDeltaToDouble();
-      for(const StdStringView &strvLine : tlLines)
+      for(const StdStringView &ssvLine : tlLines)
       { // Move the line across if it is long enough
-        if(strvLine.size() <= stMaxOutputLine)
-          clqOutput.push({ dTime, ccColour, StdString{ strvLine } });
+        if(ssvLine.size() <= stMaxOutputLine)
+          clqOutput.push({ dTime, ccColour, StdString{ ssvLine } });
         // Push a truncated line
         else clqOutput.push({ dTime, ccColour,
-          StdString{ strvLine.substr(0, stMaxOutputLineE) } +
-            cCommon->CommonEllipsis() });
+          StrAppend(ssvLine.substr(0, stMaxOutputLineE),
+            cCommon->CommonEllipsis()) });
       }
     }
   }
@@ -998,11 +1003,11 @@ struct Console :                       // Members initially private
     // Iterate each item and register command if required core flags match
     for(const ConLibStatic &clCmd : ccslInt)
       if(cSystem->SysIsCoreFlagsHave(clCmd.cfcRequired))
-        RegisterCommand(clCmd.strvName, clCmd.uMinimum,
+        RegisterCommand(clCmd.strName, clCmd.uMinimum,
           clCmd.uMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command
       else cLog->LogDebugExSafe(
-        "Console ignoring registration of command '$'.", clCmd.strvName);
+        "Console ignoring registration of command '$'.", clCmd.strName);
     // Say how many commands we registered
     cLog->LogInfoExSafe("Console initialised with $ of $ built-in commands.",
       cmMap.size(), ccslInt.size());
@@ -1076,7 +1081,7 @@ struct Console :                       // Members initially private
     cLog->LogInfoExSafe("Console time from format '$' is '$'.",
       strFmt, cmSys.FormatTime(strFmt.data()));
     // Accept the new time format
-    strvTimeFormat = strV;
+    ssvTimeFormat = strV;
     // Done
     return ACCEPT;
   }

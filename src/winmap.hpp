@@ -13,7 +13,7 @@ namespace ISysMap {                    // Start of private module namespace
 using namespace ICommon::P;            using namespace IError::P;
 using namespace ILog::P;               using namespace IName::P;
 using namespace IStd::P;               using namespace IStdLib::P;
-using namespace ISysUtil::P;           using namespace Lib::OS;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -90,7 +90,7 @@ class SysMap :                         // Members initially private
   /* -- Get pointer to memory ---------------------------------------------- */
   char *SysMapSetupMemory()
   { // Return a blank string if file is empty
-    if(!ullSize) return const_cast<char*>(cCommon->CommonCBlank());
+    if(!ullSize) return const_cast<char*>(caBlank);
     // Get pointer to mapped memory and return it if successful
     if(char*const cpM =
       reinterpret_cast<char*>(MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)))
@@ -112,9 +112,9 @@ class SysMap :                         // Members initially private
     requires (!StdIsPointer<PtrType>)
   PtrType *SysMapGetMemory() const
     { return reinterpret_cast<PtrType*>(cpMem); }
-  bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
+  bool SysMapIsEmpty() const { return cpMem == caBlank; }
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
-  bool SysMapIsAvailable() const { return !!SysMapGetMemory(); }
+  bool SysMapIsAvailable() const { return SysMapGetMemory() != nullptr; }
   bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }
   uint64_t SysMapGetSize() const { return ullSize; }
   StdTimeT SysMapGetCreation() const { return atTime.front(); }
@@ -138,9 +138,9 @@ class SysMap :                         // Members initially private
     NameClear();
   }
   /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const StdStringView &strvIn, const StdTimeT tC, const StdTimeT tM) :
+  SysMap(const StdStringView &ssvIn, const StdTimeT tC, const StdTimeT tM) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvIn },                    // Initialise file name
+    Name{ ssvIn },                     // Initialise file name
     hFile(INVALID_HANDLE_VALUE),       // No file handle
     ullSize(0),                        // No file size
     hMap(nullptr),                     // No map handle
@@ -170,9 +170,9 @@ class SysMap :                         // Members initially private
     /* -- Clear other variables -------------------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
   /* -- Constructor with actual initialisation ----------------------------- */
-  explicit SysMap(const StdStringView &strvIn) :
+  explicit SysMap(const StdStringView &ssvIn) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvIn },                    // Set file name
+    Name{ ssvIn },                     // Set file name
     hFile(SysMapSetupFile()),          // Get file handle from file on disk
     ullSize(SysMapSetupSize()),        // Get file size on disk
     hMap(SysMapSetupMap()),            // Get map handle

@@ -21,10 +21,12 @@ using namespace IStdLib::P;            using namespace IString::P;
 using namespace ISysCon::P;            using namespace ISysInfo::P;
 using namespace ISysMod::P;            using namespace ISysReg::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
-class SysProcess                       // Need this before of System init order
-{ /* ------------------------------------------------------------ */ protected:
+class SysProcess :                     // Need this before of System init order
+  /* -- Base classes ------------------------------------------------------- */
+  private NameStr                      // Mutex identifier
+{ /* -- Protected variables ------------------------------------- */ protected:
   uint64_t         ullSKL, ullSUL,     // Kernel kernel and user time
                    ullPKL, ullPUL,     // Process kernel and user time
                    ullPTL;             // Current system time
@@ -33,11 +35,9 @@ class SysProcess                       // Need this before of System init order
   const HANDLE     hProcess;           // Process handle
   const HINSTANCE  hInstance;          // Process instance
   HANDLE           hMutex;             // Global mutex handle
-  /* -- Return process and thread id ------------------------------ */ private:
+  /* -- Private variables ----------------------------------------- */ private:
   const DWORD      ulProcessId,        // Process id
                    ulThreadId;         // Thread id (WinMain())
-  /* -- Mutex name --------------------------------------------------------- */
-  NameStr          nsMutex;            // Mutex identifier
   /* ----------------------------------------------------------------------- */
   static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
   { // Get title of window and cancel if empty
@@ -53,8 +53,9 @@ class SysProcess                       // Need this before of System init order
       StdCompare(wstrN.data(), wstrT.data(), wstrN.size()*sizeof(wchar_t)))
         return TRUE;
     // We found the window
-    cLog->LogDebugExSafe("- Found window handle at $$.\n"
-                 "- Window name is '$'.",
+    cLog->LogDebugExSafe(
+      "- Found window handle at $$.\n"
+      "- Window name is '$'.",
       StdIOSHex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
     // First try showing the window and if successful? Log the successful
     // command else if showing the window failed? Log the failure with reason
@@ -242,11 +243,11 @@ class SysProcess                       // Need this before of System init order
     AnyType Test(const AnyType atParam, const char*const cpStr)
   { if(!atParam) XCS(cpStr); return atParam; }
   /* --------------------------------------------------------------- */ public:
-  bool InitGlobalMutex(const StdStringView &strvTitle)
+  bool InitGlobalMutex(const StdStringView &ssvTitle)
   { // Set mutex name
-    nsMutex.NameSet(strvTitle);
+    NameSet(ssvTitle);
     // Convert UTF title to wide string
-    const StdWideString wstrTitle{ UTFtoS16(nsMutex.NameGet()) };
+    const StdWideString wstrTitle{ UTFtoS16(NameGet()) };
     // Create the global mutex handle with the specified name and check error
     hMutex = CreateMutex(nullptr, FALSE, wstrTitle.data());
     switch(const DWORD dwResult = SysErrorCode<DWORD>())
@@ -272,7 +273,7 @@ class SysProcess                       // Need this before of System init order
         return false;
       // Other error
       default: XCS("Failed to create global mutex object!",
-        "Title",  nsMutex.NameGet(),
+        "Title",  NameGet(),
         "Result", static_cast<unsigned>(dwResult),
         "mutex",  reinterpret_cast<void*>(hMutex));
     } // Getting here is impossible
@@ -308,7 +309,7 @@ class SysProcess                       // Need this before of System init order
     // If mutex initialised? Close the handle and log if failed
     if(hMutex && !CloseHandle(hMutex))
       cLog->LogWarningExSafe("System failed to close mutex handle '$'! $.",
-        nsMutex.NameGet(), SysError());
+        NameGet(), SysError());
   )
 };/* == Class ============================================================== */
 class SysCore :
@@ -326,20 +327,28 @@ class SysCore :
   { return static_cast<size_t>(GetLocaleInfo(lcidLocale, lcType,
       StdToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize))); }
   /* ----------------------------------------------------------------------- */
-  const StdWideString GetLocaleString(const LCTYPE lcType,
-    const LCID lcidLocale=LOCALE_USER_DEFAULT)
-  { // Allocate string for requested data and return error if faield
-    StdResized<StdWideString> wstrData{
-      GetLocaleData(lcType, nullptr, 0, lcidLocale) };
-    if(wstrData.empty())
-      XCS("No storage for locale data!",
-          "Type", lcType, "Id", lcidLocale);
-    // Now fill in the string and show error if failed
-    if(!GetLocaleData(lcType, wstrData.data(), wstrData.size(), lcidLocale))
-      XCS("Failed to acquire locale data!",
-          "Type", lcType, "Id", lcidLocale, "Buffer", wstrData.size());
-    // Return data
-    return wstrData;
+  StdString GetLocaleString(const LCTYPE lcType,
+    const LCID lcidLocale = LOCALE_USER_DEFAULT)
+  { // Get size of requested string and if it is available?
+    switch(const size_t stLen = GetLocaleData(lcType, nullptr, 0, lcidLocale))
+    { // Invalid result? Above call INCLUDES the NULL terminator!!!
+      case 0: XCS("Failed not retrieve locale data!",
+                  "Type", lcType, "Id", lcidLocale);
+      // Empty string? We don't need to do anything else but return
+      case 1: return {};
+      // Anything else
+      default:
+      { // Create buffer big enough for string.
+        StdResized<StdWideString> wstrData{ stLen - 1 };
+        // Now fill in the string and show error if failed
+        if(!GetLocaleData(lcType, wstrData.data(), stLen, lcidLocale))
+          XCS("Failed to acquire locale data!",
+              "Type",   lcType, "Id",     lcidLocale,
+              "Buffer", stLen,  "String", wstrData.size());
+        // Convert the widestring to UTF8 string and return it
+        return WS16toUTF(wstrData);
+      }
+    } // Never gets here
   }
   /* -- Set socket timeout ----------------------------------------- */ public:
   static int SetSocketTimeout(const int iFd, const double dRTime,
@@ -553,7 +562,7 @@ class SysCore :
       mcSrc); }
   /* -- Free the library handle -------------------------------------------- */
   static bool LibFree(void*const vpModule)
-    { return vpModule && !!FreeLibrary(reinterpret_cast<HMODULE>(vpModule)); }
+    { return vpModule && FreeLibrary(reinterpret_cast<HMODULE>(vpModule)); }
   /* -- Get dll procedure address ------------------------------------------ */
   template<typename PtrType>
     requires StdIsPointer<PtrType>
@@ -793,15 +802,8 @@ class SysCore :
     XCS("Failed to get native system info function address!");
   }
   /* ----------------------------------------------------------------------- */
-  const StdString GetLocale(const LCID lcidLocale)
-  { // Build language and country code from system and return it
-    return
-      StrAppend(WS16toUTF(GetLocaleString(LOCALE_SISO639LANGNAME, lcidLocale)),
-        '-', WS16toUTF(GetLocaleString(LOCALE_SISO3166CTRYNAME, lcidLocale)));
-  }
-  /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData()
-  { // Operating system data. Fuck you Microsoft. I'm still supporting XP.
+  { // Operating system data
     // > https://docs.microsoft.com/en-us/windows/win32/api/
     //     sysinfoapi/nf-sysinfoapi-getversionexw
     OSVERSIONINFOEX osviData;
@@ -814,15 +816,15 @@ class SysCore :
     if(!fcbGVEW || !fcbGVEW(reinterpret_cast<LPOSVERSIONINFOW>(&osviData)))
       XCS("Failed to query operating system version!");
     // Set operating system version string
-    StdOStringStream osS; osS << "Windows ";
+    StdOStringStream osS;
+    osS << "Windows ";
     // Version information table
     struct OSListItem
     { // Label to append if verified
       const char*const cpLabel;
       // Major, minor and service pack of OS which applies to this label
       const unsigned uHi, uLo, uBd, uSp;
-    };
-    // List of recognised Windows versions
+    }; // List of recognised Windows versions
     static const StdArray<const OSListItem,41>osList{ {
       { "11 26H1+", 10, 0, 28000, 0 },
       { "11 25H2",  10, 0, 26200, 0 }, { "11 24H2",  10, 0, 26100, 0 },
@@ -878,15 +880,25 @@ class SysCore :
       else bExtra = false;
     } // Store if we have extra info because strExtra is being StdMove()'d
     else bExtra = false;
+    // Get locale id
+    const LCID lcidLocale = GetUserDefaultUILanguage();
+    // Finish version string
+    StdString strVersion{ osS.str() },
+      // Get ISO639 language code
+      strLanguage{ GetLocaleString(LOCALE_SISO639LANGNAME, lcidLocale) },
+      // Get ISO3166 country code
+      strCountry{ GetLocaleString(LOCALE_SISO3166CTRYNAME, lcidLocale) },
+      // Build single language and country locale string
+      strLocale{ StrAppend(strLanguage, '-', strCountry) };
     // Return data
     return {
-      osS.str(),                             // Version string
+      StdMove(strVersion),                   // Version string
       StdMove(strExtra),                     // Extra version string
       osviData.dwMajorVersion,               // Major OS version
       osviData.dwMinorVersion,               // Minor OS version
       osviData.dwBuildNumber,                // OS build version
       DetectWindowsArchitechture(),          // 32 or 64 OS arch
-      GetLocale(GetUserDefaultUILanguage()), // Get locale
+      StdMove(strLocale),                    // Get locale
       DetectElevation(),                     // Elevated?
       bExtra || osviData.dwMajorVersion < 6  // Wine or Old OS?
     };
@@ -906,47 +918,49 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   CPUData GetProcessorData()
   { // Try to open the specified below registry key and if successful?
-    const StdString strK{ "HARDWARE\\DESCRIPTION\\System\\CentralProcessor" };
-    if(const SysReg srRoot{ HKEY_LOCAL_MACHINE, strK, KEY_ENUMERATE_SUB_KEYS })
+    const StdStringView
+      ssvKey{ "HARDWARE\\DESCRIPTION\\System\\CentralProcessor" };
+    if(const SysReg srRoot{ HKEY_LOCAL_MACHINE, ssvKey,
+      KEY_ENUMERATE_SUB_KEYS })
     { // Enumerate subkeys
-      const StrVector svKeys{ srRoot.QuerySubKeys() };
+      const StrVector svKeys{ srRoot.SysRegQuerySubKeys() };
       // Open first subkey, usually "0" and if succeeded?
       const StdString &strSK = *svKeys.cbegin();
-      if(const SysReg srSub{ srRoot.GetHandle(), strSK, KEY_QUERY_VALUE })
+      if(const SysReg srSub{ srRoot.SysRegGetHandle(),
+        strSK, KEY_QUERY_VALUE })
       { // Query required values
-        StdString strVendor{ srSub.QueryString("VendorIdentifier") },
-                  strName{ srSub.QueryString("ProcessorNameString") },
-                  strIdent{ srSub.QueryString("Identifier") };
+        StdString strVendor{ srSub.SysRegQueryString("VendorIdentifier") },
+                  strName{ srSub.SysRegQueryString("ProcessorNameString") },
+                  strIdent{ srSub.SysRegQueryString("Identifier") };
         // Remove unnecessary whitespaces from strings
-        StrCompactRef(strVendor);
-        StrCompactRef(strName);
-        StrCompactRef(strIdent);
-        // Fail-safe empty strings
         if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
+        else StrCompactRef(strVendor);
         if(strName.empty()) strName = strVendor;
+        else StrCompactRef(strName);
         if(strIdent.empty()) strIdent = cCommon->CommonUnspec();
+        else StrCompactRef(strIdent);
         // Detect family model and stepping from string (A F 0 M 0 S)
         unsigned uFamily, uModel, uStepping;
-        const TokenStrView tsvTokens{ strIdent, cCommon->CommonSpaceV() };
+        const TokenStrView tsvTokens{ strIdent, cCommon->CommonSpace() };
         if(tsvTokens.size() >= 7 && tsvTokens[1] == "Family" &&
           tsvTokens[3] == "Model" && tsvTokens[5] == "Stepping")
         { // Convert strings to numbers
           uFamily = StrToNum<unsigned>(tsvTokens[2]);
           uModel = StrToNum<unsigned>(tsvTokens[4]);
-          uStepping= StrToNum<unsigned>(tsvTokens[6]);
+          uStepping = StrToNum<unsigned>(tsvTokens[6]);
         } // Invalid syntax
         else uFamily = uModel = uStepping = 0;
         // Return data
-        return { StdThreadMax(), srSub.Query<DWORD>("~MHz"),
-                 uFamily, uModel, uStepping, strName };
+        return { srSub.SysRegQuery<DWORD>("~MHz"), uFamily, uModel, uStepping,
+          StdMove(strName) };
       } // Log that we couldn't open the subkey
       else cLog->LogWarningExSafe("System could not open registry key $ "
-        "sub-key $! $", strK, strSK, SysError());
+        "sub-key $! $", ssvKey, strSK, SysError());
     } // Log that we couldn't open the root key
     else cLog->LogWarningExSafe("System could not open registry key $! $",
-      strK, SysError());
+      ssvKey, SysError());
     // Return default data we could not read
-    return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
+    return {};
   }
   /* ----------------------------------------------------------------------- */
   void UpdateMemoryUsageData()
@@ -975,7 +989,7 @@ class SysCore :
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning() const
-    { return !!IsDebuggerPresent(); }
+    { return static_cast<bool>(IsDebuggerPresent()); }
   /* -- Get process affinity masks ----------------------------------------- */
   uint64_t GetAffinity(const bool bS)
   { // Get current affinity and return if successful
@@ -1010,7 +1024,7 @@ class SysCore :
       // Running as admin if running as full elevation
       bAdmin = tokenElevationType == TokenElevationTypeFull;
     // Else use standard function (if XP or no linked token)
-    else bAdmin = !!IsUserAnAdmin();
+    else bAdmin = static_cast<bool>(IsUserAnAdmin());
     // If handle not opened we're done
     if(hToken != INVALID_HANDLE_VALUE) CloseHandle(hToken);
     // Return result
@@ -1020,11 +1034,11 @@ class SysCore :
   Memory GetEntropy() const
   { // Entropy data structure to return to openssl. Should be enough I think!
     struct EntropyData
-    { SYSTEMTIME            sSTime, sLTime;      // System times
-      POINT                 pPos;                // Cursor position
-      TIME_ZONE_INFORMATION tzData;              // Time zone information
-      FILETIME              cpuD[7];             // Process and system times
-      LARGE_INTEGER         liD[2];              // Current hires timers
+    { SYSTEMTIME            sSTime, sLTime; // System times
+      POINT                 pPos;           // Cursor position
+      TIME_ZONE_INFORMATION tzData;         // Time zone information
+      FILETIME              cpuD[7];        // Process and system times
+      LARGE_INTEGER         liD[2];         // Current hires timers
     };
     // Allocate memory and assign a reference structure to this memory
     Memory mData{ sizeof(EntropyData) };
@@ -1033,33 +1047,27 @@ class SysCore :
     GetSystemTime(&edData.sSTime);
     GetLocalTime(&edData.sLTime);
     // Cursor position entropy
-    if(!GetCursorPos(&edData.pPos))
-      XCS("Failed to query cursor position!");
+    GetCursorPos(&edData.pPos);
     // Time zone information
-    if(!GetTimeZoneInformation(&edData.tzData))
-      XCS("Failed to query timezone information!");
+    GetTimeZoneInformation(&edData.tzData);
     // Cpu process times
-    if(!GetProcessTimes(hProcess, &edData.cpuD[0], &edData.cpuD[1],
-                                  &edData.cpuD[2], &edData.cpuD[3]))
-      XCS("Failed to query process times!");
+    GetProcessTimes(hProcess, &edData.cpuD[0], &edData.cpuD[1],
+                              &edData.cpuD[2], &edData.cpuD[3]);
     // Cpu system times
-    if(!GetSystemTimes(&edData.cpuD[4], &edData.cpuD[5], &edData.cpuD[6]))
-      XCS("Failed to query system times!");
+    GetSystemTimes(&edData.cpuD[4], &edData.cpuD[5], &edData.cpuD[6]);
     // Cpu counters
-    if(!QueryPerformanceFrequency(&edData.liD[0]))
-      XCS("Failed to query performance frequency!");
-    if(!QueryPerformanceCounter(&edData.liD[1]))
-      XCS("Failed to query performance counter!");
+    QueryPerformanceFrequency(&edData.liD[0]);
+    QueryPerformanceCounter(&edData.liD[1]);
     // Return data
     return mData;
   }
   /* ---------------------------------------------------------------------- */
-  void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
+  void WindowInitialised(Lib::GlFW::GLFWwindow*const gwWindow)
   { // If we don't have a GlFW window?
     if(!gwWindow) return;
     // Set handles to the GLFW window that was created, or the console. The
     // handle should be valid 100% of the time but check just incase
-    SetWindowHandle(GlFW::glfwGetWin32Window(gwWindow));
+    SetWindowHandle(Lib::GlFW::glfwGetWin32Window(gwWindow));
     if(IsNotWindowHandleSet()) XC("Failed to get window handle from GlFW!");
     // Because GLFW has a horrible white background, let's make it a better
     // colour from the windows theme to not blind people.
@@ -1090,9 +1098,10 @@ class SysCore :
     return SysErrorCode<int>();
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const StdString BuildRoamingDir() const
-    { return cCmdLine->CmdLineMakeEnvPath("APPDATA", cCommon->CommonBlank()); }
-  /* -- Constructor (only derivable) --------------------------------------- */
+  StdString BuildRoamingDir() const
+    { return cCmdLine->CmdLineMakeEnvPath("APPDATA",
+        cCommon->CommonBlankStr()); }
+  /* -- Constructor -------------------------------------------------------- */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
     SysVersion{ EnumModules(),         // Enumerate modules
@@ -1101,7 +1110,7 @@ class SysCore :
     SysInfo{ GetExecutableData(),      // Get and store executable data
              GetOperatingSystemData(), // Get and store operating system data
              GetProcessorData() },     // Get and store processor data
-    SysCon { this->OSNameEx() },       // Send Wine version to console
+    SysCon{ this->OSNameEx() },        // Send Wine version to console
     hIconLarge(nullptr),               // Large icon not initialised yet
     hIconSmall(nullptr)                // Small icon not initialised yet
     /* -- No code ---------------------------------------------------------- */

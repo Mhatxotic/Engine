@@ -51,9 +51,9 @@ class InitHelper :                     // The Init Helper class
   /* ----------------------------------------------------------------------- */
   bool IHNotDeInitialise() { return !IHDeInitialise(); }
   /* -- Constructors -------------------------------------------- */ protected:
-  explicit InitHelper(const StdStringView &strvName) :
+  explicit InitHelper(const StdStringView &ssvName) :
     /* -- Initialisers ----------------------------------------------------- */
-    NameConst{ strvName },             // Initialise name
+    NameConst{ ssvName },              // Initialise name
     ctInitialised{ cd0 },              // Clear initialised time
     ctDeinitialised{ cmHiRes.GetTime() } // Set deinitialised time
     /* -- No code ---------------------------------------------------------- */

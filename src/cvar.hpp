@@ -136,18 +136,18 @@ class CVarItem :                       // Members initially private
   StdString GetValueSafe() const
   { // If confidential, return confidential
     if(FlagIsSet(CONFIDENTIAL) && csfShowFlags.FlagIsClear(CSF_CONFIDENTIAL))
-      return cCommon->CommonPrivate();
+      return "<Private>";
     // If protected, return protected
     if(FlagIsSet(CPROTECTED) && csfShowFlags.FlagIsClear(CSF_PROTECTED))
-      return cCommon->CommonProtected();
+      return "<Protected>";
     // If value is empty, return as empty
-    if(IsValueUnset()) return cCommon->CommonEmpty();
+    if(IsValueUnset()) return StdString{ cCommon->CommonEmpty() };
     // If is a float, return value
     if(FlagIsSet(TFLOAT))
       return StrFromNum(StrToNum<double>(GetValue()), 0, 12);
     // Is a boolean
     if(FlagIsSet(TBOOLEAN))
-      return StrFromBoolTF(StrToNum<bool>(GetValue()));
+      return StdString{ StrFromBoolTF(StrToNum<bool>(GetValue())) };
     // If is a integer, return number + hex
     if(FlagIsSet(TINTEGER))
     { // Get value as 64-bit integer
@@ -460,13 +460,13 @@ class CVarItem :                       // Members initially private
       } // True?
       else if(strNValue.size() == 4 &&
         StrToLowCase(strNValue) == cCommon->CommonTrue())
-          return SetValueCheckPassed(cCommon->CommonOne(), ccfcFlags,
-            strCBError);
+          return SetValueCheckPassed(
+            StdString{ cCommon->CommonOne() }, ccfcFlags, strCBError);
       // False?
       else if(strNValue.size() == 5 &&
         StrToLowCase(strNValue) == cCommon->CommonFalse())
-          return SetValueCheckPassed(cCommon->CommonZero(), ccfcFlags,
-            strCBError);
+          return SetValueCheckPassed(
+            StdString{ cCommon->CommonZero() }, ccfcFlags, strCBError);
       // If we should not abort? Just return error else throw exception
       if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
         return CVS_NOTBOOLEAN;

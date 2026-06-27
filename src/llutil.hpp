@@ -629,7 +629,7 @@ LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt{lS, 1}())))
 // ? Appends each entry in the specified table to a string separated by the
 // ? specified separator string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Implode, 1, LuaUtilImplode(lS))
+LLFUNC(Implode, 1, LuaUtilImplodeSafe(lS, 1))
 /* ========================================================================= */
 // $ Util.ImplodeEx
 // > Table:table=The table to convert to a string.
@@ -640,7 +640,7 @@ LLFUNC(Implode, 1, LuaUtilImplode(lS))
 // ? 'Separator' and uses the specified 'LastSep' as the final separator to
 // ? form a human reable string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ImplodeEx, 1, LuaUtilImplodeEx(lS))
+LLFUNC(ImplodeEx, 1, LuaUtilImplodeExSafe(lS, 1))
 /* ========================================================================= */
 // $ Util.IfBlank
 // > String:string=The string to test if empty.
@@ -648,7 +648,7 @@ LLFUNC(ImplodeEx, 1, LuaUtilImplodeEx(lS))
 // < Return:string=The returned string.
 // ? If 'String' is blank or invalid, then 'StringAlt' is returned.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IfBlank, 1, LuaUtilIfBlank(lS))
+LLFUNC(IfBlank, 1, LuaUtilIfBlank(lS, 1))
 /* ========================================================================= */
 // $ Util.IsASCII
 // > String:string=The string to test if empty.
@@ -664,7 +664,7 @@ LLFUNC(IsASCII, 1,
 // < Result:boolean=Is a valid boolean.
 // ? Returns if specified parameter is a boolean.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsBoolean, 1, LuaUtilPushVar(lS, LuaUtilIsBoolean(lS, 1)))
+LLFUNC(IsBoolean, 1, LuaUtilPushVar(lS, LuaBaseIsBool(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsExtASCII
 // > String:string=The string to test if empty.
@@ -680,42 +680,42 @@ LLFUNC(IsExtASCII, 1,
 // < Result:boolean=Is a valid function.
 // ? Returns if specified parameter is a function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsFunction, 1, LuaUtilPushVar(lS, LuaUtilIsFunction(lS, 1)))
+LLFUNC(IsFunction, 1, LuaUtilPushVar(lS, LuaBaseIsFunc(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsInteger
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid integer.
 // ? Returns if specified parameter is a integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsInteger, 1, LuaUtilPushVar(lS, LuaUtilIsInteger(lS, 1)))
+LLFUNC(IsInteger, 1, LuaUtilPushVar(lS, LuaBaseIsInt(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsNumber
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid number.
 // ? Returns if specified parameter is a number.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsNumber, 1, LuaUtilPushVar(lS, LuaUtilIsNumber(lS, 1)))
+LLFUNC(IsNumber, 1, LuaUtilPushVar(lS, LuaBaseIsNum(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsString
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid string.
 // ? Returns if specified parameter is a string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsString, 1, LuaUtilPushVar(lS, LuaUtilIsString(lS, 1)))
+LLFUNC(IsString, 1, LuaUtilPushVar(lS, LuaBaseIsStr(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsTable
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid table.
 // ? Returns if specified parameter is a table.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsTable, 1, LuaUtilPushVar(lS, LuaUtilIsTable(lS, 1)))
+LLFUNC(IsTable, 1, LuaUtilPushVar(lS, LuaBaseIsTable(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsUserdata
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid userdata object.
 // ? Returns if specified parameter is a userdata object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsUserdata, 1, LuaUtilPushVar(lS, LuaUtilIsUserData(lS, 1)))
+LLFUNC(IsUserdata, 1, LuaUtilPushVar(lS, LuaBaseIsUData(lS, 1)))
 /* ========================================================================= */
 // $ Util.LineType
 // > String:string=The string to check
@@ -957,8 +957,7 @@ LLFUNC(Replace, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(ReplaceEx, 1,
   AgNcString aDest{lS, 1};
-  LuaUtilCheckTable(lS, 2);
-  LuaUtilPushVar(lS, LuaUtilReplaceMulti(lS, aDest)))
+  LuaUtilPushVar(lS, LuaUtilReplaceMultiSafe(lS, aDest, 2)))
 /* ========================================================================= */
 // $ Util.Round
 // > Value:string=A number value
@@ -1060,6 +1059,14 @@ LLFUNC(StretchOuter, 4,
   UtilStretchToOuter(dOW, dOH, dIW, dIH);
   LuaUtilPushVar(lS, dOW, dOH, dIW, dIH))
 /* ========================================================================= */
+// $ Util.TableCopy
+// > Table:table=The source table to copy
+// < Table:newtable=The new table that was copied
+// ? Copys the source table to the new table. This is only a shallow copy and
+// ? all the new members are references of the old table members.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TableCopy, 1, LuaUtilCopyShallowTableSafe(lS, 1))
+/* ========================================================================= */
 // $ Util.TableSize
 // > Table:table=A key/value pairs table
 // < Count:integer=Number of items in a table
@@ -1070,7 +1077,7 @@ LLFUNC(StretchOuter, 4,
 // ? size yourself whilst building the key/value pairs table instead of using
 // ? this.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TableSize, 1, LuaUtilPushVar(lS, LuaUtilGetKeyValTableSize(lS)))
+LLFUNC(TableSize, 1, LuaUtilPushVar(lS, LuaUtilGetKeyValTableSizeSafe(lS, 1)))
 /* ========================================================================= */
 // $ Util.Trim
 // > String:string=The string to modify
@@ -1112,8 +1119,7 @@ LLFUNC(UUIDDecode, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(UUIDEncode, 2,
   const UuId uuidData{ AgString{lS, 1} };
-  LuaUtilPushVar(lS, uuidData.d.aqwRandom.front(),
-                     uuidData.d.aqwRandom.back()))
+  LuaUtilPushVar(lS, uuidData.d.dbRandom.front(), uuidData.d.dbRandom.back()))
 /* ========================================================================= */
 // $ Util.UUIDRandom
 // < High64:integer=The high-order 128-bit integer
@@ -1122,8 +1128,7 @@ LLFUNC(UUIDEncode, 2,
 /* ------------------------------------------------------------------------- */
 LLFUNC(UUIDRandom, 2,
   const UuId uuidData;
-  LuaUtilPushVar(lS, uuidData.d.aqwRandom.front(),
-                     uuidData.d.aqwRandom.back()))
+  LuaUtilPushVar(lS, uuidData.d.dbRandom.front(), uuidData.d.dbRandom.back()))
 /* ========================================================================= */
 // $ Util.UrlDecode
 // > Text:string=The URL string to decode.
@@ -1235,11 +1240,11 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(SHA512SSA),                 LLRSFUNC(SHA512SSS),
   LLRSFUNC(Sanitise),                  LLRSFUNC(Sign),
   LLRSFUNC(StretchInner),              LLRSFUNC(StretchOuter),
-  LLRSFUNC(TableSize),                 LLRSFUNC(Trim),
-  LLRSFUNC(UrlDecode),                 LLRSFUNC(UrlEncode),
-  LLRSFUNC(UTF8Char),                  LLRSFUNC(UUIDDecode),
-  LLRSFUNC(UUIDEncode),                LLRSFUNC(UUIDRandom),
-  LLRSFUNC(WordWrap),
+  LLRSFUNC(TableCopy),                 LLRSFUNC(TableSize),
+  LLRSFUNC(Trim),                      LLRSFUNC(UrlDecode),
+  LLRSFUNC(UrlEncode),                 LLRSFUNC(UTF8Char),
+  LLRSFUNC(UUIDDecode),                LLRSFUNC(UUIDEncode),
+  LLRSFUNC(UUIDRandom),                LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

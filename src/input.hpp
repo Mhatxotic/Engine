@@ -19,7 +19,7 @@ using namespace IHelper::P;            using namespace IJoystick::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace IUtil::P;              using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -144,6 +144,9 @@ class Input :                          // Handles keyboard, mouse & controllers
     lfOnMouseClick.LuaFuncDispatch(emaArgs[1].Int(), emaArgs[2].Int(),
       emaArgs[3].Int());
   }
+  /* -- Request from alternative thread to fullscreen toggle without save -- */
+  void InputRequestFSToggle(const bool bState)
+    { cEvtWin->AddUnblock(EWC_WIN_TOGGLEFS, bState); }
   /* -- Unfiltered key pressed --------------------------------------------- */
   void InputOnKeyPress(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
@@ -162,7 +165,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       // Set full screen setting depending on current state
       cCVars->SetInternal<bool>(VID_FS, bFullScreen);
       // Send command to toggle full-screen
-      cEvtWin->AddUnblock(EWC_WIN_TOGGLEFS, bFullScreen);
+      InputRequestFSToggle(bFullScreen);
       // Don't send key to guest
       return;
     } // Return if console handled this key
@@ -287,8 +290,9 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Init joystick system
     JoyInit();
     // Log progress
-    cLog->LogDebugExSafe("Input interface initialised (R:$;J:$).",
-      StrFromBoolTF(GlFWIsRawMouseMotionSupported()), JoyGetCount());
+    cLog->LogDebugExSafe(
+      "Input interface initialised with support for $ game control devices.",
+      JoyGetCount());
   }
   /* -- DeInit ------------------------------------------------------------- */
   void InputDeInit()

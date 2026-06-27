@@ -131,7 +131,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
                 sCLptr->SetBuffer(static_cast<ALint>(aluvNames.front()));
               // Failed? Log the failure
               else cLog->LogWarningExSafe("Sample cannot get a free source "
-                  "for spawning '$' left channel!", NameGet());
+                "for spawning '$' left channel!", NameGet());
               // Get a right channel source and set buffer if succeeded
               if(const Source*const sCRptr = SourceGetFromLua(lS))
                 sCRptr->SetBuffer(static_cast<ALint>(aluvNames.back()));
@@ -226,49 +226,55 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
   /* -- Load a single buffer from memory ----------------------------------- */
   void LoadSample(Pcm &pcmSrc)
   { // Allocate and generate openal buffers
-    aluvNames.resize(pcmSrc.GetChannels());
+    aluvNames.resize(pcmSrc.PcmDataGetChannels());
     AL(cOal->CreateBuffers(aluvNames), "Error creating sample buffers!",
       "Name", pcmSrc.NameGet(), "Count", aluvNames.size());
     // Buffer the left or mono channel
     AL(cOal->BufferData(aluvNames.front(), GetSFormat(),
-      pcmSrc.aPcmL, static_cast<ALsizei>(pcmSrc.GetRate())),
-        "Error buffering left channel/mono PCM audio data!",
-        "Name", pcmSrc.NameGet(), "Buffer",  aluvNames.front(),
-        "Format",     GetFormat(),       "MFormat", GetSFormat(),
-        "Rate",       pcmSrc.GetRate(),  "Size",    pcmSrc.aPcmL.MemSize());
+      pcmSrc.PcmDataGetLeftConst(),
+      static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
+      "Error buffering left channel/mono PCM audio data!",
+      "Name",   pcmSrc.NameGet(),        "Buffer",  aluvNames.front(),
+      "Format", GetFormat(),             "MFormat", GetSFormat(),
+      "Rate",   pcmSrc.PcmDataGetRate(),
+      "Size",   pcmSrc.PcmDataGetLeftSize());
     // Log and return if mono sample
-    if(pcmSrc.GetChannels() == PCT_MONO)
+    if(pcmSrc.PcmDataGetChannels() == PCT_MONO)
       return cLog->LogDebugExSafe(
         "Sample '$' uploaded as $[$] at $Hz as $.",
-        pcmSrc.NameGet(), aluvNames.front(), pcmSrc.aPcmL.MemSize(),
-        StrToGrouped(pcmSrc.GetRate(), 1), cOal->GetALFormat(GetFormat()));
+        pcmSrc.NameGet(), aluvNames.front(), pcmSrc.PcmDataGetLeftSize(),
+        StrToGrouped(pcmSrc.PcmDataGetRate(), 1),
+        cOal->GetALFormat(GetFormat()));
     // Buffer the right stereo channel
     AL(cOal->BufferData(aluvNames.back(), GetSFormat(),
-      pcmSrc.aPcmR, static_cast<ALsizei>(pcmSrc.GetRate())),
-        "Error buffering right/stereo channel PCM audio data!",
-        "Name", pcmSrc.NameGet(), "Buffer",  aluvNames.back(),
-        "Format",     GetFormat(),       "MFormat", GetSFormat(),
-        "Rate",       pcmSrc.GetRate(),  "Size",    pcmSrc.aPcmR.MemSize());
+      pcmSrc.PcmDataGetRightConst(),
+      static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
+      "Error buffering right/stereo channel PCM audio data!",
+      "Name",   pcmSrc.NameGet(), "Buffer",  aluvNames.back(),
+      "Format", GetFormat(),      "MFormat", GetSFormat(),
+      "Rate",   pcmSrc.PcmDataGetRate(),
+      "Size",   pcmSrc.PcmDataGetRightSize());
     // Log progress
     cLog->LogDebugExSafe(
       "Sample '$' uploaded as L:$[$] and R:$[$] at $Hz as $.",
-      pcmSrc.NameGet(), aluvNames.front(), pcmSrc.aPcmL.MemSize(),
-      aluvNames.back(), pcmSrc.aPcmR.MemSize(),
-      StrToGrouped(pcmSrc.GetRate(), 1), cOal->GetALFormat(GetFormat()));
+      pcmSrc.NameGet(), aluvNames.front(), pcmSrc.PcmDataGetLeftSize(),
+      aluvNames.back(), pcmSrc.PcmDataGetRightSize(),
+      StrToGrouped(pcmSrc.PcmDataGetRate(), 1),
+      cOal->GetALFormat(GetFormat()));
   }
   /* -- Load a single buffer ----------------------------------------------- */
   void ReloadSample()
   { // If pcm sample was not loaded from disk? Just (re)load the bitmap data
     // that already should be there and should NEVER be released.
-    if(IsDynamic()) LoadSample(*this);
+    if(PcmDataIsDynamic()) LoadSample(*this);
     // Pcm sample is static?
     else
     { // It can just be reloaded from disk
-      ReloadData();
+      PcmReloadData();
       // Load the bitmap into memory
       LoadSample(*this);
       // Clear memory because we can just reload from file
-      ClearData();
+      PcmDataClearData();
     } // Show what was loaded
     cLog->LogInfoExSafe("Sample loaded '$'!", NameGet());
   }
@@ -276,24 +282,25 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
   void InitSample(Pcm &pcmSrc)
   { // Show filename progress
     cLog->LogDebugExSafe("Sample loading from pcm '$'[$] ($;$;$)...",
-      pcmSrc.NameGet(), pcmSrc.GetAlloc(), pcmSrc.GetRate(),
-      pcmSrc.GetChannels(), pcmSrc.GetBits());
+      pcmSrc.NameGet(), pcmSrc.PcmDataGetAlloc(), pcmSrc.PcmDataGetRate(),
+      pcmSrc.PcmDataGetChannels(), pcmSrc.PcmDataGetBits());
     // Check that the format is valid
-    if(pcmSrc.IsSigned() || pcmSrc.IsBigEndian() ||
-       !Oal::GetOALType(pcmSrc.GetChannels(), pcmSrc.GetBits(),
+    if(pcmSrc.PcmDataIsSigned() || pcmSrc.PcmDataIsBigEndian() ||
+       !Oal::GetOALType(pcmSrc.PcmDataGetChannels(), pcmSrc.PcmDataGetBits(),
          aleFormat, aleSFormat))
       XC("OpenAL does not support the specified format!",
-        "BigEndian", pcmSrc.IsBigEndian(), "Signed", pcmSrc.IsSigned(),
-        "Channels",  GetChannels(),        "Bits",   GetBits());
+        "BigEndian", pcmSrc.PcmDataIsBigEndian(),
+        "Signed",    pcmSrc.PcmDataIsSigned(),
+        "Channels",  PcmDataGetChannels(), "Bits", PcmDataGetBits());
     // Take ownership of PCM object and identifier if src and dest not same
-    if(this != &pcmSrc) { SwapPcm(pcmSrc); NameSwap(pcmSrc); }
+    if(this != &pcmSrc) { PcmSwap(pcmSrc); NameSwap(pcmSrc); }
     // Set purpose of the PCM object as a sample
     FlagSet(PP_SAMPLE);
     // Initialise
     LoadSample(*this);
     // Remove all sample data because we can just load it from file again
     // and theres no point taking up precious memory for it.
-    if(IsNotDynamic()) ClearData();
+    if(PcmDataIsNotDynamic()) PcmDataClearData();
   }
   /* -- Constructor -------------------------------------------------------- */
   Sample() :

@@ -14,10 +14,11 @@ using namespace IConsole::P;           using namespace ICVarDef::P;
 using namespace ICVar::P;              using namespace ICVarLib::P;
 using namespace IError::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace ILuaFunc::P;
-using namespace ISerial::P;            using namespace IString::P;
-using namespace IStat::P;              using namespace IStd::P;
+using namespace ILuaBase::P;           using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace ILuaFunc::P;           using namespace ISerial::P;
+using namespace IString::P;            using namespace IStat::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 using LumCvEnums = LookupMap<CVarFlagsType>;
 /* ------------------------------------------------------------------------- */
@@ -52,95 +53,104 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // variable is initialising for the first time. We haven't added the
     // variable to cvmActive yet and we don't want to until the CVARS system
     // has created the variable.
-    const LuaCVarMapIt lcvmpIt{ cVariables->lcvmMap.find(cviVar.GetVar()) };
-    if(lcvmpIt == cVariables->lcvmMap.cend()) return ACCEPT;
-    // Save stack position and restore it on scope exit
+    const LuaCVarMapIt lcvmpIt{ GetLuaVarList().find(cviVar.GetVar()) };
+    if(lcvmpIt == GetLuaVarListEnd()) return ACCEPT;
+    // Save stack position and restore it on exception or scope exit
     const LuaStackSaver lSS{ cLuaFuncs->LuaRefGetState() };
     // Call the Lua callback assigned. We're expecting one or two return values
+    // but Lua will add nil's what wasn't specified.
     lcvmpIt->second.first.LuaFuncProtectedDispatch(2, strVal, cviVar.GetVar());
-    // Get result of the callback which means a boolean HAS to be returned
-    const bool bResult = LuaUtilGetBool(cLuaFuncs->LuaRefGetState(), -2);
-    // Theres also an optional second string parameter. Return standard result
-    // of 'ACCEPT' if true or 'DENY' if false.
-    if(!LuaUtilIsString(cLuaFuncs->LuaRefGetState(), -1))
+    // Get location of success return value
+    const int iBIndex = LuaBaseGetTop(cLuaFuncs->LuaRefGetState()) - 1;
+    const bool bResult = LuaUtilGetBool(cLuaFuncs->LuaRefGetState(), iBIndex);
+    // Get location of optional second string parameter which will force a
+    // different value for the cvar and return cvar to engine if not a string.
+    const int iSIndex = iBIndex + 1;
+    if(!LuaBaseIsStr(cLuaFuncs->LuaRefGetState(), iSIndex))
       return BoolToCVarReturn(bResult);
     // Replace the current value with the guest author specified value.
     cviVar.GetModifyableValue() =
-      LuaUtilToCppString(cLuaFuncs->LuaRefGetState(), -1);
+      LuaUtilToCppString(cLuaFuncs->LuaRefGetState(), iSIndex);
     // Return result of how to handle the returned string
     return bResult ? ACCEPT_HANDLED_FORCECOMMIT : ACCEPT_HANDLED;
   }
+  /* -- Get lua cvar list pair --------------------------------------------- */
+  LuaCVarPair &Pair() const { return lcvmiIt->second; }
+  /* -- Get engine cvar list iterator -------------------------------------- */
+  const CVarMapIt &Iterator() const { return Pair().second; }
   /* -- Unregister the console command from lua -------------------- */ public:
   const StdString &Name() const { return lcvmiIt->first; }
+  /* -- Get cvar data ------------------------------------------------------ */
+  CVarItem &Data() const { return Iterator()->second; }
   /* -- Get current value as string ---------------------------------------- */
-  StdString Get() const { return cCVars->GetStr(lcvmiIt->second.second); }
+  StdString Get() const { return cCVars->GetStr(Iterator()); }
   /* -- Get default value as string ---------------------------------------- */
-  StdString Default() const
-    { return cCVars->GetDefStr(lcvmiIt->second.second); }
+  StdString Default() const { return cCVars->GetDefStr(Iterator()); }
   /* -- Reset default value ------------------------------------------------ */
-  void Reset() const { cCVars->Reset(lcvmiIt->second.second); }
+  void Reset() const { cCVars->Reset(Iterator()); }
   /* -- Returns if value is empty ------------------------------------------ */
   bool Empty() const { return Get().empty(); }
   bool NotEmpty() const { return !Empty(); }
   /* -- Set value from different types ------------------------------------- */
-  CVarSetEnums SetString(const StdStringView &strvValue) const
-    { return cCVars->Set(lcvmiIt->second.second, strvValue); }
+  CVarSetEnums SetString(const StdStringView &ssvValue) const
+    { return cCVars->Set(Iterator(), ssvValue); }
   CVarSetEnums Clear() const
-    { return SetString(cCommon->CommonBlank()); }
+    { return SetString(cCommon->CommonBlankStr()); }
   CVarSetEnums SetBoolean(const bool bState) const
     { return SetString(bState ?
-        cCommon->CommonOneV() : cCommon->CommonZeroV()); }
+        cCommon->CommonOne() : cCommon->CommonZero()); }
   CVarSetEnums SetInteger(const lua_Integer liValue) const
     { return SetString(StrFromNum(liValue)); }
   CVarSetEnums SetNumber(const lua_Number lnValue) const
     { return SetString(StrFromNum(lnValue, 0, 15)); }
   /* -- Register user console command from lua ----------------------------- */
-  void Init(lua_State*const lS, const StdStringView &strvName,
-    const StdStringView &strvDefault, const CVarFlagsConst cvfcFlags)
+  void Init(lua_State*const lS, const StdStringView &ssvName,
+    const StdStringView &ssvDefault, const CVarFlagsConst cvfcFlags)
   { // Check that the variable name is valid
-    if(!cCVars->IsValidVariableName(strvName))
+    if(!cCVars->IsValidVariableName(ssvName))
       XC("CVar name is not valid!",
-        "Variable", strvName, "Minimum", cCVars->stCVarMinLength,
+        "Variable", ssvName, "Minimum", cCVars->stCVarMinLength,
         "Maximum",  cCVars->stCVarMaxLength);
     // Make sure cvar doesn't already exist
-    if(cCVars->VarExists(strvName))
-      XC("CVar already registered!", "Variable", strvName);
+    if(cCVars->VarExists(ssvName))
+      XC("CVar already registered!", "Variable", ssvName);
     // Get all the flags in the types mask
     switch(cvfcFlags.FlagAnd(TMASK))
     { // Only types specified on their own are valid
       case TSTRING: case TINTEGER: case TFLOAT: case TBOOLEAN: break;
       // Anything else?
       default: XC("CVar flags have none or mixed types!",
-        "Variable", strvName, "Flags", cvfcFlags.FlagGet());
+        "Variable", ssvName, "Flags", cvfcFlags.FlagGet());
     }
     // Since the userdata for this class object is at arg 5, we need to make
     // sure the callback function is ahead of it in arg 6 or the LuaFunc()
     // class which calls luaL_ref will fail as it ONLY reads position -1.
-    LuaUtilCopyValue(lS, 4);
+    LuaBasePushValue(lS, 4);
     // Save the function at the top of the stack used for the callback
-    lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), {
-      StdString{ strvName },
-      make_pair(LuaFunc{ StrAppend("CV:", strvName), true },
+    lcvmiIt = cParent->lcvmMap.insert(GetLuaVarListEnd(), {
+      StdString{ ssvName },
+      make_pair(LuaFunc{ StrAppend("CV:", ssvName), true },
         cCVars->GetVarListEnd())
     }); // Register the variable and set the iterator to the new cvar.
-    lcvmiIt->second.second = cCVars->RegisterVar(strvName, strvDefault,
+    Pair().second = cCVars->RegisterVar(ssvName, ssvDefault,
       LuaCallbackStatic, cvfcFlags|TLUA|PANY);
+    // Register the object in collector
+    CollectorRegister();
   }
   /* -- Register existing internal engine variable as a Lua variable ------- */
   void InitInternal(const CVarMapIt &cvmiIt)
   { // Get cvar name
-    const StdString &strvName = cvmiIt->first;
+    const StdString &ssvName = cvmiIt->first;
     // Insert a new variable
-    lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), { strvName,
-      make_pair(LuaFunc{ strvName, false }, cCVars->GetVarListEnd()) });
+    lcvmiIt = cParent->lcvmMap.insert(GetLuaVarListEnd(), { ssvName,
+      make_pair(LuaFunc{ ssvName, false }, cCVars->GetVarListEnd()) });
     // Register the variable and set the iterator to the new cvar.
-    lcvmiIt->second.second = cvmiIt;
+    Pair().second = cvmiIt;
   }
   /* -- Basic constructor with no init ------------------------------------- */
   Variable() :
     /* -- Initialisers ----------------------------------------------------- */
-    ICHelperVariable{                  // Initialise and register the object
-      cVariables, this },
+    ICHelperVariable{ cVariables },    // Initialise with NO registration
     SerialSlave{ cParent->Serial() },  // Initialise identification number
     lcvmiIt{ GetLuaVarListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
@@ -150,7 +160,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // Return if the iterator is invalid?
     if(lcvmiIt == GetLuaVarListEnd()) return;
     // Unregister the cvar if valid and registered by Lua
-    const CVarMapIt &cvmiIt = lcvmiIt->second.second;
+    const CVarMapIt &cvmiIt = Iterator();
     if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(TLUA))
       cCVars->UnregisterVar(cvmiIt);
     // Remove the lua var
@@ -193,11 +203,11 @@ lceOther{{                             // Misc flags
 static StdString VariablesMakeInformation(const CVarItem &cviVar)
 { // Print data about the cvar
   return StrFormat("Status for '$'...\n"
-    "- Callback: $.\n"               "- Flags: 0x$$$.\n"
-    "- Types: $.\n"                  "- Conditions: $.\n"
-    "- Permissions: $.\n"            "- Source: $.\n"
-    "- Other: $.\n"                  "- Default: [$/$] \"$\".\n"
-    "- Modified: $.\n"               "- Current: [$/$] \"$\".",
+    "- Callback: $.\n"                 "- Flags: 0x$$$.\n"
+    "- Types: $.\n"                    "- Conditions: $.\n"
+    "- Permissions: $.\n"              "- Source: $.\n"
+    "- Other: $.\n"                    "- Default: [$/$] \"$\".\n"
+    "- Modified: $.\n"                 "- Current: [$/$] \"$\".",
       cviVar.GetVar(),
       StrFromBoolTF(cviVar.IsTriggerSet()),
       StdIOSHex, cviVar, StdIOSDec,

@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace ICoords {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICoord::P;             using Lib::OS::GlFW::GLfloat;
-using Lib::OS::GlFW::GLuint;
+using namespace ICoord::P;             using Lib::GlFW::GLfloat;
+using Lib::GlFW::GLuint;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

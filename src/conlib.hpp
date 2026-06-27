@@ -225,7 +225,7 @@ for(const Certs::X509Pair &xPair : cSockets->GetCertList())
         .Data(xPair.first);
   // Split subject key/value pairs. We couldn't split the data if empty
   const ParserString psSubject{
-    CertGetSubject(xPair), cCommon->CommonFSlashV(), '=' };
+    CertGetSubject(xPair), cCommon->CommonFSlash(), '=' };
   if(psSubject.empty()) { sTable.Data("??").Data("<No sub>"); continue; }
   // Print country and certificate name
   const ParserStringConstIt psciC{ psSubject.find("C") },
@@ -296,7 +296,7 @@ cConsole->Flush();
 // Build commands list and if commands were matched? Print them all
 StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cConsole->GetCmdsList(),
-     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
+     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlankStr(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrPluraliseNum(stMatched,
     "matching command", "matching commands"), strMatched);
 // No commands matched
@@ -414,7 +414,7 @@ sTable.Header("ID").Header("NAME", false).Header("VERSION")
 for(const CreditLib &clRef : cCredits->CreditGetLibList())
   sTable.DataN(clRef.GetID()).Data(clRef.GetName()).Data(clRef.GetVersion())
         .DataA(clRef.IsCopyright() ?
-    "\xC2\xA9 " : cCommon->CommonBlank(), clRef.GetAuthor());
+    "\xC2\xA9 " : cCommon->CommonBlankStr(), clRef.GetAuthor());
 // Show number of libs
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cCredits->CreditGetItemCount(),
@@ -444,7 +444,7 @@ cConsole->ConsoleAddLineA("Redraw of terminal window requested!");
 { "cvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(VariablesMakeList(cCVars->GetVarList(),
-  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
+  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlankStr()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvars' function
 /* ========================================================================= */
@@ -504,7 +504,7 @@ else cConsole->ConsoleAddLine("Failed to create new private key!");
 { "cvpend", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(VariablesMakeList(cCVars->GetInitialVarList(),
-  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
+  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlankStr()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvpend' function
 /* ========================================================================= */
@@ -526,19 +526,21 @@ cConsole->ConsoleAddLineA(StrPluraliseNum(
 /* ========================================================================= */
 { "dir", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-// Make and checkfilename
-const StdString &strVal =
-  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
-switch(const ValidResult vrResult = DirValidName(strVal))
+// Get relative path if specified or root working directory if not specified
+const StdStringView ssvVal{
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod() };
+// Test if the directory is valid, get and compare result
+switch(const ValidResult vrResult = DirValidName(ssvVal))
 { // Continue if valid directory or current directory
   case VR_CURRENT: case VR_OK: break;
   // Error if anything else
   default: return cConsole->ConsoleAddLineF("Cannot check directory '$': $!",
-    strVal, cDirBase->DirBaseVNRtoStr(vrResult));
+    ssvVal, cDirBase->DirBaseVNRtoStr(vrResult));
 } // Enumerate local directories on disk
-const Dir dPath{ StdMove(strVal) };
+const Dir dPath{ ssvVal };
 // Set directory and get directories and files
-const StdString &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
+const StdStringView ssvDir{
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank() };
 // Directory data we are enumerating
 struct Item { const uint64_t ullId, ullSize;
               const StdTimeT stCreate, stModified, stAccess;
@@ -555,9 +557,9 @@ for(const Archive*const aPtr : *cArchives)
   const StrUIntMap &suimDirs = aRef.ArchiveGetDirList();
   for(const StrUIntMapPair &suimpPair : suimDirs)
   { // Skip directory if start of directory does not match
-    if(strDir != suimpPair.first.substr(0, strDir.size())) continue;
+    if(ssvDir != suimpPair.first.substr(0, ssvDir.size())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    StdString strName{ suimpPair.first.substr(strDir.size()) };
+    StdString strName{ suimpPair.first.substr(ssvDir.size()) };
     StrTrimRef(strName, '/');
     if(strName.find('/') != StdNPos) continue;
     // Add to directory list and increment directory count
@@ -569,9 +571,9 @@ for(const Archive*const aPtr : *cArchives)
   const StrUIntMap &suimFiles = aRef.ArchiveGetFileList();
   for(const StrUIntMapPair &suimpPair : suimFiles)
   { // Skip file if start of directory does not match
-    if(strDir != suimpPair.first.substr(0, strDir.size())) continue;
+    if(ssvDir != suimpPair.first.substr(0, ssvDir.size())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    StdString strName{ suimpPair.first.substr(strDir.size()) };
+    StdString strName{ suimpPair.first.substr(ssvDir.size()) };
     StrTrimRef(strName, '/');
     if(strName.find('/') != StdNPos) continue;
     // Add to file list and increment total bytes and file count
@@ -586,14 +588,14 @@ for(const DirEntMapPair &dempPair : dPath.GetDirs())
   const DirItem &diDir = dempPair.second;
   silDirs.insert({ StdMove(dempPair.first),
     { diDir.Id(), StdMaxUInt64, diDir.Created(), diDir.Written(),
-      diDir.Accessed(), cCommon->CommonBlank() } });
+      diDir.Accessed(), cCommon->CommonBlankStr() } });
 } // Enumerate local files
 for(const DirEntMapPair &dempPair : dPath.GetFiles())
 { // Add to file list and increment byte and file count
   const DirItem &diFile = dempPair.second;
   silFiles.insert({ StdMove(dempPair.first),
     { diFile.Id(), diFile.Size(), diFile.Created(), diFile.Written(),
-      diFile.Accessed(), cCommon->CommonBlank() } });
+      diFile.Accessed(), cCommon->CommonBlankStr() } });
 } // Prepare data table for archive display
 Statistic sTable;
 sTable.Header("#").Header().Header("SIZE").Header().Header("CA").Header("MA")
@@ -605,12 +607,12 @@ const StdTimeT ttTime = cmSys.GetTimeS();
 for(const StrItemPair &sipPair : silDirs)
 { // Get item data and add directory information
   const Item &itData = sipPair.second;
-  sTable.DataN(stIndex++).DataN(itData.ullId).Data(cCommon->CommonDirV())
+  sTable.DataN(stIndex++).DataN(itData.ullId).Data(cCommon->CommonDir())
         .Data().DataSD(ttTime - itData.stCreate, 1)
         .DataSD(ttTime - itData.stModified, 1)
         .DataSD(ttTime - itData.stAccess, 1)
         .Data(itData.strArc.empty() ?
-          cCommon->CommonFsV() : itData.strArc).Data(StdMove(sipPair.first));
+          cCommon->CommonFs() : itData.strArc).Data(StdMove(sipPair.first));
 } // For each file we found
 uint64_t ullBytes = 0;
 for(const StrItemPair &sipPair : silFiles)
@@ -621,7 +623,7 @@ for(const StrItemPair &sipPair : silFiles)
         .DataSD(ttTime - itData.stModified, 1)
         .DataSD(ttTime - itData.stAccess, 1)
         .Data(itData.strArc.empty() ?
-          cCommon->CommonFsV() : itData.strArc).Data(StdMove(sipPair.first));
+          cCommon->CommonFs() : itData.strArc).Data(StdMove(sipPair.first));
   ullBytes += itData.ullSize;
 } // Show summary
 cConsole->ConsoleAddLineF("$$ and $ totalling $ ($) in $.",
@@ -763,7 +765,7 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 { "find", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Find text in console backlog and if not found, show message
-cConsole->FindText(StrImplode(aArgs, cCommon->CommonSpaceV(), 1));
+cConsole->FindText(StrImplode(aArgs, cCommon->CommonSpace(), 1));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'find' function
 /* ========================================================================= */
@@ -851,12 +853,11 @@ cConsole->ConsoleAddLineF(
   cOgl->FlagIsSet(GFL_HAVEMEM) ?
     StrFormat("Memory: $ mBytes ($ mBytes available).\n",
       cOgl->GetVRAMTotal() / 1048576, cOgl->GetVRAMFree() / 1048576) :
-    cCommon->CommonBlank(),
+    cCommon->CommonBlankStr(),
   cInput->DimGetWidth(), cInput->DimGetHeight(),
     StrFromRatio(cInput->DimGetWidth(), cInput->DimGetHeight()),
-    cDisplay->DisplayGetWindowPosX(), cDisplay->DisplayGetWindowPosY(),
-    cDisplay->DisplayGetWindowScaleWidth(),
-    cDisplay->DisplayGetWindowScaleHeight(),
+    cDisplay->DisplayGetWinPosX(), cDisplay->DisplayGetWinPosY(),
+    cDisplay->DisplayGetWinScaleWidth(), cDisplay->DisplayGetWinScaleHeight(),
     StdIOSHex, cDisplay->FlagGet(),
   StdIOSDec, cDisplay->DisplayGetFSType(),
     cDisplay->DisplayGetFSTypeString(),
@@ -928,8 +929,8 @@ if(aArgs.size() == 2)
     StrPluraliseNum(iRef.GetSlotCount(), "slot", "slots"), iRef.NameGet());
 } // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("#").Header("ID").Header("FLAG", false).Header("SIZW").Header("SIZH")
-      .Header("BI").Header("B").Header("S").Header("ALLOC")
+sTable.Header("#").Header("ID").Header("FLAG", false).Header("SIZW")
+      .Header("SIZH").Header("BI").Header("B").Header("S").Header("ALLOC")
       .Header("TYPE", false).Header("NAME", false).Reserve(cImages->size());
 // Walk through image classes
 size_t stIndex = 0;
@@ -937,21 +938,21 @@ for(const Image*const iPtr : *cImages)
 { // Get reference to class and write its data to the table
   const Image &iRef = *iPtr;
   sTable.DataN(stIndex++).DataN(iRef.Serial()).DataE({
-    { iRef.IsDynamic(),          'Y' }, { iRef.IsNotDynamic(),       'y' },
-    { iRef.IsPurposeFont(),      'F' }, { iRef.IsPurposeImage(),     'I' },
-    { iRef.IsPurposeTexture(),   'T' }, { iRef.IsLoadAsDDS(),        'D' },
-    { iRef.IsLoadAsGIF(),        'G' }, { iRef.IsLoadAsJPG(),        'J' },
-    { iRef.IsLoadAsPNG(),        'P' }, { iRef.IsConvertAtlas(),     'A' },
-    { iRef.IsActiveAtlas(),      'a' }, { iRef.IsConvertReverse(),   'E' },
-    { iRef.IsActiveReverse(),    'e' }, { iRef.IsConvertRGB(),       'H' },
-    { iRef.IsActiveRGB(),        'h' }, { iRef.IsConvertRGBA(),      'D' },
-    { iRef.IsActiveRGBA(),       'd' }, { iRef.IsConvertBGROrder(),  'W' },
-    { iRef.IsActiveBGROrder(),   'w' }, { iRef.IsConvertBinary(),    'N' },
-    { iRef.IsActiveBinary(),     'n' }, { iRef.IsConvertGPUCompat(), 'O' },
-    { iRef.IsActiveGPUCompat(),  'o' }, { iRef.IsConvertRGBOrder(),  'B' },
-    { iRef.IsActiveRGBOrder(),   'b' }, { iRef.IsCompressed(),       'C' },
-    { iRef.IsPalette(),          '8' }, { iRef.IsMipmaps(),          'M' },
-    { iRef.IsReversed(),         'R' }, { iRef.LockIsSet(),          'L' },
+    { iRef.LockIsSet(),         'L' }, { iRef.IsDynamic(),         'D' },
+    { iRef.IsPurposeFont(),     'F' }, { iRef.IsPurposeImage(),    'I' },
+    { iRef.IsPurposeTexture(),  'T' }, { iRef.IsLoadAsPNG(),       '0' },
+    { iRef.IsLoadAsJPEG(),      '1' }, { iRef.IsLoadAsGIF(),       '2' },
+    { iRef.IsLoadAsDDS(),       '3' }, { iRef.IsLoadAsWEBP(),      '4' },
+    { iRef.IsConvertAtlas(),    'a' }, { iRef.IsActiveAtlas(),     'A' },
+    { iRef.IsConvertReverse(),  's' }, { iRef.IsActiveReverse(),   'S' },
+    { iRef.IsConvertRGB(),      'u' }, { iRef.IsActiveRGB(),       'U' },
+    { iRef.IsConvertRGBA(),     'x' }, { iRef.IsActiveRGBA(),      'X' },
+    { iRef.IsConvertBGROrder(), 'y' }, { iRef.IsActiveBGROrder(),  'Y' },
+    { iRef.IsConvertBinary(),   'b' }, { iRef.IsActiveBinary(),    'B' },
+    { iRef.IsConvertRGBOrder(), 'z' }, { iRef.IsActiveRGBOrder(),  'Z' },
+    { iRef.IsConvertGPUCompat(),'g' }, { iRef.IsActiveGPUCompat(), 'G' },
+    { iRef.IsCompressed(),      'C' }, { iRef.IsPalette(),         'P' },
+    { iRef.IsMipmaps(),         'M' }, { iRef.IsReversed(),        'R' },
   }).DataN(iRef.DimGetWidth()).DataN(iRef.DimGetHeight())
     .DataN(iRef.GetBitsPerPixel()).DataN(iRef.GetBytesPerPixel())
     .DataN(iRef.GetSlotCount()).DataN(iRef.GetAlloc())
@@ -1060,10 +1061,22 @@ for(const JoyInfo &jiRef : jlList)
     .Data(jiRef.NameGet());
 } // Print totals.
 cConsole->ConsoleAddLineF("$$ connected ($ supported).\n"
-                   "Input flags are 0x$$.",
+                          "Input flags are $.",
   sTable.Finish(),
     StrPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
-    jlList.size(), StdIOSHex, cInput->FlagGet());
+    jlList.size(), StrFromEvalTokens({
+      { cGlFW->WinIsLockKeyModsInputModeEnabled(),        'K' },
+      { cGlFW->WinIsRawMouseInputModeEnabled(),           'R' },
+      { cGlFW->WinIsStickyKeysInputModeEnabled(),         'S' },
+      { cGlFW->WinIsStickyMouseButtonsInputModeEnabled(), 'B' },
+      { cInput->FlagIsSet(IF_CLAMPMOUSE),                 'L' },
+      { cInput->FlagIsSet(IF_CURSOR),                     'C' },
+      { cInput->FlagIsSet(IF_FSTOGGLER),                  'F' },
+      { cInput->FlagIsSet(IF_INITEVENTS),                 'E' },
+      { cInput->FlagIsSet(IF_MOUSEFOCUS),                 'M' },
+      { cInput->FlagIsSet(IF_POLLJOYSTICKS),              'P' },
+      { cInput->FlagIsSet(IF_RESTORE),                    'O' },
+    }), StdIOSHex);
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'input' function
 /* ========================================================================= */
@@ -1085,7 +1098,7 @@ cConsole->ConsoleAddLineA(StrPluraliseNum(cJsons->size(), "json.", "jsons."));
 { "lcalc", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
-  StrFormat("return $", StrImplode(aArgs, cCommon->CommonSpaceV(), 1))));
+  StrFormat("return $", StrImplode(aArgs, cCommon->CommonSpace(), 1))));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lcalc' function
 /* ========================================================================= */
@@ -1097,7 +1110,7 @@ cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
 // Build LUA commands list and if commands were matched? Print them all
 StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cCommands->lcmMap,
-     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
+     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlankStr(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrPluraliseNum(stMatched,
     "matching LUA command", "matching LUA commands"), strMatched);
 // No LUA commands matched
@@ -1130,7 +1143,7 @@ cConsole->ConsoleAddLine(cLua->LuaTryEventOrForce(EMC_LUA_END) ?
 { "lexec", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
-  StrImplode(aArgs, cCommon->CommonSpaceV(), 1)));
+  StrImplode(aArgs, cCommon->CommonSpace(), 1)));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lexec' function
 /* ========================================================================= */
@@ -1159,7 +1172,7 @@ for(const LuaFunc*const lfPtr : *cLuaFuncs)
         .DataN(lfRef.LuaFuncGet()).DataN(lfRef.LuaFuncGetSaved())
         .Data(lfRef.NameGet());
   // Remove what we pushed
-  LuaUtilRmStack(cLuaFuncs->LuaRefGetState());
+  LuaBaseRemove(cLuaFuncs->LuaRefGetState(), -1);
 } // Number of items in buffer
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cLuaFuncs->size(), "function.", "functions."));
@@ -1180,7 +1193,7 @@ lua_State*const lS = cLua->LuaGetState();
 // class creation simplifies the cleanup process.
 const LuaStackSaver lssSaved{ lS };
 // We need free items on the stack, leave empty if not
-if(!LuaUtilIsStackAvail(lS, aArgs.size()))
+if(!LuaBaseCheckStack(lS, aArgs.size()))
   return cConsole->ConsoleAddLine("Too many path components!");
 // Get iterator to second argument. First is actually the command name. The
 // second argument in this instance is the root table name in globals.
@@ -1192,13 +1205,13 @@ if(svciIt != aArgs.cend())
   if(strRoot.empty()) return cConsole->ConsoleAddLine("Empty table name!");
   // Push variable specified on command line and if it's not a table?
   // Tell user the table is invalid and return
-  LuaUtilGetGlobal(lS, strRoot.data());
-  if(!LuaUtilIsTable(lS, -1))
+  LuaBaseGetGlobal(lS, strRoot.data());
+  if(!LuaBaseIsTable(lS, -1))
     return cConsole->ConsoleAddLineF("Table '$' $!", strRoot,
-      LuaUtilIsNil(lS, -1) ? "does not exist" : "is not valid");
+      LuaBaseIsNil(lS, -1) ? "does not exist" : "is not valid");
   // Save index so we can keep recursing the same table and check if each
   // remaining argument is a table until we reach no more arguments.
-  for(const int iIndex = LuaUtilStackSize(lS); ++svciIt != aArgs.cend();)
+  for(const int iIndex = LuaBaseGetTop(lS); ++svciIt != aArgs.cend();)
   { // Get name of parameter and if it's empty? Return empty sub-table
     const StdString &strParam = *svciIt;
     if(strParam.empty())
@@ -1206,32 +1219,34 @@ if(svciIt != aArgs.cend())
     // ...and if its a valid number?
     if(StrIsInt(strParam))
     { // Get value by index and keep searching for more tables
-      LuaUtilGetRefEx(lS, -1, StrToNum<lua_Integer>(strParam));
-      if(LuaUtilIsTable(lS, -1)) continue;
+      LuaBaseRawGetI(lS, -1, StrToNum<lua_Integer>(strParam));
+      if(LuaBaseIsTable(lS, -1)) continue;
       // Restore where we were in the stack
-      LuaUtilPruneStack(lS, iIndex);
+      LuaBaseSetTop(lS, iIndex);
     } // Find subtable. It must be a table
-    LuaUtilGetField(lS, -1, strParam.data());
-    if(LuaUtilIsTable(lS, -1)) continue;
+    LuaBaseGetField(lS, -1, strParam.data());
+    if(LuaBaseIsTable(lS, -1)) continue;
     // Tell user the table is invalid and return
     return cConsole->ConsoleAddLineF("Sub-table '$' $!", strParam,
-      LuaUtilIsNil(lS, -1) ? "does not exist" : "is not valid");
+      LuaBaseIsNil(lS, -1) ? "does not exist" : "is not valid");
   }
-} // Push global namspace and throw error if it is invalid
-else lua_pushglobaltable(lS);
+} // Push global namspace
+else LuaBasePushGlobalsTable(lS);
 // Items for sorting (Name, Value, Tokens)
 using StrStrPairMapPair = StdPair<const StdString, const StrStrMapPair>;
 using StrStrPairMap =
   StdMap<StrStrPairMapPair::first_type, StrStrPairMapPair::second_type>;
 StrStrPairMap ssmpmMap;
 // Make sure theres two elements
-for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
+for(LuaBasePushNil(lS);
+    LuaBaseNext(lS, -2);
+    LuaBaseRemove(lS, -1))
 { // Index is an integer? Create item info struct and add to list
-  if(LuaUtilIsInteger(lS, -2))
-    ssmpmMap.insert({ StrFromNum(LuaUtilToInt(lS, -2)),
+  if(LuaBaseIsInt(lS, -2))
+    ssmpmMap.insert({ StrFromNum(LuaBaseToInt(lS, -2)),
       { LuaUtilGetStackType(lS, -1), LuaUtilGetStackTokens(lS, -1) } });
   // For everything else. Create item info struct and add to list
-  else ssmpmMap.insert({ LuaUtilToString<char>(lS, -2),
+  else ssmpmMap.insert({ LuaBaseToStr<char>(lS, -2),
     { LuaUtilGetStackType(lS, -1), LuaUtilGetStackTokens(lS, -1) } });
 } // Build string to output
 Statistic sTable;
@@ -1360,7 +1375,7 @@ cEvtMain->Add(EMC_LUA_RESUME);
 // Get lua state
 lua_State*const lS = cLua->LuaGetState();
 // Get number of items in stack
-const int iCount = LuaUtilStackSize(lS);
+const int iCount = LuaBaseGetTop(lS);
 // Setup output spreadsheet
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("NAME", false).Header("VALUE")
@@ -1380,10 +1395,18 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 // ! lvars
 // ? Shows all created 'Variable' object classes created by LUA.
 /* ========================================================================= */
-{ "lvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
+{ "lvars", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cConsole->ConsoleAddLine(VariablesMakeList(cVariables->lcvmMap,
-  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
+// Formatted output. Can assume all variables will be printed
+Statistic sTable;
+sTable.Header("FLAGS").Header("NAME", false).Header("VALUE", false)
+      .Reserve(cVariables->size());
+// Write information for each lua variable
+for(Variable*const vPtr : *cVariables)
+  VariablesMakeInformationTokens(sTable, vPtr->Data());
+// Show matches
+cConsole->ConsoleAddLineF("$$ Lua cvars.",
+  sTable.Finish(), cVariables->size());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lvars' function
 /* ========================================================================= */
@@ -1530,7 +1553,7 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 // Typedefs for building memory usage data
 struct MemoryUsageItem{
   const StdStringView &strName; size_t stCount, stBytes; }
-    muiTotal{ cCommon->CommonBlank(), 0, 0 };
+    muiTotal{ cCommon->CommonBlankStr(), 0, 0 };
 using MemoryUsageItems = StdList<MemoryUsageItem>;
 // Helper macros so there is not as much spam
 #define MSSX(s,c) { c->NameGet(), \
@@ -1580,7 +1603,7 @@ cConsole->ConsoleAddLineF("$$ totalling $ ($).", stData.Finish(),
 const StdString &strExtName = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Extension '$' is$ supported by the selected graphics device.",
-    strExtName, cOgl->HaveExtension(strExtName.data()) ?
+    strExtName, GlFWBaseExtensionSupported(strExtName.data()) ?
       cCommon->CommonBlank() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglext' function
@@ -1596,7 +1619,7 @@ const StdString &strFunction = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Function '$' is$ supported by the selected graphics device.",
     strFunction, GlFWProcExists(strFunction.data()) ?
-      cCommon->CommonBlank() : " NOT");
+      cCommon->CommonBlankStr() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglfunc' function
 /* ========================================================================= */
@@ -1652,17 +1675,27 @@ for(const Pcm*const pPtr : *cPcms)
 { // Get reference to class and write its data to the table
   const Pcm &pRef = *pPtr;
   sTable.DataN(pRef.Serial()).DataE({
-    { pRef.IsPurposeSample(),      'A' }, { pRef.IsDynamic(),            'Y' },
-    { pRef.IsNotDynamic(),         'y' }, { pRef.FlagIsSet(PL_FCE_WAV),  'W' },
-    { pRef.FlagIsSet(PL_FCE_CAF),  'C' }, { pRef.FlagIsSet(PL_FCE_OGG),  'O' },
-    { pRef.IsBigEndian(),          'E' }, { pRef.IsSigned(),             'I' },
-    { pRef.IsActiveBigEndian(),    'b' }, { pRef.IsConvertBigEndian(),   'B' },
-    { pRef.IsActiveLittleEndian(), 'l' }, { pRef.IsConvertLittleEndian(),'L' },
-    { pRef.IsActiveSigned(),       's' }, { pRef.IsConvertSigned(),      'S' },
-    { pRef.IsActiveSPUCompat(),    'c' }, { pRef.IsConvertSPUCompat(),   'C' },
-    { pRef.IsActiveUnsigned(),     'u' }, { pRef.IsConvertUnsigned(),    'U' }
-  }).DataN(pRef.GetRate()).DataN(pRef.GetChannels()).DataN(pRef.GetBits())
-    .DataN(pRef.GetBytes()).DataN(pRef.GetAlloc()).Data(pRef.NameGet());
+    { pRef.PcmDataIsPurposeSample(),       'A' },
+    { pRef.PcmDataIsDynamic(),             'Y' },
+    { pRef.PcmDataIsNotDynamic(),          'y' },
+    { pRef.FlagIsSet(PL_FCE_WAV),          'W' },
+    { pRef.FlagIsSet(PL_FCE_CAF),          'C' },
+    { pRef.FlagIsSet(PL_FCE_OGG),          'O' },
+    { pRef.PcmDataIsBigEndian(),           'E' },
+    { pRef.PcmDataIsSigned(),              'I' },
+    { pRef.PcmDataIsActiveBigEndian(),     'b' },
+    { pRef.PcmDataIsConvertBigEndian(),    'B' },
+    { pRef.PcmDataIsActiveLittleEndian(),  'l' },
+    { pRef.PcmDataIsConvertLittleEndian(), 'L' },
+    { pRef.PcmDataIsActiveSigned(),        's' },
+    { pRef.PcmDataIsConvertSigned(),       'S' },
+    { pRef.PcmDataIsActiveSPUCompat(),     'z' },
+    { pRef.PcmDataIsConvertSPUCompat(),    'Z' },
+    { pRef.PcmDataIsActiveUnsigned(),      'u' },
+    { pRef.PcmDataIsConvertUnsigned(),     'U' }
+  }).DataN(pRef.PcmDataGetRate()).DataN(pRef.PcmDataGetChannels())
+    .DataN(pRef.PcmDataGetBits()).DataN(pRef.PcmDataGetBytes())
+    .DataN(pRef.PcmDataGetAlloc()).Data(pRef.NameGet());
 } // Log texture counts
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cPcms->size(), "pcm.", "pcms."));
@@ -1767,7 +1800,7 @@ cConsole->ConsoleAddLineF("$$ and $.", sTable.Finish(),
 LuaUtilClassCreate<SShot>(cLua->LuaGetState(), cSShots)->DumpMain();
 // Although SShot is asynchronous, theres no way to clean up the stack so
 // we'll just delete it straight away.
-LuaUtilRmStack(cLua->LuaGetState(), 1);
+LuaBaseRemove(cLua->LuaGetState(), 1);
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'shot' function
 /* ========================================================================= */
@@ -1791,7 +1824,7 @@ if(aArgs.size() == 2)
   // Get socket flags
   const SocketFlagsConst sfcFlags{ sRef.FlagGet() };
   // Tokens for status
-  const StdString strStatus
+  const StdStringView ssvStatus
       ((sfcFlags.FlagIsSet(SS_CLOSEDBYCLIENT)) ? "ClientClosed"
     : ((sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER)) ? "ServerClosed"
     : ((sfcFlags.FlagIsSet(SS_STANDBY))        ? "Disconnected"
@@ -1803,25 +1836,25 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_CONNECTED))      ? "Connected"
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
-    :                                            "Unknown")))))))))));
+    : cCommon->CommonUnknown())))))))))));
   // Initial connection status
   const StdString strOutput{
-    StrFormat("Status for socket $...\n"
+    StrFormat("Status for socket $<$>...\n"
       "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
       "- Address: $; Port: $$; IP: $."
       "$"
       "$",
-      uId,
-      strStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
+      uId, sRef.NameGet(),
+      ssvStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
         sRef.GetFD(), StdIOSHex, sRef.GetFD(),
       sRef.GetAddress(), StdIOSDec, sRef.GetPort(), sRef.GetIPAddress(),
       sRef.FlagIsSet(SS_VHOST) ?
         StrFormat("\n- Real host: $.", sRef.GetRealHost()) :
-        cCommon->CommonBlank(),
+        cCommon->CommonBlankStr(),
       sRef.IsSecure() ?
         StrFormat("\n- Encryption: $.",
           StrIsBlank(sRef.GetCipher(), cCommon->CommonUnresolved())) :
-        cCommon->CommonBlank()) };
+        cCommon->CommonBlankStr()) };
   // If the socket is not connected?
   if(sfcFlags.FlagIsClear(SS_CONNECTED))
     return cConsole->ConsoleAddLine(strOutput);
@@ -1850,8 +1883,9 @@ if(aArgs.size() == 2)
       TimeToShortDuration(dConnect), TimeToShortDuration(dInitial));
 } // Make neatly formatted table
 Statistic sTable;
-sTable.Header("ID").Header("FLAG").Header("IP").Header("PORT")
-      .Header("ADDRESS", false).Reserve(cSockets->size());
+sTable.Header("#").Header("FLAG").Header("IP")
+      .Header("PORT").Header("ADDRESS", false).Header("IDENTIFIER", false)
+      .Reserve(cSockets->size());
 // Walk through sockets
 for(const Socket*const sPtr : *cSockets)
 { // Get reference to class and socket flags
@@ -1872,7 +1906,8 @@ for(const Socket*const sPtr : *cSockets)
     { sRef.GetError() != 0,                  'E' },
     { sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER), 'S' },
     { sfcFlags.FlagIsSet(SS_CLOSEDBYCLIENT), 'C' }
-  }).Data(sRef.GetIPAddress()).DataN(sRef.GetPort()).Data(sRef.GetAddress());
+  }).Data(sRef.GetIPAddress()).DataN(sRef.GetPort()).Data(sRef.GetAddress())
+    .Data(sRef.NameGet());
 } // Show result
 cConsole->ConsoleAddLineF("$$ ($ connected).\n"
   "Total RX Packets: $; Bytes: $ ($).\n"
@@ -1930,9 +1965,9 @@ for(const Source*const sPtr : *cSources)
   const ALuint uType = sRef.GetType();
   // Add data to text table
   sTable.DataN(sRef.Serial()).DataN(sRef.GetSource())
-        .DataE({{ sRef.GetClass(),     'C' }, { sRef.LockIsSet(),     'L' },
-                { !!sRef.GetLooping(), 'O' }, { !!sRef.GetRelative(), 'R' },
-                { sRef.GetExternal(),  'X' }})
+        .DataE({{ sRef.GetClass(),    'C' }, { sRef.LockIsSet(),   'L' },
+                { sRef.GetLooping(),  'O' }, { sRef.GetRelative(), 'R' },
+                { sRef.GetExternal(), 'X' }})
         .DataC(alState == AL_INITIAL ? 'I' : (alState == AL_PLAYING ? 'P' :
               (alState == AL_PAUSED  ? 'H' : (alState == AL_STOPPED ? 'S' :
                                        '?'))))
@@ -2012,7 +2047,7 @@ if(cSql->SqlNotActive())
   return cConsole->ConsoleAddLine("Sql transaction not active!");
 // End transaction
 cConsole->ConsoleAddLineF("Sql transaction$ ended.",
-  cSql->SqlEnd() == SQLITE_OK ? cCommon->CommonBlank() : " NOT");
+  cSql->SqlEnd() == SQLITE_OK ? cCommon->CommonBlankStr() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqlend' function
 /* ========================================================================= */
@@ -2026,7 +2061,7 @@ cConsole->ConsoleAddLineF("Sql transaction$ ended.",
 if(cSql->SqlActive())
   return cConsole->ConsoleAddLine("Sql transaction already active!");
 // Execute the string and catch exceptions
-if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, cCommon->CommonSpaceV(), 1)))
+if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, cCommon->CommonSpace(), 1)))
 { // Get records and if we did not have any?
   const SqlResult &srRef = cSql->SqlGetRecords();
   if(srRef.empty())

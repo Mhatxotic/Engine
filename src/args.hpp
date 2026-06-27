@@ -14,19 +14,26 @@ using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-struct Args :                          // Arguments list class
+template<class StrVecType>
+  requires StdIsSame<StrVecType, StrVector> ||
+           StdIsSame<StrVecType, StrViewVector>
+struct ArgsBase :                      // Arguments list class
   /* -- Base classes ------------------------------------------------------- */
-  public StrVector                     // A vector of strings
+  public StrVecType                    // A vector of strings
+  // Careful when you use 'StrViewVector' as the string views will not have
+  // its strings null terminated when generated so make sure you DO NOT use ANY
+  // functions that relies on input of null-terminated pointers (e.g. C
+  // functions).
 { /* -- Constructor with string argument ----------------------------------- */
   template<typename StrType>
     requires StdIsString<StrType>
-  explicit Args(const StrType &strArgs)
+  explicit ArgsBase(const StrType &strArgs)
   { // Get beginning position of usable character and return if not found
     const size_t stFirst = strArgs.find_first_not_of(' ');
     if(stFirst == StdNPos) return;
     // Get ending position of usable character and extract trimmed string
     const size_t stLast = strArgs.find_last_not_of(' ');
-    const StdString strTrimmed{
+    const typename StrVecType::value_type strTrimmed{
       strArgs.substr(stFirst, stLast - stFirst + 1) };
     // Return if empty else get length of string
     if(strTrimmed.empty()) return;
@@ -46,7 +53,7 @@ struct Args :                          // Arguments list class
       if(StdIsSpace(cChar) && !bInQuotes)
       { // If were not at the start of the argument? Extract/add the argument
         if(stStart != stPos)
-          emplace_back(strTrimmed.substr(stStart, stPos - stStart));
+          this->emplace_back(strTrimmed.substr(stStart, stPos - stStart));
         // Set next argument starting position
         stStart = stPos + 1;
       } // if it's a argument separator?
@@ -60,7 +67,7 @@ struct Args :                          // Arguments list class
             // We don't want it?
             else
             { // Extract new argument
-              emplace_back(strTrimmed.substr(stStart, stPos - stStart));
+              this->emplace_back(strTrimmed.substr(stStart, stPos - stStart));
               // Set next argument starting position
               stStart = stPos + 1;
             } // No longer in quotes
@@ -83,17 +90,18 @@ struct Args :                          // Arguments list class
         default: break;
       }
     } // If there are remaining characters to add? Extract the string
-    if(stStart < stLength) emplace_back(strTrimmed.substr(stStart));
+    if(stStart < stLength) this->emplace_back(strTrimmed.substr(stStart));
   }
   /* -- Constructor that does nothing -------------------------------------- */
-  Args() = default;
+  ArgsBase() = default;
   /* -- Return if list is empty -------------------------------------------- */
-  operator bool() const { return !empty(); }
-};/* -- Build an array of arguments from a string -------------------------- */
-template<typename StrType>
-  requires StdIsString<StrType>
-static Args ArgsBuildSafe(const StrType &strArgs)
-  { return strArgs.empty() ? Args{} : Args{ strArgs }; }
+  operator bool() const { return !this->empty(); }
+};/* -- Types available ---------------------------------------------------- */
+using Args     = ArgsBase<StrVector>;     // std::vector<std::string>
+using ArgsView = ArgsBase<StrViewVector>; // std::vector<std::string_view>
+/* -- Build an array of arguments from a string safely (called by LUA api) - */
+static ArgsView ArgsBuildSafe(const StdStringView &ssvArgs)
+  { return ssvArgs.empty() ? ArgsView{} : ArgsView{ ssvArgs }; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

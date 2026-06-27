@@ -209,9 +209,7 @@ LLFUNC(StringAsync, 0,
 // ? Encodes the specified string as JSON encoded. The level depth is limited
 // ? to 255 due to limitations with LUA's hardcoded stack level.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Table, 1,
-  AcJson aClass{lS};
-  aClass().ParseTable(lS, 1, 1).Swap(aClass))
+LLFUNC(Table, 1, AcJson{lS}().ParseTableSafe(lS, 1))
 /* ========================================================================= */
 // $ Json.WaitAsync
 // ? Halts main-thread execution until all json pcm events have completed

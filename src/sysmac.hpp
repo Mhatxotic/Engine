@@ -20,7 +20,6 @@ using namespace ISysInfo::P;           using namespace ISysMod::P;
 using namespace ISysMutex::P;          using namespace ISysPosix::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
 using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -52,14 +51,14 @@ class SysCore :
   { // Get the size and return blank string if empty
     size_t stSize = 0;
     if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0)
-      return cCommon->CommonNull();
+      return StdString{ cCommon->CommonNull() };
     // Return blank string if empty
     if(!stSize) return {};
     // Resize and fill string returning generic string if failed
     StdResized<StdString> strOut{ stSize - 1 };
     if(sysctlbyname(cpS, StdToNonConstCast<char*>(strOut.data()),
-      &stSize, nullptr, 0) < 0)
-        return cCommon->CommonNull();
+         &stSize, nullptr, 0) < 0)
+      return StdString{ cCommon->CommonNull() };
     // Move generated string
     return StdMove(strOut);
   }
@@ -162,7 +161,7 @@ class SysCore :
     memData.ullMUsed =
       (static_cast<uint64_t>(vmsData.active_count) +
        static_cast<uint64_t>(vmsData.wire_count)) *
-       static_cast<uint64_t>(stPageSize);
+       static_cast<uint64_t>(GetPageSize());
     memData.ullMFree = memData.ullMTotal - memData.ullMUsed;
     // Calculate usage percentage
     memData.dMLoad = UtilMakePercentage(memData.ullMUsed, memData.ullMTotal);
@@ -499,33 +498,38 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData()
   { // Get operating system name
-    const TokenStr tsVersion{ GetSysCTLInfoString("kern.osproductversion"),
-      cCommon->CommonPeriod() };
+    const TokenStr tsVersion{
+      GetSysCTLInfoString("kern.osproductversion"), cCommon->CommonPeriod() };
     unsigned uMajor = tsVersion.empty() ? 0 : StrToNum<unsigned>(tsVersion[0]),
       uMinor = tsVersion.size() < 2 ? 0 : StrToNum<unsigned>(tsVersion[1]),
       uBuild = tsVersion.size() < 3 ? 0 : StrToNum<unsigned>(tsVersion[2]);
     // Set operating system version string
-    StdOStringStream osS; osS << "MacOS ";
+    StdOStringStream osS;
+    osS << "MacOS ";
     // Version information table
     struct OSListItem
     { // Label to append if verified
       const char*const cpLabel;
       // Major, minor and service pack of OS which applies to this label
       const unsigned uHi, uLo;
+      // Constructor
+      OSListItem(const char*const cpNLabel, const unsigned uNHi,
+        const unsigned uNLo) : cpLabel(cpNLabel), uHi(uNHi), uLo(uNLo) {};
     };
     // List of MacOS versions and when they expire
-    static const StdArray<const OSListItem,22>osList{ {
-      { "Tahoe",       26,  0 }, { "Sequoia",       15,  0 },
-      { "Sonoma",      14,  0 }, { "Ventura",       13,  0 },
-      { "Monterey",    12,  0 }, { "Big Sur",       11,  0 },
-      { "Catalina",    10, 15 }, { "Mojave",        10, 14 },
-      { "High Sierra", 10, 13 }, { "Sierra",        10, 12 },
-      { "El Capitan",  10, 11 }, { "Yosemite",      10, 10 },
-      { "Mavericks",   10,  9 }, { "Mountain Lion", 10,  8 },
-      { "Lion",        10,  7 }, { "Snow Leopard",  10,  6 },
-      { "Leopard",     10,  5 }, { "Tiger",         10,  4 },
-      { "Panther",     10,  3 }, { "Jaguar",        10,  2 },
-      { "Puma",        10,  1 }, { "Cheetah",       10,  0 },
+    static const StdArray<const OSListItem, 23>osList{ {
+      { "Golden Gate",   27,  0 }, { "Tahoe",       26,  0 },
+      { "Sequoia",       15,  0 }, { "Sonoma",      14,  0 },
+      { "Ventura",       13,  0 }, { "Monterey",    12,  0 },
+      { "Big Sur",       11,  0 }, { "Catalina",    10, 15 },
+      { "Mojave",        10, 14 }, { "High Sierra", 10, 13 },
+      { "Sierra",        10, 12 }, { "El Capitan",  10, 11 },
+      { "Yosemite",      10, 10 }, { "Mavericks",   10,  9 },
+      { "Mountain Lion", 10,  8 }, { "Lion",        10,  7 },
+      { "Snow Leopard",  10,  6 }, { "Leopard",     10,  5 },
+      { "Tiger",         10,  4 }, { "Panther",     10,  3 },
+      { "Jaguar",        10,  2 }, { "Puma",        10,  1 },
+      { "Cheetah",       10,  0 },
     } };
     // Iterate through the versions and try to find a match for the
     // versions above. 'Unknown' is caught if none are found.
@@ -658,8 +662,7 @@ class SysCore :
     // Check processor name is specified
     if(strProcessorName.empty()) strProcessorName = strVendorId;
     // Return default data we could not read
-    return { StdThreadMax(), uSpeed, uFamily, uModel, uStepping,
-      StdMove(strProcessorName) };
+    return { uSpeed, uFamily, uModel, uStepping, StdMove(strProcessorName) };
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning() const
@@ -684,9 +687,9 @@ class SysCore :
     XCS("Failed to acquire process priority!", "Pid", GetPid());
    }
   /* -- Initialise global mutex -------------------------------------------- */
-  bool InitGlobalMutex(const StdStringView &strvTitle)
+  bool InitGlobalMutex(const StdStringView &ssvTitle)
   { // Initialise the mutex and return the result
-    return this->SysDoInitGlobalMutex(strvTitle,
+    return this->SysDoInitGlobalMutex(ssvTitle,
       [](const pid_t, const pid_t pPOId)->bool{
       // Disable deprecation warnings as we need to use this
 #pragma clang diagnostic push
@@ -716,7 +719,7 @@ class SysCore :
   /* -- Default constructor ------------------------------------------------ */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
-    SysMutex{ piProcessId },           // Send pid to mutex vlass
+    SysMutex{ GetPidRef() },           // Send pid to mutex vlass
     SysCon{ EnumModules(), 0 },        // Build system module dependencies
     SysInfo{ GetExecutableData(),      // Build data about the executable
              GetOperatingSystemData(), // Build data about the OS

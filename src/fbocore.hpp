@@ -22,7 +22,7 @@ using namespace ILog::P;               using namespace IOgl::P;
 using namespace IShader::P;            using namespace IShaders::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 using FboDouble = StdArray<Fbo, 2>;    // Main and console Fbo typedef
 /* ------------------------------------------------------------------------- */
@@ -226,13 +226,10 @@ class FboCore :                        // The main Fbo operations manager
   }
   /* -- Sent when the window is resized ------------------------------------ */
   bool FboCoreAutoViewport(const GLsizei glsiWidth, const GLsizei glsiHeight,
-    const bool bForce=false)
-  { // Return if the viewport size did not change
-    if(DimIsEqual(glsiWidth, glsiHeight)) return false;
-    // Set the new viewport and log the result
-    DimSet(UtilMaximum(glsiWidth, 1), UtilMaximum(glsiHeight, 1));
-    cLog->LogDebugExSafe("FboCore set new viewport of $x$.",
-      DimGetWidth(), DimGetHeight());
+    const bool bForce = false)
+  { // Set the new viewport and log the result
+    FboCoreUpdateViewport(UtilMaximum(glsiWidth, 1),
+      UtilMaximum(glsiHeight, 1));
     // Update matrix because the window's aspect ratio may have changed and
     // if the Fbo changed then inform lua scripts that they should redraw any
     // Fbo's they are managing and return the result.
@@ -241,6 +238,13 @@ class FboCore :                        // The main Fbo operations manager
         return false;
     cEvtMain->Add(EMC_LUA_REDRAW);
     return true;
+  }
+  /* -- Update viewport and log it ----------------------------------------- */
+  void FboCoreUpdateViewport(const int iWidth, const int iHeight)
+  { // Log what we're doing and update the viewport co-ordinates
+    cLog->LogDebugExSafe("FboCore updated viewport from $x$ to $x$...",
+      DimGetWidth(), DimGetHeight(), iWidth, iHeight);
+    DimSet(iWidth, iHeight);
   }
   /* -- Initialise the console Fbo for the console object ------------------ */
   void FboCoreInitConsole(const size_t stTriangles)

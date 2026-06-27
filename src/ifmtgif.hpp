@@ -1,4 +1,4 @@
-/* == IMAGEGIF.HPP ========================================================= **
+/* == IFMTGIF.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -10,9 +10,10 @@
 namespace ICodecGIF {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IImageDef::P;          using namespace IImageLib::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace ITexDef::P;            using namespace Lib::NSGif;
+using namespace IImageData::P;         using namespace IImageDef::P;
+using namespace IImageLib::P;          using namespace IMemory::P;
+using namespace IStd::P;               using namespace ITexDef::P;
+using namespace Lib::NSGif;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

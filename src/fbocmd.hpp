@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IFboCmd {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using Lib::OS::GlFW::GLfloat;          using Lib::OS::GlFW::GLsizei;
-using Lib::OS::GlFW::GLuint;           using Lib::OS::GlFW::GLvoid;
+using Lib::GlFW::GLfloat;              using Lib::GlFW::GLsizei;
+using Lib::GlFW::GLuint;               using Lib::GlFW::GLvoid;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Defines -------------------------------------------------------------- */
@@ -67,6 +67,17 @@ struct FboCmd                          // Render command structure
               *const vpVOffset,        // - vector buffer offset
               *const vpCOffset;        // - Colour buffer offset
   const GLsizei      glsiVertices;     // Total vertices to draw
+  /* -- Initialiser constructor -------------------------------------------- */
+  FboCmd(const GLuint gluNTUId, const GLuint gluNTexId, const GLuint gluNPrgId,
+    const GLvoid*const vpNTCOffset, const GLvoid*const vpNVOffset,
+    const GLvoid*const vpNCOffset, const GLsizei glsiNVertices) :
+    /* -- Initialisers ----------------------------------------------------- */
+    gluTUId(gluNTUId),                 gluTexId(gluNTexId),
+    gluPrgId(gluNPrgId),               vpTCOffset(vpNTCOffset),
+    vpVOffset(vpNVOffset),             vpCOffset(vpNCOffset),
+    glsiVertices(glsiNVertices)
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* -- Commands ----------------------------------------------------------- */
 using FboCmdVec         = StdVector<FboCmd>;         // Render command list
 using FboCmdVecConstInt = FboCmdVec::const_iterator; // " const iterator

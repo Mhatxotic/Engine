@@ -28,7 +28,7 @@ using namespace IStream::P;            using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 using namespace IUtil::P;              using namespace Lib::Ogg;
 using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL::Types;
-using namespace Lib::OS::GlFW::Types;
+using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */
@@ -653,7 +653,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   long GetSampleRate() const { return viData.rate; }
   int GetChannels() const { return viData.channels; }
   uint64_t GetLength() const { return fmFile.MemSize(); }
-  bool IsSourceAvailable() const { return !!soSource; }
+  bool IsSourceAvailable() const { return soSource != nullptr; }
   bool IsSourceUnavailable() const { return !IsSourceAvailable(); }
   ALenum GetAudioFormat() const { return aleFormat; }
   const StdStringView &GetFormatAsIdentifier() const

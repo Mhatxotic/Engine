@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IJoyAxis {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IFillCon::P;           using namespace IGlFWUtil::P;
+using namespace IFillCon::P;           using namespace IGlFWBase::P;
 using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace

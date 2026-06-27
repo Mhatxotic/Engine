@@ -12,12 +12,13 @@ namespace IMask {                      // Start of private module namespace
 using namespace IBit::P;               using namespace ICollector::P;
 using namespace IDim::P;               using namespace IDir::P;
 using namespace IError::P;             using namespace IImage::P;
-using namespace IImageDef::P;          using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IName::P ;             using namespace ISerial::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace IImageData::P;         using namespace IImageDef::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Mask collector and member class ====================================== */
@@ -204,40 +205,40 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Init --------------------------------------------------------------- */
-  void InitBlank(const StdStringView &strvName, const unsigned uWidth,
+  void InitBlank(const StdStringView &ssvName, const unsigned uWidth,
     const unsigned uHeight)
   { // Check dimension parameters
     if(!uWidth || !uHeight ||
        UtilIntWillOverflow<int>(uWidth) || UtilIntWillOverflow<int>(uHeight))
       XC("Mask dimensions are invalid!",
-        "Name", strvName, "Width", uWidth, "Height", uHeight);
+        "Name", ssvName, "Width", uWidth, "Height", uHeight);
     // Calculate space required, push it into mask list and increment size
     const size_t stLen = (uWidth * uHeight) / 8;
     emplace_back(Memory{ stLen });
     stAlloc += stLen;
     // Set name of mask
-    NameSet(StdMove(strvName));
+    NameSet(StdMove(ssvName));
     // Set width and height
     DimSet(static_cast<int>(uWidth), static_cast<int>(uHeight));
   }
   /* -- Init filled mask --------------------------------------------------- */
-  void InitOne(const StdStringView &strvName, const unsigned uWidth,
+  void InitOne(const StdStringView &ssvName, const unsigned uWidth,
     const unsigned uHeight)
   { // Initialise new mask memory
-    InitBlank(strvName, uWidth, uHeight);
+    InitBlank(ssvName, uWidth, uHeight);
     // Now fill it with 1's
     back().MemFill<uint64_t>(0xFFFFFFFFFFFFFFFF);
   }
   /* -- Init cleared mask -------------------------------------------------- */
-  void InitZero(const StdStringView &strvName, const unsigned uWidth,
+  void InitZero(const StdStringView &ssvName, const unsigned uWidth,
     const unsigned uHeight)
   { // Initialise new mask memory
-    InitBlank(strvName, uWidth, uHeight);
+    InitBlank(ssvName, uWidth, uHeight);
     // Now fill it with zero's
     back().MemFill();
   }
   /* -- Dump a tile to disk ------------------------------------------------ */
-  void Dump(const size_t stId, const StdStringView &strvFile) const
+  void Dump(const size_t stId, const StdStringView &ssvFile) const
   { // Get source slot
     const MemConst &mcSrc = (*this)[stId];
     // Copy the slot because the image init moves it
@@ -245,7 +246,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Byte swap it
     mDst.MemByteSwap8();
     // Setup raw image
-    const Image imOut{ strvFile, StdMove(mDst), DimGetWidth<unsigned>(),
+    const Image imOut{ ssvFile, StdMove(mDst), DimGetWidth<unsigned>(),
       DimGetHeight<unsigned>(), BD_BINARY };
     // Capture exceptions
     try

@@ -9,6 +9,8 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IConDef {                    // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Colour palette ------------------------------------------------------- */
@@ -41,10 +43,17 @@ static unsigned ConColourToRGB(const ConColour ccIndex)
 }
 /* -- Console stuff, no where else to put it really ------------------------ */
 struct ConLine                         // Console line data structure
-{ /* ----------------------------------------------------------------------- */
+{ /* -- Public variables --------------------------------------------------- */
   const double     dTime;              // Line time
   const ConColour  ccColour;           // Line colour index
   const StdString  strLine;            // Line data
+  /* -- Initialiser constructor -------------------------------------------- */
+  ConLine(const double dNTime, const ConColour ccNColour,
+    StdString &&strNLine) :
+    /* -- Initialisers ----------------------------------------------------- */
+    dTime(dNTime), ccColour(ccNColour), strLine{StdMove(strNLine)}
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 using ConLines           = StdList<ConLine>;                 // Con lines data
 using ConLinesConstIt    = ConLines::const_iterator;         // " fwd const it
@@ -56,9 +65,9 @@ using ConLinesConstRevIt = ConLines::const_reverse_iterator; // " const
 }                                      // End of private module namespace
 /* ========================================================================= */
 namespace IConLib {                    // Console library namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace IConDef::P;
-using namespace ICVarDef::P;
+using namespace ICVarDef::P;           using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= **
@@ -94,23 +103,28 @@ enum ConCmdEnums : unsigned
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 using ConCbFunc = void(*)(const Args &); // Cmd callback
-/* ------------------------------------------------------------------------- */
-struct ConLib                          // Console library command structure
-{ /* ----------------------------------------------------------------------- */
-  const StdString      strName;        // Function name
+/* -- Console library command structure ------------------------------------ */
+template<class StrType>
+  requires StdIsString<StrType>
+struct ConLibBase
+{ /* -- Public variables --------------------------------------------------- */
+  const StrType        strName;        // Function name
   const unsigned       uMinimum,       // Minimum parameters
                        uMaximum;       // Maximum parameters
   const CoreFlagsConst cfcRequired;    // Required core flags
   const ConCbFunc      ccfFunc;        // Callback function
+  /* -- Initialiser constructor -------------------------------------------- */
+  ConLibBase(const StrType &strNName, unsigned uNMinimum, unsigned uNMaximum,
+    const CoreFlagsConst cfcNRequired, const ConCbFunc &ccfNFunc) :
+    /* -- Initialisers ----------------------------------------------------- */
+    strName{strNName},                 uMinimum(uNMinimum),
+    uMaximum(uNMaximum),               cfcRequired(cfcNRequired),
+    ccfFunc{ccfNFunc}
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
-struct ConLibStatic                    // For static engine commands list
-{ /* ----------------------------------------------------------------------- */
-  const StdStringView  strvName;       // Function name
-  const unsigned       uMinimum,       // Minimum parameters
-                       uMaximum;       // Maximum parameters
-  const CoreFlagsConst cfcRequired;    // Required core flags
-  const ConCbFunc      ccfFunc;        // Callback function
-};/* ----------------------------------------------------------------------- */
+using ConLib           = ConLibBase<StdString>;
+using ConLibStatic     = ConLibBase<StdStringView>;
 using ConCmdStaticList = StdArray<const ConLibStatic, MAX_CONCMD>;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

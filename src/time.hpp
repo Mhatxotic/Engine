@@ -25,7 +25,7 @@ static auto TimeParse(StdTMStruct*const stdData, const PtrType*const ptFormat)
 /* -- Public functions ----------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Some helpful globals so not to repeat anything ----------------------- */
-static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
+static const char caTimeFormat[] = "%a %b %d %H:%M:%S %Y %z";
 /* -- Convert special formatted string to unix timestamp ------------------- */
 template<typename StrType>
   requires StdIsString<StrType>
@@ -93,7 +93,7 @@ class Duration
     // in terms of leap years, proper days in a month etc.
     StdGMTime(&tD, &strDuration);
     // Output string
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // If failed? Manually do str
     if(tD.tm_year == -1)
     { // Clear years and months since we can't realiably calculate that.
@@ -113,30 +113,30 @@ class Duration
     } // Add months?
     if(tD.tm_mon && uCompMax > 0)
     { // Do add months
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_mon << StrPluraliseRef(tD.tm_mon, strMonth, strMonths);
       --uCompMax;
     } // Add days? (removing the added 1)
     if(--tD.tm_mday && uCompMax > 0)
     { // Do add days
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_mday << StrPluraliseRef(tD.tm_mday, strDay, strDays);
       --uCompMax;
     } // Add hours?
     if(tD.tm_hour && uCompMax > 0)
     { // Do add hours
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_hour << StrPluraliseRef(tD.tm_hour, strHour, strHours);
       --uCompMax;
     } // Add Minutes?
     if(tD.tm_min && uCompMax > 0)
     { // Do add minutes
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_min << StrPluraliseRef(tD.tm_min, strMin, strMins);
       --uCompMax;
     } // Check seconds
     if((tD.tm_sec || !strDuration) && uCompMax > 0)
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_sec << StrPluraliseRef(tD.tm_sec, strSec, strSecs);
     // Return string
     return osS.str();
@@ -168,25 +168,25 @@ static StdString TimeTMToStr(const StdTMStruct &tmsData,
 { return StrAppend(TimeFormat(&tmsData, cpFormat)); }
 /* -- Convert specified timestamp to string -------------------------------- */
 static StdString TimeLocalTTtoStr(const StdTimeT ttTimestamp,
-  const char*const cpFormat = cpTimeFormat)
-{ // Convert it to local time in a structure
-  StdTMStruct tmsData; StdLocalTime(&tmsData, &ttTimestamp);
-  // Do the parse and return the string
+  const char*const cpFormat = caTimeFormat)
+{ // Convert it to local time in a structure, do the parse and return string
+  StdTMStruct tmsData;
+  StdLocalTime(&tmsData, &ttTimestamp);
   return TimeTMToStr(tmsData, cpFormat);
 }
 /* -- Convert specified timestamp to string (UTC) -------------------------- */
 static StdString TimeUTCTTtoStr(const StdTimeT ttTimestamp,
-  const char*const cpFormat = cpTimeFormat)
-{ // Convert it to local time
-  StdTMStruct tmsData; StdGMTime(&tmsData, &ttTimestamp);
-  // Do the parse and return the string
+  const char*const cpFormat = caTimeFormat)
+{ // Convert it to local time, do the parse and return the string
+  StdTMStruct tmsData;
+  StdGMTime(&tmsData, &ttTimestamp);
   return TimeTMToStr(tmsData, cpFormat);
 }
 /* -- Convert time to short duration --------------------------------------- */
 static StdString TimeToShortDuration(const double dDuration,
   const int iPrecision = 6)
 { // Output string
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // Get duration ceiled and if negative?
   double dInt, dFrac = modf(dDuration, &dInt);
   if(dInt < 0)
@@ -198,14 +198,14 @@ static StdString TimeToShortDuration(const double dDuration,
   osS << StdIOSFixed << StdIOSSetFill('0') << StdIOSSetPrecision(0);
   // Have days?
   if(dInt >= 86400)
-    osS <<                           floor(dInt/86400)     << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/3600), 24) << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
+    osS <<                           floor(dInt / 86400)     << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt / 3600), 24) << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt / 60),   60) << ':'
         << StdIOSSetWidth(2);
   // No days, but hours?
   else if(dInt >= 3600)
-    osS <<                      fmod(floor(dInt/3600), 24) << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
+    osS <<                      fmod(floor(dInt / 3600), 24) << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt / 60),   60) << ':'
         << StdIOSSetWidth(2);
   // No hours, but minutes?
   else if(dInt >= 60)

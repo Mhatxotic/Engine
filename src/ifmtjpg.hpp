@@ -1,4 +1,4 @@
-/* == IMAGEJPG.HPP ========================================================= **
+/* == IFMTJPG.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -10,9 +10,10 @@
 namespace ICodecJPG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFStream::P;           using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace IMemory::P;
-using namespace ITexDef::P;            using namespace Lib::OS::JpegTurbo;
+using namespace IFStream::P;           using namespace IImageData::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace IMemory::P;            using namespace ITexDef::P;
+using namespace Lib::JpegTurbo;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -190,7 +191,7 @@ class CodecJPG :                       // JPEG codec object
   /* -- Default constructor ------------------------------------- */ protected:
   CodecJPG() :
     /* -- Initialisers ----------------------------------------------------- */
-    ImageLib{ IFMT_JPG, "Joint Photographic Experts Group", "JPG",
+    ImageLib{ IFMT_JPEG, "Joint Photographic Experts Group", "JPG",
       bind(&CodecJPG::Decode, this, _1, _2),
       bind(&CodecJPG::Encode, this, _1, _2, _3) }
     /* -- Set global pointer to static class ------------------------------- */

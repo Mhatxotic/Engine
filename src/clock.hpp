@@ -60,21 +60,25 @@ template<class ClockType>struct Clock final
   static double GetTimeDouble()
     { return ClockDurationToDouble(GetEpochTime()); }
   /* -- Return time since epoch count as integer --------------------------- */
-  template<typename IntType = StdTimeT> requires StdIsArithmatic<IntType>
-    IntType GetTimeS() const
-  { return GetTimeEx<duration<IntType>,IntType>(); }
+  template<typename IntType = StdTimeT>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeS() const
+    { return GetTimeEx<duration<IntType>,IntType>(); }
   /* -- Return time in microseconds ---------------------------------------- */
-  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
-    IntType GetTimeUS() const
-  { return GetTimeEx<microseconds,IntType>(); }
+  template<typename IntType = uint64_t>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeUS() const
+    { return GetTimeEx<microseconds,IntType>(); }
   /* -- Return time in milliseconds ---------------------------------------- */
-  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
-    IntType GetTimeMS() const
-  { return GetTimeEx<milliseconds,IntType>(); }
+  template<typename IntType = uint64_t>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeMS() const
+    { return GetTimeEx<milliseconds,IntType>(); }
   /* -- Return time in nanoseconds ----------------------------------------- */
-  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
-    IntType GetTimeNS() const
-  { return GetTimeEx<nanoseconds,IntType>(); }
+  template<typename IntType = uint64_t>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeNS() const
+    { return GetTimeEx<nanoseconds,IntType>(); }
   /* -- Get offset time ---------------------------------------------------- */
   static ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
     { return GetTime() - ctpCurrent; }
@@ -89,10 +93,10 @@ template<class ClockType>struct Clock final
   static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
     { return UtilMaximum(TimePointToDouble(ctpTime), 0.0); }
   /* -- Convert local time to string --------------------------------------- */
-  StdString FormatTime(const char*const cpFormat = cpTimeFormat) const
+  StdString FormatTime(const char*const cpFormat = caTimeFormat) const
     { return TimeLocalTTtoStr(GetTimeS(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
-  StdString FormatTimeUTC(const char*const cpFormat = cpTimeFormat) const
+  StdString FormatTimeUTC(const char*const cpFormat = caTimeFormat) const
     { return TimeUTCTTtoStr(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
   static StdString ToDurationString(unsigned uPrecision = 6)

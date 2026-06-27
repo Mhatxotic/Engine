@@ -57,8 +57,8 @@ class DirBase                          // Members initially private
   const StdStringView &DirBaseVNRtoStr(const ValidResult vrId) const
     { return vrlStrings.Get(vrId); }
   /* -- Return if a name is reserved --------------------------------------- */
-  bool DirBaseIsReservedName(const StdStringView &strvName) const
-    { return svusReserved.contains(strvName); }
+  bool DirBaseIsReservedName(const StdStringView &ssvName) const
+    { return svusReserved.contains(ssvName); }
   /* -- Return safety mode ------------------------------------------------- */
   ValidType DirBaseGetSafetyMode() const { return vtMode; }
   /* -- Default constructor ------------------------------------- */ protected:
@@ -72,8 +72,8 @@ class DirBase                          // Members initially private
       "Invalid character in part", /*0809*/ "Current sub-directory denied",
       "Current directory denied",  /*1011*/ "Explode pathname failed",
       "Trailing whitespace denied",/*1213*/ "Leading whitespace denied",
-    }},                                 // Finished ValidNameResult strings
-    svusReserved{{                      // Init reserved names
+    }},                                // Finished ValidNameResult strings
+    svusReserved{{                     // Init reserved names
       "aux",  "auX",  "aUx",  "aUX",  "Aux",  "AuX",  "AUx",  "AUX",
       "com1", "coM1", "cOm1", "cOM1", "Com1", "CoM1", "COm1", "COM1",
       "com2", "coM2", "cOm2", "cOM2", "Com2", "CoM2", "COm2", "COM2",
@@ -128,38 +128,38 @@ static bool DirIsValidPathPartCharacter(const char cChar)
 /* -- Check that path part characters are valid ---------------------------- */
 static bool DirIsValidPathPartCharactersCallback(const char cChar)
   { return !DirIsValidPathPartCharacter(cChar); }
-static bool DirIsValidPathPartCharacters(const StdStringView &strvPart,
+static bool DirIsValidPathPartCharacters(const StdStringView &ssvPart,
   const size_t stPos)
-    { return !StdAnyOf(StdNext(strvPart.cbegin(), static_cast<ssize_t>(stPos)),
-        strvPart.cend(), DirIsValidPathPartCharactersCallback); }
-static bool DirIsValidPathPartCharacters(const StdStringView &strvPart)
-  { return !StdAnyOf(strvPart.cbegin(), strvPart.cend(),
+    { return !StdAnyOf(StdNext(ssvPart.cbegin(), static_cast<ssize_t>(stPos)),
+        ssvPart.cend(), DirIsValidPathPartCharactersCallback); }
+static bool DirIsValidPathPartCharacters(const StdStringView &ssvPart)
+  { return !StdAnyOf(ssvPart.cbegin(), ssvPart.cend(),
       DirIsValidPathPartCharactersCallback); }
 /* -- Valid Windows drive letter ------------------------------------------- */
 static bool DirIsValidDrive(const char cFirst)
   { return (cFirst >= 'A' && cFirst <= 'Z') ||
            (cFirst >= 'a' && cFirst <= 'z'); }
 /* -- Check that filename doesn't leave the exe directory ------------------ */
-static ValidResult DirValidName(const StdStringView &strvName,
+static ValidResult DirValidName(const StdStringView &ssvName,
   const ValidType vtId)
 { // Failed if empty string
-  if(strvName.empty()) return VR_EMPTY;
+  if(ssvName.empty()) return VR_EMPTY;
   // Failed if the length is longer than the maximum allowed path.
-  if(strvName.size() > _MAX_PATH) return VR_TOOLONG;
+  if(ssvName.size() > _MAX_PATH) return VR_TOOLONG;
   // If using windows? Replace backslashes with forward slashes.
   const StdString &strChosen{
 #if defined(WINDOWS)
-    PSplitBackToForwardSlashes(strvName)
+    PSplitBackToForwardSlashes(ssvName)
 #else
-    StdString{ strvName }
+    StdString{ ssvName }
 #endif
   }; // Which type
   switch(vtId)
   { // Full sandbox. Do not leave .exe directory.
     case VT_UNTRUSTED:
     { // Failed if the first or last character is a space
-      if(strvName.front() <= ' ') return VR_NOLEADWS;
-      if(strvName.back() <= ' ') return VR_NOTRAILWS;
+      if(ssvName.front() <= ' ') return VR_NOLEADWS;
+      if(ssvName.back() <= ' ') return VR_NOTRAILWS;
       // Root directory not allowed.
       if(strChosen.front() == '/') return VR_NOROOT;
       // Path length is one byte?
@@ -170,7 +170,7 @@ static ValidResult DirValidName(const StdStringView &strvName,
       else if(strChosen[1] == ':')
         return DirIsValidDrive(strChosen.front()) ? VR_NODRIVE : VR_INVDRIVE;
       // Get parts from pathname and compare size
-      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlashV() };
+      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlash() };
       switch(tsvParts.size())
       { // Tokeniser failed (should be impossible)
         case 0: return VR_EXPLODE;
@@ -182,19 +182,19 @@ static ValidResult DirValidName(const StdStringView &strvName,
           // Enumerate parts from chosen end to start plus one.
           while(tsvciPart != tsvParts.cbegin())
           { // Get part string
-            const StdStringView &strvPart = *tsvciPart;
+            const StdStringView &ssvPart = *tsvciPart;
             // Test the length of the first path part
-            switch(strvPart.size())
+            switch(ssvPart.size())
             { // No length? Return empty
               case 0: return VR_EMPTY;
               // One character. No dot allowed.
-              case 1: if(strvPart.front() == '.') return VR_CSUBDIR; break;
+              case 1: if(ssvPart.front() == '.') return VR_CSUBDIR; break;
               // Two or three characters or more? Checks are fine
               default: break;
             } // Failed first character is an invalid character.
-            if(!DirIsValidPathPartCharacters(strvPart)) return VR_INVCHAR;
+            if(!DirIsValidPathPartCharacters(ssvPart)) return VR_INVCHAR;
             // Check for reserved names.
-            if(cDirBase->DirBaseIsReservedName(strvPart)) return VR_RESERVED;
+            if(cDirBase->DirBaseIsReservedName(ssvPart)) return VR_RESERVED;
             // Go backwards
             --tsvciPart;
           } // Fall through to check first string.
@@ -202,22 +202,22 @@ static ValidResult DirValidName(const StdStringView &strvName,
         } // One part?
         case 1:
         { // Get first string
-          const StdStringView &strvFirst = tsvParts.front();
+          const StdStringView &ssvFirst = tsvParts.front();
           // Test all the characters in the first string
-          if(!DirIsValidPathPartCharacters(strvFirst)) return VR_INVCHAR;
+          if(!DirIsValidPathPartCharacters(ssvFirst)) return VR_INVCHAR;
           // Check for reserved names. Only Windows has reserved names but
           // we'll prevent them on MacOS and Linux too to prevent problems
           // being passed over to Windows.
-          if(cDirBase->DirBaseIsReservedName(strvFirst)) return VR_RESERVED;
+          if(cDirBase->DirBaseIsReservedName(ssvFirst)) return VR_RESERVED;
           // Success if the first entry in the path isn't a dot
-          return strvFirst.size() != 1 ||
-                 strvFirst.front() != '.' ? VR_OK : VR_CURRENT;
+          return ssvFirst.size() != 1 ||
+                 ssvFirst.front() != '.' ? VR_OK : VR_CURRENT;
         }
       }
     } // Trusted filename?
     case VT_TRUSTED:
     { // Get parts from pathname and compare size
-      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlashV() };
+      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlash() };
       switch(tsvParts.size())
       { // Tokeniser failed (should be impossible)
         case 0: return VR_EXPLODE;
@@ -229,11 +229,11 @@ static ValidResult DirValidName(const StdStringView &strvName,
           // Enumerate parts from chosen end to start plus one.
           while(tsvciPart != tsvParts.cbegin())
           { // Get part string
-            const StdStringView &strvPart = *tsvciPart;
+            const StdStringView &ssvPart = *tsvciPart;
             // Not allowed to be empty or parent directory
-            if(strvPart.empty()) return VR_EMPTY;
+            if(ssvPart.empty()) return VR_EMPTY;
             // Failed first character is an invalid character.
-            if(!DirIsValidPathPartCharacters(strvPart)) return VR_INVCHAR;
+            if(!DirIsValidPathPartCharacters(ssvPart)) return VR_INVCHAR;
             // Go backwards
             --tsvciPart;
           } // Fall through to check first string.
@@ -241,15 +241,15 @@ static ValidResult DirValidName(const StdStringView &strvName,
         } // One part?
         case 1:
         { // Get first string
-          const StdStringView &strvFirst = tsvParts.front();
+          const StdStringView &ssvFirst = tsvParts.front();
           // Check drive letter is valid
-          if(strvFirst.size() > 1 && strvFirst[1] == ':')
+          if(ssvFirst.size() > 1 && ssvFirst[1] == ':')
           { // Get first character and make sure the drive letter is valid
-            if(!DirIsValidDrive(strvFirst.front())) return VR_INVDRIVE;
+            if(!DirIsValidDrive(ssvFirst.front())) return VR_INVDRIVE;
             // Test rest of characters from the second character
-            if(!DirIsValidPathPartCharacters(strvFirst, 2)) return VR_INVCHAR;
+            if(!DirIsValidPathPartCharacters(ssvFirst, 2)) return VR_INVCHAR;
           } // Test all of the characters
-          else if(!DirIsValidPathPartCharacters(strvFirst)) return VR_INVCHAR;
+          else if(!DirIsValidPathPartCharacters(ssvFirst)) return VR_INVCHAR;
         } // Success
         return VR_OK;
       }
@@ -331,8 +331,9 @@ class DirFile                          // Files container class
   static StrSet Export(const DirEntMap &dSrc)
   { // Write entries into a single set list and return it
     StrSet ssFiles;
-    for(const DirEntMapPair &dempFile : dSrc)
-      ssFiles.emplace(StdMove(dempFile.first));
+    StdTransform(seq, dSrc.cbegin(), dSrc.cend(),
+      std::inserter(ssFiles, ssFiles.cend()),
+      [](const DirEntMapPair &dempFile) { return dempFile.first; });
     return ssFiles;
   }
   /* -- Convert to set --------------------------------------------- */ public:
@@ -408,11 +409,11 @@ class DirCore :                        // System specific implementation
     return true;
   }
   /* -- Constructor for WIN32 system --------------------------------------- */
-  explicit DirCore(const StdStringView &strvDir) :
+  explicit DirCore(const StdStringView &ssvDir) :
     /* -- Initialisers ----------------------------------------------------- */
-    iHandle(_wfindfirst64(UTFtoS16(strvDir.empty() ?
-      cCommon->CommonAsterisk() :
-        StrAppend(StrTrimSuffix(strvDir, '/'), '/',
+    iHandle(_wfindfirst64(UTFtoS16(ssvDir.empty() ?
+      StdString{ cCommon->CommonAsterisk() } :
+        StrAppend(StrTrimSuffix(ssvDir, '/'), '/',
           cCommon->CommonAsterisk())).data(),
       &wfData)),
     bMore(iHandle != -1)
@@ -433,7 +434,7 @@ class DirCore :                        // System specific implementation
   const StdString strPrefix;           // Prefix for filenames with stat()
   DirUPtr         dupHandle;           // Context for opendir()
   /* -- Return if directory was opened on POSIX system ------------- */ public:
-  bool IsOpened() const { return !!dupHandle; }
+  bool IsOpened() const { return dupHandle != nullptr; }
   /* -- Prepare next file for POSIX system --------------------------------- */
   bool GetNextFile()
   { // Read the filename and if failed
@@ -468,9 +469,9 @@ class DirCore :                        // System specific implementation
       strDir.empty() ?                 // If requested directory is empty?
         cCommon->CommonPeriod() :      // Set to scan current directory
         StrTrimSuffix(strDir, '/'),    // Trim forward-slash trailing slashes
-      cCommon->CommonFSlashV()) },      // Add our own slash at the end
+      cCommon->CommonFSlash()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
-      opendir(strPrefix.data()) }     // Open the directory and store handle
+      opendir(strPrefix.data()) }      // Open the directory and store handle
     /* -- Unload and clear the dir handle if init and no first file -------- */
     { if(dupHandle && !GetNextFile()) dupHandle.reset(); }
   /* ----------------------------------------------------------------------- */
@@ -480,9 +481,9 @@ class Dir :                            // Directory information class
   /* -- Base classes ------------------------------------------------------- */
   public DirFile                       // Files container class
 { /* -- Do scan --------------------------------------------------- */ private:
-  static void RemoveEntry(DirEntMap &dfemMap, const StdString &strEntry)
+  static void RemoveEntry(DirEntMap &dfemMap, const StdStringView &ssvEntry)
   { // Remove specified entry
-    const DirEntMapIt demiIt{ dfemMap.find(strEntry) };
+    const DirEntMapIt demiIt{ dfemMap.find(ssvEntry) };
     if(demiIt != dfemMap.cend()) dfemMap.erase(demiIt);
   }
   /* -- Remove current and parent directory entries ------------------------ */
@@ -492,11 +493,12 @@ class Dir :                            // Directory information class
     RemoveEntry(dfemMap, cCommon->CommonTwoPeriod());
   }
   /* -- Scan with no match checking ---------------------------------------- */
-  static DirFile ScanDir(const StdStringView &strvDir = cCommon->CommonBlank())
+  static DirFile ScanDir(const StdStringView
+    &ssvDir = cCommon->CommonBlankStr())
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
-    DirCore dcInterface{ strvDir };
+    DirCore dcInterface{ ssvDir };
     if(dcInterface.IsOpened())
     { // Repeat...
       do
@@ -513,12 +515,12 @@ class Dir :                            // Directory information class
     return { StdMove(demNDirs), StdMove(demNFiles) };
   }
   /* -- Scan with match checking ------------------------------------------- */
-  static DirFile ScanDirExt(const StdStringView &strvDir,
+  static DirFile ScanDirExt(const StdStringView &ssvDir,
     const StdStringView &strExt)
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
-    DirCore dcInterface{ strvDir };
+    DirCore dcInterface{ ssvDir };
     if(dcInterface.IsOpened())
     { // Repeat...
       do
@@ -541,10 +543,10 @@ class Dir :                            // Directory information class
   /* -- Constructor of current directory --------------------------- */ public:
   Dir() : DirFile{ ScanDir() } {}
   /* -- Constructor of specified directory --------------------------------- */
-  explicit Dir(const StdStringView &strvDir) : DirFile{ ScanDir(strvDir) } {}
+  explicit Dir(const StdStringView &ssvDir) : DirFile{ ScanDir(ssvDir) } {}
   /* -- Scan specified directory for files with specified extension -------- */
-  Dir(const StdStringView &strvDir, const StdStringView &strExt) :
-    DirFile{ ScanDirExt(strvDir, strExt) } {}
+  Dir(const StdStringView &ssvDir, const StdStringView &strExt) :
+    DirFile{ ScanDirExt(ssvDir, strExt) } {}
 };/* ----------------------------------------------------------------------- */
 /* -- Get current directory ------------------------------------------------ */
 static StdString DirGetCWD()
@@ -572,19 +574,19 @@ static StdString DirGetCWD()
 #endif
 }
 /* == Set current directory ================================================ */
-static bool DirSetCWD(const StdStringView &strvDirectory)
+static bool DirSetCWD(const StdStringView &ssvDirectory)
 { // Ignore if empty
-  if(strvDirectory.empty()) return false;
+  if(ssvDirectory.empty()) return false;
   // Process is different on win32 with having drive letters
 #if defined(WINDOWS)
   // Set drive first if specified
-  if(strvDirectory.size() >= 3 && strvDirectory[1] == ':' &&
-     (strvDirectory[2] == '\\' || strvDirectory[2] != '/') &&
-     _chdrive((StdToUpper(strvDirectory.front()) - 'A') + 1) < 0)
+  if(ssvDirectory.size() >= 3 && ssvDirectory[1] == ':' &&
+     (ssvDirectory[2] == '\\' || ssvDirectory[2] != '/') &&
+     _chdrive((StdToUpper(ssvDirectory.front()) - 'A') + 1) < 0)
     return false;
 #endif
   // Set current directory and return false if there is a problem
-  return !StdChDir(strvDirectory);
+  return !StdChDir(ssvDirectory);
 }
 /* -- Make a directory ----------------------------------------------------- */
 static bool DirMkDir(const StdStringView &strDir) { return !StdMkDir(strDir); }
@@ -596,10 +598,11 @@ static bool DirMkDirEx(const StdStringView &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   if(const TokenStr tsParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->CommonFSlashV() })
+    cCommon->CommonFSlash() })
   { // This will be the string that wile sent to mkdir multiple times
     // gradually.
-    StdOStringStream osS; osS << psParts.strDrive;
+    StdOStringStream &osS = cCommon->o.StreamReset();
+    osS << psParts.strDrive;
     // Get the first item and if it is not empty?
     const StdString &strFirst = tsParts.front();
     if(!strFirst.empty())
@@ -630,13 +633,14 @@ static bool DirRmDirEx(const StdStringView &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   TokenStr tsParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->CommonFSlashV() };
+    cCommon->CommonFSlash() };
   // Get the first item and if it is not empty?
   while(!tsParts.empty())
   { // This will be the string that wile sent to mkdir multiple times
     // gradually. Do not try to construct the oss with the drive string because
     // it won't work and thats not how the constructor works it seems!
-    StdOStringStream osS; osS << psParts.strDrive;
+    StdOStringStream &osS = cCommon->o.StreamReset();
+    osS << psParts.strDrive;
     // Get the first item and if it is not empty?
     const StdString &strFirst = tsParts.front();
     if(!strFirst.empty()) osS << strFirst;
@@ -652,17 +656,17 @@ static bool DirRmDirEx(const StdStringView &strDir)
   return true;
 }
 /* -- Delete a file -------------------------------------------------------- */
-static bool DirFileUnlink(const StdStringView &strvFile)
-  { return !StdUnlink(strvFile); }
+static bool DirFileUnlink(const StdStringView &ssvFile)
+  { return !StdUnlink(ssvFile); }
 /* -- Get file size - ------------------------------------------------------ */
-static int DirFileSize(const StdStringView &strvFile, StdFStatStruct &sfssData)
-  { return StdFStat(strvFile, &sfssData) ? StdGetError() : 0; }
+static int DirFileSize(const StdStringView &ssvFile, StdFStatStruct &sfssData)
+  { return StdFStat(ssvFile, &sfssData) ? StdGetError() : 0; }
 /* -- True if specified file has the specified mode ------------------------ */
-static bool DirFileHasMode(const StdStringView &strvFile, const int iMode,
+static bool DirFileHasMode(const StdStringView &ssvFile, const int iMode,
   const int iNegate)
 { // Get file information and and if succeeded?
   StdFStatStruct sfssData;
-  if(!DirFileSize(strvFile, sfssData))
+  if(!DirFileSize(ssvFile, sfssData))
   { // If file attributes have specified mode then success
     if((sfssData.st_mode ^ iNegate) & iMode) return true;
     // Set error number
@@ -671,39 +675,39 @@ static bool DirFileHasMode(const StdStringView &strvFile, const int iMode,
   return false;
 }
 /* -- True if specified file is actually a directory ----------------------- */
-static bool DirLocalDirExists(const StdStringView &strvFile)
-  { return DirFileHasMode(strvFile, _S_IFDIR, 0); }
+static bool DirLocalDirExists(const StdStringView &ssvFile)
+  { return DirFileHasMode(ssvFile, _S_IFDIR, 0); }
 /* -- True if specified file is actually a file ---------------------------- */
-static bool DirLocalFileExists(const StdStringView &strvFile)
-  { return DirFileHasMode(strvFile, _S_IFDIR, -1); }
+static bool DirLocalFileExists(const StdStringView &ssvFile)
+  { return DirFileHasMode(ssvFile, _S_IFDIR, -1); }
 /* -- Readable or writable? ------- Check if file is readable or writable -- */
-static bool DirCheckFileAccess(const StdStringView &strvFile, const int iFlag)
-  { return !StdAccess(strvFile, iFlag); }
+static bool DirCheckFileAccess(const StdStringView &ssvFile, const int iFlag)
+  { return !StdAccess(ssvFile, iFlag); }
 /* -- True if specified file exists and is readable ------------------------ */
-static bool DirIsFileReadable(const StdStringView &strvFile)
-  { return DirCheckFileAccess(strvFile, R_OK); }
+static bool DirIsFileReadable(const StdStringView &ssvFile)
+  { return DirCheckFileAccess(ssvFile, R_OK); }
 /* -- True if specified file exists and is readable and writable ----------- */
-static bool DirIsFileReadWriteable(const StdStringView &strvFile)
-  { return DirCheckFileAccess(strvFile, R_OK|W_OK); }
+static bool DirIsFileReadWriteable(const StdStringView &ssvFile)
+  { return DirCheckFileAccess(ssvFile, R_OK|W_OK); }
 /* -- True if specified file exists and is writable ------------------------ */
-static bool DirIsFileWritable(const StdStringView &strvFile)
-  { return DirCheckFileAccess(strvFile, W_OK); }
+static bool DirIsFileWritable(const StdStringView &ssvFile)
+  { return DirCheckFileAccess(ssvFile, W_OK); }
 /* -- True if specified file exists and is executable ---------------------- */
-static bool DirIsFileExecutable(const StdStringView &strvFile)
-  { return DirCheckFileAccess(strvFile, X_OK); }
+static bool DirIsFileExecutable(const StdStringView &ssvFile)
+  { return DirCheckFileAccess(ssvFile, X_OK); }
 /* -- True if specified file or directory exists --------------------------- */
-static bool DirLocalResourceExists(const StdStringView &strvFile)
-  { return DirCheckFileAccess(strvFile, F_OK); }
+static bool DirLocalResourceExists(const StdStringView &ssvFile)
+  { return DirCheckFileAccess(ssvFile, F_OK); }
 /* -- Rename file ---------------------------------------------------------- */
 static bool DirFileRename(const StdStringView &strFrom,
   const StdStringView &strTo)
 { return !StdRename(strFrom, strTo); }
 /* -- Check that filename is valid and throw on error ---------------------- */
-static void DirVerifyFileNameIsValid(const StdStringView &strvFile)
+static void DirVerifyFileNameIsValid(const StdStringView &ssvFile)
 { // Throw error if invalid name
-  if(const ValidResult vrId = DirValidName(strvFile))
+  if(const ValidResult vrId = DirValidName(ssvFile))
     XC("Filename is invalid!",
-      "File",     strvFile,
+      "File",     ssvFile,
       "Reason",   cDirBase->DirBaseVNRtoStr(vrId),
       "ReasonId", vrId);
 }

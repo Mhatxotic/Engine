@@ -44,16 +44,7 @@ class Audio :                          // Audio manager class
   /* -- References ------------------------------------------------- */ public:
   LuaFunc          lfOnUpdate;         // Fire this when device updates
   /* -- Playback device list was updated ----------------------------------- */
-  void AudioOnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
-  { // Update the device context if supplied
-    cOal->UpdateDevice(emeEvent.eaArgs.front().Ptr<ALCdevice>());
-    // Clear and refresh device list and update the name
-    svPBDevices.clear();
-    AudioEnumPlaybackDevices();
-    cOal->UpdatePlaybackDeviceName();
-    // Send Lua event with isplaybackdevice set to true
-    lfOnUpdate.LuaFuncDispatch(true);
-  }
+  void AudioOnPbkDeviceUpdated(const EvtMainEvent&) { return AudioDoReInit(); }
   /* -- Capture device list was updated ------------------------------------ */
   void AudioOnCapDeviceUpdated(const EvtMainEvent&)
   { // Clear and re-enumerate capture devices
@@ -87,7 +78,7 @@ class Audio :                          // Audio manager class
   void AudioResetCheckTime()
     { ctpNextCheck = cmHiRes.GetTime() + acdCheckRate.load(); }
   /* -- ReInit requested --------------------------------------------------- */
-  void AudioOnReInit(const EvtMainEvent&) try
+  void AudioDoReInit() try
   { // Log re-initialisation
     cLog->LogDebugSafe("Audio class reinitialising...");
     // De-initialise audio thread
@@ -124,6 +115,8 @@ class Audio :                          // Audio manager class
     cOal->FlagClear(AFL_REINIT);
     throw;
   }
+  /* -- ReInit requested --------------------------------------------------- */
+  void AudioOnReInit(const EvtMainEvent&) { AudioDoReInit(); }
   /* -- Thread main function with system events support -------------------- */
   ThreadStatus AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
@@ -161,14 +154,14 @@ class Audio :                          // Audio manager class
           ++stDiscrepancies;
           cLog->LogDebugExSafe("Audio thread discrepancy $: "
             "Device index $ over limit of $!",
-              stDiscrepancies, stIndex, svPBDevices.size());
+            stDiscrepancies, stIndex, svPBDevices.size());
         } // Is the device name the same
         else if(svPBDevices[stIndex] != cpList)
         { // Log warning and add to discreprency list
           ++stDiscrepancies;
           cLog->LogDebugExSafe("Audio thread discrepancy $: "
             "Expected device '$' at $, not '$'!",
-              stDiscrepancies, svPBDevices[stIndex], stIndex, cpList);
+            stDiscrepancies, svPBDevices[stIndex], stIndex, cpList);
         } // Jump to next item
         cpList += strlen(cpList) + 1;
         // increment device index
@@ -235,12 +228,13 @@ class Audio :                          // Audio manager class
     const ALCsizei alcsiLength, const ALCchar*const cpMessage, void*const)
       noexcept
   { // Create string view of message and log the event
-    const StdStringView strvMsg{ cpMessage, static_cast<size_t>(alcsiLength) };
+    const StdStringView ssvMsg{ cpMessage, static_cast<size_t>(alcsiLength) };
     // Log event text to say we processed the event successfully.
     cLog->LogDebugExSafe(
       "Audio received system event $<0x$$> with device type $$<0x$$>...\n"
       "- $.", aleEventType, StdIOSHex, aleEventType, StdIOSDec,
-              aleDeviceType, StdIOSHex, aleDeviceType, strvMsg);
+              aleDeviceType, StdIOSHex, aleDeviceType, ssvMsg);
+    // Currently 'aleEventType' is bugged and shows removed even when added.
     // Send event to process the event
     switch(aleDeviceType)
     { // It was a playback device?
@@ -324,14 +318,14 @@ class Audio :                          // Audio manager class
     { // Get list of devices and break if succeeded
       if(const char* cpList = cOal->GetNCString<const char*const>(eQueryType))
       { // Parse the first item and if it is not empty?
-        Next: const StdStringView &strvRef = cpList;
-        if(!strvRef.empty())
+        Next: const StdStringView &ssvRef = cpList;
+        if(!ssvRef.empty())
         { // Print the device and its identifier
-          cLog->LogDebugExSafe("- $: $.", ltDevices.size(), strvRef);
+          cLog->LogDebugExSafe("- $: $.", ltDevices.size(), ssvRef);
           // Put it in the list
-          ltDevices.emplace(ltDevices.cend(), strvRef);
+          ltDevices.emplace(ltDevices.cend(), ssvRef);
           // Move list onwards
-          cpList += strvRef.length() + 1;
+          cpList += ssvRef.length() + 1;
           // Goto next device
           goto Next;
         } // Recover unused memory

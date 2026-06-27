@@ -27,10 +27,17 @@ class Statistic
   using JCCallback = StdIOSBase &(*)(StdIOSBase&);
   /* ----------------------------------------------------------------------- */
   struct Head                          // Column data
-  { /* --------------------------------------------------------------------- */
-    const StdString strName;           // Column name
-    JCCallback     jccFunc;            // Justification callback function
-    int            iMaxLen;            // Maximum header length
+  { /* -- Public variables ------------------------------------------------- */
+    const StdString  strName;          // Column name
+    const JCCallback jccFunc;          // Justification callback function
+    int              iMaxLen;          // Maximum header length
+    /* -- Initialiser constructor ------------------------------------------ */
+    Head(StdString &&strNName, JCCallback &&jccNFunc, const int iNMaxLen) :
+      /* -- Initialisers --------------------------------------------------- */
+      strName{StdMove(strNName)},      jccFunc{StdMove(jccNFunc)},
+      iMaxLen(iNMaxLen)
+      /* -- No code -------------------------------------------------------- */
+      {}
   };/* --------------------------------------------------------------------- */
   using HeadDeque = StdDeque<Head>;    // Column header data list
   /* -- Private variables -------------------------------------------------- */
@@ -41,8 +48,10 @@ class Statistic
     const StrVectorConstIt &svciIt, const Head &hRef)
   { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen) << StdMove(*svciIt); }
   /* -- Format output iterator data with a suffix -------------------------- */
+  template<typename StrType>
+    requires StdIsString<StrType>
   static void ProcValSuf(StdOStringStream &osS, const StrVectorConstIt &svciIt,
-    const Head &hRef, const StdString &strSuffix)
+    const Head &hRef, const StrType &strSuffix)
   { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen)
         << StdMove(*svciIt) << strSuffix; }
   /* -- Format empty output data without a suffix -------------------------- */
@@ -50,8 +59,10 @@ class Statistic
     { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen)
           << StdMove(hRef.strName); }
   /* -- Format empty output data with a suffix ----------------------------- */
+  template<typename StrType>
+    requires StdIsString<StrType>
   static void ProcHdrSuf(StdOStringStream &osS, const Head &hRef,
-    const StdString &strSuffix)
+    const StrType &strSuffix)
   { osS << hRef.jccFunc << StdIOSSetWidth(hRef.iMaxLen)
         << StdMove(hRef.strName) << strSuffix; }
   /* -- Used by Finish() which returns the last adjusted header item ------- */
@@ -87,20 +98,21 @@ class Statistic
     // Get headers size minus one
     const size_t stHM1 = Headers() - 1;
     // Create string for gap
-    const StdString strGap(stGap, ' '), &strLF = cCommon->CommonLf();
+    const StdString strGap(stGap, ' ');
+    const StdStringView &ssvLF = cCommon->CommonLf();
     // Proc headers except the last header item
     for(size_t stHIndex = 0; stHIndex < stHM1; ++stHIndex)
       ProcHdrSuf(osS, hdHeaders[stHIndex], strGap);
     // We're on the last header cell and no values? so we're done
     if(svValues.empty())
     { // Write last item with line-feed?
-      if(bAddLF) ProcHdrSuf(osS, GetLastHdr(stHM1), strLF);
+      if(bAddLF) ProcHdrSuf(osS, GetLastHdr(stHM1), ssvLF);
       // Write last item without line-feed?
       else ProcHdrNoSuf(osS, GetLastHdr(stHM1));
     } // We have values?
     else
     { // Write the last item with a line feed
-      ProcHdrSuf(osS, GetLastHdr(stHM1), strLF);
+      ProcHdrSuf(osS, GetLastHdr(stHM1), ssvLF);
       // Fill in rest of missing header columns with blanks. This is so we
       // don't need to add extra condition checks which would increase
       // processing time.
@@ -119,14 +131,14 @@ class Statistic
           for(size_t stHIndex = 0; stHIndex < stHM1; ++stHIndex, ++svciIt)
             ProcValSuf(osS, svciIt, hdHeaders[stHIndex], strGap);
           // Add the last item in row
-          ProcValSuf(osS, svciIt, hdHeaders[stHM1], strLF);
+          ProcValSuf(osS, svciIt, hdHeaders[stHM1], ssvLF);
         } // ...Until we are at the last row and first header in the last
         while(++svciIt != svciLastRowIt);
         // Proc headers on the last row except the last header item
         for(size_t stHIndex = 0; stHIndex < stHM1; ++stHIndex, ++svciIt)
           ProcValSuf(osS, svciIt, hdHeaders[stHIndex], strGap);
       } // Proc the last item with carriage return if requested
-      if(bAddLF) ProcValSuf(osS, vLast, hdHeaders[stHM1], strLF);
+      if(bAddLF) ProcValSuf(osS, vLast, hdHeaders[stHM1], ssvLF);
       // Not requested so process the last item without a carriage return
       else ProcValNoSuf(osS, vLast, hdHeaders[stHM1]);
       // Clear values
@@ -137,7 +149,7 @@ class Statistic
   /* -- Finish with new string stream -------------------------------------- */
   StdString Finish(const bool bAddLF = true, const size_t stGap = 1)
   { // Output stream
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // Do the format
     Finish(osS, bAddLF, stGap);
     // Return the string
@@ -227,7 +239,7 @@ class Statistic
     return *this;
   }
   /* -- Data by read only string view -------------------------------------- */
-  Statistic &Data(const StdStringView &strvVal)
+  Statistic &Data(const StdStringView &ssvVal)
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
@@ -236,7 +248,7 @@ class Statistic
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
       UtfDecoder{ *svValues.insert(svValues.cend(),
-        StdString{ strvVal }) }.UtfLength());
+        StdString{ ssvVal }) }.UtfLength());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
     UpdateMaxHeaderLength(hRef, iLength);
@@ -252,7 +264,7 @@ class Statistic
     { return Data(StrFormat(StdForward<StrType>(strFormat),
                             StdForward<VarArgs>(vaArgs)...)); }
   /* -- Data by read-only lvalue string copy ------------------------------- */
-  Statistic &Data(const StdString &strVal = cCommon->CommonBlank())
+  Statistic &Data(const StdString &strVal = cCommon->CommonBlankStr())
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
@@ -392,20 +404,20 @@ class Statistic
     svValues.swap(svValuesNew);
   }
   /* -- Add a header and return self --------------------------------------- */
-  Statistic &Header(const StdStringView &strvH, const bool bRJ,
+  Statistic &Header(const StdStringView &ssvH, const bool bRJ,
     const size_t stL = 0)
   { // Push the header item if there are values as this will mess everything
     // up. Make sure the first column is always left justified.
     if(svValues.empty())
-      hdHeaders.push_back({ StdString{ strvH }, bRJ ? StdIOSRight : StdIOSLeft,
-        UtilIntOrMax<int>(UtilMaximum(stL, strvH.size())) });
+      hdHeaders.push_back({ StdString{ ssvH }, bRJ ? StdIOSRight : StdIOSLeft,
+        UtilIntOrMax<int>(UtilMaximum(stL, ssvH.size())) });
     // Return self so we can daisy chain
     return *this;
   }
   /* -- Add an empty header ------------------------------------------------ */
-  Statistic &Header(const StdStringView &strvH = cCommon->CommonBlankV(),
+  Statistic &Header(const StdStringView &ssvH = cCommon->CommonBlank(),
     const size_t stL = 0)
-  { return Header(strvH, !hdHeaders.empty(), stL); }
+  { return Header(ssvH, !hdHeaders.empty(), stL); }
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */

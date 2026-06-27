@@ -209,29 +209,29 @@ class FileMap :
   /* -- Direct access using class variable name which returns opened ------- */
   operator bool() const { return FileMapOpened(); }
   /* -- Open a file on disk and map it to memory --------------------------- */
-  explicit FileMap(const StdStringView &strvF) :
+  explicit FileMap(const StdStringView &ssvF) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvF },                     // Set identifier (virtual)
-    SysMap{ strvF },                   // Initialise file handle
+    Name{ ssvF },                      // Set identifier (virtual)
+    SysMap{ ssvF },                    // Initialise file handle
     MemConst{ UtilIntOrMax<size_t>(SysMapGetSize()), SysMapGetMemory() },
     stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Take ownership of another memory block ----------------------------- */
-  FileMap(const StdStringView &strvF, MemConst &&mcSrc, const StdTimeT ttC,
+  FileMap(const StdStringView &ssvF, MemConst &&mcSrc, const StdTimeT ttC,
     const StdTimeT ttM) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvF },                     // Set identifier (virtual)
-    SysMap{ strvF, ttC, ttM },         // Reuse system map variables
+    Name{ ssvF },                      // Set identifier (virtual)
+    SysMap{ ssvF, ttC, ttM },          // Reuse system map variables
     MemConst{ StdMove(mcSrc) },        // Init read-only memory block
     stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Take ownership of another memory block ----------------------------- */
-  FileMap(const StdStringView &strvF, MemConst &&mcSrc, const StdTimeT ttC) :
+  FileMap(const StdStringView &ssvF, MemConst &&mcSrc, const StdTimeT ttC) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvF },                     // Set identifier (virtual)
-    SysMap{ strvF, ttC, ttC },         // Reuse system map variables
+    Name{ ssvF },                      // Set identifier (virtual)
+    SysMap{ ssvF, ttC, ttC },          // Reuse system map variables
     MemConst{ StdMove(mcSrc) },        // Init read-only memory block
     stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */

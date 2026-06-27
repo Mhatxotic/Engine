@@ -68,45 +68,43 @@ class System :                         // The main system class
   Interval         ivCpu;              // For getting cpu usage
   const size_t     stProcessId,        // Readable process id
                    stThreadId;         // Readable thread id
-  StdStringView    strvTitle,          // Guest title
-                   strvShortTitle,     // Guest short title
-                   strvVersion,        // Guest version
-                   strvAuthor,         // Guest author
-                   strvCopyright,      // Guest copyright
-                   strvDescription,    // Guest description
-                   strvWebsite;        // Guest website
+  StdStringView    ssvTitle,           // Guest title
+                   ssvShortTitle,      // Guest short title
+                   ssvVersion,         // Guest version
+                   ssvAuthor,          // Guest author
+                   ssvCopyright,       // Guest copyright
+                   ssvDescription,     // Guest description
+                   ssvWebsite;         // Guest website
   /* ----------------------------------------------------------------------- */
   terminate_handler thHandler;         // Old C++ termination handler
   /* ----------------------------------------------------------------------- */
-  const StdString     strRoamingDir;      // Roaming directory
+  const StdString  strRoamingDir;      // Roaming directory
   /* -- Callback for set_terminate() defined later ------------------------- */
   static void SysOnTerminateHandler[[noreturn]]();
   /* -- Return readable process and thread id ---------------------- */ public:
   size_t SysGetReadablePid() const { return stProcessId; }
   size_t SysGetReadableTid() const { return stThreadId; }
   /* -- Update CPU usage information --------------------------------------- */
-  void SysUpdateCPUUsage()
-    { if(ivCpu.CIIsTrigger()) UpdateCPUUsageData(); }
+  void SysUpdateCPUUsage() { if(ivCpu.CIIsTrigger()) UpdateCPUUsageData(); }
   /* -- Update and return process CPU usage -------------------------------- */
-  double SysUpdateAndGetCPUUsage()
-    { SysUpdateCPUUsage(); return CPUUsage(); }
+  double SysUpdateAndGetCPUUsage() { SysUpdateCPUUsage(); return CPUUsage(); }
   /* -- Update and return system CPU usage --------------------------------- */
   double SysUpdateAndGetCPUUsageSystem()
     { SysUpdateCPUUsage(); return CPUUsageSystem(); }
   /* -- Show message box with window handle (thiscall) --------------------- */
-  unsigned SysMsgEx(const StdString &strReason,
-    const StdString &strMessage, unsigned uFlags = MB_ICONSTOP) const
-  { return SysMessage(GetWindowHandle(),
-      StrAppend(ENGName(), ": ", strReason), strMessage, uFlags); }
+  unsigned SysMsgEx(const StdString &strReason, const StdString &strMessage,
+    unsigned uFlags = MB_ICONSTOP) const
+  { return SysMessage(GetWindowHandle(), StrAppend(ENGName(), ": ", strReason),
+      strMessage, uFlags); }
   /* -- Get descriptor strings --------------------------------------------- */
-  const StdStringView &SysGetGuestTitle() const { return strvTitle; }
-  const StdStringView &SysGetGuestShortTitle() const { return strvShortTitle; }
-  const StdStringView &SysGetGuestVersion() const { return strvVersion; }
-  const StdStringView &SysGetGuestAuthor() const { return strvAuthor; }
-  const StdStringView &SysGetGuestCopyright() const { return strvCopyright; }
+  const StdStringView &SysGetGuestTitle() const { return ssvTitle; }
+  const StdStringView &SysGetGuestShortTitle() const { return ssvShortTitle; }
+  const StdStringView &SysGetGuestVersion() const { return ssvVersion; }
+  const StdStringView &SysGetGuestAuthor() const { return ssvAuthor; }
+  const StdStringView &SysGetGuestCopyright() const { return ssvCopyright; }
   const StdStringView &SysGetGuestDescription() const
-    { return strvDescription; }
-  const StdStringView &SysGetGuestWebsite() const { return strvWebsite; }
+    { return ssvDescription; }
+  const StdStringView &SysGetGuestWebsite() const { return ssvWebsite; }
   /* ----------------------------------------------------------------------- */
   const CoreFlagsConst SysGetCoreFlags() const { return cfMode; }
   bool SysIsCoreFlagsHave(const CoreFlagsConst cfFlags) const
@@ -136,9 +134,8 @@ class System :                         // The main system class
     { return SysGetCoreFlagsString(SysGetCoreFlags()); }
   /* -- Default error handler ---------------------------------------------- */
   static void SysCriticalHandler[[noreturn]](const char*const cpMessage)
-  { // Show message box with error
+  { // Show message box with error and call abort (severe exit)
     cLog->LogNLCErrorExSafe("Critical error: $!", cpMessage);
-    // Abort and crash
     abort();
   }
   /* -- Restore old unexpected and termination handlers --------- */ protected:
@@ -147,7 +144,7 @@ class System :                         // The main system class
   System() :
     /* -- Initialisers ----------------------------------------------------- */
     mList{{                            // Initialise mode strings list
-      "nothing",                       // [00<      0>] (nothing)
+      "stdout",                        // [00<      0>] (nothing)
       "text",                          // [01<      1>] (text)
       "audio",                         // [02<      2>] (audio)
       "text+audio",                    // [03<    1|2>] (text+audio)
@@ -221,26 +218,26 @@ class System :                         // The main system class
       StrToBytes(RAMTotal()), StrToBytes(RAMFree()), StrToBytes(RAMProcUse()),
       OSName(), OSMajor(), OSMinor(), OSBuild(), OSBits(), OSLocale(),
         IsOSNameExSet() ? StrAppend(" via ", OSNameEx()) :
-                          cCommon->CommonBlank(),
+                          cCommon->CommonBlankStr(),
       durLong.Parse(GetUptime()),
       cmSys.FormatTime(), cmSys.FormatTimeUTC(),
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
   }
   /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
   CVarReturn SysSetGuestTitle(const StdString&, const StdString &strV)
-    { strvTitle = strV; return ACCEPT; }
+    { ssvTitle = strV; return ACCEPT; }
   CVarReturn SysSetGuestShortTitle(const StdString&, const StdString &strV)
-    { strvShortTitle = strV; return ACCEPT; }
+    { ssvShortTitle = strV; return ACCEPT; }
   CVarReturn SysSetGuestVersion(const StdString&, const StdString &strV)
-    { strvVersion = strV; return ACCEPT; }
+    { ssvVersion = strV; return ACCEPT; }
   CVarReturn SysSetGuestAuthor(const StdString&, const StdString &strV)
-    { strvAuthor = strV; return ACCEPT; }
+    { ssvAuthor = strV; return ACCEPT; }
   CVarReturn SysSetGuestCopyright(const StdString&, const StdString &strV)
-    { strvCopyright = strV; return ACCEPT; }
+    { ssvCopyright = strV; return ACCEPT; }
   CVarReturn SysSetGuestDescription(const StdString&, const StdString &strV)
-    { strvDescription = strV; return ACCEPT; }
+    { ssvDescription = strV; return ACCEPT; }
   CVarReturn SysSetGuestWebsite(const StdString&, const StdString &strV)
-    { strvWebsite = strV; return ACCEPT; }
+    { ssvWebsite = strV; return ACCEPT; }
   /* -- Update minimum RAM ------------------------------------------------- */
   CVarReturn SysSetMinRAM(const uint64_t ullMinValue)
   { // If we're to check for minimum memory free
@@ -292,9 +289,9 @@ class System :                         // The main system class
   { // Ignore if we don't care that a debugger is attached to the process
     if(!bEnabled || !DebuggerRunning()) return ACCEPT;
     // Throw error
-    XC("There is a debugger attached to this software. Please "
-      "close the offending debugger that is hooking onto this application "
-      "and try running the application again");
+    XC("There is a debugger attached to this software. Please close the "
+      "offending debugger that is hooking onto this application and try "
+      "running the application again");
   }
   /* -- Set working directory ---------------------------------------------- */
   CVarReturn SysSetWorkDir(const StdString &strP, StdString &strV)
@@ -357,8 +354,8 @@ class System :                         // The main system class
 void System::SysOnTerminateHandler()
 { // Show message box to user
   cSystem->SysMsgEx("Abnormal program termination!",
-    "An unexpected error has occurred and the engine "
-    "must now terminate! We apologise for the inconvenience!");
+    "An unexpected error has occurred and the engine must now terminate! We "
+    "apologise for the inconvenience!");
   // Terminate now without destructors
   _exit(-1);
 }

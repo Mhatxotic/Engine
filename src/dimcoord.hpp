@@ -44,7 +44,8 @@ struct DimCoords :                     // Members initially public
   /* -- Default constructor that zero initialises everything --------------- */
   DimCoords() = default;
 };/* ----------------------------------------------------------------------- */
-using DimCoInt = DimCoords<int>;       // Dimension Cordinates typedef
+using DimCoInt   = DimCoords<int>;     // Dimension int coords typedef
+using DimCoSizeT = DimCoords<size_t>;  // Dimension size_t coords typedef
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

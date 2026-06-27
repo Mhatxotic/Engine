@@ -37,9 +37,13 @@ if [ ! $? -eq 0 ]; then
   exit 4
 fi
 
+sed -i '' '410,412d' CMakeLists.txt
+
 build()
 {
   rm -rfv CMakeFiles CMakeCache* 2>/dev/null
+
+
 
   cmake -D"LIBTYPE=STATIC" \
         -D"CMAKE_BUILD_TYPE=Release" \
@@ -60,7 +64,7 @@ build()
         -D"ALSOFT_NO_CONFIG_UTIL=TRUE" \
         -D"ALSOFT_REQUIRE_SDL2=FALSE" \
         -D"ALSOFT_UPDATE_BUILD_VERSION=FALSE" \
-        -D"ALSOFT_UTILS=FALSE"
+        -D"ALSOFT_UTILS=FALSE" \
         .
   if [ ! $? -eq 0 ]; then
     exit 6

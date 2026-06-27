@@ -11,11 +11,12 @@ namespace IFile {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ICollector::P;
 using namespace IFStream::P;           using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- File collector and member class -------------------------------------- */
@@ -42,65 +43,65 @@ static void FileReadString(lua_State*const lS)
     if(!fFile.FStreamFError())
     { // Add the string that was read and return a nil for no error
       LuaUtilPushStr(lS, strData);
-      return LuaUtilPushNil(lS);
+      return LuaBasePushNil(lS);
     } // Error occured so return error message
-    LuaUtilPushBool(lS, false);
+    LuaUtilPushFalse(lS);
     LuaUtilPushStr(lS, fFile.FStreamGetErrStr());
   } // Open failed?
   else
   { // Return error message
-    LuaUtilPushBool(lS, false);
+    LuaUtilPushFalse(lS);
     LuaUtilPushStr(lS, fFile.FStreamGetErrStr());
   }
 }
 /* -- Write data a file in one go ------------------------------------------ */
-static void FileWriteData(lua_State*const lS, const StdString &strFile,
+static void FileWriteData(lua_State*const lS, const StdStringView &ssvFile,
   const FStreamMode fmMode, const void*const vpPtr, const size_t stBytes)
 { // Open file with the specified mode and if successful?
-  if(FStream fFile{ strFile, fmMode })
+  if(FStream fFile{ ssvFile, fmMode })
   { // Success if zero size
-    if(!stBytes) return LuaUtilPushBool(lS, true);
+    if(!stBytes) return LuaUtilPushTrue(lS);
     // Write the data and check if we wrote enough data?
     const size_t stWritten = fFile.FStreamWrite(vpPtr, stBytes);
-    if(stWritten == stBytes) return LuaUtilPushInt(lS, stWritten);
+    if(stWritten == stBytes) return LuaBasePushInt(lS, stWritten);
     // Error occured so return failure with error message
-    LuaUtilPushBool(lS, false);
+    LuaUtilPushFalse(lS);
     LuaUtilPushStr(lS, fFile.FStreamFError() ? fFile.FStreamGetErrStr() :
       StrFormat("Only $ of $ bytes written", stWritten, stBytes));
   } // Failed so return reason
   else
   { // Error occured so return failure with error message
-    LuaUtilPushBool(lS, false);
+    LuaUtilPushFalse(lS);
     LuaUtilPushStr(lS, fFile.FStreamGetErrStr());
   }
 }
 /* -- Append string to file in one go -------------------------------------- */
 static void FileAppendString(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const StdString strFile{ LuaUtilGetCppFile(lS, 1) },
-               strWhat{ LuaUtilGetCppStr(lS, 2) };
-  FileWriteData(lS, strFile, FM_A_B, strWhat.data(), strWhat.size());
+  const StdStringView ssvFile{ LuaUtilGetCppFile(lS, 1) },
+                      ssvWhat{ LuaUtilGetCppStr(lS, 2) };
+  FileWriteData(lS, ssvFile, FM_A_B, ssvWhat.data(), ssvWhat.size());
 }
 /* -- Write string to file in one go --------------------------------------- */
 static void FileWriteString(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const StdString strFile{ LuaUtilGetCppFile(lS, 1) },
-               strWhat{ LuaUtilGetCppStr(lS, 2) };
-  FileWriteData(lS, strFile, FM_W_B, strWhat.data(), strWhat.size());
+  const StdStringView ssvFile{ LuaUtilGetCppFile(lS, 1) },
+                      ssvWhat{ LuaUtilGetCppStr(lS, 2) };
+  FileWriteData(lS, ssvFile, FM_W_B, ssvWhat.data(), ssvWhat.size());
 }
 /* -- Append data to file in one go ---------------------------------------- */
 static void FileAppendBlock(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const StdString strFile{ LuaUtilGetCppFile(lS, 1) };
+  const StdStringView ssvFile{ LuaUtilGetCppFile(lS, 1) };
   const MemConst &mcSrc = LuaUtilGetClassRef<Asset>(lS, 2, cAssets);
-  FileWriteData(lS, strFile, FM_A_B, mcSrc.MemPtr(), mcSrc.MemSize());
+  FileWriteData(lS, ssvFile, FM_A_B, mcSrc.MemPtr(), mcSrc.MemSize());
 }
 /* -- Write data to file in one go ----------------------------------------- */
 static void FileWriteBlock(lua_State*const lS)
 { // Get filename, string to write from Lua and send it to writer function
-  const StdString strFile{ LuaUtilGetCppFile(lS, 1) };
+  const StdStringView ssvFile{ LuaUtilGetCppFile(lS, 1) };
   const MemConst &mcSrc = LuaUtilGetClassRef<Asset>(lS, 2, cAssets);
-  FileWriteData(lS, strFile, FM_W_B, mcSrc.MemPtr(), mcSrc.MemSize());
+  FileWriteData(lS, ssvFile, FM_W_B, mcSrc.MemPtr(), mcSrc.MemSize());
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

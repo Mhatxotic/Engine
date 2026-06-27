@@ -11,7 +11,8 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaLib {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICVarDef::P;           using namespace ILuaUtil::P;
+using namespace ICVarDef::P;           using namespace ILuaBase::P;
+using namespace ILuaUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Macros to simplify creating lualib functions ------------------------- */

@@ -298,7 +298,7 @@ CTOR_BEGIN_DUO(Bins, Bin, CLHelperUnsafe, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperBin{ cBins, this },        // Register the object in collector
     SerialSlave{ cParent->Serial() }   // Initialise identification number
-    /* --------------------------------------------------------------------- */
+    /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
 CTOR_END_NOINITS(Bins, Bin, BIN)       // End of bin objects collector

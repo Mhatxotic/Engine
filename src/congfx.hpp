@@ -21,7 +21,7 @@ using namespace IImageDef::P;          using namespace ILog::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace IUtf::P;               using namespace Lib::OS::GlFW::Types;
+using namespace IUtf::P;               using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ========================================================================= */
@@ -165,8 +165,10 @@ class ConGfx :                         // Members initially private
   }
   /* -- Check if console key pressed in console ---------------------------- */
   bool ConGfxIsKeyHandled(const int iKey, const int iState, const int iMod)
-  { // Return unhandled if console not visible or a key was released
-    if(cConsole->IsNotVisible() || iState == GLFW_RELEASE) return false;
+  { // Return unhandled if console not visible
+    if(cConsole->IsNotVisible()) return false;
+    // If console is enabled but key is released then ignore it
+    if(iState == GLFW_RELEASE) return true;
     // Control key, which key?
     if(iMod & GLFW_MOD_CONTROL) switch(iKey)
     { // Test keys with control held

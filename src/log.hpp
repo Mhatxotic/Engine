@@ -29,10 +29,18 @@ enum LHLevel : unsigned                // Log helper level flags
   LH_MAX,                              // Maximum log message level
 };/* ----------------------------------------------------------------------- */
 struct LogLine                         // Log line structure
-{ /* ----------------------------------------------------------------------- */
+{ /* -- Public variables --------------------------------------------------- */
   const double     dTime;              // The time it happend
   const LHLevel    lhlLevel;           // The type of log entry
   const StdString  strLine;            // The log entry string
+  /* -- Initialiser constructor -------------------------------------------- */
+  LogLine(const double dNTime, const LHLevel lhlNLevel, StdString &&strNLine) :
+    /* -- Initialisers ----------------------------------------------------- */
+    dTime(dNTime),                     // Set current time
+    lhlLevel(lhlNLevel),               // Set log level
+    strLine{StdMove(strNLine)}         // Copy or move message
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 using LogLines        = StdList<LogLine>;         // List of log lines
 using LogLinesConstIt = LogLines::const_iterator; // Log lines iterator
@@ -57,8 +65,8 @@ class Log :                            // The actual class body
   using SafeLHLevel = StdAtomic<LHLevel>;  // Async safe 'LHLevel'.
   /* -- Private variables -------------------------------------------------- */
   const LogLevels  llLevels;           // Log level strings
-  const StdString  strStdOut,          // Label for 'stdout'
-                   strStdErr;          // Label for 'stderr'
+  const StdStringView ssvStdOut,       // Label for 'stdout'
+                   ssvStdErr;          // Label for 'stderr'
   SafeLHLevel      slhlLevel;          // Log helper level for this instance
   size_t           stMaximum;          // Maximum log lines
   FStreamMode      fsmMode;            // Logging mode (append or truncate)
@@ -87,8 +95,8 @@ class Log :                            // The actual class body
     // appending for this and it turned out to be almost twice as slow as
     // using formatstring due to the fact that less memory management
     // is required!
-    for(const StdStringView &strvLine : tlLines)
-      push_back({ CCDeltaToDouble(), lhRequire, StdString{ strvLine } });
+    for(const StdStringView &ssvLine : tlLines)
+      push_back({ CCDeltaToDouble(), lhRequire, StdString{ ssvLine } });
     // Ignore if file not opened
     if(FStreamClosed()) return;
     // Get start of log
@@ -278,16 +286,16 @@ class Log :                            // The actual class body
     });
   }
   /* -- Initialise log to built-in standard output ------------------------- */
-  void LogInit(FILE*const fpDevice, const StdString &strLabel)
+  void LogInit(FILE*const fpDevice, const StdStringView &ssvLabel)
   { // Set device, name and write confirmation of opening a device handle
     FStreamSetHandle(fpDevice);
-    NameSet(strLabel);
+    NameSet(ssvLabel);
     LogWriteStringEx("Logging to standard output '$'.", NameGet());
   }
   /* -- Initialise with specified file name -------------------------------- */
-  bool LogInit(const StdString &strFN)
+  bool LogInit(const StdStringView &ssvFN)
   { // Try to create the file, or open append it and return if failure
-    if(FStreamOpen(strFN, fsmMode)) return false;
+    if(FStreamOpen(ssvFN, fsmMode)) return false;
     LogWriteStringEx("Log file is '$' at $.", NameGet(), cmSys.FormatTime());
     return true;
   }
@@ -301,8 +309,8 @@ class Log :                            // The actual class body
       "Info",                          // Log line is information
       "Debug"                          // Log line is for developers
     }},                                // End of log level strings
-    strStdOut{ "/dev/stdout" },        // Initialise display label for stdout
-    strStdErr{ "/dev/stderr" },        // Initialise display label for stderr
+    ssvStdOut{ "/dev/stdout" },        // Initialise display label for stdout
+    ssvStdErr{ "/dev/stderr" },        // Initialise display label for stderr
     slhlLevel{ LH_DEBUG },             // Initialise default level
     stMaximum(1000),                   // Initialise maximum output lines
     fsmMode(FM_MAX)                    // File mode initialised by cvar
@@ -346,8 +354,8 @@ class Log :                            // The actual class body
           // Compare the character
           switch(strFN.front())
           { // Check for requested use of stderr or stdout
-            case '!': LogInit(stderr, strStdErr); return ACCEPT;
-            case '-': LogInit(stdout, strStdOut); return ACCEPT;
+            case '!': LogInit(stderr, ssvStdErr); return ACCEPT;
+            case '-': LogInit(stdout, ssvStdOut); return ACCEPT;
             // Anything else ignore and open the file normally
             default: break;
           } // Done

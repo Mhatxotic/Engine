@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IFboBlend {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using Lib::OS::GlFW::GLenum;
+using Lib::GlFW::GLenum;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo blend class ====================================================== */

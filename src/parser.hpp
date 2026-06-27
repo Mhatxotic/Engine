@@ -11,8 +11,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IParser {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IError::P;             using namespace IStd::P;
-using namespace IString::P;
+using namespace ICommon::P;            using namespace IError::P;
+using namespace IStd::P;               using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Parser class --------------------------------------------------------- */
@@ -127,7 +127,7 @@ class Parser :
   /* -- Converts the variables to a string --------------------------------- */
   StdString ParserImplodeEx(auto &&aSep, auto &&aSuf) const
   { // String to return
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // For each key/value pair, implode it into a string
     for(const ParserMapTypePair &pmtpPair : *this)
       osS << pmtpPair.first << aSep << pmtpPair.second << aSuf;

@@ -186,9 +186,9 @@ class CLHelperBase :
       NameGet());
   }
   /* -- Constructor -------------------------------------------------------- */
-  explicit CLHelperBase(const StdStringView &strvName) :
+  explicit CLHelperBase(const StdStringView &ssvName) :
     /* -- Initialisers ----------------------------------------------------- */
-    InitHelper{ strvName },            // Set initialisation helper name
+    InitHelper{ ssvName },             // Set initialisation helper name
     stMaximum(StdMaxSizeT)             // Initialise maximum objects
     /* -- No code ---------------------------------------------------------- */
     {}

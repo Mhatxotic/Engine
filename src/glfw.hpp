@@ -11,12 +11,12 @@ namespace IGlFW {                      // Start of module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IEvtMain::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWUtil::P;
-using namespace IGlFWWindow::P;        using namespace IHelper::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IToken::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace IGlFWBase::P;          using namespace IGlFWUtil::P;
+using namespace IGlFWCursor::P;        using namespace IGlFWWindow::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IToken::P;             using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::GlFW;
 /* ------------------------------------------------------------------------- */
 using CursorStandard = StdArray<GlFWCursor, CUR_MAX>;
 /* ------------------------------------------------------------------------- */
@@ -33,7 +33,7 @@ class GlFW :                           // Root engine class
   private CursorStandard               // Standard cursors list
 { /* -- Private variables and functions ------------------------------------ */
   unsigned         uErrorLevel;        // Ignore further glfw errors
-  const StdStringView strvIntVersion;  // Internal (headers) version number
+  const StdStringView ssvIntVersion;   // Internal (headers) version number
   StdString        strExtVersion;      // External (library) version number
   StrVSet          svsFeatures;        // Features included
   bool             bRawMouseSupported; // Is raw mouse motion supported
@@ -96,7 +96,7 @@ class GlFW :                           // Root engine class
   }
   /* --------------------------------------------------------------- */ public:
   const StdStringView &GlFWGetInternalVersion() const
-    { return strvIntVersion; }
+    { return ssvIntVersion; }
   /* -- DeInitialiser ------------------------------------------------------ */
   void GlFWDeInit()
   { // Ignore if class not initialised
@@ -144,7 +144,7 @@ class GlFW :                           // Root engine class
   { // Get GLFW's identity. This string's lifetime is infinite (static).
     if(const char*const cpIdentity = glfwGetVersionString())
     { // Parse each token (0 is always the version), rest is the features
-      if(TokenStrView tsvIdentity{ cpIdentity, cCommon->CommonSpaceV() })
+      if(TokenStrView tsvIdentity{ cpIdentity, cCommon->CommonSpace() })
       { // Store library version and If first token which says the version
         // mismatches with our version? Write a log message. It's not really a
         // problem since GlFW's headers maintain compatibility across versions.
@@ -153,8 +153,8 @@ class GlFW :                           // Root engine class
             GlFWGetInternalVersion());
         // Parse features into a list
         StdForEach(seq, StdNext(tsvIdentity.begin()), tsvIdentity.end(),
-          [this](StdStringView &strvStr)
-            { svsFeatures.emplace(StdMove(strvStr)); });
+          [this](StdStringView &ssvStr)
+            { svsFeatures.emplace(StdMove(ssvStr)); });
         // Write the features
         cLog->LogDebugExSafe("GlFW library $ features $ ($).",
           tsvIdentity.front(), StrExplodeEx(svsFeatures, ", ", " and "),
@@ -177,7 +177,7 @@ class GlFW :                           // Root engine class
     glfwSetErrorCallback(GlFWOnHandleErrorStatic);
     GlFWResetErrorLevel();
     // Initialise GlFW and throw exception if failed
-    if(!glfwInit()) XC("GlFW initialisation failed!");
+    if(!GlFWBaseInit()) XC("GlFW initialisation failed!");
     // Report internal library version
     GlFWVerifyVersion();
     // Class initialised
@@ -185,9 +185,9 @@ class GlFW :                           // Root engine class
     // Initialise standard built-in operating system cursors
     GlFWInitCursors();
     // Set if raw mouse motion supported
-    bRawMouseSupported = GlFWIsRawMouseMotionSupported();
+    bRawMouseSupported = GlFWBaseRawMouseMotionSupported();
     cLog->LogDebugExSafe("GlFW raw mouse motion support is $.",
-      GlFWIsRawMouseMotionSupported() ? "available" : "unavailable");
+      bRawMouseSupported ? "available" : "unavailable");
     // Set monitor change callback
     GlFWSetMonitorCallback(GlFWOnMonitorChangedStatic);
     // Report initialisation successful
@@ -229,7 +229,7 @@ class GlFW :                           // Root engine class
 #undef CURSOR                          // Done with this macro
     /* --------------------------------------------------------------------- */
     uErrorLevel(0),                    // No errors occured
-    strvIntVersion{                    // Init internal version number
+    ssvIntVersion{                     // Init internal version number
       STR(GLFW_VERSION_MAJOR) "."      // (?.x.x) Major
       STR(GLFW_VERSION_MINOR) "."      // (x.?.x) Minor
       STR(GLFW_VERSION_REVISION)       // (x.x.?) Revision
