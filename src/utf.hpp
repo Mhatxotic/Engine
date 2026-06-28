@@ -365,7 +365,7 @@ static StrList UtfWordWrap(const StdStringView &strvText,
       // Update start of next line
       svciStart = svciSpace;
     } // Set indentation for next line
-    if(strIndent.empty()) strIndent = cCommon->CommonSpace();
+    if(strIndent.empty()) strIndent = StdString(stIndent, ' ');
     // Reset column to indent size
     stColumn = stIndent;
   } // If we are not at end of string? Add the remaining characters

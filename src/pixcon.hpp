@@ -745,7 +745,7 @@ class SysCon :                         // All members initially private
         // Save old colour so we can restore it
         if(color_content(sPalette,
           &stEntry[0], &stEntry[1], &stEntry[2]) == ERR)
-            stEntry[0] = stEntry[1] = stEntry[2] = -1;
+           stEntry[0] = stEntry[1] = stEntry[2] = -1;
         // Grab the colour required by the engine
         unsigned uRGB = ConColourToRGB(static_cast<ConColour>(stPalette));
         // Calculate new value based on our required colour.
@@ -758,53 +758,51 @@ class SysCon :                         // All members initially private
         // Feed the RGB to set the palette colours and if failed just break
         // because we don't really know how many colours the terminal supports.
         if(init_color(sPalette, sR, sG, sB) == ERR) continue;
-      } // If we loaded colours?
-      if(stPalette > 0)
-      { // Get maximum supported colours
-        const size_t stPairsMaxSupported = static_cast<size_t>(COLOR_PAIRS);
-        // Create number of pairs we need. We only need COLOUR_MAX squared so
-        // we dont need to load the reset if there are any.
-        if(const size_t stPairsMax = UtilMinimum(stPairsMaxSupported,
-          static_cast<size_t>(COLOUR_MAX * COLOUR_MAX)))
-        { // Size palette array to save colours
-          ptPairs.resize(stPairsMax);
-          // For each background colour we support. Ignore the first entry.
-          for(stPairs = 1; stPairs < stPairsMax; ++stPairs)
-          { // Save old foreground and background palette entry
-            ShortPair &spEntry = ptPairs[stPalette];
-            if(pair_content(static_cast<short>(stPairs),
-                 &spEntry[0], &spEntry[1]) == ERR)
-              spEntry[0] = spEntry[1] = -1;
-            // Calculate foreground and background positions
-            const size_t stIndexBG = stPairs / COLOUR_MAX,
-                         stIndexFG = stPairs % COLOUR_MAX,
-            // If the pairs are the same colour then we don't want to
-            // initialise these pairs as whats the point in trying to
-            // display the same colour on the same background?
-                         stAdd = stIndexFG == stIndexBG ? 1 : 0;
-            // Initialise the colour code Wrap the id's to the number of
-            // palette entries the terminal let us initialise. Goto the
-            // next pair if it succeded else fall through to finish.
-            init_pair(static_cast<short>(stPairs),
-              static_cast<short>((stIndexFG + stAdd) % stPalette),
-              static_cast<short>(stIndexBG % stPalette));
-          } // Log number of colours and pairs loaded
-          cLog->LogDebugExSafe(
-            "SysCon set $/$ palette entries and $/$($) pairs!",
-            stPalette, COLOUR_MAX, stPairs, stPairsMax,
-            stPairsMaxSupported );
-        } // No
-        else
-        { // Clear the saved pairs table
-          ptPairs.clear();
-          // Log that we don't have any colour pairs
-          cLog->LogDebugExSafe(
-            "SysCon set no pairs from the $ palette entries!", stPalette);
-        }
-      } // No palette entries?
-      else cLog->LogWarningExSafe("SysCon set no palette entries from $!",
-        COLOUR_MAX);
-    } // Update size
+      } // Get maximum supported colours
+      const size_t stPairsMaxSupported = static_cast<size_t>(COLOR_PAIRS);
+      // Create number of pairs we need. We only need COLOUR_MAX squared so
+      // we dont need to load the reset if there are any.
+      if(const size_t stPairsMax = UtilMinimum(stPairsMaxSupported,
+        static_cast<size_t>(COLOUR_MAX * COLOUR_MAX)))
+      { // Size palette array to save colours
+        ptPairs.resize(stPairsMax);
+        // For each background colour we support. Ignore the first entry.
+        for(stPairs = 1; stPairs < stPairsMax; ++stPairs)
+        { // Save old foreground and background palette entry
+          ShortPair &spEntry = ptPairs[stPalette];
+          if(pair_content(static_cast<short>(stPairs),
+               &spEntry[0], &spEntry[1]) == ERR)
+            spEntry[0] = spEntry[1] = -1;
+          // Calculate foreground and background positions
+          const size_t stIndexBG = stPairs / COLOUR_MAX,
+                       stIndexFG = stPairs % COLOUR_MAX,
+          // If the pairs are the same colour then we don't want to
+          // initialise these pairs as whats the point in trying to
+          // display the same colour on the same background?
+                       stAdd = stIndexFG == stIndexBG ? 1 : 0;
+          // Initialise the colour code Wrap the id's to the number of
+          // palette entries the terminal let us initialise. Goto the
+          // next pair if it succeded else fall through to finish.
+          init_pair(static_cast<short>(stPairs),
+            static_cast<short>((stIndexFG + stAdd) % stPalette),
+            static_cast<short>(stIndexBG % stPalette));
+        } // Log number of colours and pairs loaded
+        cLog->LogDebugExSafe(
+          "SysCon set $/$ palette entries and $/$($) pairs!",
+          stPalette, COLOUR_MAX, stPairs, stPairsMax,
+          stPairsMaxSupported );
+      } // No
+      else
+      { // Clear the saved pairs table
+        ptPairs.clear();
+        // Log that we don't have any colour pairs
+        cLog->LogDebugExSafe(
+          "SysCon set no pairs from the $ palette entries!", stPalette);
+      }
+    } // No palette entries?
+    else cLog->LogWarningExSafe("SysCon set no palette entries from $!",
+      COLOUR_MAX);
+    // Update size
     CheckAndUpdateSize();
     // System console is initialised
     cLog->LogDebugSafe("SysCon initialised.");

@@ -118,7 +118,7 @@ class SysInfo                          // Common system structs and funcs
   double CPUUsage() const { return cpuUData.dProcess; }
   double CPUUsageSystem() const { return cpuUData.dSystem; }
   /* ----------------------------------------------------------------------- */
-  constexpr const double dBytesPerMeg = 1048576.0;
+  static constexpr const double dBytesPerMeg = 1048576.0;
   uint64_t RAMTotal() const { return memData.ullMTotal; }
   double RAMTotalMegs() const
     { return static_cast<double>(RAMTotal()) / dBytesPerMeg; }

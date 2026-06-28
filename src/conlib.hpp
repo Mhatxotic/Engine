@@ -928,8 +928,8 @@ if(aArgs.size() == 2)
     StrPluraliseNum(iRef.GetSlotCount(), "slot", "slots"), iRef.NameGet());
 } // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("#").Header("ID").Header("FLAG", false).Header("SIZW").Header("SIZH")
-      .Header("BI").Header("B").Header("S").Header("ALLOC")
+sTable.Header("#").Header("ID").Header("FLAG", false).Header("SIZW")
+      .Header("SIZH").Header("BI").Header("B").Header("S").Header("ALLOC")
       .Header("TYPE", false).Header("NAME", false).Reserve(cImages->size());
 // Walk through image classes
 size_t stIndex = 0;
