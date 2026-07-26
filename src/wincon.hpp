@@ -161,20 +161,20 @@ class SysCon :                         // Members initially private
       { // What virtual key was pressed?
         switch(iData.Event.KeyEvent.wVirtualKeyCode)
         { // Valid key
-          case VK_PRIOR  : iKey = GLFW_KEY_PAGE_UP; break;
+          case VK_PRIOR  : iKey = GLFW_KEY_PAGE_UP;   break;
           case VK_NEXT   : iKey = GLFW_KEY_PAGE_DOWN; break;
-          case VK_HOME   : iKey = GLFW_KEY_HOME; break;
-          case VK_END    : iKey = GLFW_KEY_END; break;
+          case VK_HOME   : iKey = GLFW_KEY_HOME;      break;
+          case VK_END    : iKey = GLFW_KEY_END;       break;
           case VK_BACK   : iKey = GLFW_KEY_BACKSPACE; break;
-          case VK_INSERT : iKey = GLFW_KEY_INSERT; break;
-          case VK_DELETE : iKey = GLFW_KEY_DELETE; break;
-          case VK_UP     : iKey = GLFW_KEY_UP; break;
-          case VK_DOWN   : iKey = GLFW_KEY_DOWN; break;
-          case VK_ESCAPE : iKey = GLFW_KEY_ESCAPE; break;
-          case VK_LEFT   : iKey = GLFW_KEY_LEFT; break;
-          case VK_RIGHT  : iKey = GLFW_KEY_RIGHT; break;
-          case VK_RETURN : iKey = GLFW_KEY_ENTER; break;
-          case VK_TAB    : iKey = GLFW_KEY_TAB; break;
+          case VK_INSERT : iKey = GLFW_KEY_INSERT;    break;
+          case VK_DELETE : iKey = GLFW_KEY_DELETE;    break;
+          case VK_UP     : iKey = GLFW_KEY_UP;        break;
+          case VK_DOWN   : iKey = GLFW_KEY_DOWN;      break;
+          case VK_ESCAPE : iKey = GLFW_KEY_ESCAPE;    break;
+          case VK_LEFT   : iKey = GLFW_KEY_LEFT;      break;
+          case VK_RIGHT  : iKey = GLFW_KEY_RIGHT;     break;
+          case VK_RETURN : iKey = GLFW_KEY_ENTER;     break;
+          case VK_TAB    : iKey = GLFW_KEY_TAB;       break;
           // Key not supported?
           default: if(iData.Event.KeyEvent.uChar.UnicodeChar)
           { // Set the character code and return character type
@@ -218,13 +218,17 @@ class SysCon :                         // Members initially private
     // We read an event
     return ktType;
   }
-  /* -- Drawing attributes ------------------------------------------------- */
+  /* -- Return current absolute position ----------------------------------- */
   size_t GetPos() const { return (stY * stW) + stX; }
+  /* -- Return right most absolute line position --------------------------- */
   size_t GetPosEOL() const { return (stY * stW) + stW; }
+  /* -- Return end position ------------------------------------------------ */
   size_t EndPos() const { return stEndPos; }
-  size_t SafeEnd(const size_t _stP) const
-   { return UtilMinimum(_stP, EndPos()); }
-  void SetColour(const WORD wNewCol) { wColour = wNewCol; }
+  /* -- Return absolute screen buffer end position with bounds check ------- */
+  size_t SafeEnd(const size_t stPos) const
+    { return UtilMinimum(stPos, EndPos()); }
+  /* -- Set new writing colour --------------------------------------------- */
+  void SetColour(const WORD wNColour) { wColour = wNColour; }
   /* -- Set cursor size ---------------------------------------------------- */
   void SetCursorMode(const bool bInsert)
   { // Return if we already have this cursor siz
