@@ -17,9 +17,9 @@ using namespace IFileMap::P;           using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
 using namespace IMemory::P;            using namespace IName::P ;
-using namespace IPcmDef::P;            using namespace IPcmLib::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;
+using namespace IPcmData::P;           using namespace IPcmDef::P;
+using namespace IPcmLib::P;            using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Pcm collector and member class ======================================= */

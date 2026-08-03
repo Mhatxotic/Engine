@@ -1,4 +1,4 @@
-/* == IMAGEPNG.HPP ========================================================= **
+/* == IFMTPNG.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -11,12 +11,12 @@ namespace ICodecPNG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace IDim::P;
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFStream::P;           using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace ILog::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ITexDef::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::Png;
+using namespace IFStream::P;           using namespace IImageData::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ITexDef::P;            using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::Png;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

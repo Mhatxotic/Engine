@@ -1,4 +1,4 @@
-/* == PCMFMWAV.HPP ========================================================= **
+/* == PFMTWAV.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -12,9 +12,9 @@ namespace ICodecWAV {                  // Start of private module namespace
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace IFlags::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IName::P;
-using namespace IPcmDef::P;            using namespace IPcmLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;
+using namespace IPcmData::P;           using namespace IPcmDef::P;
+using namespace IPcmLib::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= **

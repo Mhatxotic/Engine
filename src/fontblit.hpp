@@ -462,7 +462,7 @@ GLfloat PrintW(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
 { // Build a new utfstring class with the string
   UtfDecoder udRef{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
   // Print with word wrapping and save height
   const GLfloat fHeight = DoPrintW(glfX, glfY, glfW, glfI, udRef);
   // Cleanup enabled flags
@@ -479,7 +479,7 @@ GLfloat PrintWS(const GLfloat glfW, const GLfloat glfI, const StrType &strStr)
 { // Build a new utfstring class with the string
   UtfDecoder udRef{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
   // Print simulated wrapping and return the height
   const GLfloat fHeight = DoPrintWS(glfW, glfI, udRef);
   // Cleanup enabled flags
@@ -495,7 +495,7 @@ GLfloat PrintWTS(const GLfloat glfW, const GLfloat glfI, const StrType &strStr,
 { // Build a new utfstring class with the string
   UtfDecoder udRef{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
@@ -513,7 +513,7 @@ GLfloat PrintWU(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
 { // Build a new utfstring class with the string
   UtfDecoder udRef{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
   // Simulate the height of the print
   const GLfloat fHeight = DoPrintWS(UtilDistance(glfX, glfW), glfI, udRef);
   // Reset the iterator on the utf string.
@@ -636,7 +636,7 @@ GLfloat PrintWUT(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
 { // Build a new utfstring class with the string
   UtfDecoder udRef{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Simulate the height of the print
@@ -660,7 +660,7 @@ GLfloat PrintWT(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
 { // Build a new utfstring class with the string
   UtfDecoder udRef{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
@@ -796,7 +796,7 @@ GLfloat PrintSU(const StrType &strStr)
 { // Build a new utfstring class with the string
   UtfDecoder udRef{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
   // Simulate the height
   const GLfloat fHeight = DoPrintSU(udRef);
   // Cleanup enabled flags

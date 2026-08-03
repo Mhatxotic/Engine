@@ -1,4 +1,4 @@
-/* == PCMFMCAF.HPP ========================================================= **
+/* == PFMTCAF.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -11,9 +11,10 @@ namespace ICodecCAF {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace IFlags::P;             using namespace ILog::P;
-using namespace IMemory::P;            using namespace IPcmDef::P;
-using namespace IPcmLib::P;            using namespace IStd::P;
-using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
+using namespace IMemory::P;            using namespace IPcmData::P;
+using namespace IPcmDef::P;            using namespace IPcmLib::P;
+using namespace IStd::P;               using namespace IUtil::P;
+using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

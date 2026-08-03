@@ -103,6 +103,7 @@ namespace E {                          // Start of engine namespace
 #include "oal.hpp"                     // OpenAL audio header
 #include "dformat.hpp"                 // Plugin data format helper header
 #include "pcmdef.hpp"                  // Pcm definitions header
+#include "pcmdata.hpp"                 // Pcm data class header
 #include "pcmlib.hpp"                  // Pcm codecs handling header
 #include "pfmtwav.hpp"                 // PcmLib WAV file codec
 #include "pfmtcaf.hpp"                 // PcmLib CAF file codec
@@ -116,11 +117,13 @@ namespace E {                          // Start of engine namespace
 #include "colour.hpp"                  // Colour class definition header
 #include "ogl.hpp"                     // OpenGL graphics management header
 #include "imagedef.hpp"                // Image data definitions header
+#include "imagedata.hpp"               // Image metadata class header
 #include "imagelib.hpp"                // Image codecs handling header
 #include "ifmtdds.hpp"                 // ImageLib DDS file codec
 #include "ifmtgif.hpp"                 // ImageLib GIF file codec
 #include "ifmtpng.hpp"                 // ImageLib PNG file codec
 #include "ifmtjpg.hpp"                 // ImageLib JPG file codec
+#include "ifmtwebp.hpp"                // ImageLib WEBP file codec
 #include "bin.hpp"                     // Bin packing class header
 #include "image.hpp"                   // Image load and save handling header
 #include "shader.hpp"                  // OpenGL Shader handling header

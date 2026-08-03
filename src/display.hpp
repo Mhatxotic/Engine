@@ -20,14 +20,14 @@ using namespace IFboCore::P;           using namespace IFlags::P;
 using namespace IFont::P;              using namespace IGlFW::P;
 using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
 using namespace IGlFWUtil::P;          using namespace IHelper::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IInput::P;             using namespace ILog::P;
-using namespace ILookupArray::P;       using namespace ILuaFunc::P;
-using namespace IMutex::P;             using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace IImage::P;             using namespace IImageData::P;
+using namespace IImageDef::P;          using namespace IInput::P;
+using namespace ILog::P;               using namespace ILookupArray::P;
+using namespace ILuaFunc::P;           using namespace IMutex::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

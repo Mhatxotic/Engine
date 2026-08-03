@@ -1,4 +1,4 @@
-/* == IMAGEDDS.HPP ========================================================= **
+/* == IFMTDDS.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -10,9 +10,9 @@
 namespace ICodecDDS {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace IImageDef::P;          using namespace IImageLib::P;
-using namespace IMemory::P;            using namespace ITexDef::P;
-using namespace IUtil::P;
+using namespace IImageData::P;         using namespace IImageDef::P;
+using namespace IImageLib::P;          using namespace IMemory::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

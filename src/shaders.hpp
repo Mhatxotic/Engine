@@ -232,11 +232,10 @@ struct ShaderCore                      // Actual body
       "ycbcr.z=texture(texCr,vec2(texcoordout)).r-0.5;";
     // 3D YCbCr shaders to comple
     const struct ShaderList {
-      Shader              &shShader;   // Shader class destination
-      const StdString     &strName;    // Name of shader
-      const StdStringView &svRange,    // Shader dynamic range code
-                          &svMatrix,   // Shader colour range matrix code
-                          &svKey;      // RGB keying code
+      ShaderList(Shader &shShader, const StdString &strName,
+        const StdStringView &svRange, const StdStringView &svMatrix,
+        const StdStringView &svKey)
+      { Init3DYCbCrTemplate(shShader, strName, svRange, svMatrix, svKey); }
     } slShaders[] = {
       { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },
       { sh3DYCbCr601FR, "FRAG-3D YCbCr>F601>RGB", svFull, sv601, svNoKey },
@@ -254,11 +253,8 @@ struct ShaderCore                      // Actual body
       { sh3DYCbCrK709FR, "FRAG-3D YCbCr>F709>RGBK", svFull, sv709, svKey },
       { sh3DYCbCrK709PR, "FRAG-3D YCbCr>P709>RGBK", svPartial, sv709, svKey },
       { sh3DYCbCrK709PR, "FRAG-3D YCbCr>P709>RGBK", svPartial, sv709, svKey }
-    };
-    // Compile each of the above shaders
-    for(const ShaderList &slShader : slShaders)
-      Init3DYCbCrTemplate(slShader.shShader, slShader.strName,
-        slShader.svRange, slShader.svMatrix, slShader.svKey);
+    }; // Unusued
+    static_cast<void>(slShaders);
   }
   /* -- Initialise built-in shaders -------------------------------- */ public:
   void ShadersInit()

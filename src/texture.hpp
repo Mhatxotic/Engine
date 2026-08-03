@@ -14,14 +14,15 @@ namespace ITexture {                   // Start of private module namespace
 using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IFbo::P;
 using namespace IFboCmd::P;            using namespace IFboItem::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IJson::P;              using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace ISerial::P;            using namespace IShader::P;
-using namespace IShaders::P;           using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace IImage::P;             using namespace IImageData::P;
+using namespace IImageDef::P;          using namespace IJson::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace ISerial::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Define texture collector class --------------------------------------- */

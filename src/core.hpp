@@ -22,18 +22,19 @@ using namespace ICommon::P;            using namespace ICmdLine::P;
 using namespace ICmdLine::P;           using namespace ICodecCAF::P;
 using namespace ICodecDDS::P;          using namespace ICodecGIF::P;
 using namespace ICodecJPG::P;          using namespace ICodecOGG::P;
-using namespace ICodecPNG::P;          using namespace ICodecWAV::P;
-using namespace IConDef::P;            using namespace IConGraph::P;
-using namespace IConLib::P;            using namespace IConsole::P;
-using namespace ICredit::P;            using namespace ICrypt::P;
-using namespace IDir::P;               using namespace IDisplay::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IEvtWin::P;            using namespace IFbo::P;
-using namespace IFboCore::P;           using namespace IFile::P;
-using namespace IFont::P;              using namespace IFrame::P;
-using namespace IFreeType::P;          using namespace IFtf::P;
-using namespace IGlFW::P;              using namespace IGlFWMonitor::P;
-using namespace IGlFWUtil::P;          using namespace IImage::P;
+using namespace ICodecPNG::P;          using namespace ICodecWEBP::P;
+using namespace ICodecWAV::P;          using namespace IConDef::P;
+using namespace IConGraph::P;          using namespace IConLib::P;
+using namespace IConsole::P;           using namespace ICredit::P;
+using namespace ICrypt::P;             using namespace IDir::P;
+using namespace IDisplay::P;           using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IEvtWin::P;
+using namespace IFbo::P;               using namespace IFboCore::P;
+using namespace IFile::P;              using namespace IFont::P;
+using namespace IFrame::P;             using namespace IFreeType::P;
+using namespace IFtf::P;               using namespace IGlFW::P;
+using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
+using namespace IImage::P;             using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
 using namespace IInput::P;             using namespace IInterval::P;
 using namespace IJson::P;              using namespace ILog::P;
@@ -79,13 +80,13 @@ class Core final :                     // Members initially private
   private Sources,    private Samples,            private Streams,
   private EvtWin,     private Ogl,                private ImageLibs,
   private CodecPNG,   private CodecJPG,           private CodecGIF,
-  private CodecDDS,   private Images,             private Shaders,
-  private Clips,      private Display,            private Input,
-  private ShaderCore, private Fbos,               private FboCore,
-  private SShots,     private Textures,           private Palettes,
-  private Atlases,    private Fonts,              private Videos,
-  private ConGfx,     private Variables,          private Commands,
-  private Lua
+  private CodecDDS,   private CodecWEBP,          private Images,
+  private Shaders,    private Clips,              private Display,
+  private Input,      private ShaderCore,         private Fbos,
+  private FboCore,    private SShots,             private Textures,
+  private Palettes,   private Atlases,            private Fonts,
+  private Videos,     private ConGfx,             private Variables,
+  private Commands,   private Lua
 { /* -- Private typedefs to run a function when scope exits ---------------- */
   template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
     explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}

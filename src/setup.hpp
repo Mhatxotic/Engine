@@ -484,6 +484,22 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <png/png.h>                   // Main header
   } /* --------------------------------------------------------------------- */
+  namespace WebP                       // SIMPLEWEBP API FUNCTIONS
+  { /* --------------------------------------------------------------------- */
+#if defined(MSVC_VANILLA)
+# pragma warning(push)
+# pragma warning(disable:4244)         // Possible loss of data on narrowing
+# pragma warning(disable:5344)         // Potentially uninitialized local
+#endif
+#define SIMPLEWEBP_DISABLE_STDIO       // Don't need STDIO functions
+#define SIMPLEWEBP_IMPLEMENTATION      // Define body functions
+#include <swp/simplewebp.h>            // Main header
+#undef SIMPLEWEBP_IMPLEMENTATION       // Done with this define
+#undef SIMPLEWEBP_DISABLE_STDIO        // Done with this define
+#if defined(MSVC_VANILLA)
+# pragma warning(pop)
+#endif
+  } /* --------------------------------------------------------------------- */
   namespace RapidJson                  // RAPIDJSON API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define RAPIDJSON_NAMESPACE            Lib::RapidJson
@@ -499,11 +515,12 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <rapidjson/error/en.h>        // Error handling
 #include <rapidjson/cursorstreamwrapper.h> // To get better error information
 #undef RAPIDJSON_HAS_CXX11_NOEXCEPT    // Done with this define
+#undef RAPIDJSON_HAS_CXX11_RVALUE_REFS // Done with this define
 #undef RAPIDJSON_ASSERT                // Done with this define
 #undef RAPIDJSON_NAMESPACE_END         // Done with this define
 #undef RAPIDJSON_NAMESPACE_BEGIN       // Done with this define
+#undef RAPIDJSON_NOEXCEPT              // Done with this define
 #undef RAPIDJSON_HAS_STDSTRING         // Done with this define
-#undef RAPIDJSON_NAMESPACE             // Done with this define
   } /* --------------------------------------------------------------------- */
   namespace OpenAL                     // OPENAL API FUNCTIONS
   { /* --------------------------------------------------------------------- */

@@ -398,9 +398,7 @@ class SysCon :                         // All members initially private
     { FormatHandleFinish([this](){ PopColour(); }, [](){}); }
   /* -- Write data upwards and wrapping (same as what Char::* does) -------- */
   int WriteLineWU(UtfDecoder &&udStr)
-  { // Check the string is valid
-    if(!udStr.UtfValid()) return 1;
-    // Indent
+  { // Indent
     const int iIndent = 1;
     // Simulated cursor position
     int iXp = 0, iYp = 1;
