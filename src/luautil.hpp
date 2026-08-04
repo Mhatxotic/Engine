@@ -407,7 +407,12 @@ static StdString LuaUtilStack(lua_State*const lST)
   // call to the root call so we need to use this list to reverse them after.
   // Also we (or even Lua) does know how many total calls there has been, we
   // can only enumerate them.
-  struct Debug { lua_State*const lS; lua_Debug ldD; };
+  struct Debug {
+    lua_State*const lS;
+    lua_Debug       ldD;
+    Debug(lua_State*const lNS, lua_Debug &&ldND) :
+      lS(lNS), ldD{StdMove(ldND)} {}
+  };
   using LuaStack = StdList<Debug>;
   using LuaStackRevIt = LuaStack::reverse_iterator;
   LuaStack lsStack;

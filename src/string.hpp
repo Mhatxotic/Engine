@@ -12,6 +12,15 @@ namespace IString {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
 using namespace IUtf::P;
+/* -- Generic struct for human-readable formatted numbers ------------------ */
+template<typename IntType>
+  requires StdIsIntegral<IntType>
+struct GroupedValueBase {
+  const IntType    itValue;
+  const char*const cpSuf;
+  GroupedValueBase(const IntType itNValue, const char*const cpNSuf) :
+    itValue(itNValue), cpSuf(cpNSuf) {}
+};
 /* -- Process string format/append value into output string stream --------- */
 template<typename AnyType>
   static void StrFormatValue(StdOStringStream &osS, AnyType &&atVal)
@@ -609,11 +618,11 @@ static OutType StrToReadableSuffix(const InType itValue,
   if(!StdAnyOf(scLookup.cbegin(), scLookup.cend(),
     [&otReturn, itValue, &cpSuffix](const auto &aItem)
   { // Calculate best measurement to show
-    if(itValue < aItem.vValue) return false;
+    if(itValue < aItem.itValue) return false;
     // Set suffix that was sent and return success
     *cpSuffix = aItem.cpSuf;
     otReturn = static_cast<OutType>(itValue) /
-      static_cast<OutType>(aItem.vValue);
+      static_cast<OutType>(aItem.itValue);
     return true;
   }))
   { // Not found any matches so precision will now be zero
@@ -635,12 +644,12 @@ template<typename OutType, typename InType, class SuffixClass>
 template<typename IntType>
   static double StrToBytesHelper(const IntType itBytes,
     const char**const cpSuffix, int &iPrecision)
-{ // A test to perform
-  struct ByteValue { const IntType vValue; const char*const cpSuf; };
+{ // Create grouped value type
+  using GroupedValue = GroupedValueBase<IntType>;
   // If input value is 64-bit?
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer
-    static const StdArray<const ByteValue,6> bvLookup{ {
+    static const StdArray<const GroupedValue,6> bvLookup{ {
       { 0x1000000000000000ULL, "EB" }, { 0x0004000000000000ULL, "PB" },
       { 0x0000010000000000ULL, "TB" }, { 0x0000000040000000ULL, "GB" },
       { 0x0000000000100000ULL, "MB" }, { 0x0000000000000400ULL, "KB" }
@@ -650,7 +659,7 @@ template<typename IntType>
   } // If input value is 32-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer
-    static const StdArray<const ByteValue,3> bvLookup{ {
+    static const StdArray<const GroupedValue,3> bvLookup{ {
       { 0x40000000UL, "GB" }, { 0x00100000UL, "MB" }, { 0x00000400UL, "KB" }
     } };
     return StrToReadableSuffix<double>(itBytes,
@@ -658,13 +667,13 @@ template<typename IntType>
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer
-    static const StdArray<const ByteValue,1> bvLookup{ { { 0x0400, "KB" } } };
+    static const StdArray<const GroupedValue,1> bvLookup{ { { 0x0400, "KB" } } };
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const StdArray<const ByteValue,0> bvLookup{ {} };
+    static const StdArray<const GroupedValue,0> bvLookup{ {} };
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   }
@@ -697,12 +706,12 @@ template<typename IntType>
   requires StdIsIntegral<IntType>
 static double StrToReadableBitsHelper(const IntType itBits,
   const char**const cpSuffix, int &iPrecision)
-{ // A test to perform
-  struct BitValue { const IntType vValue; const char*const cpSuf; };
+{ // Create grouped value type
+  using GroupedValue = GroupedValueBase<IntType>;
   // If input value is 64-bit?
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const BitValue,6> bvLookup{ {
+    static const StdArray<const GroupedValue,6> bvLookup{ {
       { 1000000000000000000ULL, "Eb" }, { 1000000000000000ULL, "Pb" },
       {       1000000000000ULL, "Tb" }, {       1000000000ULL, "Gb" },
       {             1000000ULL, "Mb" }, {             1000ULL, "Kb" },
@@ -713,7 +722,7 @@ static double StrToReadableBitsHelper(const IntType itBits,
   } // If input value is 32-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 32-bit integer.
-    static const StdArray<const BitValue,3> bvLookup{ {
+    static const StdArray<const GroupedValue,3> bvLookup{ {
       { 1000000000UL, "Gb" }, { 1000000UL, "Mb" }, { 1000UL, "Kb" },
     } };
     // Return result
@@ -722,14 +731,14 @@ static double StrToReadableBitsHelper(const IntType itBits,
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer.
-    static const StdArray<const BitValue,6> bvLookup{ { { 1000, "Kb" } } };
+    static const StdArray<const GroupedValue,6> bvLookup{ { { 1000, "Kb" } } };
     // Return result
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const StdArray<const BitValue,0> bvLookup{ {} };
+    static const StdArray<const GroupedValue,0> bvLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itBits,
       cpSuffix, iPrecision, bvLookup, "b");
@@ -761,12 +770,12 @@ template<typename IntType>
 template<typename IntType>
   static double StrToReadableHelper(const IntType itValue,
     const char**const cpSuffix, int &iPrecision)
-{ // A test to perform
-  struct Value { const IntType vValue; const char*const cpSuf; };
+{ // Create grouped value type
+  using GroupedValue = GroupedValueBase<IntType>;
   // If input value is 64-bit?
   if constexpr(sizeof(IntType) == sizeof(uint64_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const Value,4> vLookup{ {
+    static const StdArray<const GroupedValue,4> vLookup{ {
       { 1000000000000ULL, "T" }, { 1000000000ULL, "B" },
       { 1000000ULL,       "M" }, { 1000ULL,       "K" }
     } };
@@ -775,7 +784,7 @@ template<typename IntType>
   } // If input value is 32-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint32_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const Value,3> vLookup{ {
+    static const StdArray<const GroupedValue,3> vLookup{ {
       { 1000000000UL, "B" }, { 1000000UL, "M" }, { 1000UL, "K" }
     } };
     // Return result
@@ -783,13 +792,13 @@ template<typename IntType>
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 64-bit integer.
-    static const StdArray<const Value,1> vLookup{ { { 1000, "K" } } };
+    static const StdArray<const GroupedValue,1> vLookup{ { { 1000, "K" } } };
     // Return result
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   } // Else needed on MSVC
   else
   { // Input value is not 64, 32 nor 16 bit? Use a empty table
-    static const StdArray<const Value,0> vLookup{ {} };
+    static const StdArray<const GroupedValue,0> vLookup{ {} };
     // Show error
     return StrToReadableSuffix<double>(itValue, cpSuffix, iPrecision, vLookup);
   }

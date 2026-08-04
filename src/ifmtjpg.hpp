@@ -191,7 +191,7 @@ class CodecJPG :                       // JPEG codec object
   /* -- Default constructor ------------------------------------- */ protected:
   CodecJPG() :
     /* -- Initialisers ----------------------------------------------------- */
-    ImageLib{ IFMT_JPG, "Joint Photographic Experts Group", "JPG",
+    ImageLib{ IFMT_JPEG, "Joint Photographic Experts Group", "JPG",
       bind(&CodecJPG::Decode, this, _1, _2),
       bind(&CodecJPG::Encode, this, _1, _2, _3) }
     /* -- Set global pointer to static class ------------------------------- */

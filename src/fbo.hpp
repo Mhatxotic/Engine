@@ -281,16 +281,9 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   { // Bind Fbo and Fbo texture
     FboBindAndTexture();
     // Procedures to perform
-    struct Procedure { const GLenum gleWrap; const char cWrap; };
-    using Procedures = StdArray<const Procedure, 3>;
-    static const Procedures sProcedures{{
-      { GL_TEXTURE_WRAP_S, 'S' },
-      { GL_TEXTURE_WRAP_T, 'T' },
-      { GL_TEXTURE_WRAP_R, 'R' }
-    }};
-    // Set to repeat and disable filter
-    for(const Procedure &pItem : sProcedures)
-      cOgl->SetTexParam(pItem.gleWrap, gliWrapMode);
+    cOgl->SetTexParam(GL_TEXTURE_WRAP_S, gliWrapMode);
+    cOgl->SetTexParam(GL_TEXTURE_WRAP_T, gliWrapMode);
+    cOgl->SetTexParam(GL_TEXTURE_WRAP_R, gliWrapMode);
   }
   /* -- Set filtering by ID ------------------------------------------------ */
   OglFilterEnum FboGetFilter() const { return ofeFilterId; }
@@ -405,8 +398,8 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     // Generate texture name for Fbo and bind it.
     GL(cOgl->CreateTexture(&gluFbotex),
      "Failed to create texture for framebuffer!",
-     "Name", NameGet(), "Width",  glsiW,
-     "Height",     glsiH,        "Buffer", &gluFbotex);
+     "Name",   NameGet(), "Width",  glsiW,
+     "Height", glsiH,     "Buffer", &gluFbotex);
     // Bind Fbo texture
     GL(FboBindTexture(), "Failed to select Fbo texture as active!",
       "Name", NameGet(), "Texture", gluFbotex);
@@ -417,7 +410,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     GL(cOgl->UploadTexture(0, DimGetWidth(), DimGetHeight(), gliPixFormat,
       GL_BGR, nullptr),
         "Failed to allocate video memory for framebuffer texture!",
-        "Name",  NameGet(),    "Texture", gluFbotex,
+        "Name",        NameGet(),     "Texture", gluFbotex,
         "Width",       DimGetWidth(), "Height",  DimGetHeight(),
         "PixelFormat", gliPixFormat);
     // Attach 2D texture to this Fbo

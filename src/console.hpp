@@ -897,10 +897,15 @@ struct Console :                       // Members initially private
   template<class StrType>
     requires StdIsString<StrType>
   CmdMapIt RegisterCommand(const StrType &strName, const unsigned uMin,
-    const unsigned uMax, const ConCbFunc ccfFunc)
-  { // Insert trusted command into commands list
-    return cmMap.insert({ StdString{ strName },
-      { StdString{ strName }, uMin, uMax, CFL_BASIC, ccfFunc } }).first;
+    const unsigned uMax, const ConCbFunc &ccfFunc)
+  { // Insert trusted command into commands list. Have to convert to string if
+    // it is a string_view.
+    if constexpr(StdIsSame<StrType, StdStringView>)
+      return cmMap.insert({ StdString{ strName },
+        { StdString{ strName }, uMin, uMax, CFL_BASIC, ccfFunc } }).first;
+    // If it is a normal string then insert as is
+    else return cmMap.insert({ strName,
+      { strName, uMin, uMax, CFL_BASIC, ccfFunc } }).first;
   }
   /* -- Unregister console command ----------------------------------------- */
   void UnregisterCommand(const CmdMapIt &cmiIt) { cmMap.erase(cmiIt); }
@@ -998,11 +1003,11 @@ struct Console :                       // Members initially private
     // Iterate each item and register command if required core flags match
     for(const ConLibStatic &clCmd : ccslInt)
       if(cSystem->SysIsCoreFlagsHave(clCmd.cfcRequired))
-        RegisterCommand(clCmd.strvName, clCmd.uMinimum,
+        RegisterCommand(clCmd.strName, clCmd.uMinimum,
           clCmd.uMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command
       else cLog->LogDebugExSafe(
-        "Console ignoring registration of command '$'.", clCmd.strvName);
+        "Console ignoring registration of command '$'.", clCmd.strName);
     // Say how many commands we registered
     cLog->LogInfoExSafe("Console initialised with $ of $ built-in commands.",
       cmMap.size(), ccslInt.size());

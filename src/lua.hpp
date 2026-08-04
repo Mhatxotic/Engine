@@ -20,7 +20,7 @@ using namespace ICVarDef::P;           using namespace ICVar::P;
 using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFlags::P;
 using namespace IFrame::P;             using namespace ILog::P;
-using namespace ILuaDef;               using namespace ILuaCode::P;
+using namespace ILuaCode::P;           using namespace ILuaDef::P;
 using namespace ILuaFunc::P;           using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
 using namespace IStd::P;               using namespace IString::P;

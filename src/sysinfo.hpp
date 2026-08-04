@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace ISysInfo {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;
+using namespace ICommon::P;            using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == System common ======================================================== **
@@ -22,16 +22,24 @@ namespace P {                          // Start of public module namespace
 class SysInfo                          // Common system structs and funcs
 { /* -- Typedefs ------------------------------------------------ */ protected:
   const struct ExeData                 // Executable data
-  { /* --------------------------------------------------------------------- */
+  { /* -- Public variables ------------------------------------------------- */
     const unsigned ulHeaderSum,        // Executable checksum in header
                    ulCheckSum;         // Executable actual checksum
     const bool     bExeIsModified,     // True if executable is modified
                    bExeIsBundled;      // True if executable is bundled
+    /* -- Initialiser constructor ------------------------------------------ */
+    ExeData(const unsigned ulNHeaderSum, const unsigned ulNCheckSum,
+      const bool bNExeIsModified, const bool bNExeIsBundled) :
+      /* -- Initialisers --------------------------------------------------- */
+      ulHeaderSum(ulNHeaderSum),       ulCheckSum(ulNCheckSum),
+      bExeIsModified(bNExeIsModified), bExeIsBundled(bNExeIsBundled)
+      /* -- No code -------------------------------------------------------- */
+      {}
   } /* --------------------------------------------------------------------- */
   exeData;                             // Physical executable data
   /* ----------------------------------------------------------------------- */
   const struct OSData                  // Operating system data
-  { /* --------------------------------------------------------------------- */
+  { /* -- Public variables ------------------------------------------------- */
     const StdString strName,           // Os name (e.g. Windows)
                     strNameEx;         // Os host (e.g. Wine)
     const unsigned  uMajor,            // Os major version
@@ -41,17 +49,48 @@ class SysInfo                          // Common system structs and funcs
     const StdString strLocale;         // Os locale
     const bool      bIsAdmin,          // Os user has elevated privileges
                     bIsAdminDef;       // Os uses admin accounts by default
+    /* -- Initialiser constructor ------------------------------------------ */
+    OSData(StdString &&strNName, StdString &&strNNameEx,
+      const unsigned uNMajor, const unsigned uNMinor, const unsigned uNBuild,
+      const unsigned uNBits, StdString &&strNLocale, const bool bNIsAdmin,
+      const bool bNIsAdminDef) :
+      /* -- Initialisers --------------------------------------------------- */
+      strName{StdMove(strNName)},      strNameEx{StdMove(strNNameEx)},
+      uMajor(uNMajor),                 uMinor(uNMinor),
+      uBuild(uNBuild),                 uBits(uNBits),
+      strLocale{StdMove(strNLocale)},  bIsAdmin(bNIsAdmin),
+      bIsAdminDef(bNIsAdminDef)
+      /* -- No code -------------------------------------------------------- */
+      {}
   } /* --------------------------------------------------------------------- */
   osData;                              // Operating system data
   /* ----------------------------------------------------------------------- */
   const struct CPUData                 // Processor data
-  { /* --------------------------------------------------------------------- */
+  { /* -- Public variables ------------------------------------------------- */
     const size_t    stCpuCount;        // Cpu count
     const unsigned  ulSpeed,           // ~MHz
                     ulFamily,          // Family
                     ulModel,           // Model
                     ulStepping;        // Stepping
     const StdString sProcessorName;    // CPU id or vendor
+    /* -- Initialiser constructor (detection success) ---------------------- */
+    CPUData(const unsigned ulNSpeed, const unsigned ulNFamily,
+      const unsigned ulNModel, const unsigned ulNStepping,
+      StdString &&sNProcessorName) :
+      /* -- Initialisers --------------------------------------------------- */
+      stCpuCount(StdThreadMax()),      ulSpeed(ulNSpeed),
+      ulFamily(ulNFamily),             ulModel(ulNModel),
+      ulStepping(ulNStepping),         sProcessorName{StdMove(sNProcessorName)}
+      /* -- No code -------------------------------------------------------- */
+      {}
+    /* -- Default constructor (detection failed) --------------------------- */
+    CPUData() :
+      /* -- Initialisers --------------------------------------------------- */
+      stCpuCount(StdThreadMax()),      ulSpeed(0),
+      ulFamily(0),                     ulModel(0),
+      ulStepping(0),                   sProcessorName{cCommon->CommonUnspec()}
+      /* -- No code -------------------------------------------------------- */
+      {}
   } /* --------------------------------------------------------------------- */
   cpuData;                             // System processor data
   /* ----------------------------------------------------------------------- */
@@ -81,13 +120,10 @@ class SysInfo                          // Common system structs and funcs
     /* -- Default constructor ---------------------------------------------- */
     MemData() :
       /* -- Initialisers --------------------------------------------------- */
-      ullMTotal(0),                    // Zero total memory
-      ullMFree(0),                     // Zero free memory
-      ullMUsed(0),                     // Zero used memory
-      dMLoad(0.0),                     // Zero memory usage percentage
-      stMFree(0),                      // Zero 32-bit free memory
-      stMProcUse(0),                   // Zero process usage
-      stMProcPeak(0)                   // Zero process peak usage
+      ullMTotal(0),                    ullMFree(0),
+      ullMUsed(0),                     dMLoad(0.0),
+      stMFree(0),                      stMProcUse(0),
+      stMProcPeak(0)
       /* -- No code -------------------------------------------------------- */
       {}
   } /* --------------------------------------------------------------------- */

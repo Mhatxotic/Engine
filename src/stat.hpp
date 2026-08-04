@@ -27,10 +27,17 @@ class Statistic
   using JCCallback = StdIOSBase &(*)(StdIOSBase&);
   /* ----------------------------------------------------------------------- */
   struct Head                          // Column data
-  { /* --------------------------------------------------------------------- */
-    const StdString strName;           // Column name
-    JCCallback     jccFunc;            // Justification callback function
-    int            iMaxLen;            // Maximum header length
+  { /* -- Public variables ------------------------------------------------- */
+    const StdString  strName;          // Column name
+    const JCCallback jccFunc;          // Justification callback function
+    int              iMaxLen;          // Maximum header length
+    /* -- Initialiser constructor ------------------------------------------ */
+    Head(StdString &&strNName, JCCallback &&jccNFunc, const int iNMaxLen) :
+      /* -- Initialisers --------------------------------------------------- */
+      strName{StdMove(strNName)},      jccFunc{StdMove(jccNFunc)},
+      iMaxLen(iNMaxLen)
+      /* -- No code -------------------------------------------------------- */
+      {}
   };/* --------------------------------------------------------------------- */
   using HeadDeque = StdDeque<Head>;    // Column header data list
   /* -- Private variables -------------------------------------------------- */

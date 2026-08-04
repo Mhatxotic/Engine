@@ -345,16 +345,22 @@ class SysCore :
                     strStepping{ StdMove(psvParser.ParserGet("stepping")) };
           // Fail-safe any empty strings
           if(strSpeed.empty()) strSpeed = cCommon->CommonZero();
+          else StrCompactRef(strCpuId);
           if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
+          else StrCompactRef(strVendor);
           if(strCpuId.empty()) strCpuId = strVendor;
+          else StrCompactRef(strCpuId);
           if(strFamily.empty()) strFamily = cCommon->CommonZero();
+          else StrCompactRef(strFamily);
           if(strModel.empty()) strModel = cCommon->CommonZero();
+          else StrCompactRef(strModel);
           if(strStepping.empty()) strStepping = cCommon->CommonZero();
+          else StrCompactRef(strStepping);
           // Make processor id so it is consistent with the other platforms
           // Return strings
-          return { StdThreadMax(), StrToNum<unsigned>(strSpeed),
-            StrToNum<unsigned>(strFamily), StrToNum<unsigned>(strModel),
-            StrToNum<unsigned>(strStepping), StdMove(strCpuId) };
+          return { StrToNum<unsigned>(strSpeed), StrToNum<unsigned>(strFamily),
+            StrToNum<unsigned>(strModel), StrToNum<unsigned>(strStepping),
+            StdMove(strCpuId) };
         } // Failed to parse cpu variables
         else cLog->LogWarningSafe("Could not parse cpu information file!");
       } // Failed to read cpu info failed
@@ -364,7 +370,7 @@ class SysCore :
     else cLog->LogWarningExSafe("Could not open cpu information file: $!",
       StrFromErrNo());
     // Return default data we could not read
-    return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
+    return {};
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning() const { return false; }

@@ -489,7 +489,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #if defined(MSVC_VANILLA)
 # pragma warning(push)
 # pragma warning(disable:4244)         // Possible loss of data on narrowing
-# pragma warning(disable:5344)         // Potentially uninitialized local
+# pragma warning(disable:4701)         // Potentially uninitialized local
 #endif
 #define SIMPLEWEBP_DISABLE_STDIO       // Don't need STDIO functions
 #define SIMPLEWEBP_IMPLEMENTATION      // Define body functions

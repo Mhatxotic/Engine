@@ -658,8 +658,7 @@ class SysCore :
     // Check processor name is specified
     if(strProcessorName.empty()) strProcessorName = strVendorId;
     // Return default data we could not read
-    return { StdThreadMax(), uSpeed, uFamily, uModel, uStepping,
-      StdMove(strProcessorName) };
+    return { uSpeed, uFamily, uModel, uStepping, StdMove(strProcessorName) };
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning() const

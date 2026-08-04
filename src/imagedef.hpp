@@ -17,7 +17,7 @@ namespace P {                          // Start of public module namespace
 enum ImageFormat : size_t              // Available image codecs
 { /* ----------------------------------------------------------------------- */
   IFMT_PNG,                            // [0] PNG  (IImageFormat::CodecPNG)
-  IFMT_JPG,                            // [1] JPG  (IImageFormat::CodecJPG)
+  IFMT_JPEG,                           // [1] JPEG (IImageFormat::CodecJPEG)
   IFMT_GIF,                            // [2] GIF  (IImageFormat::CodecGIF)
   IFMT_DDS,                            // [3] DDS  (IImageFormat::CodecDDS)
   IFMT_WEBP,                           // [4] WEBP (IImageFormat::CodecWEBP)
@@ -53,12 +53,14 @@ BUILD_FLAGS(Image,                     // Shared image flags
   IL_REVERSE               {Flag(15)}, // Force reverse the image?
   /* -- Force load formats (Only used in 'Image' class) -------------------- */
   IL_FCE_PNG               {Flag(24)}, // Force load as PNG?
-  IL_FCE_JPG               {Flag(25)}, // Force load as JPEG?
+  IL_FCE_JPEG              {Flag(25)}, // Force load as JPEG?
   IL_FCE_GIF               {Flag(26)}, // Force load as GIF?
   IL_FCE_DDS               {Flag(27)}, // Force load as DDS?
+  IL_FCE_WEBP              {Flag(28)}, // Force load as WEBP?
   /* -- Image loader public mask bits -------------------------------------- */
   IL_MASK{ IL_TOGPU|IL_TO24BPP|IL_TO32BPP|IL_TOBGR|IL_TORGB|IL_TOBINARY|
-    IL_REVERSE|IL_ATLAS|IL_FCE_JPG|IL_FCE_PNG|IL_FCE_GIF|IL_FCE_DDS },
+    IL_REVERSE|IL_ATLAS|IL_FCE_JPEG|IL_FCE_PNG|IL_FCE_GIF|IL_FCE_DDS|
+    IL_FCE_WEBP },
   /* -- Active flags (Only used in 'Image' class) ----------------------- */
   IA_TOGPU                 {Flag(32)}, // Image converted to load in GL?
   IA_TO24BPP               {Flag(33)}, // Converted image to 24bpp?

@@ -14,28 +14,65 @@ using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Universally unique identifier helper ================================= */
-struct UuId                            // Members initially public
-{ /* -- Typedefs ----------------------------------------------------------- */
+class UuId                             // Members initially public
+{ /* -- Private typedefs --------------------------------------------------- */
+  typedef StdArray<uint8_t, 6>  Sextuple;   // 6 bytes
+  typedef StdArray<uint8_t, 16> Sexdecuple; // 16 bytes
+  typedef StdArray<uint64_t, 2> Double;     // 2 quad words (16 bytes)
+  /* -- Typedefs --------------------------------------------------- */ public:
   const union Struct                   // UUIDv4 structure
   { /* -- It's safe to use arrays in unions since C++11 -------------------- */
     struct Parts                       // Access to parts
-    { /* ------------------------------------------------------------------- */
+    { /* -- Public variables ----------------------------------------------- */
       uint32_t     dwTimeLow;          // Low 32-bits of the current time
       uint16_t     wTimeMid,           // Middle 16-bits of the current time
                    wTimeHiAndVer;      // 4-bit "version" + 12-bits of the time
       uint8_t      ucClkSeqHiRes,      // 1-3 bit "variant" + 13-15 bit clock
                    ucClkSeqLow;        // As above
-      StdArray<uint8_t, 6> acNode;     // Node id (48-bit)
+      Sextuple     sxtNode;            // Node id (48-bit)
+      /* -- Default constructor -------------------------------------------- */
+      Parts() :
+        /* -- Initialisers ------------------------------------------------- */
+        dwTimeLow(0),                  wTimeMid(0),
+        wTimeHiAndVer(0),              ucClkSeqHiRes(0),
+        ucClkSeqLow(0),                sxtNode{ 0, 0, 0, 0, 0, 0 }
+        /* -- No code ------------------------------------------------------ */
+        {}
+      /* -- Initialiser constructor ---------------------------------------- */
+      Parts(const uint32_t dwNTimeLow, const uint16_t wNTimeMid,
+        const uint16_t wNTimeHiAndVer, const uint8_t ucNClkSeqHiRes,
+        const uint8_t ucNClkSeqLow, const Sextuple &sxtNNode) :
+        /* -- Initialisers ------------------------------------------------- */
+        dwTimeLow(dwNTimeLow),         wTimeMid(wNTimeMid),
+        wTimeHiAndVer(wNTimeHiAndVer), ucClkSeqHiRes(ucNClkSeqHiRes),
+        ucClkSeqLow(ucNClkSeqLow),     sxtNode{ sxtNNode }
+        /* -- No code ------------------------------------------------------ */
+        {}
     } p; /* ---------------------------------------------------------------- */
-    StdArray<uint8_t, 16>  abRandom;   // As sixteen 8-bit integers (128-bit)
-    StdArray<uint64_t, 2>  aqwRandom;  // As two 64-bit integers    (128-bit)
+    Sexdecuple     sdcRandom;        // As sixteen 8-bit integers (128-bit)
+    Double         dbRandom;         // As two 64-bit integers    (128-bit)
+    /* -- Default constructor ---------------------------------------------- */
+    Struct() :
+      /* -- Initialisers --------------------------------------------------- */
+      p{}                            // Run default constructor (required)
+      /* -- No code -------------------------------------------------------- */
+      {}
+    /* -- Initialiser constructor ------------------------------------------ */
+    Struct(const uint32_t dwNTimeLow, const uint16_t wNTimeMid,
+      const uint16_t wNTimeHiAndVer, const uint8_t ucNClkSeqHiRes,
+      const uint8_t ucNClkSeqLow, const Sextuple &sxtNNode) :
+      /* -- Initialisers --------------------------------------------------- */
+      p{ dwNTimeLow, wNTimeMid, wNTimeHiAndVer, ucNClkSeqHiRes, ucNClkSeqLow,
+         sxtNNode }                    // Initialise union
+      /* -- No code -------------------------------------------------------- */
+      {}
     /* --------------------------------------------------------------------- */
   } d;                                 // Member to hold uuid data
   /* -- Initialise randomised UUID -------------------------------- */ private:
   static Struct UuIdRandom()
   { // Initialise a random struct
     Struct uuidData;
-    CryptRandomPtr(&uuidData.abRandom, sizeof(uuidData.abRandom));
+    CryptRandomPtr(&uuidData.sdcRandom, sizeof(uuidData.sdcRandom));
     // https://tools.ietf.org/html/rfc4122#section-4.2
     uuidData.p.ucClkSeqHiRes =
       static_cast<uint8_t>((uuidData.p.ucClkSeqHiRes & 0x3F) | 0x80);
@@ -48,8 +85,8 @@ struct UuId                            // Members initially public
   static Struct UuIdReadTwoQuads(const uint64_t ull1, const uint64_t ull2)
   { // Structure to return
     Struct uuidData;
-    uuidData.aqwRandom[0] = ull1;
-    uuidData.aqwRandom[1] = ull2;
+    uuidData.dbRandom[0] = ull1;
+    uuidData.dbRandom[1] = ull2;
     return uuidData;
   }
   /* -- Initialise UUID from a container (thick) --------------------------- */
@@ -59,13 +96,13 @@ struct UuId                            // Members initially public
        aData[8]  != '-' ||             // 00000000{-}0000-0000-000000000000
        aData[13] != '-' ||             // 00000000-0000{-}0000-000000000000
        aData[18] != '-') [[unlikely]]  // 00000000-0000-0000{-}000000000000
-      return { { 0, 0, 0, 0, 0, {{ 0, 0, 0, 0, 0, 0 }} } };
+      return { 0, 0, 0, 0, 0, {{ 0, 0, 0, 0, 0, 0 }} };
     // Helper function to modify each index with bits
     auto HDC = [&aData](const size_t stIndex, const int iBits)->int {
       return CryptHex2Char<0>(static_cast<unsigned char>(aData[stIndex])) *
         iBits; };
     // Return parsed values
-    return { {
+    return {
       // Helper macro
       static_cast<uint32_t>(           // d.p.dwTimeLow
         HDC(0, 0x10000000) | HDC(1, 0x1000000) | HDC(2, 0x100000) |
@@ -77,7 +114,7 @@ struct UuId                            // Members initially public
         HDC(14, 0x1000) | HDC(15, 0x100) | HDC(16, 0x10) | HDC(17, 0x1)),
       static_cast<uint8_t>(HDC(19, 0x10) | HDC(20, 0x1)), // d.p.ucClkSeqHiRes
       static_cast<uint8_t>(HDC(21, 0x10) | HDC(22, 0x1)), // d.p.ucClkSeqLow
-      {{ // d.p.acNode
+      {{ // d.p.sxtNode
         static_cast<uint8_t>(HDC(24, 0x10) | HDC(25, 0x1)), // [0]
         static_cast<uint8_t>(HDC(26, 0x10) | HDC(27, 0x1)), // [1]
         static_cast<uint8_t>(HDC(28, 0x10) | HDC(29, 0x1)), // [2]
@@ -85,14 +122,13 @@ struct UuId                            // Members initially public
         static_cast<uint8_t>(HDC(32, 0x10) | HDC(33, 0x1)), // [4]
         static_cast<uint8_t>(HDC(34, 0x10) | HDC(35, 0x1))  // [5]
       }} // Done with helper macro
-    } };
+    };
   }
   /* -- Initialise UUID from C-string (thin) ------------------------------- */
-  template<class StrType>
-    constexpr static Struct UuIdReadString(StrType &&strStr)
-  { return StdNormaliseString(StdForward<StrType>(strStr),
-      [](auto &&aStr)->Struct{
-        return UuIdReadStringStr(StdForward<decltype(aStr)>(aStr)); }); }
+  template<class StrType>static Struct UuIdReadString(StrType &&strStr)
+    { return StdNormaliseString(StdForward<StrType>(strStr),
+        [](auto &&aStr)->Struct{
+          return UuIdReadStringStr(StdForward<decltype(aStr)>(aStr)); }); }
   /* -- Convert UUID to string ------------------------------------- */ public:
   StdString UuIdToString() const
   { // Return result
@@ -102,12 +138,12 @@ struct UuId                            // Members initially public
       StdIOSSetWidth(4), d.p.wTimeHiAndVer,                     '-', // %04x-
       StdIOSSetWidth(2), static_cast<unsigned>(d.p.ucClkSeqHiRes),   // %02x
       StdIOSSetWidth(2), static_cast<unsigned>(d.p.ucClkSeqLow),'-', // %02x-
-      StdIOSSetWidth(2), static_cast<unsigned>(d.p.acNode[0]),       // %02x
-      StdIOSSetWidth(2), static_cast<unsigned>(d.p.acNode[1]),       // %02x
-      StdIOSSetWidth(2), static_cast<unsigned>(d.p.acNode[2]),       // %02x
-      StdIOSSetWidth(2), static_cast<unsigned>(d.p.acNode[3]),       // %02x
-      StdIOSSetWidth(2), static_cast<unsigned>(d.p.acNode[4]),       // %02x
-      StdIOSSetWidth(2), static_cast<unsigned>(d.p.acNode[5]));      // %02x
+      StdIOSSetWidth(2), static_cast<unsigned>(d.p.sxtNode[0]),      // %02x
+      StdIOSSetWidth(2), static_cast<unsigned>(d.p.sxtNode[1]),      // %02x
+      StdIOSSetWidth(2), static_cast<unsigned>(d.p.sxtNode[2]),      // %02x
+      StdIOSSetWidth(2), static_cast<unsigned>(d.p.sxtNode[3]),      // %02x
+      StdIOSSetWidth(2), static_cast<unsigned>(d.p.sxtNode[4]),      // %02x
+      StdIOSSetWidth(2), static_cast<unsigned>(d.p.sxtNode[5]));     // %02x
   }
   /* -- Constructor to init from string ------------------------------------ */
   explicit UuId(auto &&aStr) :

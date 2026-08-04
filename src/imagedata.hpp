@@ -98,8 +98,9 @@ class ImageData :                      // Members initially private
   FH(Palette,          IF_PALETTE)     // Is/IsNot/Set/ClearPalette
   FH(LoadAsDDS,        IL_FCE_DDS)     // Is/IsNot/Set/ClearLoadAsDDS
   FH(LoadAsGIF,        IL_FCE_GIF)     // Is/IsNot/Set/ClearLoadAsGIF
-  FH(LoadAsJPG,        IL_FCE_JPG)     // Is/IsNot/Set/ClearLoadAsJPG
+  FH(LoadAsJPEG,       IL_FCE_JPEG)    // Is/IsNot/Set/ClearLoadAsJPEG
   FH(LoadAsPNG,        IL_FCE_PNG)     // Is/IsNot/Set/ClearLoadAsPNG
+  FH(LoadAsWEBP,       IL_FCE_WEBP)    // Is/IsNot/Set/ClearLoadAsWEBP
   FH(ConvertAtlas,     IL_ATLAS)       // Is/IsNot/Set/ClearConvertAtlas
   FH(ConvertReverse,   IL_REVERSE)     // Is/IsNot/Set/ClearConvertReverse
   FH(ConvertRGB,       IL_TO24BPP)     // Is/IsNot/Set/ClearConvertRGB

@@ -72,7 +72,16 @@ static CVarReturn LuaCodeCheckVersion(const StdString &strVal,
 /* -- Callback for lua_dump ------------------------------------------------ */
 namespace LuaCodeDumpHelper
 { /* -- Memory blocks structure for dump function -------------------------- */
-  struct MemData { MemoryList mlBlocks; size_t stTotal; };
+  struct MemData
+  { /* -- Public variables ------------------------------------------------- */
+    MemoryList     mlBlocks;           // List of memory blocks
+    size_t         stTotal;            // Size of all memory blocks
+    /* -- Initialiser constructor ------------------------------------------ */
+    MemData(MemoryList &&mlNBlocks, const size_t stNTotal) :
+      mlBlocks{StdMove(mlNBlocks)}, stTotal(stNTotal) {}
+    /* -- Default constructor ---------------------------------------------- */
+    MemData() : stTotal(0) {}
+  };/* --------------------------------------------------------------------- */
   /* -- The callback function ---------------------------------------------- */
   static int PopulateMemoryListCallback(lua_State*const,
     const void*const vpAddr, const size_t stSize, void*const vpUser)
@@ -89,7 +98,7 @@ namespace LuaCodeDumpHelper
 static Memory LuaCodeCompileFunction(lua_State*const lS, const bool bDebug)
 { // Include utility namespace
   using namespace LuaCodeDumpHelper;
-  MemData mdData{ {}, 0 };
+  MemData mdData;
   // Dump the code to binary and if error occured?
   if(lua_dump(lS, PopulateMemoryListCallback, &mdData, bDebug ? 0 : 1))
     XC("Failure dumping function!");

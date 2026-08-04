@@ -59,18 +59,33 @@ class SysReg                           // Members initially private
     if(NotOpened()) return {};
     // Initialise size and type
     DWORD dwSize = 0, dwType = 0;
-    // Query value into string
+    // Query length of registry value
     const StdWideString wstrV{ UTFtoS16(strV) };
     if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
-      reinterpret_cast<LPBYTE>(&dwType), &dwSize) != ERROR_MORE_DATA ||
-        dwType != REG_SZ || !dwSize) return {};
-    // Create a pre-allocated stringAllocate buffer and query value again
-    StdResized<StdWideString> wstrBuffer{ dwSize / sizeof(wchar_t) };
-    if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
-      reinterpret_cast<LPBYTE>(wstrBuffer.data()), &dwSize) != ERROR_SUCCESS)
-        return {};
-    // Return as UTF string.
-    return WS16toUTF(wstrBuffer);
+      reinterpret_cast<LPBYTE>(&dwType), &dwSize) == ERROR_MORE_DATA)
+    { // Must be a string!
+      if(dwType == REG_SZ)
+      { // Compare size (size includes NULL terminator)
+        switch(dwSize)
+        { // Function failure (no null terminator?, should be impossible)
+          case 0: [[fallthrough]];
+          // Just a null terminator
+          case 1: break;
+          // Anything else?
+          default:
+          { // Grab the string value and return a UTF8 string version
+            StdResized<StdWideString> wstrBuffer{
+              (dwSize / sizeof(wchar_t)) - 1 };
+            if(RegQueryValueEx(GetHandle(), wstrV.data(), nullptr, &dwType,
+                 reinterpret_cast<LPBYTE>(wstrBuffer.data()), &dwSize)
+               == ERROR_SUCCESS) return WS16toUTF(wstrBuffer);
+            // Failed
+            break;
+          } // Size comparison
+        } // Invalid size
+      } // Invalid type
+    } // Query failed or something else so return empty string
+    return {};
   }
   /* -- Query value -------------------------------------------------------- */
   LSTATUS Query(const StdString &strV, void **vpD, const DWORD dwS) const

@@ -937,21 +937,21 @@ for(const Image*const iPtr : *cImages)
 { // Get reference to class and write its data to the table
   const Image &iRef = *iPtr;
   sTable.DataN(stIndex++).DataN(iRef.Serial()).DataE({
-    { iRef.IsDynamic(),          'Y' }, { iRef.IsNotDynamic(),       'y' },
-    { iRef.IsPurposeFont(),      'F' }, { iRef.IsPurposeImage(),     'I' },
-    { iRef.IsPurposeTexture(),   'T' }, { iRef.IsLoadAsDDS(),        'D' },
-    { iRef.IsLoadAsGIF(),        'G' }, { iRef.IsLoadAsJPG(),        'J' },
-    { iRef.IsLoadAsPNG(),        'P' }, { iRef.IsConvertAtlas(),     'A' },
-    { iRef.IsActiveAtlas(),      'a' }, { iRef.IsConvertReverse(),   'E' },
-    { iRef.IsActiveReverse(),    'e' }, { iRef.IsConvertRGB(),       'H' },
-    { iRef.IsActiveRGB(),        'h' }, { iRef.IsConvertRGBA(),      'D' },
-    { iRef.IsActiveRGBA(),       'd' }, { iRef.IsConvertBGROrder(),  'W' },
-    { iRef.IsActiveBGROrder(),   'w' }, { iRef.IsConvertBinary(),    'N' },
-    { iRef.IsActiveBinary(),     'n' }, { iRef.IsConvertGPUCompat(), 'O' },
-    { iRef.IsActiveGPUCompat(),  'o' }, { iRef.IsConvertRGBOrder(),  'B' },
-    { iRef.IsActiveRGBOrder(),   'b' }, { iRef.IsCompressed(),       'C' },
-    { iRef.IsPalette(),          '8' }, { iRef.IsMipmaps(),          'M' },
-    { iRef.IsReversed(),         'R' }, { iRef.LockIsSet(),          'L' },
+    { iRef.LockIsSet(),         'L' }, { iRef.IsDynamic(),         'D' },
+    { iRef.IsPurposeFont(),     'F' }, { iRef.IsPurposeImage(),    'I' },
+    { iRef.IsPurposeTexture(),  'T' }, { iRef.IsLoadAsPNG(),       '0' },
+    { iRef.IsLoadAsJPEG(),      '1' }, { iRef.IsLoadAsGIF(),       '2' },
+    { iRef.IsLoadAsDDS(),       '3' }, { iRef.IsLoadAsWEBP(),      '4' },
+    { iRef.IsConvertAtlas(),    'a' }, { iRef.IsActiveAtlas(),     'A' },
+    { iRef.IsConvertReverse(),  's' }, { iRef.IsActiveReverse(),   'S' },
+    { iRef.IsConvertRGB(),      'u' }, { iRef.IsActiveRGB(),       'U' },
+    { iRef.IsConvertRGBA(),     'x' }, { iRef.IsActiveRGBA(),      'X' },
+    { iRef.IsConvertBGROrder(), 'y' }, { iRef.IsActiveBGROrder(),  'Y' },
+    { iRef.IsConvertBinary(),   'b' }, { iRef.IsActiveBinary(),    'B' },
+    { iRef.IsConvertRGBOrder(), 'z' }, { iRef.IsActiveRGBOrder(),  'Z' },
+    { iRef.IsConvertGPUCompat(),'g' }, { iRef.IsActiveGPUCompat(), 'G' },
+    { iRef.IsCompressed(),      'C' }, { iRef.IsPalette(),         'P' },
+    { iRef.IsMipmaps(),         'M' }, { iRef.IsReversed(),        'R' },
   }).DataN(iRef.DimGetWidth()).DataN(iRef.DimGetHeight())
     .DataN(iRef.GetBitsPerPixel()).DataN(iRef.GetBytesPerPixel())
     .DataN(iRef.GetSlotCount()).DataN(iRef.GetAlloc())

@@ -264,8 +264,8 @@ LLRSKTBEGIN(FlagsPre)                  // Beginning of image loader flags codes
   LLRSKTITEM(IL_,NONE),    LLRSKTITEM(IL_,TOGPU),    LLRSKTITEM(IL_,TO24BPP),
   LLRSKTITEM(IL_,TO32BPP), LLRSKTITEM(IL_,TOBGR),    LLRSKTITEM(IL_,TORGB),
   LLRSKTITEM(IL_,REVERSE), LLRSKTITEM(IL_,TOBINARY), LLRSKTITEM(IL_,ATLAS),
-  LLRSKTITEM(IL_,FCE_DDS), LLRSKTITEM(IL_,FCE_GIF),  LLRSKTITEM(IL_,FCE_JPG),
-  LLRSKTITEM(IL_,FCE_PNG),
+  LLRSKTITEM(IL_,FCE_DDS), LLRSKTITEM(IL_,FCE_GIF),  LLRSKTITEM(IL_,FCE_JPEG),
+  LLRSKTITEM(IL_,FCE_PNG), LLRSKTITEM(IL_,FCE_WEBP),
 LLRSKTEND                              // End of image loader flags codes
 /* ========================================================================= */
 // @ Image.FlagsPost

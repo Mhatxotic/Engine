@@ -760,9 +760,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // force detection doesn't really matter as much, but overall, still
     // needed if speed is absolutely neccesary.
     if(IsLoadAsPNG()) ImageLoad(IFMT_PNG, fmData, *this);
-    else if(IsLoadAsJPG()) ImageLoad(IFMT_JPG, fmData, *this);
+    else if(IsLoadAsJPEG()) ImageLoad(IFMT_JPEG, fmData, *this);
     else if(IsLoadAsGIF()) ImageLoad(IFMT_GIF, fmData, *this);
     else if(IsLoadAsDDS()) ImageLoad(IFMT_DDS, fmData, *this);
+    else if(IsLoadAsWEBP()) ImageLoad(IFMT_WEBP, fmData, *this);
     // Auto detection of image
     else ImageLoad(fmData, *this);
     // Apply filters if image has no special circumstances

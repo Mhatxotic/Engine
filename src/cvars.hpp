@@ -57,6 +57,9 @@ struct CVars :                         // Start of vars class
   { /* --------------------------------------------------------------------- */
     CVarMap       &cvmMap;             // Reference to variable list
     const StdStringView strName;       // Name of list
+    /* --------------------------------------------------------------------- */
+    CVarMapNameStruct(CVarMap &cvmNMap, const StdStringView &strNName) :
+      cvmMap(cvmNMap), strName{strNName} {}
   };/* --------------------------------------------------------------------- */
   using CVarMapNameStructArray = StdArray<const CVarMapNameStruct, 2>;
   using CVarMapNameStructArrayIt = CVarMapNameStructArray::iterator;

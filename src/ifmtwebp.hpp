@@ -36,21 +36,23 @@ class CodecWEBP :                      // WEBP codec object
     simplewebp_allocator swaFuncs{ WebPAlloc, WebPFree, this };
     // Initialize input handle from the memory buffer
     simplewebp *swpData;
-    if(const simplewebp_error switErr = simplewebp_load_from_memory(
+    if(const simplewebp_error switErrLoad = simplewebp_load_from_memory(
          fmData.FileMapReadPtrFrom(0), fmData.MemSize(), &swaFuncs,
-           &swpData))
-      XC("Failed to load WebP from memory!", "Code", switErr);
+         &swpData))
+      XC("Failed to load WebP from memory!", "Code", switErrLoad);
     // So we can clean up
     try
     { // Get and set dimensions
       size_t stWidth = 0, stHeight = 0;
       simplewebp_get_dimensions(swpData, &stWidth, &stHeight);
-      idData.DimSet(stWidth, stHeight);
+      using Lib::OS::GlFW::GLuint;
+      idData.DimSet(static_cast<GLuint>(stWidth),
+        static_cast<GLuint>(stHeight));
       // Decode the stream and clear it after
       Memory mPixels{ stWidth * stHeight * BY_RGBA };
-      if(const simplewebp_error switErr2 =
+      if(const simplewebp_error switErrDecode =
            simplewebp_decode(swpData, mPixels.MemPtr(), nullptr))
-        XC("Failed to decode WebP image!", "Code", switErr2);
+        XC("Failed to decode WebP image!", "Code", switErrDecode);
       simplewebp_unload(swpData);
       // Success, add the image data to list and set RGBA and reversed
       idData.AddSlot(mPixels);

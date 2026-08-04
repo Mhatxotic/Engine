@@ -326,20 +326,28 @@ class SysCore :
   { return static_cast<size_t>(GetLocaleInfo(lcidLocale, lcType,
       StdToNonConstCast<LPWSTR>(vpData), UtilIntOrMax<int>(stSize))); }
   /* ----------------------------------------------------------------------- */
-  const StdWideString GetLocaleString(const LCTYPE lcType,
-    const LCID lcidLocale=LOCALE_USER_DEFAULT)
-  { // Allocate string for requested data and return error if faield
-    StdResized<StdWideString> wstrData{
-      GetLocaleData(lcType, nullptr, 0, lcidLocale) };
-    if(wstrData.empty())
-      XCS("No storage for locale data!",
-          "Type", lcType, "Id", lcidLocale);
-    // Now fill in the string and show error if failed
-    if(!GetLocaleData(lcType, wstrData.data(), wstrData.size(), lcidLocale))
-      XCS("Failed to acquire locale data!",
-          "Type", lcType, "Id", lcidLocale, "Buffer", wstrData.size());
-    // Return data
-    return wstrData;
+  StdString GetLocaleString(const LCTYPE lcType,
+    const LCID lcidLocale = LOCALE_USER_DEFAULT)
+  { // Get size of requested string and if it is available?
+    switch(const size_t stLen = GetLocaleData(lcType, nullptr, 0, lcidLocale))
+    { // Invalid result? Above call INCLUDES the NULL terminator!!!
+      case 0: XCS("Failed not retrieve locale data!",
+                  "Type", lcType, "Id", lcidLocale);
+      // Empty string? We don't need to do anything else but return
+      case 1: return {};
+      // Anything else
+      default:
+      { // Create buffer big enough for string.
+        StdResized<StdWideString> wstrData{ stLen - 1 };
+        // Now fill in the string and show error if failed
+        if(!GetLocaleData(lcType, wstrData.data(), stLen, lcidLocale))
+          XCS("Failed to acquire locale data!",
+              "Type",   lcType, "Id",     lcidLocale,
+              "Buffer", stLen,  "String", wstrData.size());
+        // Convert the widestring to UTF8 string and return it
+        return WS16toUTF(wstrData);
+      }
+    } // Never gets here
   }
   /* -- Set socket timeout ----------------------------------------- */ public:
   static int SetSocketTimeout(const int iFd, const double dRTime,
@@ -793,13 +801,6 @@ class SysCore :
     XCS("Failed to get native system info function address!");
   }
   /* ----------------------------------------------------------------------- */
-  const StdString GetLocale(const LCID lcidLocale)
-  { // Build language and country code from system and return it
-    return
-      StrAppend(WS16toUTF(GetLocaleString(LOCALE_SISO639LANGNAME, lcidLocale)),
-        '-', WS16toUTF(GetLocaleString(LOCALE_SISO3166CTRYNAME, lcidLocale)));
-  }
-  /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData()
   { // Operating system data. Fuck you Microsoft. I'm still supporting XP.
     // > https://docs.microsoft.com/en-us/windows/win32/api/
@@ -878,15 +879,25 @@ class SysCore :
       else bExtra = false;
     } // Store if we have extra info because strExtra is being StdMove()'d
     else bExtra = false;
+    // Get locale id
+    const LCID lcidLocale = GetUserDefaultUILanguage();
+    // Finish version string
+    StdString strVersion{ osS.str() },
+      // Get ISO639 language code
+      strLanguage{ GetLocaleString(LOCALE_SISO639LANGNAME, lcidLocale) },
+      // Get ISO3166 country code
+      strCountry{ GetLocaleString(LOCALE_SISO3166CTRYNAME, lcidLocale) },
+      // Build single language and country locale string
+      strLocale{ StrAppend(strLanguage, '-', strCountry) };
     // Return data
     return {
-      osS.str(),                             // Version string
+      StdMove(strVersion),                   // Version string
       StdMove(strExtra),                     // Extra version string
       osviData.dwMajorVersion,               // Major OS version
       osviData.dwMinorVersion,               // Minor OS version
       osviData.dwBuildNumber,                // OS build version
       DetectWindowsArchitechture(),          // 32 or 64 OS arch
-      GetLocale(GetUserDefaultUILanguage()), // Get locale
+      StdMove(strLocale),                    // Get locale
       DetectElevation(),                     // Elevated?
       bExtra || osviData.dwMajorVersion < 6  // Wine or Old OS?
     };
@@ -918,13 +929,12 @@ class SysCore :
                   strName{ srSub.QueryString("ProcessorNameString") },
                   strIdent{ srSub.QueryString("Identifier") };
         // Remove unnecessary whitespaces from strings
-        StrCompactRef(strVendor);
-        StrCompactRef(strName);
-        StrCompactRef(strIdent);
-        // Fail-safe empty strings
         if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
+        else StrCompactRef(strVendor);
         if(strName.empty()) strName = strVendor;
+        else StrCompactRef(strName);
         if(strIdent.empty()) strIdent = cCommon->CommonUnspec();
+        else StrCompactRef(strIdent);
         // Detect family model and stepping from string (A F 0 M 0 S)
         unsigned uFamily, uModel, uStepping;
         const TokenStrView tsvTokens{ strIdent, cCommon->CommonSpaceV() };
@@ -933,12 +943,12 @@ class SysCore :
         { // Convert strings to numbers
           uFamily = StrToNum<unsigned>(tsvTokens[2]);
           uModel = StrToNum<unsigned>(tsvTokens[4]);
-          uStepping= StrToNum<unsigned>(tsvTokens[6]);
+          uStepping = StrToNum<unsigned>(tsvTokens[6]);
         } // Invalid syntax
         else uFamily = uModel = uStepping = 0;
         // Return data
-        return { StdThreadMax(), srSub.Query<DWORD>("~MHz"),
-                 uFamily, uModel, uStepping, strName };
+        return { srSub.Query<DWORD>("~MHz"), uFamily, uModel, uStepping,
+          StdMove(strName) };
       } // Log that we couldn't open the subkey
       else cLog->LogWarningExSafe("System could not open registry key $ "
         "sub-key $! $", strK, strSK, SysError());
@@ -946,7 +956,7 @@ class SysCore :
     else cLog->LogWarningExSafe("System could not open registry key $! $",
       strK, SysError());
     // Return default data we could not read
-    return { StdThreadMax(), 0, 0, 0, 0, cCommon->CommonUnspec() };
+    return {};
   }
   /* ----------------------------------------------------------------------- */
   void UpdateMemoryUsageData()
