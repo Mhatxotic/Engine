@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.5.28.223 -->
-<!-- Automatically built at Fri May 29 00:02:42 2026 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.5.28.223 -->
+<!-- Reference for the Mhatxotic Engine API version 26.8.5.22 -->
+<!-- Automatically built at Wed Aug 05 23:01:46 2026 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.8.5.22 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.5.28.223">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.8.5.22">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.5.28.223">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.8.5.22">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.5.28.223">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.8.5.22">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.5.28.223 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.8.5.22 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.5.28.223 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.8.5.22 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.5.28.223 API reference</H1>
+	<H1>Mhatxotic Engine 26.8.5.22 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 926 functions (408 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 222 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 926 functions (408 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 223 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1921,7 +1921,7 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(222 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(223 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
@@ -1971,6 +1971,7 @@
 									<LI><A href="#cv.con_bloutput">con_bloutput</A></LI>
 									<LI><A href="#cv.con_cvshowflags">con_cvshowflags</A></LI>
 									<LI><A href="#cv.con_disabled">con_disabled</A></LI>
+									<LI><A href="#cv.con_enablebreak">con_enablebreak</A></LI>
 									<LI><A href="#cv.con_font">con_font</A></LI>
 									<LI><A href="#cv.con_fontcolour">con_fontcolour</A></LI>
 									<LI><A href="#cv.con_fontflags">con_fontflags</A></LI>
@@ -7616,9 +7617,9 @@
 	<DIV id="Socket.Create" style="display:none">
 		<H3>Socket.Create</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Socket.Create(<I><U>Address</U>, <U>Port</U>, <U>Cipher</U>, <U>Delay</U>, <U>Error</U>, <U>Success</U></I>)</PRE>
+		<PRE>Socket.Create(<I><U>Name</U>, <U>Address</U>, <U>Port</U>, <U>Cipher</U>, <U>Delay</U>, <U>Error</U>, <U>Success</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Address</U> <I>(string)</I> = The network destination address to connect to.<BR><U>Port</U> <I>(integer)</I> = The port to connect to (1-65535).<BR><U>Cipher</U> <I>(string)</I> = Make SSL connection and try this cipher.<BR><U>Delay</U> <I>(string)</I> = The worker thread throttling rate.<BR><U>Error</U> <I>(function)</I> = Function to call when a critical error occurs<BR><U>Success</U> <I>(function)</I> = Function to call when any other event occurs<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Name to identify the socket.<BR><U>Address</U> <I>(string)</I> = The network destination address to connect to.<BR><U>Port</U> <I>(integer)</I> = The port to connect to (1-65535).<BR><U>Cipher</U> <I>(string)</I> = Make SSL connection and try this cipher.<BR><U>Delay</U> <I>(string)</I> = The worker thread throttling rate.<BR><U>Error</U> <I>(function)</I> = Function to call when a critical error occurs<BR><U>Success</U> <I>(function)</I> = Function to call when any other event occurs<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Makes a standard point-to-point connection to the specified address.<BR>The function returns immediately as all socket operations are asynchronous. If you need SSL, make sure you specify the cipher suite you want to use or blank if you don't want to use SSL. Since a worker thread is used for each socket, you might want to specify a delay to throttle the loop as all operations are non-blocking. A value of 0 will make the thread consume 100% of a CPU core so be careful.<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
@@ -7626,9 +7627,9 @@
 	<DIV id="Socket.CreateHTTP" style="display:none">
 		<H3>Socket.CreateHTTP</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Socket.CreateHTTP(<I><U>Cipher</U>, <U>Address</U>, <U>Port</U>, <U>Request</U>, <U>Scheme</U>, <U>Headers</U>, <U>Body</U>, <U>Success</U></I>)</PRE>
+		<PRE>Socket.CreateHTTP(<I><U>Name</U>, <U>Cipher</U>, <U>Address</U>, <U>Port</U>, <U>Request</U>, <U>Scheme</U>, <U>Headers</U>, <U>Body</U>, <U>Success</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
-		<PRE><U>Cipher</U> <I>(string)</I> = Make SSL connection and try this cipher.<BR><U>Address</U> <I>(string)</I> = The network destination address to connect to.<BR><U>Port</U> <I>(integer)</I> = The port to connect to (1-65535).<BR><U>Request</U> <I>(string)</I> = The HTTP URI request resource.<BR><U>Scheme</U> <I>(string)</I> = The HTTP scheme (GET, POST, PUT, DELETE, etc.).<BR><U>Headers</U> <I>(string)</I> = A carriage return separated list of headers.<BR><U>Body</U> <I>(string)</I> = A body of text to send with the request.<BR><U>Success</U> <I>(function)</I> = Function to call when any other event occurs<BR></PRE>
+		<PRE><U>Name</U> <I>(string)</I> = Name to identify the socket.<BR><U>Cipher</U> <I>(string)</I> = Make SSL connection and try this cipher.<BR><U>Address</U> <I>(string)</I> = The network destination address to connect to.<BR><U>Port</U> <I>(integer)</I> = The port to connect to (1-65535).<BR><U>Request</U> <I>(string)</I> = The HTTP URI request resource.<BR><U>Scheme</U> <I>(string)</I> = The HTTP scheme (GET, POST, PUT, DELETE, etc.).<BR><U>Headers</U> <I>(string)</I> = A carriage return separated list of headers.<BR><U>Body</U> <I>(string)</I> = A body of text to send with the request.<BR><U>Success</U> <I>(function)</I> = Function to call when any other event occurs<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>This is a minimalist implementation of a HTTP request and will support most (if not all) operations one would need. The function returns immediately. The worker thread uses blocking socket operations.<BR></PRE>
 		<H4><A href="#idx:Socket">&#x25B2; Return to table of contents</A></H4>
@@ -12735,6 +12736,11 @@
 		<PRE>Specifies wether the console is permanantly disabled or not. It ignores the CON_GCWTERM setting as well. This does not disable the NCurses mode terminal which cannot be disabled.<BR></PRE>
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.con_enablebreak" style="display:none">
+		<H3>con_enablebreak</H3>
+		<PRE>Enables or disables CONTROL+C and CONTROL+BREAK interrupt handler. When set to zero, the keys are ignored. When one, the keys perform a clean shutdown. Note that this does not affect the SIGINT signal.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.con_font" style="display:none">
 		<H3>con_font</H3>
 		<PRE>Specifies the filename of the FreeType compatible font to load as the console font file.<BR></PRE>
@@ -13621,6 +13627,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Fri May 29 00:02:42 2026 +0100</ADDRESS>
+	This document was generated at Wed Aug 05 23:01:46 2026 +0100</ADDRESS>
 </BODY>
 </HTML>

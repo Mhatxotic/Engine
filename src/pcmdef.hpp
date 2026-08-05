@@ -69,7 +69,7 @@ BUILD_FLAGS(Pcm,                       // PCM loading flags
   /* -- Mask bits ---------------------------------------------------------- */
   PL_MASK{ PL_FCE_WAV|PL_FCE_CAF|PL_FCE_OGG|PL_TOSPU|PL_TOBE|PL_TOLE|
            PL_TOSIGNED|PL_TOUNSIGNED }
-);/* ------------------------------------------------------------------------- */
+);/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

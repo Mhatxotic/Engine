@@ -667,7 +667,8 @@ template<typename IntType>
   } // If input value is 16-bit?
   else if constexpr(sizeof(IntType) == sizeof(uint16_t))
   { // Tests lookup table. This is all we can fit in a 16-bit integer
-    static const StdArray<const GroupedValue,1> bvLookup{ { { 0x0400, "KB" } } };
+    static const StdArray<const GroupedValue,1>
+      bvLookup{ { { 0x0400, "KB" } } };
     return StrToReadableSuffix<double>(itBytes,
       cpSuffix, iPrecision, bvLookup, "B");
   } // Else needed on MSVC

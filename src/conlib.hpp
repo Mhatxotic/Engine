@@ -1806,12 +1806,12 @@ if(aArgs.size() == 2)
     :                                            "Unknown")))))))))));
   // Initial connection status
   const StdString strOutput{
-    StrFormat("Status for socket $...\n"
+    StrFormat("Status for socket $<$>...\n"
       "- Status: $; Flags: 0x$$; Error: $$; Descriptor: $ (0x$$).\n"
       "- Address: $; Port: $$; IP: $."
       "$"
       "$",
-      uId,
+      uId, sRef.NameGet(),
       strStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
         sRef.GetFD(), StdIOSHex, sRef.GetFD(),
       sRef.GetAddress(), StdIOSDec, sRef.GetPort(), sRef.GetIPAddress(),
@@ -1850,8 +1850,9 @@ if(aArgs.size() == 2)
       TimeToShortDuration(dConnect), TimeToShortDuration(dInitial));
 } // Make neatly formatted table
 Statistic sTable;
-sTable.Header("ID").Header("FLAG").Header("IP").Header("PORT")
-      .Header("ADDRESS", false).Reserve(cSockets->size());
+sTable.Header("#").Header("FLAG").Header("IP")
+      .Header("PORT").Header("ADDRESS", false).Header("IDENTIFIER", false)
+      .Reserve(cSockets->size());
 // Walk through sockets
 for(const Socket*const sPtr : *cSockets)
 { // Get reference to class and socket flags
@@ -1872,7 +1873,8 @@ for(const Socket*const sPtr : *cSockets)
     { sRef.GetError() != 0,                  'E' },
     { sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER), 'S' },
     { sfcFlags.FlagIsSet(SS_CLOSEDBYCLIENT), 'C' }
-  }).Data(sRef.GetIPAddress()).DataN(sRef.GetPort()).Data(sRef.GetAddress());
+  }).Data(sRef.GetIPAddress()).DataN(sRef.GetPort()).Data(sRef.GetAddress())
+    .Data(sRef.NameGet());
 } // Show result
 cConsole->ConsoleAddLineF("$$ ($ connected).\n"
   "Total RX Packets: $; Bytes: $ ($).\n"

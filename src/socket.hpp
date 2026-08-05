@@ -148,13 +148,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       VarArgs &&...vaArgs)
   { // If parameters are specified then cater to them
     if constexpr(sizeof...(VarArgs) > 0)
-      cLog->LogExSafe(lhlSeverity, "Socket $;$$$;$: $", Serial(), StdIOSHex,
-        FlagGet(), StdIOSDec, GetAddressAndPort(),
+      cLog->LogExSafe(lhlSeverity, "Socket $<$> $", Serial(), NameGet(),
         StrFormat(StdForward<StrType>(strFormat),
-          StdForward<VarArgs>(vaArgs)...));
+        StdForward<VarArgs>(vaArgs)...));
     // No parameters specified so don't need to format them
-    else cLog->LogExSafe(lhlSeverity, "Socket $;$$$;$: $", Serial(), StdIOSHex,
-      FlagGet(), StdIOSDec, GetAddressAndPort(),
+    else cLog->LogExSafe(lhlSeverity, "Socket $<$> $", Serial(), NameGet(),
       StdForward<StrType>(strFormat));
   }
   /* -- Internal log ------------------------------------------------------- */
@@ -180,7 +178,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Initialise static error (no openssl error) ------------------------- */
   ThreadStatus SetErrorStatic(const StdString &strReason, const bool bSet)
   { // Show reason in log
-    SocketLogUnsafe(LH_WARNING, "$", strReason);
+    SocketLogUnsafe(LH_WARNING, "error: $", strReason);
     // Forget any error if disconnecting or disconnected
     if(!bSet || IsDisconnectingOrDisconnected()) return TS_ERROR;
     // Set our own error code
@@ -195,11 +193,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   { // Clear errors
     ERR_clear_error();
     // Connection aborted message
-    strError = "Connection aborted";
+    strError = "Connection aborted!";
     // Set our own error code
     aiError = -1;
     // Set the error as the reason
-    SocketLogSafe(LH_WARNING, "$", strError);
+    SocketLogSafe(LH_WARNING, "abort requested...");
     // Done
     return TS_ERROR;
   }
@@ -209,7 +207,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     if(!IsDisconnectedByClient())
     { // If disconnecting or disconnected? Show reason in log
       if(IsDisconnectingOrDisconnected())
-        SocketLogUnsafe(LH_WARNING, "$", strReason);
+        SocketLogUnsafe(LH_WARNING, "error: $", strReason);
       // Not disconnecting or disconnected?
       else
       { // Process errors... Only show errors we can actually report on
@@ -428,7 +426,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Decrement connection count
     --cParent->astConnected;
     // Report disconnection and statistics to log
-    SocketLogUnsafe(LH_DEBUG, "Disconnected (RX:$/$;TX:$/$).",
+    SocketLogUnsafe(LH_DEBUG, "disconnected (RX:$/$;TX:$/$).",
       GetRXpkt(), GetRX(), GetTXpkt(), GetTX());
   }
   /* -- Compact all packets into single packet ----------------------------- */
@@ -461,7 +459,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     if(CryptBIOSetConnHostname(bioPtr, GetAddressAndPort().data()) != 1)
       return SetErrorSafe("Resolve failed!");
     // Log and do secure connection
-    SocketLogSafe(LH_DEBUG, "$onnecting...", IsSecure() ? "Securely c" : "C");
+    SocketLogSafe(LH_DEBUG, "$connecting to '$'...",
+      IsSecure() ? "securely " : cCommon->CommonBlank(), GetAddressAndPort());
     // Set connecting flag. Do send an event for this
     AddStatus(SS_CONNECTING, acdConnect);
     // Abort if requested
@@ -500,7 +499,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Set a flag if address and host are not the same
     if(strRealHost != strIP) FlagSet(SS_VHOST);
     // Show connected ip address
-    SocketLogSafe(LH_DEBUG, "Connected to '$'.", GetIPAddress());
+    SocketLogSafe(LH_DEBUG, "connected to '$'.", GetIPAddress());
     // Set socket read and send timeout
     switch(cSystem->SetSocketTimeout(aiFd,
       cParent->adRecvTimeout, cParent->adSendTimeout))
@@ -508,16 +507,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       case 0: break;
       // Failed so just log message
       case 1:
-        SocketLogSafe(LH_WARNING, "Set recv timeout failed!");
+        SocketLogSafe(LH_WARNING, "set recv timeout failed!");
         break;
       case 2:
-        SocketLogSafe(LH_WARNING, "Set send timeout failed!");
+        SocketLogSafe(LH_WARNING, "set send timeout failed!");
         break;
       case 3:
-        SocketLogSafe(LH_WARNING, "Set recv/send timeout failed!");
+        SocketLogSafe(LH_WARNING, "set recv/send timeout failed!");
         break;
       default:
-        SocketLogSafe(LH_WARNING, "Unknown error setting socket timeouts!");
+        SocketLogSafe(LH_WARNING, "unknown error setting socket timeouts!");
         break;
     } // Until thread says to terminate
     if(tReader.ThreadShouldExit()) return SetAborted();
@@ -606,31 +605,31 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               if(!SSL_CTX_set1_param(sslctxPtr, x509vp.get()))
               { // Log the error and return failure
                 SocketLogSafe(LH_WARNING,
-                  "Failed to assign verification parameters to context!");
+                  "failed to assign verification parameters to context!");
                 return TS_ERROR;
               } // Succeeded a this point
             } // Failed setting host?
             else
             { // Log the error and return failure
-              SocketLogSafe(LH_WARNING, "Failed to set matching hostname!");
+              SocketLogSafe(LH_WARNING, "failed to set matching hostname!");
               return TS_ERROR;
             }
           } // Failed setting purpose?
           else
           { // Log the error and return failure
-            SocketLogSafe(LH_WARNING, "Failed to set purpose!");
+            SocketLogSafe(LH_WARNING, "failed to set purpose!");
             return TS_ERROR;
           }
         } // Failed setting verification flags?
         else
         { // Log the error and return failure
-          SocketLogSafe(LH_WARNING, "Failed to set verification flags!");
+          SocketLogSafe(LH_WARNING, "failed to set verification flags!");
           return TS_ERROR;
         }
       } // Failed creating context?
       else
       { // Log the error and return failure
-        SocketLogSafe(LH_WARNING, "Failed to create verification context!");
+        SocketLogSafe(LH_WARNING, "failed to create verification context!");
         return TS_ERROR;
       } // Done setting up verification. Now create socket
       bioPtr = BIO_new_ssl_connect(sslctxPtr);
@@ -645,18 +644,18 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       if(cParent->aiOCSP >= 1)
       { // Setup OCSP verification
         if(!SSL_set_tlsext_status_type(sslPtr, TLSEXT_STATUSTYPE_ocsp))
-          SocketLogSafe(LH_WARNING, "Failed to setup OCSP verification!");
+          SocketLogSafe(LH_WARNING, "failed to setup OCSP verification!");
         // Set callback and argument
         int(*fCB)(SSL*,void*) = [](SSL*const sO, void*const vpS)->int
           { return reinterpret_cast<Socket*>(vpS)->
               OCSPVerificationResponse(sO); };
         if(!CryptSSLCtxSetTlsExtStatusCb(sslctxPtr, fCB))
           SocketLogSafe(LH_WARNING,
-            "Failed to setup OCSP verification callback!");
+            "failed to setup OCSP verification callback!");
         if(!SSL_CTX_set_tlsext_status_arg(sslctxPtr,
           reinterpret_cast<void*>(this)))
             SocketLogSafe(LH_WARNING,
-              "Failed to setup OCSP verification argument!");
+              "failed to setup OCSP verification argument!");
       } // Set SNI hostname. Some sites break if this is not set
       if(!CryptSSLSetTlsExtHostName(sslPtr, strAddr.data()))
         return SetErrorStaticSafe("Init TLS SNI hostname failed!");
@@ -665,8 +664,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Get X509 chain verificiation result
       switch(const size_t stRes =
         static_cast<size_t>(SSL_get_verify_result(sslPtr)))
-      { // No error? Log success and carry on
-        case X509_V_OK: SocketLogSafe(LH_DEBUG, "X509 chain is good."); break;
+      { // No error?
+        case X509_V_OK:
+          // Log success and carry on
+          SocketLogSafe(LH_DEBUG, "certificate chain is good.");
+          break;
         // Anything else?
         default:
         { // Find error code if the error code information is not found?
@@ -678,7 +680,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               SetErrorStaticSafe(StrAppend("X509_V_ERR_UNKNOWN_", stRes));
               return TS_ERROR;
             } // Log the warning and return success
-            SocketLogSafe(LH_WARNING, "Unknown X509 error $ bypassed!", stRes);
+            SocketLogSafe(LH_WARNING,
+              "unknown certificate error $ bypassed!", stRes);
           } // Found the error code
           else
           { // Get reference to structure
@@ -692,7 +695,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               SetErrorStaticSafe(strErr);
               return TS_ERROR;
             } // Log the warning and return success
-            SocketLogSafe(LH_WARNING, "$ bypassed!", strErr);
+            SocketLogSafe(LH_WARNING,
+              "certificate error '$' bypassed!", strErr);
             // Set socket error and error string
           } // Done
           break;
@@ -712,19 +716,19 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           StrCompactRef(strCipher);
           StrChopRef(strCipher);
           // Print encryption info. Don't need to lock twice
-          SocketLogUnsafe(LH_DEBUG, "Cipher is '$'.", strCipher);
+          SocketLogUnsafe(LH_DEBUG, "cipher is '$'.", strCipher);
         });
       } // Get cipher failed? Log failure
-      else return SetErrorSafe("Server using no cipher!");
+      else return SetErrorSafe("using no TLS cipher!");
       // Get server certificate
       if(const X509*const xCert = SSL_get0_peer_certificate(sslPtr))
       { // Get certificate subject and if successful? Log subject line. OpenSSL
         // doesn't give us the length so feed into logger as c-string
         if(X509_NAME_oneline(X509_get_subject_name(xCert), cpStr, iLen))
-          SocketLogSafe(LH_DEBUG, "Subject is '$'.", cpStr);
+          SocketLogSafe(LH_DEBUG, "certificate subject is '$'.", cpStr);
         // Get certificate issuer and if successful? Log issuer line
         if(X509_NAME_oneline(X509_get_issuer_name(xCert), cpStr, iLen))
-          SocketLogSafe(LH_DEBUG, "Issuer is '$'.", cpStr);
+          SocketLogSafe(LH_DEBUG, "certificate issuer is '$'.", cpStr);
         // Don't free certificate since we're using SSL_get0_*
       } // Error occured
       else return SetErrorSafe("Server returned no certificate!");
@@ -1067,13 +1071,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         { // Read the correct number of bytes? Or we're just doing a HEAD req?
           // Log that the download was successful.
           if(stContentRead == stContentLength || eMode == HTTP_HEAD)
-            SocketLogSafe(LH_DEBUG, "Download successful.");
+            SocketLogSafe(LH_DEBUG, "download successful.");
           // We did not get the correct number of bytes? Set error code.
-          else return SetErrorSafe(StrFormat("Failed at $!", stContentRead));
+          else return
+            SetErrorSafe(StrFormat("download failed at $ bytes!",
+              stContentRead));
         } // There was no content length? Just log the bytes downloaded
-        else SocketLogSafe(LH_DEBUG, "$ downloaded.", stContentRead);
+        else SocketLogSafe(LH_DEBUG, "downloaded $ bytes.", stContentRead);
         // We're done with the connection
-        return TS_ERROR;
+        return TS_OK;
       } // Not processing headers?
       if(!bHeaders)
       { // Not processing headers? Processing content? Increment content read
@@ -1087,7 +1093,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Have content length and at EOF? Log it
         if(stContentLength && stContentRead == stContentLength)
         { // All downloaded
-          SocketLogSafe(LH_DEBUG, "Download complete.");
+          SocketLogSafe(LH_DEBUG, "download complete.");
           // So below scopes can jump here
           return TS_OK;
         } // Wait for next packet, thread abort or server disconnect.
@@ -1148,9 +1154,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         return SetErrorStaticSafe(
           StrFormat("Bad status code '$'!", strvStatus));
       // If the status code is anything but an error? Log successful code
-      if(stStatus < 400) SocketLogSafe(LH_DEBUG, "Status code $.", strvStatus);
+      if(stStatus < 400) SocketLogSafe(LH_DEBUG, "status code $.", strvStatus);
       // Error status code? Log error status code
-      else SocketLogSafe(LH_WARNING, "Status error $!", strvStatus);
+      else SocketLogSafe(LH_WARNING, "status error $!", strvStatus);
       // If connection upgrade required? Handle websocket if requested else
       // throw an error because the socket might be left in a waiting state
       // which our client expects the server to close the connection.
@@ -1181,7 +1187,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       const StrNCStrMapConstIt sncsmciType{
         GetRegistryIterator("content-type") };
       if(sncsmciType != psvRegistry.cend())
-        SocketLogSafe(LH_DEBUG, "Type is '$'.", sncsmciType->second);
+        SocketLogSafe(LH_DEBUG, "type is '$'.", sncsmciType->second);
       // Should get content length
       const StrNCStrMapConstIt sncsmciLen{
         GetRegistryIterator("content-length") };
@@ -1191,20 +1197,21 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         if(!StrIsInt(strVal))
         { // Assume zero, safe to continue and log the warning
           stContentLength = 0;
-          SocketLogSafe(LH_WARNING, "Invalid content length!");
+          SocketLogSafe(LH_WARNING, "invalid content length!");
         } // Valid content-length
         else
         { // Convert length string to integer and log the length
           stContentLength = StrToNum<size_t>(strVal);
-          SocketLogSafe(LH_DEBUG, "Length is $.", stContentLength);
+          SocketLogSafe(LH_DEBUG, "content length is $ bytes.",
+            stContentLength);
         } // Set downloading status
         AddStatus(SS_DOWNLOADING);
         // If we already got enough bytes from the header packet?
         if(stInitial == stContentLength)
-          SocketLogSafe(LH_DEBUG, "Downloaded in one packet.");
+          SocketLogSafe(LH_DEBUG, "downloaded esource in one packet.");
         // If we got too many bytes? treat it as completed anyway
         else if(stInitial > stContentLength)
-          SocketLogSafe(LH_WARNING, "Downloaded ($ excess)!",
+          SocketLogSafe(LH_WARNING, "downloaded resource ($ bytes excess)!",
             stInitial - stContentLength);
         // Keep waiting for data
         else continue;
@@ -1497,7 +1504,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           "Address", strAddr, "Port", uPort);
       // Get last packet, log the transfer and return the time
       const double dTime = GetPacket(mbD, plList, stX);
-      SocketLogUnsafe(LH_DEBUG, "$ of $ to LUA.",
+      SocketLogUnsafe(LH_DEBUG, "compacted $ bytes of $ to LUA.",
         mbD.MemSize(), strvKind);
       return dTime;
     });
@@ -1509,14 +1516,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     const StdStringView strvKind)
   { // Synchronise socket access
     MutexCall([this, &mbD, &plList, &stX, &strvKind]()
-    { // Not empty? Return top memory block else through error
-      if(plList.empty())
-        XC("No packets remaining in blocklist to compact!",
-          "Address", strAddr, "Port", uPort);
+    { // Just return if there are no packets to compact
+      if(plList.empty()) return;
       // Get packet count and compact all of them into this memory and log
       const size_t stCount = plList.size();
       Compact(mbD, plList, stX);
-      SocketLogUnsafe(LH_DEBUG, "$ $ of $ to LUA.",
+      SocketLogUnsafe(LH_DEBUG, "sent $ packets of $ of $ bytes to LUA.",
         stCount, strvKind, mbD.MemSize());
     });
   }
@@ -1620,19 +1625,19 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               return;
             } // Not a valid integer so debug it
             else SocketLogSafe(LH_ERROR,
-              "Invalid integer\n$", LuaUtilGetVarStack(lsState));
+              "invalid integer\n$", LuaUtilGetVarStack(lsState));
           } // Unknown class?
           else SocketLogSafe(LH_ERROR,
-            "Invalid class\n$", LuaUtilGetVarStack(lsState));
+            "invalid class\n$", LuaUtilGetVarStack(lsState));
         } // Unknown function callback?
         else SocketLogSafe(LH_ERROR,
-          "Invalid callback\n$", LuaUtilGetVarStack(lsState));
+          "invalid callback\n$", LuaUtilGetVarStack(lsState));
       } // Lua is paused? Log this just to know this event was ignored
       else SocketLogSafe(LH_WARNING,
-        "Ignoring event $=$$!", emeEvent.cCmd, StdIOSHex, uStatus);
+        "ignoring event $=$$!", emeEvent.cCmd, StdIOSHex, uStatus);
     } // Not enough parameters so log error
     else SocketLogSafe(LH_ERROR,
-      "Not enough event params ($)", emaArgs.size());
+      "not enough event params ($)", emaArgs.size());
     // Done
     return EventError();
   } // Exception occured? Cleanup and rethrow exception
@@ -1704,7 +1709,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   { // Ignore if already disconnecting
     if(IsDisconnectingOrDisconnected()) return false;
     // If the connection was closed by the server then it's a clean exit
-    SocketLogSafe(LH_DEBUG, "Disconnecting...");
+    SocketLogSafe(LH_DEBUG, "disconnecting...");
     // Disconnecting
     AddStatus(SS_DISCONNECTING, acdDisconnect);
     // Lock access to packet list
@@ -1730,23 +1735,28 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     });
   }
   /* -- Init connection ---------------------------------------------------- */
-  void Connect(lua_State*const lS, const StdStringView &strvAddress,
-    const unsigned uNPort, const StdStringView &strvCipher)
-  { // Set address and port and TLS cipher
+  void Connect(lua_State*const lS, const StdStringView &strvName,
+    const StdStringView &strvAddress, const unsigned uNPort,
+    const StdStringView &strvCipher)
+  { // Initialise name
+    NameSet(strvName);
+    // Set address and port and TLS cipher
     SetAddressAndCipher(strvAddress, uNPort, strvCipher);
     // Init LUA references
     LuaEvtInitEx(lS);
-    // Initialise name, thread and start the connection process
-    NameSetA("S:", GetAddressAndPort());
+    // Initialise thread and start the connection process
     tReader.ThreadInit(StrAppend("socketreader:", Serial()),
       bind(&Socket::SockReadThreadMain, this, _1), this);
   }
   /* -- Init --------------------------------------------------------------- */
-  void HTTPRequest(lua_State*const lS, const StdStringView &strvCipher,
-    const StdStringView &strvAddress, const unsigned uNPort,
-    const StdStringView &strvRequest, const StdStringView &strvMethod,
-    const StdStringView &strvHeaders, const StdStringView &strvBody)
-  { // Request must begin with a forward slash
+  void HTTPRequest(lua_State*const lS, const StdStringView &strvName,
+    const StdStringView &strvCipher,  const StdStringView &strvAddress,
+    const unsigned uNPort, const StdStringView &strvRequest,
+    const StdStringView &strvMethod, const StdStringView &strvHeaders,
+    const StdStringView &strvBody)
+  { // Initialise name
+    NameSet(strvName);
+    // Request must begin with a forward slash
     if(strvRequest.front() != '/')
       XC("Resource is invalid!", "Resource", strvRequest);
     // Set address and TLS cipher
@@ -1804,8 +1814,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     });
     // Init LUA references
     LuaEvtInitEx(lS);
-    // Start the thread
-    NameSetA("HS:", GetAddressAndPort());
+    // Initialse thread and start the connection process
     tReader.ThreadInit(StrAppend("sockethttp:", Serial()),
       bind(&Socket::SocketHTTPThreadMain, this, _1), this);
   }

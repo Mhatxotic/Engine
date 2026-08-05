@@ -14,7 +14,7 @@ using namespace IImageDef::P;          using namespace IMemory::P;
 using namespace IStd::P;               using namespace ITexDef::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ----------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
 struct ImageSlot :                     // Members initially public
   /* -- Initialisers ------------------------------------------------------- */
   public Memory,                       // Memory data
