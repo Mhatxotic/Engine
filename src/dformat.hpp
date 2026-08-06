@@ -34,8 +34,8 @@ class DataFormat                       // Image libraries format object class
   using CbFuncDecoder = function<CbFuncDecoderT>;
   using CbFuncEncoder = function<CbFuncEncoderT>;
   /* -- Private variables ----------------------------------------- */ private:
-  const StdStringView strvName,        // Name of plugin
-                      strvExt;         // Default extension of plugin type
+  const StdStringView ssvName,         // Name of plugin
+                      ssvExt;          // Default extension of plugin type
   const DataFormatFlagsConst dffcCaps; // Capabilities
   const CbFuncDecoder cfdFunc;         // Loader function
   const CbFuncEncoder cfeFunc;         // Saver function
@@ -47,7 +47,7 @@ class DataFormat                       // Image libraries format object class
     if(ftNId == stExpect) return ftNId;
     XC("Internal error: Data format id mismatch!",
       "Id",     ftNId,    "Expect",    stExpect,
-      "Filter", strvName, "Extension", strvExt);
+      "Filter", ssvName, "Extension", ssvExt);
   }
   /* -- Unsupported callbacks----------------------------------------------- */
   static bool NoDecoder(FileMap&, DataType&) { return false; }
@@ -56,21 +56,21 @@ class DataFormat                       // Image libraries format object class
   /* -- Get members ------------------------------------------------ */ public:
   const CbFuncDecoder &GetDecoder() const { return cfdFunc; }
   const CbFuncEncoder &GetEncoder() const { return cfeFunc; }
-  const StdStringView &GetName() const { return strvName; }
-  const StdStringView &GetExt() const { return strvExt; }
+  const StdStringView &GetName() const { return ssvName; }
+  const StdStringView &GetExt() const { return ssvExt; }
   bool HaveDecoder() const { return dffcCaps.FlagIsSet(DF_DECODE); }
   bool HaveEncoder() const { return dffcCaps.FlagIsSet(DF_ENCODE); }
   /* -- Constructor with loader function only ------------------- */ protected:
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
     const FormatType ftNId,            // The IFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
-    strvName{ strvNName },             // Set name for filter
-    strvExt{ strvNExt },               // Set extension for filter
+    ssvName{ ssvNName },               // Set name for filter
+    ssvExt{ ssvNExt },                 // Set extension for filter
     dffcCaps{ DF_DECODE },             // Set load only capability
     cfdFunc{ cfdNFunc },               // Set loader function
     cfeFunc{ NoEncoder },              // Set no saver function
@@ -81,13 +81,13 @@ class DataFormat                       // Image libraries format object class
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
     const FormatType ftNId,            // The IFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncEncoder &cfeNFunc,     // Function to call when saving
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
-    strvName{ strvNName },             // Set name for filter
-    strvExt{ strvNExt },               // Set extension for filter
+    ssvName{ ssvNName },               // Set name for filter
+    ssvExt{ ssvNExt },                 // Set extension for filter
     dffcCaps{ DF_ENCODE },             // Set save only capability
     cfdFunc{ NoDecoder },              // Set no loader function
     cfeFunc{ cfeNFunc },               // Set saver function
@@ -98,14 +98,14 @@ class DataFormat                       // Image libraries format object class
   explicit DataFormat(
     /* -- Required arguments ----------------------------------------------- */
     const FormatType ftNId,            // The IFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const CbFuncEncoder &cfeNFunc,     // Function to call when saving
     const size_t stSize                // Size of collector to id
     ): /* -- Initialisers -------------------------------------------------- */
-    strvName{ strvNName },             // Set name for filter
-    strvExt{ strvNExt },               // Set extension for filter
+    ssvName{ ssvNName },               // Set name for filter
+    ssvExt{ ssvNExt },                 // Set extension for filter
     dffcCaps{ DF_DECODE|DF_ENCODE },   // Set load and save capabilities
     cfdFunc{ cfdNFunc },               // Set loader function
     cfeFunc{ cfeNFunc },               // Set saver function

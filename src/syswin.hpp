@@ -242,9 +242,9 @@ class SysProcess                       // Need this before of System init order
     AnyType Test(const AnyType atParam, const char*const cpStr)
   { if(!atParam) XCS(cpStr); return atParam; }
   /* --------------------------------------------------------------- */ public:
-  bool InitGlobalMutex(const StdStringView &strvTitle)
+  bool InitGlobalMutex(const StdStringView &ssvTitle)
   { // Set mutex name
-    nsMutex.NameSet(strvTitle);
+    nsMutex.NameSet(ssvTitle);
     // Convert UTF title to wide string
     const StdWideString wstrTitle{ UTFtoS16(nsMutex.NameGet()) };
     // Create the global mutex handle with the specified name and check error
@@ -1030,11 +1030,11 @@ class SysCore :
   Memory GetEntropy() const
   { // Entropy data structure to return to openssl. Should be enough I think!
     struct EntropyData
-    { SYSTEMTIME            sSTime, sLTime;      // System times
-      POINT                 pPos;                // Cursor position
-      TIME_ZONE_INFORMATION tzData;              // Time zone information
-      FILETIME              cpuD[7];             // Process and system times
-      LARGE_INTEGER         liD[2];              // Current hires timers
+    { SYSTEMTIME            sSTime, sLTime; // System times
+      POINT                 pPos;           // Cursor position
+      TIME_ZONE_INFORMATION tzData;         // Time zone information
+      FILETIME              cpuD[7];        // Process and system times
+      LARGE_INTEGER         liD[2];         // Current hires timers
     };
     // Allocate memory and assign a reference structure to this memory
     Memory mData{ sizeof(EntropyData) };

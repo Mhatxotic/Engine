@@ -155,9 +155,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
                    glullTotalVRAM,     // Maximum VRAM supported
                    glullFreeVRAM;      // Current VRAM available
   ClkDuration      cdLimit;            // Frame limit based on refresh rate
-  StdStringView    strvRenderer,       // GL renderer string
-                   strvVersion,        // GL version string
-                   strvVendor;         // GL vendor string
+  StdStringView    ssvRenderer,        // GL renderer string
+                   ssvVersion,         // GL version string
+                   ssvVendor;          // GL vendor string
   VSyncMode        vsmSetting;         // VSync setting
   /* -- Delayed destruction ------------------------------------------------ */
   /* Because LUA garbage collection could zap a texture or Fbo class at any  */
@@ -261,9 +261,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Load GL capabilities ----------------------------------------------- */
   void DetectCapabilities()
   { // Current current OpenGL strings
-    strvRenderer = GetString<char>(GL_RENDERER);
-    strvVersion = GetString<char>(GL_VERSION);
-    strvVendor = GetString<char>(GL_VENDOR);
+    ssvRenderer = GetString<char>(GL_RENDERER);
+    ssvVersion = GetString<char>(GL_VERSION);
+    ssvVendor = GetString<char>(GL_VENDOR);
     // Get vendor specific memory info extensions
     SetFlagExt("GL_NVX_gpu_memory_info", GFL_HAVENVMEM);
     SetFlagExt("GL_ATI_meminfo", GFL_HAVEATIMEM);
@@ -1096,9 +1096,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     { return reinterpret_cast<const char*>
         (sAPI.glGetStringi(GL_EXTENSIONS, gluIndex)); }
   /* -- Read OpenGL renderer data ------------------------------------------ */
-  const StdStringView &GetVendor() const { return strvVendor; }
-  const StdStringView &GetRenderer() const { return strvRenderer; }
-  const StdStringView &GetVersion() const { return strvVersion; }
+  const StdStringView &GetVendor() const { return ssvVendor; }
+  const StdStringView &GetRenderer() const { return ssvRenderer; }
+  const StdStringView &GetVersion() const { return ssvVersion; }
   /* -- Reset all binds ---------------------------------------------------- */
   void OglResetBinds()
   { // Unbind active texture, shader program, texture, fbo and select default
@@ -1361,9 +1361,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     gluPackAlign = gluTexUnits = gluMaxVertexAttr = 0;
     glePolyMode = GL_NONE;
     // Set blank generic text for strings
-    strvVendor = cCommon->CommonNull();
-    strvVersion = cCommon->CommonNull();
-    strvRenderer = cCommon->CommonNull();
+    ssvVendor = cCommon->CommonNull();
+    ssvVersion = cCommon->CommonNull();
+    ssvRenderer = cCommon->CommonNull();
     // Log class initialising
     cLog->LogInfoSafe("OGL subsystem de-initialised.");
   }
@@ -1457,11 +1457,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     glullTotalVRAM(0),                 // No total vram
     glullFreeVRAM(0),                  // No free vram
     cdLimit{ cd0 },                    // Init frame duration
-    strvRenderer{                      // Blank renderer
+    ssvRenderer{                       // Blank renderer
       cCommon->CommonNull() },         // Initialise with "<null>" text
-    strvVersion{                       // Blank version
+    ssvVersion{                        // Blank version
       cCommon->CommonNull() },         // Initialise with "<null>" text
-    strvVendor{                        // Blank vendor
+    ssvVendor{                         // Blank vendor
       cCommon->CommonNull() },         // Initialise with "<null>" text
     vsmSetting{ VSYNC_OFF }            // Set no VSync by default
     /* -- Set global pointer to static class ------------------------------- */

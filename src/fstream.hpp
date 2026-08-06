@@ -40,12 +40,12 @@ class FStreamBase :                    // File stream base class
   FILE            *fStream;            // Stream handle
   int              iErrNo;             // Stored error number
   /* -- Accept a file stream from DoOpen() --------------------------------- */
-  int FStreamDoAccept(const StdStringView &strvFile, FILE*const fPtr)
+  int FStreamDoAccept(const StdStringView &ssvFile, FILE*const fPtr)
   { // Close original file if opened
     FStreamCloseSafe();
     // Set the new handle and file name
     FStreamSetHandle(fPtr);
-    NameSet(strvFile);
+    NameSet(ssvFile);
     // Success!
     return 0;
   }
@@ -77,7 +77,7 @@ class FStreamBase :                    // File stream base class
 #endif                                 // Operating system check
   }
   /* -- Check that already set members are valid --------------------------- */
-  void FStreamDoCheckOpenDirect(const StdStringView &strvF,
+  void FStreamDoCheckOpenDirect(const StdStringView &ssvF,
     const FStreamMode fsmMode)
   { // Return if the file is opened successfully
     if(FStreamOpened()) return;
@@ -85,7 +85,7 @@ class FStreamBase :                    // File stream base class
     using namespace ICmdLine::P;
     if(cCmdLine->CmdLineIsNoHome()) return;
     // Try opened again from persist directory
-    NameSet(cCmdLine->CmdLineGetHome(strvF));
+    NameSet(cCmdLine->CmdLineGetHome(ssvF));
     FStreamSetHandle(FStreamDoOpenDirect(NameGet(), fsmMode));
   }
   /* -- Retrun true if internal stream or stream closed successfully ------- */
@@ -282,16 +282,16 @@ class FStreamBase :                    // File stream base class
   /* -- Return size of file ------------------------------------------------ */
   int64_t FStreamSizeSafe() { return FStreamClosed() ? 0 : FStreamSize(); }
   /* -- Open a file without filename validation ---------------------------- */
-  int FStreamOpen(const StdStringView &strvFile, const FStreamMode fsmMode)
+  int FStreamOpen(const StdStringView &ssvFile, const FStreamMode fsmMode)
   { // Try to open the file on disk and if succeeded? Return the result
     if(FILE*const fPtr =
-      FStreamErrNoWrapper(FStreamDoOpenDirect(strvFile, fsmMode)))
-        return FStreamDoAccept(strvFile, fPtr);
+      FStreamErrNoWrapper(FStreamDoOpenDirect(ssvFile, fsmMode)))
+        return FStreamDoAccept(ssvFile, fPtr);
     // Return original error if there is a home directory?
     using namespace ICmdLine::P;
     if(cCmdLine->CmdLineIsHome())
     { // Build new filename and return the new open result
-      StdString strFilePersist{ cCmdLine->CmdLineGetHome(strvFile) };
+      StdString strFilePersist{ cCmdLine->CmdLineGetHome(ssvFile) };
       if(FILE*const fPtr = FStreamDoOpenDirect(strFilePersist, fsmMode))
         return FStreamDoAccept(strFilePersist, fPtr);
     } // Failed so return error number
@@ -316,9 +316,9 @@ class FStreamBase :                    // File stream base class
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with direct open (copy filename) ----------------------- */
-  FStreamBase(const StdStringView &strvF, const FStreamMode fsmMode) :
+  FStreamBase(const StdStringView &ssvF, const FStreamMode fsmMode) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvF },                     // Copy filename
+    Name{ ssvF },                      // Copy filename
     fStream(FStreamDoOpenDirect(       // Open a stream
       NameGet(),                       // - with the specified filename
       fsmMode)),                       // - with the specified mode
@@ -344,9 +344,9 @@ class FStreamBase :                    // File stream base class
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with lvalue name init, no open ------------------------- */
-  explicit FStreamBase(const StdStringView &strvF) : // Filename to set
+  explicit FStreamBase(const StdStringView &ssvF) : // Filename to set
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvF },                     // Move filename across
+    Name{ ssvF },                      // Move filename across
     fStream(nullptr),                  // File context not initialised yet
     iErrNo(0)                          // Error number not initialised yet
     /* -- No code ---------------------------------------------------------- */
@@ -369,10 +369,10 @@ struct FStream :                       // Main file stream class
 { /* -- Direct access using class variable name which returns opened ------- */
   operator bool() const { return FStreamOpened(); }
   /* -- Constructor with optional checking --------------------------------- */
-  FStream(const StdStringView &strvF, const FStreamMode fsmMode) :
+  FStream(const StdStringView &ssvF, const FStreamMode fsmMode) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvF },                     // Initialise identifier (virtual)
-    FStreamBase{ strvF, fsmMode }      // Initialise other members
+    Name{ ssvF },                      // Initialise identifier (virtual)
+    FStreamBase{ ssvF, fsmMode }       // Initialise other members
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with rvalue name init, no open ------------------------- */
@@ -383,10 +383,10 @@ struct FStream :                       // Main file stream class
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with lvalue name init, no open ------------------------- */
-  explicit FStream(const StdStringView &strvF) :
+  explicit FStream(const StdStringView &ssvF) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strvF },                     // Initialise identifier (virtual)
-    FStreamBase{ strvF }               // Initialise other members
+    Name{ ssvF },                      // Initialise identifier (virtual)
+    FStreamBase{ ssvF }                // Initialise other members
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- MOVE assignment constructor ---------------------------------------- */

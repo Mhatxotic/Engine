@@ -234,8 +234,8 @@ enum CVarEnums : size_t                // CVars list (cvarlib.hpp for bodies)
 struct CVarItemStatic                  // Start of CVar static struct
 { /* ----------------------------------------------------------------------- */
   const CoreFlagsConst cfcRequired;    // Required core flags
-  const StdStringView  strvVar,        // Variable name from C-String
-                       strvValue;      // Variable default value from C-String
+  const StdStringView  ssvVar,         // Variable name from C-String
+                       ssvValue;       // Variable default value from C-String
   const CbFunc         cbTrigger;      // Callback trigger event
   const CVarFlagsConst cFlags;         // Variable flags
 };/* ----------------------------------------------------------------------- */

@@ -312,10 +312,10 @@ template<class MemberType, class ColType>class AsyncLoader :
     }
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncInit(lua_State*const lsS, const StdStringView &strvIdent,
-    const StdStringView &strvLabel)
+  void AsyncInit(lua_State*const lsS, const StdStringView &ssvIdent,
+    const StdStringView &ssvLabel)
   { // Set the filename
-    NameSet(strvIdent);
+    NameSet(ssvIdent);
     // Parse the class, error and success functions.
     lecAsync.LuaEvtInitEx(lsS);
     // Save the current stack because if an error occurs asynchronously, the
@@ -323,7 +323,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     strAsyncError = StdMove(LuaUtilStack(lsS));
     // Begin async thread
     tAsyncThread.ThreadInit(
-      StrAppend(strvLabel, ':', mtAsyncOwner.Serial()),
+      StrAppend(ssvLabel, ':', mtAsyncOwner.Serial()),
       bind(&AsyncLoader<MemberType, ColType>::AsyncThreadMain, this, _1),
         this);
   }
@@ -401,40 +401,40 @@ template<class MemberType, class ColType>class AsyncLoader :
     lecAsync.LuaEvtDeInit();
   }
   /* -- The thread only calls LoadData() and thats it ---------------------- */
-  void AsyncInitNone(lua_State*const lsS, const StdStringView &strvIdent,
-    const StdStringView &strvLabel)
+  void AsyncInitNone(lua_State*const lsS, const StdStringView &ssvIdent,
+    const StdStringView &ssvLabel)
   { // Loading from memory
     asctAsyncType = BA_NONE;
     // Init rest of members
-    AsyncInit(lsS, strvIdent, strvLabel);
+    AsyncInit(lsS, ssvIdent, ssvLabel);
   }
   /* -- The thread loads from a filemap and calls LoadData() --------------- */
-  void AsyncInitFile(lua_State*const lsS, const StdStringView &strvFilename,
-    const StdStringView &strvLabel)
+  void AsyncInitFile(lua_State*const lsS, const StdStringView &ssvFilename,
+    const StdStringView &ssvLabel)
   { // Loading from file
     asctAsyncType = BA_FILE;
     // Init rest of members
-    AsyncInit(lsS, strvFilename, strvLabel);
+    AsyncInit(lsS, ssvFilename, ssvLabel);
   }
   /* -- The thread loads from the command-line ----------------------------- */
-  void AsyncInitCmdLine(lua_State*const lsS, const StdStringView &strvCmdLine,
-    const StdStringView &strvLabel, Memory &mbInput)
+  void AsyncInitCmdLine(lua_State*const lsS, const StdStringView &ssvCmdLine,
+    const StdStringView &ssvLabel, Memory &mbInput)
   { // Loading from command-line
     asctAsyncType = BA_EXECUTE;
     // Set memory sent to stdin
     MemSwap(mbInput);
     // Init rest of members
-    AsyncInit(lsS, strvCmdLine, strvLabel);
+    AsyncInit(lsS, ssvCmdLine, ssvLabel);
   }
   /* -- The thread loads from existing memory and calls LoadData() --------- */
-  void AsyncInitArray(lua_State*const lsS, const StdStringView &strvIdent,
-    const StdStringView &strvLabel, Memory &mData)
+  void AsyncInitArray(lua_State*const lsS, const StdStringView &ssvIdent,
+    const StdStringView &ssvLabel, Memory &mData)
   { // Set data to load from
     MemSwap(mData);
     // Loading from memory
     asctAsyncType = BA_MEMORY;
     // Init rest of members
-    AsyncInit(lsS, strvIdent, strvLabel);
+    AsyncInit(lsS, ssvIdent, ssvLabel);
   }
   /* -- Send load data update and register in collector -------------------- */
   void SyncLoadDataAndRegister(FileMap &fmData) const
@@ -444,38 +444,38 @@ template<class MemberType, class ColType>class AsyncLoader :
     static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
   }
   /* -- Init from file synchronously from disk only ------------------------ */
-  void SyncInitFileDisk(const StdStringView &strvFilename)
+  void SyncInitFileDisk(const StdStringView &ssvFilename)
   { // Set filename
-    NameSet(strvFilename);
+    NameSet(ssvFilename);
     // Load from specified file
-    FileMap fmData{ AssetLoadFromDisk(strvFilename) };
+    FileMap fmData{ AssetLoadFromDisk(ssvFilename) };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from file synchronously --------------------------------------- */
-  void SyncInitFile(const StdStringView &strvFilename)
+  void SyncInitFile(const StdStringView &ssvFilename)
   { // Set filename
-    NameSet(strvFilename);
+    NameSet(ssvFilename);
     // Load from specified file
-    FileMap fmData{ AssetExtract(strvFilename) };
+    FileMap fmData{ AssetExtract(ssvFilename) };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from array synchronously -------------------------------------- */
-  void SyncInitArray(const StdStringView &strvIdent, Memory &mData)
+  void SyncInitArray(const StdStringView &ssvIdent, Memory &mData)
   { // Set identifier
-    NameSet(strvIdent);
+    NameSet(ssvIdent);
     // Put the memory block into a file map and load the block
-    FileMap fmData{ strvIdent, StdMove(mData), cmSys.GetTimeS() };
+    FileMap fmData{ ssvIdent, StdMove(mData), cmSys.GetTimeS() };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }
   /* -- Init from file synchronously with filename checking ---------------- */
-  void SyncInitFileSafe(const StdStringView &strvFilename)
+  void SyncInitFileSafe(const StdStringView &ssvFilename)
   { // Set filename
-    NameSet(strvFilename);
+    NameSet(ssvFilename);
     // Load from specified file from archives or disk
-    FileMap fmData{ AssetExtract(strvFilename) };
+    FileMap fmData{ AssetExtract(ssvFilename) };
     // Send to derived class and register
     SyncLoadDataAndRegister(fmData);
   }

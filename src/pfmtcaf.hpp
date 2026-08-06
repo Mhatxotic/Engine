@@ -97,7 +97,7 @@ class CodecCAF :                       // CAF codec object
             UtilCastInt64ToDouble(fmData.FileMapReadVar64BE());
           if(dV < 1.0 || dV > 5644800.0)
             XC("CAF sample rate invalid!", "Rate", dV);
-          pdData.SetRate(static_cast<ALuint>(dV));
+          pdData.PcmDataSetRate(static_cast<ALuint>(dV));
           // Check that FormatType(4) is 'lpcm'.
           switch(const unsigned uHdr = fmData.FileMapReadVar32LE())
           { // Only the correct format time is allowed
@@ -136,36 +136,42 @@ class CodecCAF :                       // CAF codec object
             // Anything else is unsupported
             default: XC("CAF fpp of 1 only supported!", "Frames", uFPP);
           } // Update settings
-          if(!pdData.SetChannelsSafe(
+          if(!pdData.PcmDataSetChannelsSafe(
                static_cast<PcmChannelType>(fmData.FileMapReadVar32BE())))
             XC("CAF format has invalid channel count!",
-              "Channels", pdData.GetChannels());
+              "Channels", pdData.PcmDataGetChannels());
           // Read bits per sample and check that format is supported in OpenAL
-          pdData.SetBits(static_cast<PcmBitType>(fmData.FileMapReadVar32BE()));
-          switch(pdData.GetBits())
+          pdData.PcmDataSetBits(
+            static_cast<PcmBitType>(fmData.FileMapReadVar32BE()));
+          switch(pdData.PcmDataGetBits())
           { // Only 8-bit, 16-bit and 32-bit allowed
             case PBI_BYTE:
-              if(hPcmFmtFlags.FlagIsZero()) pdData.SetSigned();
+              if(hPcmFmtFlags.FlagIsZero()) pdData.PcmDataSetSigned();
               break;
             case PBI_SHORT:
-              if(hPcmFmtFlags.FlagIsClear(HF_ISPCMLE)) pdData.SetBigEndian();
-              if(hPcmFmtFlags.FlagIsSet(HF_SIGNEDINT)) pdData.SetSigned();
+              if(hPcmFmtFlags.FlagIsClear(HF_ISPCMLE))
+                pdData.PcmDataSetBigEndian();
+              if(hPcmFmtFlags.FlagIsSet(HF_SIGNEDINT))
+                pdData.PcmDataSetSigned();
               break;
             case PBI_LONG:
               if(hPcmFmtFlags.FlagIsSet(HF_ISFLOAT))
                 XC("Pcm data must be integer 32bps!",
                   "Flags", hPcmFmtFlags.FlagGet());
-              if(hPcmFmtFlags.FlagIsClear(HF_ISPCMLE)) pdData.SetBigEndian();
-              if(hPcmFmtFlags.FlagIsSet(HF_SIGNEDINT)) pdData.SetSigned();
+              if(hPcmFmtFlags.FlagIsClear(HF_ISPCMLE))
+                pdData.PcmDataSetBigEndian();
+              if(hPcmFmtFlags.FlagIsSet(HF_SIGNEDINT))
+                pdData.PcmDataSetSigned();
               break;
             case PBI_NONE: default:
-              XC("Invalid sample bit-depth!", "Depth", pdData.GetBits());
+              XC("Invalid sample bit-depth!",
+                "Depth", pdData.PcmDataGetBits());
           } // Done
           break;
         } // Is it the 'data' chunk?
         case HL_U32LE_V_DATA:
         { // Store pcm data and break
-          pdData.aPcmL.MemInitData(stSize, fmData.FileMapReadPtr(stSize));
+          pdData.PcmDataPrepareData(fmData.FileMapReadPtr(stSize), stSize);
           break;
         } // Unknown header so ignore unknown channel and break
         default:
@@ -178,8 +184,8 @@ class CodecCAF :                       // CAF codec object
         }
       }
     } // Check that we got the chunks we care about?
-    if(!pdData.GetRate()) XC("CAF has no 'desc' chunk!");
-    if(pdData.aPcmL.MemIsEmpty()) XC("CAF has no 'data' chunk!");
+    if(!pdData.PcmDataGetRate()) XC("CAF has no 'desc' chunk!");
+    if(pdData.PcmDataNotPrepared()) XC("CAF has no 'data' chunk!");
     // Done
     return true;
   }

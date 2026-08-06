@@ -24,26 +24,26 @@ class CreditLib :                      // Members initially private
   public MemConst                      // License data memory
 { /* ----------------------------------------------------------------------- */
   const size_t     stId;               // Unique identification umber
-  const StdStringView strvName,        // Name of library
-                   strvVersion,        // String version
-                   strvAuthor;         // Author of library
+  const StdStringView ssvName,         // Name of library
+                   ssvVersion,         // String version
+                   ssvAuthor;          // Author of library
   const bool       bCopyright;         // Is copyrighted library
   /* --------------------------------------------------------------- */ public:
   const size_t &GetID() const { return stId; }
-  const StdStringView &GetName() const { return strvName; }
-  const StdStringView &GetVersion() const { return strvVersion; }
-  const StdStringView &GetAuthor() const { return strvAuthor; }
+  const StdStringView &GetName() const { return ssvName; }
+  const StdStringView &GetVersion() const { return ssvVersion; }
+  const StdStringView &GetAuthor() const { return ssvAuthor; }
   bool IsCopyright() const { return bCopyright; }
   /* ----------------------------------------------------------------------- */
-  CreditLib(const size_t stCreditId, const StdStringView &strvNName,
-    const StdStringView &strvNVersion, const StdStringView &strvNAuthor,
+  CreditLib(const size_t stCreditId, const StdStringView &ssvNName,
+    const StdStringView &ssvNVersion, const StdStringView &ssvNAuthor,
     const bool bNCopyright, const void*const vpData, const size_t stSize) :
     /* -- Initialisers ----------------------------------------------------- */
     MemConst{ stSize, vpData },        // Init credit license data
     stId{ stCreditId },                // Init credit unique id
-    strvName{ strvNName },             // Init credit name
-    strvVersion{ strvNVersion },       // Init credit version
-    strvAuthor{ strvNAuthor },         // Init credit author
+    ssvName{ ssvNName },               // Init credit name
+    ssvVersion{ ssvNVersion },         // Init credit version
+    ssvAuthor{ ssvNAuthor },           // Init credit author
     bCopyright{ bNCopyright }          // Init credit copyright status
     /* -- Increment credit id counter -------------------------------------- */
     {}

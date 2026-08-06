@@ -41,26 +41,26 @@ template<typename AnyType, typename ...VarArgs>
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Format final parameter to output string stream ----------------------- */
-static void StrFormatParam(StdOStringStream &osS, const StdStringView &strvPos,
-  const size_t stPos) { osS << strvPos.substr(stPos); }
+static void StrFormatParam(StdOStringStream &osS, const StdStringView &ssvPos,
+  const size_t stPos) { osS << ssvPos.substr(stPos); }
 /* -- Check for next limiter ----------------------------------------------- */
 static size_t StrFormatGetNextDelimiter(StdOStringStream &osS,
-  const StdStringView &strvPos, size_t stPos)
+  const StdStringView &ssvPos, size_t stPos)
 { // Find mark that will be replaced by this param and if no more tokens?
-  const size_t stNewPos = strvPos.find('$', stPos);
+  const size_t stNewPos = ssvPos.find('$', stPos);
   if(stNewPos == StdNPos)
   { // Return the rest of the string and return finished to the caller
-    StrFormatParam(osS, strvPos, stPos);
+    StrFormatParam(osS, ssvPos, stPos);
     return StdNPos;
   } // How far did we find the new position
   switch(const size_t sitNum = static_cast<size_t>(stNewPos - stPos))
   { // One character? Just copy one character and move ahead two to skip over
     // the '$' we just processed.
-    case 1: osS << strvPos[stPos];
+    case 1: osS << ssvPos[stPos];
             stPos += 2; break;
     // More than one character? Copy characters and stride over the '$' we
     // just processed. Better than storing single characters.
-    default: osS << strvPos.substr(stPos, sitNum);
+    default: osS << ssvPos.substr(stPos, sitNum);
              stPos += sitNum + 1;
              break;
     // Did not move? This can happen at the start of the string. Just move
@@ -72,15 +72,15 @@ static size_t StrFormatGetNextDelimiter(StdOStringStream &osS,
 /* -- Format any parameter to output string stream ------------------------- */
 template<typename AnyType, typename ...VarArgs>
   static void StrFormatParam(StdOStringStream &osS,
-    const StdStringView &strvPos, size_t stPos, AnyType &&atVal,
+    const StdStringView &ssvPos, size_t stPos, AnyType &&atVal,
     VarArgs &&...vaArgs)
 { // Find mark that will be replaced by this param and return if finished
-  const size_t stNewPos = StrFormatGetNextDelimiter(osS, strvPos, stPos);
+  const size_t stNewPos = StrFormatGetNextDelimiter(osS, ssvPos, stPos);
   if(stNewPos == StdNPos) return;
   // Push the value we are supposed to replace the matched '$' with.
   StrFormatValue(osS, StdForward<AnyType>(atVal));
   // Process more parameters if we can.
-  StrFormatParam(osS, strvPos, stNewPos, StdForward<VarArgs>(vaArgs)...);
+  StrFormatParam(osS, ssvPos, stNewPos, StdForward<VarArgs>(vaArgs)...);
 }
 /* -- Public functions ----------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -143,11 +143,11 @@ template<typename IntType>
 static StdString StrReadableFromNum(const IntType itVal, const int iPrec = 0)
   { return StrAppendImbue(StdIOSFixed, StdIOSSetPrecision(iPrec), itVal); }
 /* -- Trim specified characters from end of string ------------------------- */
-static StdString StrTrimSuffix(const StdStringView &strvStr, const char cChar)
+static StdString StrTrimSuffix(const StdStringView &ssvStr, const char cChar)
 { // Return empty string if source string is empty or calculate ending
   // misoccurance of character then copy and return the string
-  return StdString{ strvStr.empty() ?
-    strvStr : strvStr.substr(0, strvStr.find_last_not_of(cChar) + 1) };
+  return StdString{ ssvStr.empty() ?
+    ssvStr : ssvStr.substr(0, ssvStr.find_last_not_of(cChar) + 1) };
 }
 /* -- Trim specified characters from end of string ------------------------- */
 template<class StrType>

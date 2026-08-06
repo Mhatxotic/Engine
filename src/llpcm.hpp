@@ -91,7 +91,7 @@ LLFUNC(Asset, 1,
   const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgPcmFlags aFlags{lS, 3};
-  AcPcm{lS}().InitArray(aName, aAsset, aFlags))
+  AcPcm{lS}().PcmInitArray(aName, aAsset, aFlags))
 /* ========================================================================= */
 // $ Pcm.AssetAsync
 // > Id:String=The identifier of the string
@@ -110,7 +110,7 @@ LLFUNC(AssetAsync, 0,
   const AgAsset aAsset{lS, 2};
   const AgPcmFlags aFlags{lS, 3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcPcm{lS}().InitAsyncArray(lS, aName, aAsset, aFlags))
+  AcPcm{lS}().PcmInitAsyncArray(lS, aName, aAsset, aFlags))
 /* ========================================================================= */
 // $ Pcm.Count
 // < Count:integer=Total number of pcms created.
@@ -128,7 +128,7 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cPcms->CollectorCount()))
 LLFUNC(File, 1,
   const AgFilename aFilename{lS, 1};
   const AgPcmFlags aFlags{lS, 2};
-  AcPcm{lS}().InitFile(aFilename, aFlags))
+  AcPcm{lS}().PcmInitFile(aFilename, aFlags))
 /* ========================================================================= */
 // $ Pcm.FileAsync
 // > Filename:string=The filename of the encoded waveform to load
@@ -144,7 +144,7 @@ LLFUNC(FileAsync, 0,
   const AgFilename aFilename{lS, 1};
   const AgPcmFlags aFlags{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcPcm{lS}().InitAsyncFile(lS, aFilename, aFlags))
+  AcPcm{lS}().PcmInitAsyncFile(lS, aFilename, aFlags))
 /* ========================================================================= */
 // $ Pcm.Raw
 // > Name:string=Identifier of the sample.
@@ -161,7 +161,7 @@ LLFUNC(Raw, 1,
   const AgUIntLG aRate{lS, 3, 1, 5644800};
   const AgIntegerLG<PcmChannelType> aChannels{lS, 4, PCT_MONO, PCT_STEREO};
   const AgIntegerLGP2<PcmBitType> aBitsPerChannel{lS, 5, PBI_BYTE, PBI_LONG};
-  AcPcm{lS}().InitRaw(aName, aAsset, aRate, aChannels, aBitsPerChannel))
+  AcPcm{lS}().PcmInitRaw(aName, aAsset, aRate, aChannels, aBitsPerChannel))
 /* ========================================================================= */
 // $ Pcm.WaitAsync
 // ? Halts main-thread execution until all async pcm events have completed

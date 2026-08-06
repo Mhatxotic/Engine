@@ -234,7 +234,7 @@ class Statistic
     return *this;
   }
   /* -- Data by read only string view -------------------------------------- */
-  Statistic &Data(const StdStringView &strvVal)
+  Statistic &Data(const StdStringView &ssvVal)
   { // Return if there are no headers
     if(hdHeaders.empty()) return *this;
     // Get pointer to header data
@@ -243,7 +243,7 @@ class Statistic
     // decoder and get length of the utf8 string
     const int iLength = UtilIntOrMax<int>(
       UtfDecoder{ *svValues.insert(svValues.cend(),
-        StdString{ strvVal }) }.UtfLength());
+        StdString{ ssvVal }) }.UtfLength());
     // If the length of this value is longer and is not the last header value
     // then set the header longer
     UpdateMaxHeaderLength(hRef, iLength);
@@ -399,20 +399,20 @@ class Statistic
     svValues.swap(svValuesNew);
   }
   /* -- Add a header and return self --------------------------------------- */
-  Statistic &Header(const StdStringView &strvH, const bool bRJ,
+  Statistic &Header(const StdStringView &ssvH, const bool bRJ,
     const size_t stL = 0)
   { // Push the header item if there are values as this will mess everything
     // up. Make sure the first column is always left justified.
     if(svValues.empty())
-      hdHeaders.push_back({ StdString{ strvH }, bRJ ? StdIOSRight : StdIOSLeft,
-        UtilIntOrMax<int>(UtilMaximum(stL, strvH.size())) });
+      hdHeaders.push_back({ StdString{ ssvH }, bRJ ? StdIOSRight : StdIOSLeft,
+        UtilIntOrMax<int>(UtilMaximum(stL, ssvH.size())) });
     // Return self so we can daisy chain
     return *this;
   }
   /* -- Add an empty header ------------------------------------------------ */
-  Statistic &Header(const StdStringView &strvH = cCommon->CommonBlankV(),
+  Statistic &Header(const StdStringView &ssvH = cCommon->CommonBlankV(),
     const size_t stL = 0)
-  { return Header(strvH, !hdHeaders.empty(), stL); }
+  { return Header(ssvH, !hdHeaders.empty(), stL); }
   /* -- Add data by pointer ------------------------------------------------ */
   Statistic &DataV(const void*const vpAddr) { return Data(StrAppend(vpAddr)); }
   /* -- Constructor that does nothing -------------------------------------- */

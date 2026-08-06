@@ -82,26 +82,26 @@ class SysCon :                         // Members initially private
   static BOOL WINAPI CtrlHandlerStatic(DWORD);
   BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
   { // Get event information
-    StdStringView strvEvent;
+    StdStringView ssvEvent;
     switch(dwCtrlType)
     { // Note that we store a character in the first column of the string to
       // say if this event has a timer set by Windows that will forcefully
       // terminate the app when expired. '.' means no, '!' is yes.
       case CTRL_C_EVENT        : if(!bBreakEnabled) return TRUE;
-                                 strvEvent = ".ctrl+c";     break;
-      case CTRL_CLOSE_EVENT    : strvEvent = "!close";      break;
+                                 ssvEvent = ".ctrl+c";     break;
+      case CTRL_CLOSE_EVENT    : ssvEvent = "!close";      break;
       case CTRL_BREAK_EVENT    : if(!bBreakEnabled) return TRUE;
-                                 strvEvent = ".ctrl+break"; break;
-      case CTRL_LOGOFF_EVENT   : strvEvent = "!logoff";     break;
-      case CTRL_SHUTDOWN_EVENT : strvEvent = "!shutdown";   break;
-      default                  : strvEvent = ".unknown";    break;
+                                 ssvEvent = ".ctrl+break"; break;
+      case CTRL_LOGOFF_EVENT   : ssvEvent = "!logoff";     break;
+      case CTRL_SHUTDOWN_EVENT : ssvEvent = "!shutdown";   break;
+      default                  : ssvEvent = ".unknown";    break;
     } // Log event
     cLog->LogWarningExSafe(
       "SysCon got operating system event $<$>, shutting down...",
-        strvEvent.substr(1), dwCtrlType);
+        ssvEvent.substr(1), dwCtrlType);
     // Because windows will terminate my process after this function returns
     // We'll need to wait for the exit
-    if(strvEvent.front() == '!')
+    if(ssvEvent.front() == '!')
     { // Lock mutex
       MutexUniqueCall([this](UniqueLock &ulLock){
         // Ignore if we've already exited which can happen if shutdown and

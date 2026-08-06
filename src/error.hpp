@@ -45,29 +45,29 @@ class Error final :
 { /* -- Private variables -------------------------------------------------- */
   StdOStringStream osS;                // Error message builder
   /* -- Write left part of var --------------------------------------------- */
-  void Init(const StdStringView &strvName, const StdStringView &strvType)
-    { osS << "\n+ " << strvName << '<' << strvType << "> = "; }
+  void Init(const StdStringView &ssvName, const StdStringView &ssvType)
+    { osS << "\n+ " << ssvName << '<' << ssvType << "> = "; }
   /* -- Show integer ------------------------------------------------------- */
   template<typename IntType, typename UIntType = StdMakeUnsigned<IntType>>
     requires StdIsIntegral<IntType> && StdIsUnsigned<UIntType>
-  void Int(const StdStringView &strvName, const StdStringView &strvType,
+  void Int(const StdStringView &ssvName, const StdStringView &ssvType,
     const IntType itVal)
   { // Write value and type to stream and then the human readable value
-    Init(strvName, strvType);
+    Init(ssvName, ssvType);
     osS << StdIOSDec << itVal << " (0x" << StdIOSHex
         << static_cast<UIntType>(itVal) << ").";
   }
   /* -- Show float --------------------------------------------------------- */
   template<typename FloatType>
-    void Float(const StdStringView &strvName, const StdStringView &strvType,
+    void Float(const StdStringView &ssvName, const StdStringView &ssvType,
       const FloatType ftValue)
-  { Init(strvName, strvType); osS << StdIOSFixed << ftValue << '.'; }
+  { Init(ssvName, ssvType); osS << StdIOSFixed << ftValue << '.'; }
   /* -- Show STL string ---------------------------------------------------- */
   template<class StrType>
-    void Str(const StdStringView &strvName, const StdStringView &strvType,
+    void Str(const StdStringView &ssvName, const StdStringView &ssvType,
       StrType &&strValue)
   { // Initialise start of string
-    Init(strvName, strvType);
+    Init(ssvName, ssvType);
     // String is empty? Write empty string label
     if(strValue.empty()) { osS << cCommon->CommonEmpty() << '.'; return; }
     // String is not displayable?
@@ -96,7 +96,7 @@ class Error final :
     requires (stA > 0)
   void Param(const char (&caName)[stA], AnyType &&atValue, VarArgs &&...vaArgs)
   { // Make a string view of parameter since we have the size
-    const StdStringView strvName{ caName, stA - 1 };
+    const StdStringView ssvName{ caName, stA - 1 };
     // Remove trash from type and if is integral or enum type?
     using AnyTypeNoRef = StdRemoveConstVolRef<AnyType>;
     using AnyTypeDecayed = StdDecay<AnyType>;
@@ -104,71 +104,71 @@ class Error final :
     { // Is a boolean type?
       if constexpr(StdIsSame<AnyTypeDecayed, bool>)
       { // Initialise key name with a boolean type and make it human readable
-        Init(strvName, "Bool");
+        Init(ssvName, "Bool");
         osS << StrFromBoolTF(atValue) << '.';
       } // If the type is a readable unsigned character type?
       else if constexpr(StdIsSame<AnyTypeDecayed, unsigned char>)
       { // Initialise key name with a uchar type and make it human readable
-        Int<unsigned>(strvName, "UChar", static_cast<unsigned>(atValue));
+        Int<unsigned>(ssvName, "UChar", static_cast<unsigned>(atValue));
         if(atValue > 32) osS << " '" << static_cast<char>(atValue) << "'.";
       } // If the type is a readable character type?
       else if constexpr(StdIsSame<AnyTypeDecayed, char>)
       { // Initialise key name with a char type and make it human readable
-        Int<signed, unsigned>(strvName, "Char", static_cast<int>(atValue));
+        Int<signed, unsigned>(ssvName, "Char", static_cast<int>(atValue));
         if(atValue > 32) osS << " '" << atValue << "'.";
       } // If it is a 64-bit integer type?
       else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint64_t))
       { // If it's signed or unsigned type?
         if constexpr(StdIsSigned<AnyTypeDecayed>)
-          Int<int64_t, uint64_t>(strvName, "Int64", atValue);
-        else Int<uint64_t>(strvName, "UInt64", atValue);
+          Int<int64_t, uint64_t>(ssvName, "Int64", atValue);
+        else Int<uint64_t>(ssvName, "UInt64", atValue);
       } // If it is a 32-bit integer type?
       else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint32_t))
       { // If it's signed or unsigned type?
         if constexpr(StdIsSigned<AnyTypeDecayed>)
-          Int<int32_t, uint32_t>(strvName, "Int32", atValue);
-        else Int<uint32_t>(strvName, "UInt32", atValue);
+          Int<int32_t, uint32_t>(ssvName, "Int32", atValue);
+        else Int<uint32_t>(ssvName, "UInt32", atValue);
       } // If it is a 16-bit integer type?
       else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint16_t))
       { // If it's signed or unsigned type?
         if constexpr(StdIsSigned<AnyTypeDecayed>)
-          Int<int16_t, uint16_t>(strvName, "Int16", atValue);
-        else Int<uint16_t>(strvName, "UInt16", atValue);
+          Int<int16_t, uint16_t>(ssvName, "Int16", atValue);
+        else Int<uint16_t>(ssvName, "UInt16", atValue);
       } // If it is a 8-bit integer type?
       else if constexpr(sizeof(AnyTypeDecayed) == sizeof(uint8_t))
       { // If it's signed or unsigned type?
         if constexpr(StdIsSigned<AnyTypeDecayed>)
-          Int<int64_t, uint64_t>(strvName, "Int64", atValue);
-        else Int<uint64_t>(strvName, "UInt64", atValue);
+          Int<int64_t, uint64_t>(ssvName, "Int64", atValue);
+        else Int<uint64_t>(ssvName, "UInt64", atValue);
       } // Impossible size but just incase.
       else static_assert(sizeof(atValue) == 0, "Unknown integral type!");
     } // Is a floating point type?
     else if constexpr(StdIsFloat<AnyTypeDecayed>)
     { // Is a 64-bit floating point number?
       if constexpr(sizeof(AnyTypeDecayed) == sizeof(double))
-        Float(strvName, "Float64", atValue);
+        Float(ssvName, "Float64", atValue);
       // Is a 32-bit floating point number?
       else if constexpr(sizeof(AnyTypeDecayed) == sizeof(float))
-        Float(strvName, "Float32", atValue);
+        Float(ssvName, "Float32", atValue);
       // Impossible size but just incase.
       else static_assert(sizeof(atValue) == 0, "Unknown float type!");
     } // Is a class type?
     else if constexpr(StdIsClass<AnyTypeDecayed>)
     { // Is 'StdString' type?
       if constexpr(StdIsSame<AnyTypeDecayed, StdString>)
-        Str(strvName, "Str", StdForward<AnyType>(atValue));
+        Str(ssvName, "Str", StdForward<AnyType>(atValue));
       // Is 'StdStringView' type?
       else if constexpr(StdIsSame<AnyTypeDecayed, StdStringView>)
-        Str(strvName, "StrV", StdForward<AnyType>(atValue));
+        Str(ssvName, "StrV", StdForward<AnyType>(atValue));
       // Is 'StdWideString' type?
       else if constexpr(StdIsSame<AnyTypeDecayed, StdWideString>)
-        Str(strvName, "WStr", StdForward<AnyType>(atValue));
+        Str(ssvName, "WStr", StdForward<AnyType>(atValue));
       // Is 'StdWideStringView' type?
       else if constexpr(StdIsSame<AnyTypeDecayed, StdWideStringView>)
-        Str(strvName, "WStrV", StdForward<AnyType>(atValue));
+        Str(ssvName, "WStrV", StdForward<AnyType>(atValue));
       // Is 'StdException' type?
       else if constexpr(StdIsSame<AnyTypeDecayed, StdException>)
-        Str(strvName, "Ex", StdStringView{ atValue.what() });
+        Str(ssvName, "Ex", StdStringView{ atValue.what() });
       // We don't support any other types yet
       else static_assert(sizeof(atValue) == 0, "Unknown class type!");
     } // Is an array type?
@@ -177,7 +177,7 @@ class Error final :
       constexpr size_t stN = StdExtent<AnyTypeNoRef>;
       static_assert(stN > 0);
       // Initialise start of string
-      Init(strvName, "CStrArray");
+      Init(ssvName, "CStrArray");
       // Empty?
       if(!*atValue) osS << cCommon->CommonEmpty() << '.';
       // Displayable?
@@ -193,7 +193,7 @@ class Error final :
           StdRemovePointer<StdRemoveConstVolRef<AnyTypeDecayed>>>;
       if constexpr(StdIsSame<AnyTypeNoRefPtr, char>)
       { // Initialise start of string
-        Init(strvName, "CStr");
+        Init(ssvName, "CStr");
         // Get variable as a C-string
         if(!atValue) osS << cCommon->CommonNull() << '.';
         // Empty?
@@ -205,7 +205,7 @@ class Error final :
       } // If it's a wide char pointer type?
       else if constexpr(StdIsSame<AnyTypeNoRefPtr, wchar_t>)
       { // Initialise start of string
-        Init(strvName, "WCStr");
+        Init(ssvName, "WCStr");
         // Get variable as a C-string
         if(!atValue) osS << cCommon->CommonNull() << '.';
         // Empty?
@@ -217,7 +217,7 @@ class Error final :
       } // Anything else we can just print the address
       else
       { // Initialise name
-        Init(strvName, "Ptr");
+        Init(ssvName, "Ptr");
          // Get variable as a C-string
         if(!atValue) osS << cCommon->CommonNull();
         // Valid? Display and translation if neccesary

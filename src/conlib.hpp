@@ -1652,17 +1652,27 @@ for(const Pcm*const pPtr : *cPcms)
 { // Get reference to class and write its data to the table
   const Pcm &pRef = *pPtr;
   sTable.DataN(pRef.Serial()).DataE({
-    { pRef.IsPurposeSample(),      'A' }, { pRef.IsDynamic(),            'Y' },
-    { pRef.IsNotDynamic(),         'y' }, { pRef.FlagIsSet(PL_FCE_WAV),  'W' },
-    { pRef.FlagIsSet(PL_FCE_CAF),  'C' }, { pRef.FlagIsSet(PL_FCE_OGG),  'O' },
-    { pRef.IsBigEndian(),          'E' }, { pRef.IsSigned(),             'I' },
-    { pRef.IsActiveBigEndian(),    'b' }, { pRef.IsConvertBigEndian(),   'B' },
-    { pRef.IsActiveLittleEndian(), 'l' }, { pRef.IsConvertLittleEndian(),'L' },
-    { pRef.IsActiveSigned(),       's' }, { pRef.IsConvertSigned(),      'S' },
-    { pRef.IsActiveSPUCompat(),    'c' }, { pRef.IsConvertSPUCompat(),   'C' },
-    { pRef.IsActiveUnsigned(),     'u' }, { pRef.IsConvertUnsigned(),    'U' }
-  }).DataN(pRef.GetRate()).DataN(pRef.GetChannels()).DataN(pRef.GetBits())
-    .DataN(pRef.GetBytes()).DataN(pRef.GetAlloc()).Data(pRef.NameGet());
+    { pRef.PcmDataIsPurposeSample(),       'A' },
+    { pRef.PcmDataIsDynamic(),             'Y' },
+    { pRef.PcmDataIsNotDynamic(),          'y' },
+    { pRef.FlagIsSet(PL_FCE_WAV),          'W' },
+    { pRef.FlagIsSet(PL_FCE_CAF),          'C' },
+    { pRef.FlagIsSet(PL_FCE_OGG),          'O' },
+    { pRef.PcmDataIsBigEndian(),           'E' },
+    { pRef.PcmDataIsSigned(),              'I' },
+    { pRef.PcmDataIsActiveBigEndian(),     'b' },
+    { pRef.PcmDataIsConvertBigEndian(),    'B' },
+    { pRef.PcmDataIsActiveLittleEndian(),  'l' },
+    { pRef.PcmDataIsConvertLittleEndian(), 'L' },
+    { pRef.PcmDataIsActiveSigned(),        's' },
+    { pRef.PcmDataIsConvertSigned(),       'S' },
+    { pRef.PcmDataIsActiveSPUCompat(),     'z' },
+    { pRef.PcmDataIsConvertSPUCompat(),    'Z' },
+    { pRef.PcmDataIsActiveUnsigned(),      'u' },
+    { pRef.PcmDataIsConvertUnsigned(),     'U' }
+  }).DataN(pRef.PcmDataGetRate()).DataN(pRef.PcmDataGetChannels())
+    .DataN(pRef.PcmDataGetBits()).DataN(pRef.PcmDataGetBytes())
+    .DataN(pRef.PcmDataGetAlloc()).Data(pRef.NameGet());
 } // Log texture counts
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cPcms->size(), "pcm.", "pcms."));

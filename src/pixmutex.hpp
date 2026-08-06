@@ -27,13 +27,13 @@ class SysMutex                         // Need this before of System init order
   constexpr static size_t stPidSize = sizeof(pid_t); // Size of a pid
   using CbFunc = bool(const pid_t,const pid_t); // Callback return type
   /* -- Initialise global mutex ------------------------------------ */ public:
-  bool SysDoInitGlobalMutex(const StdStringView &strvTitle, CbFunc cbCb)
+  bool SysDoInitGlobalMutex(const StdStringView &ssvTitle, CbFunc cbCb)
   { // Initialise mutex ident
-    nsMutex.NameSet(strvTitle);
+    nsMutex.NameSet(ssvTitle);
     // Shared memory file descriptor helper
     class Shm
     { /* -- Private variables ---------------------------------------------- */
-      const StdStringView &strvTitle;  // Filename of shm object
+      const StdStringView &ssvTitle;   // Filename of shm object
       int               iFd,           // The file descriptor of the shm object
                         iMode;         // Requested mode for the shm object
       /* -- Return mode -------------------------------------------- */ public:
@@ -61,38 +61,38 @@ class SysMutex                         // Need this before of System init order
         // Set new mode
         iMode = iNMode;
         // Open and assign the new descriptor
-        iFd = shm_open(strvTitle.data(), iMode, 0600);
+        iFd = shm_open(ssvTitle.data(), iMode, 0600);
         // Return if the open succeeded
         return Get() >= 0;
       }
       /* -- Destructor that closes the file descriptor --------------------- */
       ~Shm() { if(Get() >= 0) close(Get()); }
       /* -- Constructor that initialises variables ------------------------- */
-      explicit Shm(const StdStringView &strvNTitle) :
+      explicit Shm(const StdStringView &ssvNTitle) :
         /* -- Initialisers ------------------------------------------------- */
-        strvTitle(strvNTitle),         // Set reference to title
+        ssvTitle(ssvNTitle),           // Set reference to title
         iFd(-1),                       // File descriptor uninitialised
         iMode(0)                       // Mode uninitialised
         /* -- No code ------------------------------------------------------ */
         {}
       /* -- Initialise a single object that automatically cleans up -------- */
-    } shmShm{ strvTitle };
+    } shmShm{ ssvTitle };
     // Create the semaphore and if an error occurs?
     if(!shmShm.Open(O_CREAT | O_EXCL | O_RDWR))
     { // Report error if it isn't because the semaphore already exists
       if(StdIsNotError(EEXIST))
         XCL("Failed to setup shared memory object for exclusive writing!",
-          "Name", strvTitle, "Mode", shmShm.Mode());
+          "Name", ssvTitle, "Mode", shmShm.Mode());
       // Try opening it again for reading with exclusivity
       if(!shmShm.Open(O_RDWR | O_EXCL))
         XCL("Failed to reopen setup shared memory object!",
-          "Name", strvTitle, "Mode", shmShm.Mode());
+          "Name", ssvTitle, "Mode", shmShm.Mode());
       // Initialise memory
       pipProcessId = StdMMap<pid_t>
         (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
       if(pipProcessId == MAP_FAILED)
         XCL("Failed to setup shared memory for reading!",
-          "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+          "Name", ssvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
       // Test if the process exists and if it does, run the user callback
       const pid_t pPId = *pipProcessId;
       if(getpgid(pPId) >= 0)
@@ -107,21 +107,21 @@ class SysMutex                         // Need this before of System init order
         "Previous pid of $ not valid so assuming no previous instance.", pPId);
       // Unmap previous shared memory
       if(munmap(pipProcessId, stPidSize))
-        XCL("Failed to unmap shared memory from reading!", "Name", strvTitle);
+        XCL("Failed to unmap shared memory from reading!", "Name", ssvTitle);
       // Try reopening for exclusive writing again
       if(!shmShm.Open(O_RDWR | O_EXCL))
         XCL("Failed to setup shared memory object for exclusive writing!",
-          "Name", strvTitle, "Mode", shmShm.Mode());
+          "Name", ssvTitle, "Mode", shmShm.Mode());
     } // Make sure it is the correct size
     if(!shmShm.Truncate(stPidSize) && StdIsNotError(EINVAL))
       XCL("Failed to truncate shared memory object!",
-        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+        "Name", ssvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
     // Initialise memory
     pipProcessId = StdMMap<pid_t>(nullptr, stPidSize,
       PROT_READ | PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
     if(pipProcessId == MAP_FAILED)
       XCL("Failed to setup shared memory for writing!",
-        "Name", strvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
+        "Name", ssvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
     // Write the current PID to shared memory
     *pipProcessId = ptPId;
     // Execution can continue

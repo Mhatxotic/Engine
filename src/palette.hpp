@@ -150,34 +150,34 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   public Lockable,                     // Lua garbage collector instruction
   public Pal                           // Base Palette class
 { /* -- Init name only --------------------------------------------- */ public:
-  void Init(const StdStringView &strvName) { NameSet(strvName); }
+  void Init(const StdStringView &ssvName) { NameSet(ssvName); }
   /* -- Init name and data from another palette ---------------------------- */
-  void Init(const StdStringView &strvName, const Pal &palOther)
-    { Init(strvName); Pal::operator=(palOther); }
+  void Init(const StdStringView &ssvName, const Pal &palOther)
+    { Init(ssvName); Pal::operator=(palOther); }
   /* -- Load palette from image -------------------------------------------- */
-  void Init(const StdStringView &strvName, const Image &imOther)
+  void Init(const StdStringView &ssvName, const Image &imOther)
   { // Set name from image
-    NameSet(strvName);
+    NameSet(ssvName);
     // Throw error if image doesn't have a palette
     if(imOther.IsNotPalette())
       XC("Image does not have a palette!",
-        "Palette", strvName, "Image", imOther.NameGet());
+        "Palette", ssvName, "Image", imOther.NameGet());
     // Must have two images
     if(imOther.GetSlotCount() != 2)
       XC("Image must must have two slots!",
-        "Palette", strvName, "Image", imOther.NameGet(),
+        "Palette", ssvName, "Image", imOther.NameGet(),
         "Slots",   imOther.GetSlotCount());
     // Get last item
     const ImageSlot &isPalette = imOther.GetSlotsConst().back();
     // Dimensions must be valid
     if(isPalette.DimIsNotWidthSet() || isPalette.DimGetWidth() > size())
       XC("Image palette has invalid count!",
-        "Palette", strvName,                 "Image",   imOther.NameGet(),
+        "Palette", ssvName,                 "Image",   imOther.NameGet(),
         "Actual",  isPalette.DimGetWidth(), "Maximum", size());
     // Make sure palette entries are the same depth
     if(isPalette.DimGetHeight() != BY_RGB)
       XC("Image palette has invalid byte count!",
-        "Palette", strvName,                  "Image",    imOther.NameGet(),
+        "Palette", ssvName,                  "Image",    imOther.NameGet(),
         "Actual",  isPalette.DimGetHeight(), "Required", BY_RGB);
     // Step through our palette and set values to zero
     for(size_t stIndex = 0; stIndex < isPalette.DimGetWidth(); ++stIndex)

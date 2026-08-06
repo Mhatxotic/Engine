@@ -83,8 +83,8 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   bool Empty() const { return Get().empty(); }
   bool NotEmpty() const { return !Empty(); }
   /* -- Set value from different types ------------------------------------- */
-  CVarSetEnums SetString(const StdStringView &strvValue) const
-    { return cCVars->Set(lcvmiIt->second.second, strvValue); }
+  CVarSetEnums SetString(const StdStringView &ssvValue) const
+    { return cCVars->Set(lcvmiIt->second.second, ssvValue); }
   CVarSetEnums Clear() const
     { return SetString(cCommon->CommonBlank()); }
   CVarSetEnums SetBoolean(const bool bState) const
@@ -95,23 +95,23 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   CVarSetEnums SetNumber(const lua_Number lnValue) const
     { return SetString(StrFromNum(lnValue, 0, 15)); }
   /* -- Register user console command from lua ----------------------------- */
-  void Init(lua_State*const lS, const StdStringView &strvName,
-    const StdStringView &strvDefault, const CVarFlagsConst cvfcFlags)
+  void Init(lua_State*const lS, const StdStringView &ssvName,
+    const StdStringView &ssvDefault, const CVarFlagsConst cvfcFlags)
   { // Check that the variable name is valid
-    if(!cCVars->IsValidVariableName(strvName))
+    if(!cCVars->IsValidVariableName(ssvName))
       XC("CVar name is not valid!",
-        "Variable", strvName, "Minimum", cCVars->stCVarMinLength,
+        "Variable", ssvName, "Minimum", cCVars->stCVarMinLength,
         "Maximum",  cCVars->stCVarMaxLength);
     // Make sure cvar doesn't already exist
-    if(cCVars->VarExists(strvName))
-      XC("CVar already registered!", "Variable", strvName);
+    if(cCVars->VarExists(ssvName))
+      XC("CVar already registered!", "Variable", ssvName);
     // Get all the flags in the types mask
     switch(cvfcFlags.FlagAnd(TMASK))
     { // Only types specified on their own are valid
       case TSTRING: case TINTEGER: case TFLOAT: case TBOOLEAN: break;
       // Anything else?
       default: XC("CVar flags have none or mixed types!",
-        "Variable", strvName, "Flags", cvfcFlags.FlagGet());
+        "Variable", ssvName, "Flags", cvfcFlags.FlagGet());
     }
     // Since the userdata for this class object is at arg 5, we need to make
     // sure the callback function is ahead of it in arg 6 or the LuaFunc()
@@ -119,20 +119,20 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     LuaUtilCopyValue(lS, 4);
     // Save the function at the top of the stack used for the callback
     lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), {
-      StdString{ strvName },
-      make_pair(LuaFunc{ StrAppend("CV:", strvName), true },
+      StdString{ ssvName },
+      make_pair(LuaFunc{ StrAppend("CV:", ssvName), true },
         cCVars->GetVarListEnd())
     }); // Register the variable and set the iterator to the new cvar.
-    lcvmiIt->second.second = cCVars->RegisterVar(strvName, strvDefault,
+    lcvmiIt->second.second = cCVars->RegisterVar(ssvName, ssvDefault,
       LuaCallbackStatic, cvfcFlags|TLUA|PANY);
   }
   /* -- Register existing internal engine variable as a Lua variable ------- */
   void InitInternal(const CVarMapIt &cvmiIt)
   { // Get cvar name
-    const StdString &strvName = cvmiIt->first;
+    const StdString &ssvName = cvmiIt->first;
     // Insert a new variable
-    lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), { strvName,
-      make_pair(LuaFunc{ strvName, false }, cCVars->GetVarListEnd()) });
+    lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), { ssvName,
+      make_pair(LuaFunc{ ssvName, false }, cCVars->GetVarListEnd()) });
     // Register the variable and set the iterator to the new cvar.
     lcvmiIt->second.second = cvmiIt;
   }

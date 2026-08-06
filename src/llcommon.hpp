@@ -17,29 +17,29 @@ struct AgLCString { size_t stB; const char *cpD;
   explicit AgLCString(lua_State*const lS, const int iArg) :
     stB(0), cpD{LuaUtilGetLStr<char>(lS, iArg, stB)}{} };
 /* -- Get string (empty allowed) ------------------------------------------- */
-struct AgString { const StdStringView strvString;
-  const StdStringView &operator()() const { return strvString; }
+struct AgString { const StdStringView ssvString;
+  const StdStringView &operator()() const { return ssvString; }
   operator const StdStringView&() const { return operator()(); }
   explicit AgString(lua_State*const lS, const int iArg) :
-    strvString{LuaUtilGetCppStr<StdStringView>(lS, iArg)}{} };
+    ssvString{LuaUtilGetCppStr<StdStringView>(lS, iArg)}{} };
 /* -- Get modifyable string ------------------------------------------------ */
-struct AgNcString { StdStringView strvString;
-  StdStringView &operator()() { return strvString; }
+struct AgNcString { StdStringView ssvString;
+  StdStringView &operator()() { return ssvString; }
   operator StdStringView&() { return operator()(); }
   explicit AgNcString(lua_State*const lS, const int iArg) :
-    strvString{LuaUtilGetCppStr<StdStringView>(lS, iArg)}{} };
+    ssvString{LuaUtilGetCppStr<StdStringView>(lS, iArg)}{} };
 /* -- Get non-empty string ------------------------------------------------- */
-struct AgNeString { const StdStringView strvNeString;
-  const StdStringView &operator()() const { return strvNeString; }
+struct AgNeString { const StdStringView ssvNeString;
+  const StdStringView &operator()() const { return ssvNeString; }
   operator const StdStringView&() const { return operator()(); }
   explicit AgNeString(lua_State*const lS, const int iArg) :
-    strvNeString{LuaUtilGetCppStrNE<StdStringView>(lS, iArg)}{} };
+    ssvNeString{LuaUtilGetCppStrNE<StdStringView>(lS, iArg)}{} };
 /* -- Get Valid filename --------------------------------------------------- */
-struct AgFilename { const StdStringView strvFilename;
-  const StdStringView &operator()() const { return strvFilename; }
+struct AgFilename { const StdStringView ssvFilename;
+  const StdStringView &operator()() const { return ssvFilename; }
   operator const StdStringView&() const { return operator()(); }
   explicit AgFilename(lua_State*const lS, const int iArg) :
-    strvFilename{LuaUtilGetCppFile<StdStringView>(lS, iArg)}{} };
+    ssvFilename{LuaUtilGetCppFile<StdStringView>(lS, iArg)}{} };
 /* -- Create class template ------------------------------------------------ */
 template<class ClassType>struct ArClass { ClassType &ctClassRef;
   ClassType &operator()() const { return ctClassRef; }

@@ -209,15 +209,14 @@ static unsigned SysMessage(void*const, StdString strTitle,
 { // Print the error in console
   fprintf(stderr, "%s: %s\n", strTitle.data(), strMessage.data());
   // Eligable directories for dialog box elf binaries
-  const StdArray<const StdStringView, 10> strvaDirPrefixes{
+  const StdArray<const StdStringView, 10> ssvaDirPrefixes{
     "/bin/",             "/usr/bin/",        "/usr/sbin/",
     "/usr/local/bin/",   "/usr/local/sbin/", "/usr/games/",
     "/usr/local/games/", "/snap/bin/",       "/var/lib/flatpak/exports/bin/",
     "/run/current-system/sw/bin/" };
   // Dialog box applications we can use
-  struct DlgBoxApplication {
-    const StdStringView strvElf, strvCompulsoryParam,
-                      strvTitleParam, strvMessageParam; };
+  struct DlgBoxApplication { const StdStringView ssvElf, ssvCompulsoryParam,
+   ssvTitleParam, ssvMessageParam; };
   // The dialog box elf binary database
   const StdArray<const DlgBoxApplication, 5> dbaaApps{ {
     { "yad",                   cCommon->CommonBlank(),
@@ -238,19 +237,19 @@ static unsigned SysMessage(void*const, StdString strTitle,
   // Search for one of these apps now
   for(const DlgBoxApplication &dbaApp : dbaaApps)
   { // In one of these directories
-    for(const StdStringView &strvDir : strvaDirPrefixes)
+    for(const StdStringView &ssvDir : ssvaDirPrefixes)
     { // Build filename and ignore if not exist, readable or executable
-      const StdString strPath{ StrAppend(strvDir, dbaApp.strvElf) };
+      const StdString strPath{ StrAppend(ssvDir, dbaApp.ssvElf) };
       if(!DirCheckFileAccess(strPath, F_OK|R_OK|X_OK)) continue;
       // Build command line
-      const StdString strCmdLine{ StrFormat("$ $ $ $",
-        strPath, dbaApp.strvCompulsoryParam,
-       (dbaApp.strvTitleParam.empty() ?
-          cCommon->CommonBlank() : StrFormat("$\"$\"",
-            dbaApp.strvTitleParam, strTitle)),
-       (dbaApp.strvMessageParam.empty() ?
-          cCommon->CommonBlank() : StrFormat("$\"$\"",
-            dbaApp.strvMessageParam, strMessage))) };
+      const StdString strCmdLine{
+        StrFormat("$ $ $ $", strPath, dbaApp.ssvCompulsoryParam,
+          (dbaApp.ssvTitleParam.empty() ?
+           cCommon->CommonBlank() :
+             StrFormat("$\"$\"", dbaApp.ssvTitleParam, strTitle)),
+          (dbaApp.ssvMessageParam.empty() ?
+           cCommon->CommonBlank() :
+             StrFormat("$\"$\"", dbaApp.ssvMessageParam, strMessage))) };
       // Now execute and break if successful
       if(!system(strCmdLine.data())) return 0;
     }

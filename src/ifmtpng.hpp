@@ -90,19 +90,19 @@ class CodecPNG :                       // PNG codec object
         { Meta(cpK, cpV, strlen(cpV)); }
       void Meta(const char*const cpK, const StdString &strV)
         { Meta(cpK, strV.data(), strV.size()); }
-      void Meta(const char*const cpK, const StdStringView &strvV)
-        { Meta(cpK, strvV.data(), strvV.size()); }
+      void Meta(const char*const cpK, const StdStringView &ssvV)
+        { Meta(cpK, ssvV.data(), ssvV.size()); }
       // Constructor
       explicit PngWriter(const FStream &fsC) :
         // Initialisers
-        psData(png_create_write_struct(  // Create a write struct
-          PNG_LIBPNG_VER_STRING,         // Set version string
-          StdToNonConstCast<png_voidp>(  // Send user parameter
-            fsC.NameGetData()),         // Set filename as user parameter
-          PngError,                      // Set error callback function
-          PngWarning)),                  // Set warning callback function
-        piData(                          // We'll handle the info struct here
-          png_create_info_struct(psData))// Func checks if psData=NULL so safe
+        psData(png_create_write_struct(   // Create a write struct
+          PNG_LIBPNG_VER_STRING,          // Set version string
+          StdToNonConstCast<png_voidp>(   // Send user parameter
+            fsC.NameGetData()),           // Set filename as user parameter
+          PngError,                       // Set error callback function
+          PngWarning)),                   // Set warning callback function
+        piData(                           // We'll handle the info struct here
+          png_create_info_struct(psData)) // Func checks if psData=NULL so safe
       { // Check to make sure write struct is valid
         if(!psData) XC("Create PNG write struct failed!");
         // Check to make sure info struct is valid
@@ -194,14 +194,14 @@ class CodecPNG :                       // PNG codec object
       // Constructor
       explicit PngReader(FileMap &fmC) :
         // Initialisers
-        psData(png_create_read_struct(   // Create a read struct
-          PNG_LIBPNG_VER_STRING,         // Set version string
-          StdToNonConstCast<png_voidp>(  // Send user parameter
-            fmC.NameGetData()),         // Set filename as user parameter
-          PngError,                      // Set error callback function
-          PngWarning)),                  // Set warning callback function
-        piData(                          // We'll handle the info struct here
-          png_create_info_struct(psData))// Func checks if psData=NULL so safe
+        psData(png_create_read_struct(    // Create a read struct
+          PNG_LIBPNG_VER_STRING,          // Set version string
+          StdToNonConstCast<png_voidp>(   // Send user parameter
+            fmC.NameGetData()),           // Set filename as user parameter
+          PngError,                       // Set error callback function
+          PngWarning)),                   // Set warning callback function
+        piData(                           // We'll handle the info struct here
+          png_create_info_struct(psData)) // Func checks if psData=NULL so safe
       { // Check to make sure write struct is valid
         if(!psData) XC("Create PNG read struct failed!");
         // Check to make sure info struct is valid

@@ -272,7 +272,7 @@ class UtfDecoder final :               // UTF8 string decoder helper
   /* -- Reset pointer ------------------------------------------------------ */
   void UtfReset() { UtfSetPos(UtfGetStartPos()); }
   /* -- Reset pointer to specified position -------------------------------- */
-  void UtfReset(StdStringView &&strvNew) { swap(strvNew); UtfReset(); }
+  void UtfReset(StdStringView &&ssvNew) { swap(ssvNew); UtfReset(); }
   /* -- Return current string position ------------------------------------- */
   StringViewConstIt UtfGetPos() const { return svciIt; }
   /* -- Return current character ------------------------------------------- */
@@ -315,25 +315,25 @@ class UtfDecoder final :               // UTF8 string decoder helper
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Word wrap a utf string --------------------------------------------- */
-static StrList UtfWordWrap(const StdStringView &strvText,
-  const size_t stWidth, const size_t stIndent)
+static StrList UtfWordWrap(const StdStringView &ssvText, const size_t stWidth,
+  const size_t stIndent)
 { // Return empty array if width is invalid.
   if(!stWidth || stWidth <= stIndent) return {};
   // If string is empty, return at least one item because this could be
   // a blank line on purpose.
-  if(strvText.empty()) return { StdString{ strvText } };
+  if(ssvText.empty()) return { StdString{ ssvText } };
   // Create the line list and indent string
   StrList slLines;
   StdString strIndent;
   // Prepare UTF-8 string parser
-  UtfDecoder udStr{ strvText };
+  UtfDecoder udStr{ ssvText };
   // Save starting and last whitespace found iterator
   StringViewConstIt svciStart{ udStr.UtfGetStartPos() },
                     svciSpace{ svciStart };
   // Helper function copy part of a string into the the word buffer
-  const auto Snip = [&udStr, &slLines, &strIndent, &strvText]
+  const auto Snip = [&udStr, &slLines, &strIndent, &ssvText]
       (const StringViewConstIt svciS, const StringViewConstIt svciE) {
-    slLines.emplace_back(strIndent + StdString{ strvText.substr(
+    slLines.emplace_back(strIndent + StdString{ ssvText.substr(
       static_cast<size_t>(svciS - udStr.UtfGetStartPos()),
       static_cast<size_t>(svciE - svciS)) });
   }; // Current column

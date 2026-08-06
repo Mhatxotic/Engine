@@ -18,18 +18,19 @@ using namespace IString::P;            using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-class Certs                            // Certificates store
-{ /* -- Typedefs --------------------------------------------------- */ public:
-  using X509Pair = StdPair<const StdString, X509*>; // Do not &ref string
-  using X509List = StdVector<X509Pair>;             // A vector of pairs
-  /* -- X509 error database --------------------------------------- */ private:
+struct Certs                            // Certificates store
+{ /* -- X509 error database ------------------------------------------------ */
   struct X509ErrInfo                   // Information about the X509 error
   { /* --------------------------------------------------------------------- */
     const char*const cpErr;            // Error as a string (X509_V_ERR_*)
     const size_t     stBank;           // Override bank index (adullCertBypass)
     const uint64_t   ullFlag;          // Flag required to ignore this error
-  };/* --------------------------------------------------------------------- */
+  }; /* -- Private typedefs ------------------------------------------------ */
   using X509Err = StdMap<const size_t, const X509ErrInfo>;
+  using X509ErrConstIt = X509Err::const_iterator;
+  using X509Pair = StdPair<const StdString, X509*>; // Do not &ref string
+  using X509List = StdVector<X509Pair>;             // A vector of pairs
+  /* -------------------------------------------------------------- */ private:
   using AtomicDoubleUInt64 = StdArray<AtomicUInt64, 2>;
   /* -- Variables ---------------------------------------------------------- */
   SSL_CTX           *scStore;          // Context used for cerificate store
@@ -85,9 +86,8 @@ class Certs                            // Certificates store
       [this, &strD, &maLock](const StdString &strF)
     { // Capture exceptions
       try
-      { // Load the certificate
+      { // Load the certificate and get the data pointer to it
         const FileMap fmCert{ AssetExtract(StrAppend(strD, '/', strF)) };
-        // Get pointer
         const unsigned char*ucpPtr = fmCert.MemPtr<unsigned char>();
         // Load the raw certificate and ig it succeeded?
         using X509Ptr = StdUniquePtr<X509, function<decltype(X509_free)>>;
@@ -157,12 +157,13 @@ class Certs                            // Certificates store
   /* ----------------------------------------------------------------------- */
   bool CertsIsStoreAvailable() const { return !!CertsGetStore(); }
   /* -- Find a X509 error -------------------------------------------------- */
-  auto CertsGetError(const size_t stId) const { return xErrDB.find(stId); }
+  X509ErrConstIt CertsGetError(const size_t stId) const
+    { return xErrDB.find(stId); }
   /* -- Is X509 error valid ------------------------------------------------ */
-  bool CertsIsErrorValid(const auto &aItem) const
-    { return aItem != xErrDB.cend(); }
-  bool CertsIsNotErrorValid(const auto &aItem) const
-    { return !CertsIsErrorValid(aItem); }
+  bool CertsIsErrorValid(const X509ErrConstIt xeciIt) const
+    { return xeciIt != xErrDB.cend(); }
+  bool CertsIsNotErrorValid(const X509ErrConstIt xeciIt) const
+    { return !CertsIsErrorValid(xeciIt); }
   /* -- Verify if a X509 bypass flag is set -------------------------------- */
   bool CertsIsX509BypassFlagSet(const size_t stBank, uint64_t ullFlag)
     { return adullCertBypass[stBank] & ullFlag; }

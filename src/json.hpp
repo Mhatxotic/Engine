@@ -335,8 +335,8 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     return { rsbOut.GetString(), rsbOut.GetSize() };
   }
   /* ----------------------------------------------------------------------- */
-  template<typename WriterType>int ToFile(const StdStringView &strvFile) const
-    { return FStream{ strvFile, FM_W_T }.
+  template<typename WriterType>int ToFile(const StdStringView &ssvFile) const
+    { return FStream{ ssvFile, FM_W_T }.
         FStreamWriteStringSafe(ToString<WriterType>()) ? 0 : StdGetError(); }
   /* -- Default constructor ------------------------------------------------ */
   Json() :
@@ -348,11 +348,11 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor from a filename ---------------------------------------- */
-  explicit Json(const StdStringView &strvFile) :
+  explicit Json(const StdStringView &ssvFile) :
     /* -- Initialisers ----------------------------------------------------- */
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */
-    { SyncInitFileSafe(strvFile); }
+    { SyncInitFileSafe(ssvFile); }
   /* -- Destructor that tries to recover on exception ---------------------- */
   DTORHELPER(~Json, AsyncCancel())
 };/* -- End ---------------------------------------------------------------- */

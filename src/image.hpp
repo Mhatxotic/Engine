@@ -781,29 +781,29 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     AsyncReady(fmData);
   }
   /* -- Save image using a type id ----------------------------------------- */
-  void SaveFile(const StdStringView &strvFile, const size_t stSId,
+  void SaveFile(const StdStringView &ssvFile, const size_t stSId,
     const ImageFormat ifPId)
-      const { ImageSave(ifPId, strvFile, *this, GetSlotsConst()[stSId]); }
+      const { ImageSave(ifPId, ssvFile, *this, GetSlotsConst()[stSId]); }
   /* -- Load image from memory asynchronously ------------------------------ */
-  void InitAsyncArray(lua_State*const lS, const StdStringView &strvIdent,
+  void InitAsyncArray(lua_State*const lS, const StdStringView &ssvIdent,
     Asset &aData, const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
     // The decoded image will be kept in memory
     SetDynamic();
     // Load image from memory asynchronously
-    AsyncInitArray(lS, strvIdent, "bmparray", aData);
+    AsyncInitArray(lS, ssvIdent, "bmparray", aData);
   }
   /* -- Load image from file asynchronously -------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const StdStringView &strvFile,
+  void InitAsyncFile(lua_State*const lS, const StdStringView &ssvFile,
     const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
     // Load image from file asynchronously
-    AsyncInitFile(lS, strvFile, "imagefile");
+    AsyncInitFile(lS, ssvFile, "imagefile");
   }
   /* -- Create a blank image for working on -------------------------------- */
-  void InitBlank(const StdStringView &strvIdent, const unsigned uBWidth,
+  void InitBlank(const StdStringView &ssvIdent, const unsigned uBWidth,
     const unsigned uBHeight, const bool bAlpha, const bool bClear)
   { // Lookup table for alpha setting
     using BitDepthTexTypePair = StdPair<const BitDepth, const TextureType>;
@@ -816,7 +816,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     SetBitsAndBytesPerPixel(bdttpLookupRef.first);
     SetPixelType(bdttpLookupRef.second);
     // Set other members
-    NameSet(strvIdent);
+    NameSet(ssvIdent);
     SetDynamic();
     DimSet(uBWidth, uBHeight);
     // Add the raw data into a slot
@@ -840,14 +840,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     isFirst.MemSwap(mSrc);
   }
   /* -- Load image from a raw image data ----------------------------------- */
-  void InitRaw(const StdStringView &strvName, Memory &mSrc,
+  void InitRaw(const StdStringView &ssvName, Memory &mSrc,
     const unsigned uBWidth, const unsigned uBHeight,
     const BitDepth bdBitsPP)
   { // Check that the range is valid
     const unsigned uMSize = 0xFFFF;
     if(!uBWidth || !uBHeight || uBWidth > uMSize || uBHeight > uMSize)
       XC("Image dimensions are not acceptable!",
-        "File",   strvName, "Width",   uBWidth,
+        "File",   ssvName, "Width",   uBWidth,
         "Height", uBHeight, "Maximum", uMSize);
     // Set bits per pixel
     SetBitsAndBytesPerPixel(bdBitsPP);
@@ -861,25 +861,25 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     { // Only fail if not binary
       if(GetBitsPerPixel() != BD_BINARY)
         XC("Image bits per pixel not valid!",
-          "File", strvName, "Depth", GetBitsPerPixel());
+          "File", ssvName, "Depth", GetBitsPerPixel());
       // Total pixels must be divisible by 8
       if(const size_t stRemainder = TotalPixels() % CHAR_BIT)
         XC("Binary image pixel count must be divisible by eight!",
-          "File", strvName, "Pixels", TotalPixels(), "Remainder", stRemainder);
+          "File", ssvName, "Pixels", TotalPixels(), "Remainder", stRemainder);
       // Set expected number of bits for binary image
       stExpect = TotalPixels() / CHAR_BIT;
     } // Compressed textures not supported yet
     else if(GetPixelType() >= TT_DXT1 && GetPixelType() <= TT_DXT3)
       XC("Compressed images not supported yet!",
-        "File", strvName, "Type", ImageGetPixelFormat(GetPixelType()));
+        "File", ssvName, "Type", ImageGetPixelFormat(GetPixelType()));
     // Set expected number of bytes
     else stExpect = TotalPixels() * GetBytesPerPixel();
     // Check that the size matches
     if(stExpect != mSrc.MemSize())
       XC("Arguments are not valid for specified image data!",
-        "File", strvName, "Expect", stExpect, "Actual", mSrc.MemSize());
+        "File", ssvName, "Expect", stExpect, "Actual", mSrc.MemSize());
     // Everything looks OK, set rest of the members
-    NameSet(strvName);
+    NameSet(ssvName);
     SetDynamic();
     // Add the raw data into a slot
     AddSlot(mSrc);
@@ -909,22 +909,22 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     CollectorRegister();
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const StdStringView &strvFileName,
+  void InitFile(const StdStringView &ssvFileName,
     const ImageFlagsConst &ifcFlags)
   { // Set the loading flags
     FlagSet(ifcFlags);
     // Load the file normally
-    SyncInitFileSafe(strvFileName);
+    SyncInitFileSafe(ssvFileName);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const StdStringView &strvName, Memory &mRval,
+  void InitArray(const StdStringView &ssvName, Memory &mRval,
     const ImageFlagsConst &ifcFlags)
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
     // Set the loading flags
     FlagSet(ifcFlags);
     // Load the array normally
-    SyncInitArray(strvName, mRval);
+    SyncInitArray(ssvName, mRval);
   }
   /* -- Default constructor ------------------------------------------------ */
   Image() :
@@ -947,8 +947,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ImageData{ ifcPurpose }            // Initialise purpose of image class
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Constructor -------------------------------------------------------- */
-  explicit Image(                      // Initialise a 1x1 pixel texture
+  /* -- Constructor to initialise a 1x1 pixel texture ---------------------- */
+  explicit Image(
     /* -- Parameters ------------------------------------------------------- */
     const uint32_t ulColour            // 32-bit RGBA colour pixel value
     ): /* -- Initialisers -------------------------------------------------- */
@@ -956,53 +956,53 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     SerialSlave{ cParent->Serial() },  // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
-    /* -- Code  ------------------------------------------------------------ */
-    { InitColour(ulColour); }          // Init 1x1 tex with specified colour
-  /* -- Constructor -------------------------------------------------------- */
-  Image(                               // Initialise from RAW pixel data
+    /* -- Init 1x1 tex with specified colour ------------------------------- */
+    { InitColour(ulColour); }
+  /* -- Constructor to Initialise from RAW pixel data ---------------------- */
+  Image(
     /* -- Parameters ------------------------------------------------------- */
-    const StdStringView &strvName,     // Name of the object
+    const StdStringView &ssvName,      // Name of the object
     Memory &&mRval,                    // Source pixel data
     const unsigned uWidth,             // Number of pixels in each scanline
     const unsigned uHeight,            // Number of scan lines
     const BitDepth bdBits              // Bit depth of the pixel data
     ): /* -- Initialisation of members ------------------------------------- */
-    Name{ strvName },                  // Initialise identifier
+    Name{ ssvName },                   // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
     SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise raw image --------------------------------------------- */
-    { InitRaw(strvName, mRval, uWidth, uHeight, bdBits); }
-  /* -- Constructor -------------------------------------------------------- */
-  Image(                               // Initialise from known file formats
+    { InitRaw(ssvName, mRval, uWidth, uHeight, bdBits); }
+  /* -- Constructor to initialise from known file formats ------------------ */
+  Image(
     /* -- Parameters ------------------------------------------------------- */
-    const StdStringView &strvName,     // Name of object
+    const StdStringView &ssvName,      // Name of object
     Memory &&mRval,                    // Source memory block to read from
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
-    Name{ strvName },                  // Initialise identifier
+    Name{ ssvName },                   // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
     SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise from array -------------------------------------------- */
-    { InitArray(strvName, mRval, ifFlags); }
-  /* -- Constructor -------------------------------------------------------- */
-  Image(                               // Initialise image from file
+    { InitArray(ssvName, mRval, ifFlags); }
+  /* -- Constructor to initialise image from file -------------------------- */
+  Image(
     /* -- Parameters ------------------------------------------------------- */
-    const StdStringView &strvName,     // Name of image from assets to load
+    const StdStringView &ssvName,      // Name of image from assets to load
     const ImageFlagsConst &ifFlags     // Loading flags
     ): /* -- Initialisation of members ------------------------------------- */
-    Name{ strvName },                  // Initialise identifier
+    Name{ ssvName },                   // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
     SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
-    /* -- Code ------------------------------------------------------------- */
-    { InitFile(strvName, ifFlags); }   // Initialisation from file
-  /* -- Constructor -------------------------------------------------------- */
-  Image(                               // MOVE constructor to SWAP with another
+    /* -- Code to initialise from file ------------------------------------- */
+    { InitFile(ssvName, ifFlags); }
+  /* -- MOVE constructor to SWAP with another ------------------------------ */
+  Image(
     /* -- Parameters ------------------------------------------------------- */
     Image &&imOtherRval                // Other image to swap with
     ): /* -- Initialisation of members ------------------------------------- */
@@ -1011,8 +1011,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     SerialSlave{ cParent->Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
-    /* -- Code ------------------------------------------------------------- */
-    { SwapImage(imOtherRval); }        // Swap image over
+    /* -- Swap image over -------------------------------------------------- */
+    { SwapImage(imOtherRval); }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Image, AsyncCancel())    // Wait for loading thread to cancel
 };/* -- End ---------------------------------------------------------------- */

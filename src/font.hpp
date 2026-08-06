@@ -188,11 +188,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       NameGet(), cStart, cEnd);
   }
   /* -- Do initialise all freetype characters in specified string ---------- */
-  void InitFTCharString(const StdStringView strvString)
+  void InitFTCharString(const StdStringView ssvString)
   { // Ignore if string not valid or font not loaded
-    if(strvString.empty() || !ftfData.IsLoaded()) return;
+    if(ssvString.empty() || !ftfData.IsLoaded()) return;
     // Do load string characters
-    DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(strvString);
+    DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(ssvString);
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
   }

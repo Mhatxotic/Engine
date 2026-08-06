@@ -981,13 +981,13 @@ class Display :                        // Actual class body
 #endif
   }
   /* -- Set window icons --------------------------------------------------- */
-  bool DisplaySetIcon(const StdStringView &strvNames)
+  bool DisplaySetIcon(const StdStringView &ssvNames)
   { // Separate icon names and if we got an icon name? Since we are building
     // the file name list with StdStringView's, we have to finalise these
     // strings eventually because if they get to the file system C function, we
-    // will have sent the full list of file names (strvNames) instead since
+    // will have sent the full list of file names (ssvNames) instead since
     // those functions just parse the whole .data() part.
-    if(const TokenStrView tsvIcons{ strvNames, cCommon->CommonColonV(), 3 })
+    if(const TokenStrView tsvIcons{ ssvNames, cCommon->CommonColonV(), 3 })
     { // If using interactive mode?
       if(cSystem->SysIsGraphicalMode())
       { // Clear images and icons
@@ -997,13 +997,13 @@ class Display :                        // Actual class body
         gfwivIcons.reserve(tsvIcons.size());
         ivIcons.reserve(tsvIcons.size());
         // Build icons
-        for(const StdStringView &strvName : tsvIcons)
+        for(const StdStringView &ssvName : tsvIcons)
         { // Check filename and load icon and force to RGB 32BPP. Note that
-          DirVerifyFileNameIsValid(strvName);
+          DirVerifyFileNameIsValid(ssvName);
           // GLFW only accepts reversed 32BPP images in RGB order so we need to
           // force that by the image loader class too.
           const Image &imC = ivIcons.emplace_back(
-            Image{ StdString{ strvName }, IL_REVERSE|IL_TORGB|IL_TO32BPP });
+            Image{ StdString{ ssvName }, IL_REVERSE|IL_TORGB|IL_TO32BPP });
           // Add to the available images we loaded
           const ImageSlot &imsD = imC.GetSlotsConst().front();
           gfwivIcons.push_back({ imsD.DimGetWidth<int>(),
@@ -1038,8 +1038,8 @@ class Display :                        // Actual class body
     return false;
   }
   /* -- Update icons and refresh icon if succeeded ------------------------- */
-  void DisplaySetIconFromLua(const StdStringView &strvNames)
-    { if(DisplaySetIcon(strvNames)) return cEvtWin->Add(EWC_WIN_SETICON); }
+  void DisplaySetIconFromLua(const StdStringView &ssvNames)
+    { if(DisplaySetIcon(ssvNames)) return cEvtWin->Add(EWC_WIN_SETICON); }
   /* -- Get window full-screen type ---------------------------------------- */
   FSType DisplayGetFSType() const { return fsType; }
   const StdStringView &DisplayGetFSTypeString(const FSType fsT) const
@@ -1411,8 +1411,8 @@ class Display :                        // Actual class body
     return ACCEPT;
   }
   /* -- Icon filenames changed (allow blank strings) ----------------------- */
-  CVarReturn DisplaySetIcon(const StdStringView &strvF, StdString&)
-    { return BoolToCVarReturn(strvF.empty() || DisplaySetIcon(strvF)); }
+  CVarReturn DisplaySetIcon(const StdStringView &ssvF, StdString&)
+    { return BoolToCVarReturn(ssvF.empty() || DisplaySetIcon(ssvF)); }
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

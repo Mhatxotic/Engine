@@ -235,12 +235,12 @@ class Audio :                          // Audio manager class
     const ALCsizei alcsiLength, const ALCchar*const cpMessage, void*const)
       noexcept
   { // Create string view of message and log the event
-    const StdStringView strvMsg{ cpMessage, static_cast<size_t>(alcsiLength) };
+    const StdStringView ssvMsg{ cpMessage, static_cast<size_t>(alcsiLength) };
     // Log event text to say we processed the event successfully.
     cLog->LogDebugExSafe(
       "Audio received system event $<0x$$> with device type $$<0x$$>...\n"
       "- $.", aleEventType, StdIOSHex, aleEventType, StdIOSDec,
-              aleDeviceType, StdIOSHex, aleDeviceType, strvMsg);
+              aleDeviceType, StdIOSHex, aleDeviceType, ssvMsg);
     // Send event to process the event
     switch(aleDeviceType)
     { // It was a playback device?
@@ -324,14 +324,14 @@ class Audio :                          // Audio manager class
     { // Get list of devices and break if succeeded
       if(const char* cpList = cOal->GetNCString<const char*const>(eQueryType))
       { // Parse the first item and if it is not empty?
-        Next: const StdStringView &strvRef = cpList;
-        if(!strvRef.empty())
+        Next: const StdStringView &ssvRef = cpList;
+        if(!ssvRef.empty())
         { // Print the device and its identifier
-          cLog->LogDebugExSafe("- $: $.", ltDevices.size(), strvRef);
+          cLog->LogDebugExSafe("- $: $.", ltDevices.size(), ssvRef);
           // Put it in the list
-          ltDevices.emplace(ltDevices.cend(), strvRef);
+          ltDevices.emplace(ltDevices.cend(), ssvRef);
           // Move list onwards
-          cpList += strvRef.length() + 1;
+          cpList += ssvRef.length() + 1;
           // Goto next device
           goto Next;
         } // Recover unused memory

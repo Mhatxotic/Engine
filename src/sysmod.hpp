@@ -67,10 +67,10 @@ class SysModuleData :                  // Members initially private
     StdString &&strVer) :
     /* -- Initialisers ----------------------------------------------------- */
     PathSplit{ strF },                 // Copy filename
-    uMajor(uMa),                     // Copy major version
-    uMinor(uMi),                     // Copy minor version
-    uBuild(uBu),                     // Copy build version
-    uRevision(uRe),                  // Copy revision version
+    uMajor(uMa),                       // Copy major version
+    uMinor(uMi),                       // Copy minor version
+    uBuild(uBu),                       // Copy build version
+    uRevision(uRe),                    // Copy revision version
     strVendor{ StdMove(strVen) },      // Move vendor string
     strDesc{ StdMove(strDe) },         // Move description string
     strComments{ StdMove(strCo) },     // Move comments string
@@ -81,10 +81,10 @@ class SysModuleData :                  // Members initially private
   explicit SysModuleData(const StdString &strF) :
     /* -- Initialisers ----------------------------------------------------- */
     PathSplit{ strF },                 // Initialise path parts
-    uMajor(0),                        // Major version not initialised yet
-    uMinor(0),                        // Minor version not initialised yet
-    uBuild(0),                        // Build version not initialised yet
-    uRevision(0)                      // Revision not initialised yet
+    uMajor(0),                         // Major version not initialised yet
+    uMinor(0),                         // Minor version not initialised yet
+    uBuild(0),                         // Build version not initialised yet
+    uRevision(0)                       // Revision not initialised yet
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -143,17 +143,17 @@ class SysVersion :
 { /* ----------------------------------------------------------------------- */
   const SysModuleData &smdEng;         // Engine executable information
   /* ----------------------------------------------------------------------- */
-  const StdStringView strvBuildType,   // Build type
-                      strvCompVer,     // Compiler version
-                      strvCompiled,    // Compilation date
-                      strvCompiler,    // Compiler name
-                      strvBuildTarget; // Target architechture
+  const StdStringView ssvBuildType,    // Build type
+                      ssvCompVer,      // Compiler version
+                      ssvCompiled,     // Compilation date
+                      ssvCompiler,     // Compiler name
+                      ssvBuildTarget;  // Target architechture
   /* -- Access to engine version data ------------------------------ */ public:
-  const StdStringView &ENGBuildType() const { return strvBuildType; }
-  const StdStringView &ENGCompVer() const { return strvCompVer; }
-  const StdStringView &ENGCompiled() const { return strvCompiled; }
-  const StdStringView &ENGCompiler() const { return strvCompiler; }
-  const StdStringView &ENGTarget() const { return strvBuildTarget; }
+  const StdStringView &ENGBuildType() const { return ssvBuildType; }
+  const StdStringView &ENGCompVer() const { return ssvCompVer; }
+  const StdStringView &ENGCompiled() const { return ssvCompiled; }
+  const StdStringView &ENGCompiler() const { return ssvCompiler; }
+  const StdStringView &ENGTarget() const { return ssvBuildTarget; }
   const StdString &ENGAuthor() const { return smdEng.GetVendor(); }
   const StdString &ENGComments() const { return smdEng.GetComments(); }
   const StdString &ENGDir() const { return smdEng.GetDir(); }
@@ -186,11 +186,11 @@ class SysVersion :
     /* -- Initialisers ----------------------------------------------------- */
     SysModules{ StdMove(smlOther) },   // Move system modules list
     smdEng{ FindBaseModuleInfo(stI) }, // Move engine executable info
-    strvBuildType{ BUILD_TYPE_LABEL }, // Build type
-    strvCompVer{ COMPILER_VERSION },   // Compiler version
-    strvCompiled{ VER_DATE },          // Compilation date
-    strvCompiler{ COMPILER_NAME },     // Compiler name
-    strvBuildTarget{ BUILD_TARGET }    // Target architechture
+    ssvBuildType{ BUILD_TYPE_LABEL },  // Build type
+    ssvCompVer{ COMPILER_VERSION },    // Compiler version
+    ssvCompiled{ VER_DATE },           // Compilation date
+    ssvCompiler{ COMPILER_NAME },      // Compiler name
+    ssvBuildTarget{ BUILD_TARGET }     // Target architechture
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

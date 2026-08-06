@@ -373,15 +373,15 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     }
   }
   /* -- Initialise --------------------------------------------------------- */
-  void FboInit(const StdStringView &strvID, const GLsizei glsiW,
+  void FboInit(const StdStringView &ssvID, const GLsizei glsiW,
     const GLsizei glsiH, const size_t stTri, const size_t stCmd)
   { // Say we're initialising the frame buffer.
     cLog->LogDebugExSafe("Fbo initialising a $x$ object '$'...",
-      glsiW, glsiH, strvID);
+      glsiW, glsiH, ssvID);
     // De-initialise old Fbo first.
     FboDeInit();
     // Set identifier.
-    NameSet(strvID);
+    NameSet(ssvID);
     // Reserve memory for triangle and command buffers
     FboReserve(stTri, stCmd);
     // Record dimensions and clamp texture size to maximum supported size.

@@ -683,9 +683,9 @@ class SysCore :
     XCS("Failed to acquire process priority!", "Pid", GetPid());
    }
   /* -- Initialise global mutex -------------------------------------------- */
-  bool InitGlobalMutex(const StdStringView &strvTitle)
+  bool InitGlobalMutex(const StdStringView &ssvTitle)
   { // Initialise the mutex and return the result
-    return this->SysDoInitGlobalMutex(strvTitle,
+    return this->SysDoInitGlobalMutex(ssvTitle,
       [](const pid_t, const pid_t pPOId)->bool{
       // Disable deprecation warnings as we need to use this
 #pragma clang diagnostic push

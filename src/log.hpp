@@ -65,8 +65,8 @@ class Log :                            // The actual class body
   using SafeLHLevel = StdAtomic<LHLevel>;  // Async safe 'LHLevel'.
   /* -- Private variables -------------------------------------------------- */
   const LogLevels  llLevels;           // Log level strings
-  const StdStringView strvStdOut,      // Label for 'stdout'
-                   strvStdErr;         // Label for 'stderr'
+  const StdStringView ssvStdOut,       // Label for 'stdout'
+                   ssvStdErr;          // Label for 'stderr'
   SafeLHLevel      slhlLevel;          // Log helper level for this instance
   size_t           stMaximum;          // Maximum log lines
   FStreamMode      fsmMode;            // Logging mode (append or truncate)
@@ -95,8 +95,8 @@ class Log :                            // The actual class body
     // appending for this and it turned out to be almost twice as slow as
     // using formatstring due to the fact that less memory management
     // is required!
-    for(const StdStringView &strvLine : tlLines)
-      push_back({ CCDeltaToDouble(), lhRequire, StdString{ strvLine } });
+    for(const StdStringView &ssvLine : tlLines)
+      push_back({ CCDeltaToDouble(), lhRequire, StdString{ ssvLine } });
     // Ignore if file not opened
     if(FStreamClosed()) return;
     // Get start of log
@@ -286,16 +286,16 @@ class Log :                            // The actual class body
     });
   }
   /* -- Initialise log to built-in standard output ------------------------- */
-  void LogInit(FILE*const fpDevice, const StdStringView &strvLabel)
+  void LogInit(FILE*const fpDevice, const StdStringView &ssvLabel)
   { // Set device, name and write confirmation of opening a device handle
     FStreamSetHandle(fpDevice);
-    NameSet(strvLabel);
+    NameSet(ssvLabel);
     LogWriteStringEx("Logging to standard output '$'.", NameGet());
   }
   /* -- Initialise with specified file name -------------------------------- */
-  bool LogInit(const StdStringView &strvFN)
+  bool LogInit(const StdStringView &ssvFN)
   { // Try to create the file, or open append it and return if failure
-    if(FStreamOpen(strvFN, fsmMode)) return false;
+    if(FStreamOpen(ssvFN, fsmMode)) return false;
     LogWriteStringEx("Log file is '$' at $.", NameGet(), cmSys.FormatTime());
     return true;
   }
@@ -309,8 +309,8 @@ class Log :                            // The actual class body
       "Info",                          // Log line is information
       "Debug"                          // Log line is for developers
     }},                                // End of log level strings
-    strvStdOut{ "/dev/stdout" },       // Initialise display label for stdout
-    strvStdErr{ "/dev/stderr" },       // Initialise display label for stderr
+    ssvStdOut{ "/dev/stdout" },        // Initialise display label for stdout
+    ssvStdErr{ "/dev/stderr" },        // Initialise display label for stderr
     slhlLevel{ LH_DEBUG },             // Initialise default level
     stMaximum(1000),                   // Initialise maximum output lines
     fsmMode(FM_MAX)                    // File mode initialised by cvar
@@ -354,8 +354,8 @@ class Log :                            // The actual class body
           // Compare the character
           switch(strFN.front())
           { // Check for requested use of stderr or stdout
-            case '!': LogInit(stderr, strvStdErr); return ACCEPT;
-            case '-': LogInit(stdout, strvStdOut); return ACCEPT;
+            case '!': LogInit(stderr, ssvStdErr); return ACCEPT;
+            case '-': LogInit(stdout, ssvStdOut); return ACCEPT;
             // Anything else ignore and open the file normally
             default: break;
           } // Done

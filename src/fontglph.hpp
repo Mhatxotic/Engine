@@ -151,7 +151,7 @@ struct HandleGlyphFunc                 // Members initially public
       const Codepoint coCharOutline)
     { return foP->DoHandleStaticGlyph(coChar, coCharOutline); }
   };/* --------------------------------------------------------------------- */
-};                                    // End of HandleGlyphFunc
+};                                     // End of HandleGlyphFunc
 /* -- Do load character function ------------------------------------------- */
 template<class StrokerFuncType>
   void DoInitFTChar(FT_GlyphSlot &ftgsRef, const Codepoint coCharOutline,
@@ -356,9 +356,9 @@ template<class HandleGlyphFuncType>
 template<class HandleGlyphFuncType,
          class InitCharFuncType,
          class RoundCheckFuncType>
-void DoInitFTCharString(const StdStringView &strvStr)
+void DoInitFTCharString(const StdStringView &ssvStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strvStr };
+  UtfDecoder udRef{ ssvStr };
   // Enumerate trough the entire string
   while(const Codepoint coChar = udRef.UtfNext())
     DoCheckGlyph<HandleGlyphFuncType,
@@ -367,41 +367,38 @@ void DoInitFTCharString(const StdStringView &strvStr)
 }
 /* -- Apply rounding functor before entering loop -------------------------- */
 template<class HandleGlyphFuncType, class InitCharFuncType>
-  void DoInitFTCharStringApplyRound(const StdStringView &strvStr)
+  void DoInitFTCharStringApplyRound(const StdStringView &ssvStr)
 { // Load the character with floor rounding?
   if(FlagIsSet(FF_FLOORADVANCE))
     DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
-      RoundCheckFunc::Manual<RoundFunc::Floor<GLfloat>>>(strvStr);
+      RoundCheckFunc::Manual<RoundFunc::Floor<GLfloat>>>(ssvStr);
   // Load the character with ceil rounding?
   else if(FlagIsSet(FF_CEILADVANCE))
     DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
-      RoundCheckFunc::Manual<RoundFunc::Ceil<GLfloat>>>(strvStr);
+      RoundCheckFunc::Manual<RoundFunc::Ceil<GLfloat>>>(ssvStr);
   // Load the character with round rounding?
   else if(FlagIsSet(FF_ROUNDADVANCE))
     DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
-      RoundCheckFunc::Manual<RoundFunc::Round<GLfloat>>>(strvStr);
+      RoundCheckFunc::Manual<RoundFunc::Round<GLfloat>>>(ssvStr);
   // No rounding (allows subpixel drawing)
   DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
-    RoundCheckFunc::Manual<RoundFunc::Straight<GLfloat>>>(strvStr);
+    RoundCheckFunc::Manual<RoundFunc::Straight<GLfloat>>>(ssvStr);
 }
 /* -- Apply rounding functor before entering loop -------------------------- */
 template<class HandleGlyphFuncType>
-  void DoInitFTCharStringApplyStroker(const StdStringView &strvStr)
+  void DoInitFTCharStringApplyStroker(const StdStringView &ssvStr)
 { // If stroker is loaded?
   if(ftfData.IsStrokerLoaded())
   { // Load entire stroker outline?
     if(FlagIsSet(FF_STROKETYPE2))
       DoInitFTCharStringApplyRound<HandleGlyphFuncType,
-        StrokerCheckFunc::Manual<InitCharFunc::Outline2>>
-          (strvStr);
+        StrokerCheckFunc::Manual<InitCharFunc::Outline2>>(ssvStr);
     // Load outside of stroker (default)
     else DoInitFTCharStringApplyRound<HandleGlyphFuncType,
-      StrokerCheckFunc::Manual<InitCharFunc::Outline1>>
-        (strvStr);
+      StrokerCheckFunc::Manual<InitCharFunc::Outline1>>(ssvStr);
   } // Load no stroker
   else DoInitFTCharStringApplyRound<HandleGlyphFuncType,
-    StrokerCheckFunc::Manual<InitCharFunc::NoOutline>>
-      (strvStr);
+    StrokerCheckFunc::Manual<InitCharFunc::NoOutline>>(ssvStr);
 }
 /* -- Check if a character needs initialising ------------------------------ */
 size_t CheckGlyph(const Codepoint coChar)

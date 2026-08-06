@@ -361,9 +361,9 @@ class Lua :                            // Actual class body
           for(const LuaKeyInt &lkiRef : ltRef.lkisList)
           { // Get reference to key/value pair and it to LUA
             LuaUtilPushInt(LuaGetState(), lkiRef.liValue);
-            LuaUtilSetField(LuaGetState(), -2, lkiRef.strvName.data());
+            LuaUtilSetField(LuaGetState(), -2, lkiRef.ssvName.data());
             // Also set an array key index too
-            LuaUtilPushExtStr(LuaGetState(), lkiRef.strvName);
+            LuaUtilPushExtStr(LuaGetState(), lkiRef.ssvName);
             lua_rawseti(LuaGetState(), -2, liIndex++);
           } // Set field name and finalise const table
           LuaUtilSetField(LuaGetState(), -2, ltRef.cpName);
@@ -375,17 +375,17 @@ class Lua :                            // Actual class body
       } // If we have don't have member functions?
       if(!llsRef.libmfList)
       { // Set this current list to global
-        LuaUtilSetGlobal(LuaGetState(), llsRef.strvName.data());
+        LuaUtilSetGlobal(LuaGetState(), llsRef.ssvName.data());
         // Log progress
         cLog->LogDebugExSafe(
           "- $ with $ functions and $ tables with $ values.",
-          llsRef.strvName, llsRef.stLLCount, ltsList.size(), stStaticsNS);
+          llsRef.ssvName, llsRef.stLLCount, ltsList.size(), stStaticsNS);
         // Continue
         continue;
       } // Load members into this namespace too for possible aliasing.
       luaL_setfuncs(LuaGetState(), llsRef.libmfList, 0);
       // Set to global variable
-      LuaUtilSetGlobal(LuaGetState(), llsRef.strvName.data());
+      LuaUtilSetGlobal(LuaGetState(), llsRef.ssvName.data());
       // Pre-cache the metadata for the class and it's methods.
       LuaUtilPushTable(LuaGetState(), 0, 4);
       // Copy a reference to the table and set an internal reference to it.
@@ -393,28 +393,28 @@ class Lua :                            // Actual class body
       const int iReference = LuaUtilRefInit(LuaGetState());
       if(LuaUtilIsNotRefValid(iReference))
         XC("Could not create reference to metatable!",
-          "Name", llsRef.strvName);
+          "Name", llsRef.ssvName);
       llcirAPI[llsRef.lciId] = iReference;
       // Push the name of the object for 'tostring()' LUA function.
-      LuaUtilPushExtStr(LuaGetState(), llsRef.strvName);
+      LuaUtilPushExtStr(LuaGetState(), llsRef.ssvName);
       LuaUtilSetField(LuaGetState(), -2, cCommon->CommonLuaNameV().data());
       // Set function methods so var:func() works.
       LuaUtilPushTable(LuaGetState(), 0, llsRef.stLLMFCount);
       luaL_setfuncs(LuaGetState(), llsRef.libmfList, 0);
       LuaUtilSetField(LuaGetState(), -2, "__index");
       // Getmetatable(x) just returns the type name for now.
-      LuaUtilPushExtStr(LuaGetState(), llsRef.strvName);
+      LuaUtilPushExtStr(LuaGetState(), llsRef.ssvName);
       LuaUtilSetField(LuaGetState(), -2, "__metatable");
       // Push garbage collector function.
       LuaUtilPushCFunc(LuaGetState(), llsRef.lcfpDestroy);
       LuaUtilSetField(LuaGetState(), -2, "__gc");
       // Register the table in the global namespace.
       LuaUtilSetField(LuaGetState(), LUA_REGISTRYINDEX,
-        llsRef.strvName.data());
+        llsRef.ssvName.data());
       // Log progress
       cLog->LogDebugExSafe(
         "- $ ($:$) with $ methods, $ functions and $ tables with $ values.",
-        llsRef.strvName, llsRef.lciId, iReference, llsRef.stLLMFCount,
+        llsRef.ssvName, llsRef.lciId, iReference, llsRef.stLLMFCount,
         llsRef.stLLCount, ltsList.size(), stStaticsNS);
     } // Report summary of API usage
     cLog->LogDebugExSafe(

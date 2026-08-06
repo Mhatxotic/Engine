@@ -33,7 +33,7 @@ class GlFW :                           // Root engine class
   private CursorStandard               // Standard cursors list
 { /* -- Private variables and functions ------------------------------------ */
   unsigned         uErrorLevel;        // Ignore further glfw errors
-  const StdStringView strvIntVersion;  // Internal (headers) version number
+  const StdStringView ssvIntVersion;   // Internal (headers) version number
   StdString        strExtVersion;      // External (library) version number
   StrVSet          svsFeatures;        // Features included
   bool             bRawMouseSupported; // Is raw mouse motion supported
@@ -96,7 +96,7 @@ class GlFW :                           // Root engine class
   }
   /* --------------------------------------------------------------- */ public:
   const StdStringView &GlFWGetInternalVersion() const
-    { return strvIntVersion; }
+    { return ssvIntVersion; }
   /* -- DeInitialiser ------------------------------------------------------ */
   void GlFWDeInit()
   { // Ignore if class not initialised
@@ -153,8 +153,8 @@ class GlFW :                           // Root engine class
             GlFWGetInternalVersion());
         // Parse features into a list
         StdForEach(seq, StdNext(tsvIdentity.begin()), tsvIdentity.end(),
-          [this](StdStringView &strvStr)
-            { svsFeatures.emplace(StdMove(strvStr)); });
+          [this](StdStringView &ssvStr)
+            { svsFeatures.emplace(StdMove(ssvStr)); });
         // Write the features
         cLog->LogDebugExSafe("GlFW library $ features $ ($).",
           tsvIdentity.front(), StrExplodeEx(svsFeatures, ", ", " and "),
@@ -229,7 +229,7 @@ class GlFW :                           // Root engine class
 #undef CURSOR                          // Done with this macro
     /* --------------------------------------------------------------------- */
     uErrorLevel(0),                    // No errors occured
-    strvIntVersion{                    // Init internal version number
+    ssvIntVersion{                     // Init internal version number
       STR(GLFW_VERSION_MAJOR) "."      // (?.x.x) Major
       STR(GLFW_VERSION_MINOR) "."      // (x.?.x) Minor
       STR(GLFW_VERSION_REVISION)       // (x.x.?) Revision

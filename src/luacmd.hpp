@@ -49,20 +49,20 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
   /* -- Unregister the console command from lua -------------------- */ public:
   const StdString &Name() const { return lcmiIt->first; }
   /* -- Register user console command from lua ----------------------------- */
-  void Init(lua_State*const lS, const StdStringView &strvName,
+  void Init(lua_State*const lS, const StdStringView &ssvName,
     const unsigned uMinimum, const unsigned uMaximum)
   { // Check that the console command is valid
-    if(!cConsole->IsValidConsoleCommandName(strvName))
+    if(!cConsole->IsValidConsoleCommandName(ssvName))
       XC("Console command name is invalid!",
-        "Command", strvName, "Minimum", cConsole->stConCmdMinLength,
+        "Command", ssvName, "Minimum", cConsole->stConCmdMinLength,
         "Maximum", cConsole->stConCmdMaxLength);
     // Check min/Max params and that they're valid
     if(uMinimum && uMaximum && uMaximum < uMinimum)
       XC("Minimum greater than maximum!",
-        "Name", strvName, "Minimum",  uMinimum, "Maximum", uMaximum);
+        "Name", ssvName, "Minimum",  uMinimum, "Maximum", uMaximum);
     // Find command and throw exception if already exists
-    if(cConsole->CommandIsRegistered(strvName))
-      XC("Console command already exists!", "Command", strvName);
+    if(cConsole->CommandIsRegistered(ssvName))
+      XC("Console command already exists!", "Command", ssvName);
     // Since the userdata for this class object is at arg 5, we need to make
     // sure the callback function is ahead of it in arg 6 or the LuaFunc()
     // class which calls luaL_ref will fail as it ONLY reads position -1.
@@ -72,9 +72,9 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     // is called. Create a function and reference the function on the lua
     // stack and insert the reference into the list
     lcmiIt = GetLuaCmdsList().insert(GetLuaCmdsListEnd(),
-      { StdString{ strvName },
-        make_pair(LuaFunc{ StrAppend("CC:", strvName), true },
-          cConsole->RegisterCommand(strvName,
+      { StdString{ ssvName },
+        make_pair(LuaFunc{ StrAppend("CC:", ssvName), true },
+          cConsole->RegisterCommand(ssvName,
             uMinimum, uMaximum, LuaCallbackStatic)) });
   }
   /* -- Basic constructor with no init ----------------------------- */ public:

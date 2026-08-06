@@ -1218,23 +1218,23 @@ static void LuaUtilToTable(lua_State*const lS, const auto &ltData)
 /* -- Explode LUA string into table ---------------------------------------- */
 static void LuaUtilExplode(lua_State*const lS)
 { // Check parameters
-  const StdStringView strvStr{ LuaUtilGetCppStr(lS, 1) },
-                      strvSep{ LuaUtilGetCppStr(lS, 2) };
+  const StdStringView ssvStr{ LuaUtilGetCppStr(lS, 1) },
+                      ssvSep{ LuaUtilGetCppStr(lS, 2) };
   // Create empty table if string invalid
-  if(strvStr.empty() || strvSep.empty()) { LuaUtilPushTable(lS); return; }
+  if(ssvStr.empty() || ssvSep.empty()) { LuaUtilPushTable(lS); return; }
   // Else convert whats in the string
-  LuaUtilToTable(lS, TokenStrView{ strvStr, strvSep });
+  LuaUtilToTable(lS, TokenStrView{ ssvStr, ssvSep });
 }
 /* -- Explode LUA string into table ---------------------------------------- */
 static void LuaUtilExplodeEx(lua_State*const lS)
 { // Check parameters
-  const StdStringView strvStr{ LuaUtilGetCppStr(lS, 1) },
-                      strvSep{ LuaUtilGetCppStr(lS, 2) };
+  const StdStringView ssvStr{ LuaUtilGetCppStr(lS, 1) },
+                      ssvSep{ LuaUtilGetCppStr(lS, 2) };
   const size_t stMax = LuaUtilGetInt<size_t>(lS, 3);
   // Create empty table if string invalid
-  if(strvStr.empty() || strvSep.empty() || !stMax) return LuaUtilPushTable(lS);
+  if(ssvStr.empty() || ssvSep.empty() || !stMax) return LuaUtilPushTable(lS);
   // Else convert whats in the string
-  LuaUtilToTable(lS, TokenStrView{ strvStr, strvSep, stMax });
+  LuaUtilToTable(lS, TokenStrView{ ssvStr, ssvSep, stMax });
 }
 /* -- Process initial implosion a table ------------------------------------ */
 static lua_Integer LuaUtilImplodePrepare(lua_State*const lS,
@@ -1390,9 +1390,9 @@ static void LuaUtilClearTables(lua_State*const lS, int iStart)
       LuaUtilClearTableSafe(lS, iStart); }
 /* -- Replace text with values from specified LUA table -------------------- */
 static StdString LuaUtilReplaceMulti(lua_State*const lS,
-  const StdStringView &strvWhat)
+  const StdStringView &ssvWhat)
 { // Return if source string is empty?
-  if(strvWhat.empty()) return {};
+  if(ssvWhat.empty()) return {};
   // Table for replacements
   using StrViewPair = StdPair<const StdStringView, const StdStringView>;
   using StrViewPairList = StdList<StrViewPair>;
@@ -1410,11 +1410,11 @@ static StdString LuaUtilReplaceMulti(lua_State*const lS,
                     liIndex += 2)
     { // Get key from table
       LuaUtilGetRefEx(lS, 2, liIndex);
-      const StdStringView strvKey{ LuaUtilToCppString(lS) };
+      const StdStringView ssvKey{ LuaUtilToCppString(lS) };
       LuaUtilRmStack(lS);
       // Get value from table
       LuaUtilGetRefEx(lS, 2, liIndex + 1);
-      lList.push_back({ strvKey, LuaUtilToCppString(lS) });
+      lList.push_back({ ssvKey, LuaUtilToCppString(lS) });
       LuaUtilRmStack(lS);
     }
   } // Until there are no more items, add value if key is a string
@@ -1429,7 +1429,7 @@ static StdString LuaUtilReplaceMulti(lua_State*const lS,
   } // Return nothing if empty
   if(lList.empty()) return {};
   // Do the replacement and return the string
-  return StrReplaceEx(strvWhat, lList);
+  return StrReplaceEx(ssvWhat, lList);
 }
 /* -- Convert map tp table ------------------------------------------------- */
 template<class MapType>

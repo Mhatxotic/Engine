@@ -68,13 +68,13 @@ class System :                         // The main system class
   Interval         ivCpu;              // For getting cpu usage
   const size_t     stProcessId,        // Readable process id
                    stThreadId;         // Readable thread id
-  StdStringView    strvTitle,          // Guest title
-                   strvShortTitle,     // Guest short title
-                   strvVersion,        // Guest version
-                   strvAuthor,         // Guest author
-                   strvCopyright,      // Guest copyright
-                   strvDescription,    // Guest description
-                   strvWebsite;        // Guest website
+  StdStringView    ssvTitle,           // Guest title
+                   ssvShortTitle,      // Guest short title
+                   ssvVersion,         // Guest version
+                   ssvAuthor,          // Guest author
+                   ssvCopyright,       // Guest copyright
+                   ssvDescription,     // Guest description
+                   ssvWebsite;         // Guest website
   /* ----------------------------------------------------------------------- */
   terminate_handler thHandler;         // Old C++ termination handler
   /* ----------------------------------------------------------------------- */
@@ -99,14 +99,14 @@ class System :                         // The main system class
   { return SysMessage(GetWindowHandle(),
       StrAppend(ENGName(), ": ", strReason), strMessage, uFlags); }
   /* -- Get descriptor strings --------------------------------------------- */
-  const StdStringView &SysGetGuestTitle() const { return strvTitle; }
-  const StdStringView &SysGetGuestShortTitle() const { return strvShortTitle; }
-  const StdStringView &SysGetGuestVersion() const { return strvVersion; }
-  const StdStringView &SysGetGuestAuthor() const { return strvAuthor; }
-  const StdStringView &SysGetGuestCopyright() const { return strvCopyright; }
+  const StdStringView &SysGetGuestTitle() const { return ssvTitle; }
+  const StdStringView &SysGetGuestShortTitle() const { return ssvShortTitle; }
+  const StdStringView &SysGetGuestVersion() const { return ssvVersion; }
+  const StdStringView &SysGetGuestAuthor() const { return ssvAuthor; }
+  const StdStringView &SysGetGuestCopyright() const { return ssvCopyright; }
   const StdStringView &SysGetGuestDescription() const
-    { return strvDescription; }
-  const StdStringView &SysGetGuestWebsite() const { return strvWebsite; }
+    { return ssvDescription; }
+  const StdStringView &SysGetGuestWebsite() const { return ssvWebsite; }
   /* ----------------------------------------------------------------------- */
   const CoreFlagsConst SysGetCoreFlags() const { return cfMode; }
   bool SysIsCoreFlagsHave(const CoreFlagsConst cfFlags) const
@@ -228,19 +228,19 @@ class System :                         // The main system class
   }
   /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
   CVarReturn SysSetGuestTitle(const StdString&, const StdString &strV)
-    { strvTitle = strV; return ACCEPT; }
+    { ssvTitle = strV; return ACCEPT; }
   CVarReturn SysSetGuestShortTitle(const StdString&, const StdString &strV)
-    { strvShortTitle = strV; return ACCEPT; }
+    { ssvShortTitle = strV; return ACCEPT; }
   CVarReturn SysSetGuestVersion(const StdString&, const StdString &strV)
-    { strvVersion = strV; return ACCEPT; }
+    { ssvVersion = strV; return ACCEPT; }
   CVarReturn SysSetGuestAuthor(const StdString&, const StdString &strV)
-    { strvAuthor = strV; return ACCEPT; }
+    { ssvAuthor = strV; return ACCEPT; }
   CVarReturn SysSetGuestCopyright(const StdString&, const StdString &strV)
-    { strvCopyright = strV; return ACCEPT; }
+    { ssvCopyright = strV; return ACCEPT; }
   CVarReturn SysSetGuestDescription(const StdString&, const StdString &strV)
-    { strvDescription = strV; return ACCEPT; }
+    { ssvDescription = strV; return ACCEPT; }
   CVarReturn SysSetGuestWebsite(const StdString&, const StdString &strV)
-    { strvWebsite = strV; return ACCEPT; }
+    { ssvWebsite = strV; return ACCEPT; }
   /* -- Update minimum RAM ------------------------------------------------- */
   CVarReturn SysSetMinRAM(const uint64_t ullMinValue)
   { // If we're to check for minimum memory free

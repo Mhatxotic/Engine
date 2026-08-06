@@ -52,40 +52,40 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
     const PcmFormat pfNId,             // The PFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
     SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
+    DataFormat{ pfNId, ssvNName, ssvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with saver function only ------------------------------- */
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
     const PcmFormat pfNId,             // The PFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
     SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ pfNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
+    DataFormat{ pfNId, ssvNName, ssvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with both loader and saver functions ------------------- */
   explicit PcmLib(
     /* -- Required arguments ----------------------------------------------- */
     const PcmFormat pfNId,             // The PFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
     SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ pfNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
+    DataFormat{ pfNId, ssvNName, ssvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -102,9 +102,9 @@ static void PcmLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
     if(plRef.GetDecoder()(fmData, pdData))
       return cLog->LogInfoExSafe(
         "Pcm loaded '$' directly as $<$>! ($;$;$;$)",
-        fmData.NameGet(), plRef.GetExt(), pfId, pdData.GetRate(),
-        pdData.GetChannels(), pdData.GetBits(),
-        StrFromBoolTF(pdData.IsDynamic()), pdData.GetAlloc());
+        fmData.NameGet(), plRef.GetExt(), pfId, pdData.PcmDataGetRate(),
+        pdData.PcmDataGetChannels(), pdData.PcmDataGetBits(),
+        StrFromBoolTF(pdData.PcmDataIsDynamic()), pdData.PcmDataGetAlloc());
     // Could not detect format so throw error
     throw StdRunTimeError{ "Unable to load sound!" };
   } // Error occured. Error used as title
@@ -127,9 +127,10 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
     { // Load the bitmap, log and return if we loaded successfully
       if(plRef.GetDecoder()(fmData, pdData))
         return cLog->LogInfoExSafe("Pcm loaded '$' as $! ($;$;$;$)",
-          fmData.NameGet(), plRef.GetExt(), pdData.GetRate(),
-          pdData.GetChannels(), pdData.GetBits(),
-          StrFromBoolTF(pdData.IsDynamic()), StdIOSDec, pdData.GetAlloc());
+          fmData.NameGet(), plRef.GetExt(), pdData.PcmDataGetRate(),
+          pdData.PcmDataGetChannels(), pdData.PcmDataGetBits(),
+          StrFromBoolTF(pdData.PcmDataIsDynamic()), StdIOSDec,
+            pdData.PcmDataGetAlloc());
     } // Error occured. Error used as title
     catch(const StdException &eReason)
     { // Throw an error with the specified reason
@@ -138,7 +139,7 @@ static void PcmLoadFile(FileMap &fmData, PcmData &pdData)
         "Position", fmData.FileMapTell(), "Plugin", plRef.GetName());
     } // Rewind stream position and reset all pcm data read to load again
     fmData.FileMapRewind();
-    pdData.ResetAllData();
+    pdData.PcmDataResetAllData();
   } // Could not detect so throw error
   XC("Unable to determine sound format!",
     "Name", fmData.NameGet(), "Size", fmData.MemSize());

@@ -50,13 +50,13 @@ static CVarReturn LuaCodeCheckVersion(const StdString &strVal,
   // If version stored is not the same as expected?
   if(strVal != svVersion)
   { // If the LUA code table doesn't exist? Just initialise the version
-    if(!cSql->SqlIsTableExist(cSqls->strvLCTable)) goto Accepted;
+    if(!cSql->SqlIsTableExist(cSqls->ssvLCTable)) goto Accepted;
     // Log that the LUA version is different
     cLog->LogWarningExSafe("LuaCode detected LUA version mismatch "
       "(\"$\" != \"$\") so the code cache will be flushed.",
       strVal, svVersion);
     // Clear the cache and if succeeded?
-    if(cSql->SqlFlushTable(cSqls->strvLCTable) == SQLITE_OK)
+    if(cSql->SqlFlushTable(cSqls->ssvLCTable) == SQLITE_OK)
     { // Write success in the console
       cLog->LogWarningSafe("LuaCode flushed the LUA code cache successfully!");
       // Update cvar to the current version
@@ -148,9 +148,9 @@ static void LuaCodeCompileFunction(lua_State*const lS)
 }
 /* -- Compile a buffer ----------------------------------------------------- */
 static void LuaCodeDoCompileBuffer(lua_State*const lS, const char *cpBuf,
-  size_t stSize, const StdStringView &strvRef)
+  size_t stSize, const StdStringView &ssvRef)
 { // Compile the specified script and capture result
-  switch(const int iR = luaL_loadbuffer(lS, cpBuf, stSize, strvRef.data()))
+  switch(const int iR = luaL_loadbuffer(lS, cpBuf, stSize, ssvRef.data()))
   { // No error? Execute functions and log success. We should always be in
     // the sandbox, so no pcall is needed.
     case LUA_OK: return;
@@ -165,13 +165,13 @@ static void LuaCodeDoCompileBuffer(lua_State*const lS, const char *cpBuf,
 }
 /* -- Compile a buffer ----------------------------------------------------- */
 static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
-  const char*const cpBuf, const size_t stSize, const StdStringView &strvRef)
+  const char*const cpBuf, const size_t stSize, const StdStringView &ssvRef)
 { // If lua caching is disabled or the buffer is binary or no reference given?
   if(lcSetting == LCC_OFF || (stSize >= sizeof(uint32_t) &&
     *reinterpret_cast<const uint32_t*>(cpBuf) == 0x61754C1B) ||
-    strvRef.empty() || strvRef.front() == '!')
+    ssvRef.empty() || ssvRef.front() == '!')
   { // Do compile the buffer and return
-    LuaCodeDoCompileBuffer(lS, cpBuf, stSize, strvRef);
+    LuaCodeDoCompileBuffer(lS, cpBuf, stSize, ssvRef);
     // Return success but cache disabled
     return LCR_NOCACHE;
   } // Get checksum of module
@@ -179,7 +179,7 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
   // Check if we have cached this in the sql database and if we have?
   if(cSql->SqlExecuteAndSuccess(
     StrFormat("SELECT `$` from `$` WHERE R=? AND C=?",
-      cSqls->strvLCCodeColumn, cSqls->strvLCTable), strvRef, uCRC))
+      cSqls->ssvLCCodeColumn, cSqls->ssvLCTable), ssvRef, uCRC))
   { // Get records and if we have results?
     const SqlResult &srData = cSql->SqlGetRecords();
     if(!srData.empty())
@@ -194,10 +194,10 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
         { // Cache is valid
           cLog->LogDebugExSafe(
             "LuaCode will use cached version of '$'[$]($$)!",
-              strvRef, stSize, StdIOSHex, uCRC);
+              ssvRef, stSize, StdIOSHex, uCRC);
           // Do compile the buffer
           LuaCodeDoCompileBuffer(lS,
-            sdRef.MemPtr<char>(), sdRef.MemSize(), strvRef);
+            sdRef.MemPtr<char>(), sdRef.MemSize(), ssvRef);
           // Clear SQL results
           cSql->SqlReset();
           // Return that we used the cached version
@@ -205,32 +205,32 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
         } // Invalid type
         else cLog->LogWarningExSafe(
           "LuaCode will recompile '$'[$]($$$) as it has a bad type of $!",
-            strvRef, stSize, StdIOSHex, uCRC, StdIOSDec, sdRef.iType);
+            ssvRef, stSize, StdIOSHex, uCRC, StdIOSDec, sdRef.iType);
       } // Invalid keyname?
       else cLog->LogWarningExSafe(
         "LuaCode will recompile '$'[$]($$) as it has a bad keyname!",
-        strvRef, stSize, StdIOSHex, uCRC);
+        ssvRef, stSize, StdIOSHex, uCRC);
     } // No results
     else cLog->LogDebugExSafe(
       "LuaCode will recompile '$'[$]($$) as the module was modified!",
-        strvRef, stSize, StdIOSHex, uCRC);
+        ssvRef, stSize, StdIOSHex, uCRC);
   } // Error reading database so try to rebuild table
   else cSql->SqlLuaCacheRebuildTable();
   // Do compile the buffer
-  LuaCodeDoCompileBuffer(lS, cpBuf, stSize, strvRef);
+  LuaCodeDoCompileBuffer(lS, cpBuf, stSize, ssvRef);
   // Compile the function
   Memory mbData{ LuaCodeCompileFunction(lS, lcSetting == LCC_FULL) };
   // Send to sql database and return if succeeded
   if(cSql->SqlExecuteAndSuccess(StrFormat(
          "INSERT or REPLACE into `$`(`$`,`$`,`$`,`$`) VALUES(?,?,?,?)",
-         cSqls->strvLCTable, cSqls->strvLCCRCColumn, cSqls->strvLCTimeColumn,
-         cSqls->strvLCRefColumn, cSqls->strvLCCodeColumn),
-       uCRC, cmSys.GetTimeNS<sqlite3_int64>(), strvRef, mbData))
+         cSqls->ssvLCTable, cSqls->ssvLCCRCColumn, cSqls->ssvLCTimeColumn,
+         cSqls->ssvLCRefColumn, cSqls->ssvLCCodeColumn),
+       uCRC, cmSys.GetTimeNS<sqlite3_int64>(), ssvRef, mbData))
     return LCR_RECOMPILE;
   // Show error
   cLog->LogWarningExSafe(
     "LuaCode failed to store cache for '$' because $ ($)!",
-    strvRef, cSql->SqlGetErrorStr(), cSql->SqlGetError());
+    ssvRef, cSql->SqlGetErrorStr(), cSql->SqlGetError());
   // Try to rebuild table
   cSql->SqlLuaCacheRebuildTable();
   // Clear SQL results
@@ -240,28 +240,28 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
 }
 /* -- Compile a string ----------------------------------------------------- */
 static LuaCompResult LuaCodeCompileString(lua_State*const lS,
-  const StdStringView &strvBuf, const StdStringView &strvRef)
+  const StdStringView &ssvBuf, const StdStringView &ssvRef)
     { return LuaCodeCompileBuffer(lS,
-        strvBuf.data(), strvBuf.size(), strvRef); }
+        ssvBuf.data(), ssvBuf.size(), ssvRef); }
 /* -- Executes the function and returns the compilation result ------------- */
 static LuaCompResult LuaCodeExecCallRet(lua_State*const lS,
   const LuaCompResult lcrRes, const int iRet)
     { LuaUtilCallFunc(lS, iRet); return lcrRes; }
 /* -- Compile a memory block ----------------------------------------------- */
 static LuaCompResult LuaCodeCompileBlock(lua_State*const lS,
-  const MemConst &mcSrc, const StdStringView &strvRef)
+  const MemConst &mcSrc, const StdStringView &ssvRef)
     { return LuaCodeCompileBuffer(lS,
-        mcSrc.MemPtr<char>(), mcSrc.MemSize(), strvRef); }
+        mcSrc.MemPtr<char>(), mcSrc.MemSize(), ssvRef); }
 /* -- Execute specified block ---------------------------------------------- */
 static LuaCompResult LuaCodeExecuteBlock(lua_State*const lS,
-  const MemConst &mcSrc, const int iRet, const StdStringView &strvRef)
+  const MemConst &mcSrc, const int iRet, const StdStringView &ssvRef)
     { return LuaCodeExecCallRet(lS,
-        LuaCodeCompileBlock(lS, mcSrc, strvRef), iRet); }
+        LuaCodeCompileBlock(lS, mcSrc, ssvRef), iRet); }
 /* -- Execute specified string in unprotected ------------------------------ */
 static LuaCompResult LuaCodeExecuteString(lua_State*const lS,
-  const StdStringView &strvCode, const int iRet, const StdStringView &strvRef)
+  const StdStringView &ssvCode, const int iRet, const StdStringView &ssvRef)
     { return LuaCodeExecCallRet(lS,
-        LuaCodeCompileString(lS, strvCode, strvRef), iRet); }
+        LuaCodeCompileString(lS, ssvCode, ssvRef), iRet); }
 /* -- Compile contents of a file (returns function on lua stack) ----------- */
 static LuaCompResult LuaCodeCompileFile(lua_State*const lS,
   const FileMap &fScript)
@@ -269,12 +269,12 @@ static LuaCompResult LuaCodeCompileFile(lua_State*const lS,
         fScript.MemSize(), fScript.NameGetData()); }
 /* -- Copmile file and execute script that may be binary ------------------- */
 static LuaCompResult LuaCodeCompileFile(lua_State*const lS,
-  const StdStringView &strvFilename)
-    { return LuaCodeCompileFile(lS, AssetExtract(strvFilename)); }
+  const StdStringView &ssvFilename)
+    { return LuaCodeCompileFile(lS, AssetExtract(ssvFilename)); }
 /* -- Load file and execute script that may be binary ---------------------- */
 static LuaCompResult LuaCodeExecuteFile(lua_State*const lS,
-  const StdStringView &strvFilename, const int iRet=0)
-    { return LuaCodeExecCallRet(lS, LuaCodeCompileFile(lS, strvFilename),
+  const StdStringView &ssvFilename, const int iRet=0)
+    { return LuaCodeExecCallRet(lS, LuaCodeCompileFile(lS, ssvFilename),
         iRet); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

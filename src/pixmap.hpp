@@ -35,10 +35,10 @@ class SysMap :
     // ~FStream() will close the file
   }
   /* -- Setup handle ------------------------------------------------------- */
-  static FStreamBase SysMapSetupFile(const StdStringView &strvF)
+  static FStreamBase SysMapSetupFile(const StdStringView &ssvF)
   { // Open file and return it if opened else show error
-    if(FStream fsFile{ strvF, FM_R_B }) return fsFile;
-    XCS("Open file for file mapping failed!", "File", strvF);
+    if(FStream fsFile{ ssvF, FM_R_B }) return fsFile;
+    XCS("Open file for file mapping failed!", "File", ssvF);
   }
   /* -- Setup file information --------------------------------------------- */
   StdFStatStruct SysMapSetupInfo()
@@ -109,9 +109,9 @@ class SysMap :
     NameClear();
   }
   /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const StdStringView &strvF, const StdTimeT tC, const StdTimeT tM) :
+  SysMap(const StdStringView &ssvF, const StdTimeT tC, const StdTimeT tM) :
     /* -- Initialisers------------------------------------------------------ */
-    FStreamBase{ strvF },              // Open specified file
+    FStreamBase{ ssvF },               // Open specified file
 #if defined(LINUX)                     // Using Linux?
     // Note that all these zeros cause an error for other systems because
     // the structure may contain padding values so this needs to be changed to
@@ -154,9 +154,9 @@ class SysMap :
     /* -- So other class doesn't destruct ---------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit SysMap(const StdStringView &strvF) :
+  explicit SysMap(const StdStringView &ssvF) :
     /* -- Initialisers ----------------------------------------------------- */
-    FStreamBase{ SysMapSetupFile(strvF) }, // Iniitalise file handle
+    FStreamBase{ SysMapSetupFile(ssvF) }, // Iniitalise file handle
     sData{ SysMapSetupInfo() },        // Initialise file data
     cpMem(SysMapSetupMemory())         // Initialise file pointer
     /* -- No code ---------------------------------------------------------- */

@@ -119,8 +119,8 @@ class CmdLine                          // Members initially public
   bool CmdLineIsHome() const { return !CmdLineIsNoHome(); }
   /* -- Return and move string into output string -------------------------- */
   const StdString &CmdLineGetHome() const { return strHD; }
-  StdString CmdLineGetHome(const StdStringView &strvSuf) const
-    { return StrAppend(CmdLineGetHome(), strvSuf); }
+  StdString CmdLineGetHome(const StdStringView &ssvSuf) const
+    { return StrAppend(CmdLineGetHome(), ssvSuf); }
   /* -- Get environment variable ------------------------------------------- */
   template<class StrType>
     const StdString &CmdLineGetEnv(const StrType &strEnv) const

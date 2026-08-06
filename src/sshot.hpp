@@ -58,7 +58,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
   }
   /* -- Capture screenshot from Fbo -------------------------------- */ public:
   bool DumpFbo(const Fbo &fboRef,
-    const StdStringView &strvFile = cCommon->CommonBlankV())
+    const StdStringView &ssvFile = cCommon->CommonBlankV())
   { // Cancel if thread is still running
     if(tThread.ThreadIsJoinable()) return false;
     // DeInit old thread, we need to reuse it
@@ -85,8 +85,8 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       "Failed to read Fbo pixel data!",
       "Name", fboRef.NameGet(), "Mode", ImageGetPixelFormat(ttMode));
     // Get new filename or original filename
-    NameSet(strvFile.empty() ? StrAppend(cSystem->SysGetGuestShortTitle(),
-      cmSys.FormatTime("-%Y%m%d-%H%M%S")) : strvFile);
+    NameSet(ssvFile.empty() ? StrAppend(cSystem->SysGetGuestShortTitle(),
+      cmSys.FormatTime("-%Y%m%d-%H%M%S")) : ssvFile);
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
       fboRef.NameGet(), NameGet(), fboRef.DimGetWidth(),

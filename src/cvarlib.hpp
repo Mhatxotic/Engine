@@ -936,7 +936,7 @@ CVarItemStaticList{{
 // ? Specifies the volume of Stream classes. 0.0 (mute) to
 // ? 1.0 (maximum volume).
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_strvol", "1",
+{ CFL_AUDIO, "aud_ssvol", "1",
   CB(StreamSetVolume, ALfloat), TUFLOATSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! AUD_VERSION

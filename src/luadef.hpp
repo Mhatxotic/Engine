@@ -15,12 +15,12 @@ namespace P {                          // Start of public module namespace
 /* == Typedefs ============================================================= */
 struct LuaKeyInt                       // Lua key/value pairs C
 { /* -- Public variables --------------------------------------------------- */
-  const StdStringView strvName;        // Name of const table
+  const StdStringView ssvName;         // Name of const table
   const lua_Integer   liValue;         // Integer value for this const
   /* -- Initialiser constructor -------------------------------------------- */
-  LuaKeyInt(StdStringView &&strvNName, const lua_Integer liNValue) :
+  LuaKeyInt(StdStringView &&ssvNName, const lua_Integer liNValue) :
     /* -- Initialisers ----------------------------------------------------- */
-    strvName{StdMove(strvNName)},      liValue(liNValue)
+    ssvName{StdMove(ssvNName)},        liValue(liNValue)
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -70,7 +70,7 @@ static LuaLibClassIdReferences llcirAPI
 struct LuaLibStatic
 { /* -- Public variables --------------------------------------------------- */
   const LuaClassId     lciId;          // Unique class id (see above)
-  const StdStringView  strvName;       // Name of library
+  const StdStringView  ssvName;        // Name of library
   const CoreFlagsConst cfcRequired;    // Required core flags to register
   const luaL_Reg*const libList;        // Library functions
   const size_t         stLLCount;      // Size of library functions
@@ -80,17 +80,17 @@ struct LuaLibStatic
   const LuaTableSpan   ltsList;        // Table of const key/values to define
   const size_t         stLLTotal;      // Total number of entries
   /* -- Initialiser constructor -------------------------------------------- */
-  LuaLibStatic(const LuaClassId lciNId, const StdStringView &strvNName,
+  LuaLibStatic(const LuaClassId lciNId, const StdStringView &ssvNName,
     const CoreFlagsConst cfcNRequired, const luaL_Reg*const libNList,
     const size_t stNLLCount, const luaL_Reg*const libmfNList,
     const size_t stNLLMFCount, const lua_CFunction lcfpNDestroy,
     const LuaTableSpan &ltsNList, const size_t stNLLTotal) :
     /* -- Initialisers ----------------------------------------------------- */
-    lciId(lciNId),                   strvName{strvNName},
-    cfcRequired{cfcNRequired},       libList(libNList),
-    stLLCount(stNLLCount),           libmfList(libmfNList),
-    stLLMFCount(stNLLMFCount),       lcfpDestroy(lcfpNDestroy),
-    ltsList{ltsNList},               stLLTotal(stNLLTotal)
+    lciId(lciNId),                     ssvName{ssvNName},
+    cfcRequired{cfcNRequired},         libList(libNList),
+    stLLCount(stNLLCount),             libmfList(libmfNList),
+    stLLMFCount(stNLLMFCount),         lcfpDestroy(lcfpNDestroy),
+    ltsList{ltsNList},                 stLLTotal(stNLLTotal)
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- Lua API namespace descriptor list (ref'd in collect, lua, lualib) -- */

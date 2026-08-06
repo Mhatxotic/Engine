@@ -54,43 +54,43 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
     SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cParent->size() }
+    DataFormat{ ifNId, ssvNName, ssvNExt, cfdNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with saver function only ------------------------------- */
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
     SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ ifNId, strvNName, strvNExt, cfeNFunc, cParent->size() }
+    DataFormat{ ifNId, ssvNName, ssvNExt, cfeNFunc, cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with both loader and saver functions ------------------- */
   explicit ImageLib(
     /* -- Required arguments ----------------------------------------------- */
     const ImageFormat ifNId,           // The IFMT_* id
-    const StdStringView &strvNName,    // The name of the codec
-    const StdStringView &strvNExt,     // The default extension for the codec
+    const StdStringView &ssvNName,     // The name of the codec
+    const StdStringView &ssvNExt,      // The default extension for the codec
     const CbFuncDecoder &cfdNFunc,     // Function to call when loading
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
     SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ ifNId, strvNName, strvNExt, cfdNFunc, cfeNFunc,
+    DataFormat{ ifNId, ssvNName, ssvNExt, cfdNFunc, cfeNFunc,
       cParent->size() }
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -98,12 +98,12 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
 CTOR_END(ImageLibs, ImageLib, IMAGELIB,
   reserve(IFMT_MAX); CollectorSetLimit(IFMT_MAX),)
 /* -- Save a image using a specific type ----------------------------------- */
-static void ImageSave(const ImageFormat ifId, const StdStringView &strvFile,
+static void ImageSave(const ImageFormat ifId, const StdStringView &ssvFile,
   const ImageData &idData, const ImageSlot &isData)
 { // Get plugin class
   const ImageLib &ilRef = *cImageLibs->at(ifId);
   // Set filename with forced extension so we can delete it if it fails
-  const StdString strFileNX{ StrAppend(strvFile, '.', ilRef.GetExt()) };
+  const StdString strFileNX{ StrAppend(ssvFile, '.', ilRef.GetExt()) };
   bool bCreated = false;
   // Capture exceptions
   try

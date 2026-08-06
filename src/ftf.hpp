@@ -128,41 +128,41 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     fOutline = fNOutline;
   }
   /* -- Load pcm from memory asynchronously -------------------------------- */
-  void InitAsyncArray(lua_State*const lS, const StdStringView &strvFile,
+  void InitAsyncArray(lua_State*const lS, const StdStringView &ssvFile,
     Asset &aRef, const float fWidth, const float fHeight,
     const unsigned uDpiWidth, const unsigned uDpiHeight,
     const GLfloat fNOutline)
   { // Set other members
     InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Prepare asynchronous loading from array
-    AsyncInitArray(lS, strvFile, "ftfarray", aRef);
+    AsyncInitArray(lS, ssvFile, "ftfarray", aRef);
   }
   /* -- Load pcm from file asynchronously ---------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const StdStringView &strvFile,
+  void InitAsyncFile(lua_State*const lS, const StdStringView &ssvFile,
     const float fWidth, const float fHeight, const unsigned uDpiWidth,
     const unsigned uDpiHeight, const GLfloat fNOutline)
   { // Set other members
     InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Prepare asynchronous loading from array
-    AsyncInitFile(lS, strvFile, "ftffile");
+    AsyncInitFile(lS, ssvFile, "ftffile");
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const StdStringView &strvFile, const GLfloat fWidth,
+  void InitFile(const StdStringView &ssvFile, const GLfloat fWidth,
     const GLfloat fHeight, const unsigned uDpiWidth, const unsigned uDpiHeight,
     const GLfloat fNOutline)
   { // Set other members
     InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Load file normally
-    SyncInitFileSafe(strvFile);
+    SyncInitFileSafe(ssvFile);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const StdStringView &strvName, Memory &mData,
+  void InitArray(const StdStringView &ssvName, Memory &mData,
     const GLfloat fWidth, const GLfloat fHeight, const unsigned uDpiWidth,
     const unsigned uDpiHeight, const GLfloat fNOutline)
   { // Set other members
     InitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Load file as array
-    SyncInitArray(strvName, mData);
+    SyncInitArray(ssvName, mData);
   }
   /* -- De-init ftf font --------------------------------------------------- */
   void DeInit() { DoDeInit(); ftsStroker = nullptr; ftfFace = nullptr; }

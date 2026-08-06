@@ -312,9 +312,9 @@ class SysCore :
   { // Get operating system name
     struct utsname utsnData;
     if(uname(&utsnData)) XCS("Failed to read operating system information!");
-    const StdStringView strvRelease{ utsnData.release };
+    const StdStringView ssvRelease{ utsnData.release };
     // Tokenize version numbers
-    const TokenStrView tsvVersion{ strvRelease, cCommon->CommonPeriod() };
+    const TokenStrView tsvVersion{ ssvRelease, cCommon->CommonPeriod() };
     // Process and activate locale code
     StdString strCode{ cCmdLine->CmdLineGetEnv("LANG") };
     ProcessAndActivateLocale(strCode);
@@ -402,9 +402,9 @@ class SysCore :
     return iNice;
    }
   /* -- Initialise global mutex -------------------------------------------- */
-  bool InitGlobalMutex(const StdStringView &strvTitle)
+  bool InitGlobalMutex(const StdStringView &ssvTitle)
   { // Initialise the mutex and return the result
-    return this->SysDoInitGlobalMutex(strvTitle,
+    return this->SysDoInitGlobalMutex(ssvTitle,
       [](const pid_t pMPid, const pid_t pOPid)->bool
     { // Put in log that another instance of this application is running and
       // return to caller that execution must cease.

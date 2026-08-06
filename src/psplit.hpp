@@ -80,11 +80,11 @@ class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
   public FileParts                     // File parts
 { /* -- Constructors ---------------------------------------------- */ private:
-  FileParts Init(const StdStringView &strvSrc, const bool bUseFullPath) const
+  FileParts Init(const StdStringView &ssvSrc, const bool bUseFullPath) const
   { // Windows?
 #if defined(WINDOWS)
     // Convert UTF8 string to UNICODE string
-    StdWideString wstrSrc{ UTFtoS16(strvSrc) };
+    StdWideString wstrSrc{ UTFtoS16(ssvSrc) };
     // Build full path name and use requested pathname if not wanted or failed?
     StdResized<StdWideString> wstrFull{ _MAX_PATH };
     if(!bUseFullPath || !_wfullpath(const_cast<wchar_t*>(wstrFull.data()),
@@ -122,9 +122,9 @@ class PathSplit :
 #else
     // If a full path name build is re4quested? Set original string
     StdResized<StdString> strFull{ _MAX_PATH };
-    if(!bUseFullPath || !realpath(const_cast<char*>(strvSrc.data()),
+    if(!bUseFullPath || !realpath(const_cast<char*>(ssvSrc.data()),
       const_cast<char*>(strFull.data())))
-        strFull.assign(strvSrc);
+        strFull.assign(ssvSrc);
     // Succeeded? Resize the string
     else strFull.resize(strlen(strFull.data()));
     // This is the final full path string so compact it
@@ -182,10 +182,10 @@ class PathSplit :
 #endif
   }
   /* -- Constructors with initialisation --------------------------- */ public:
-  explicit PathSplit(const StdStringView &strvSrc,
+  explicit PathSplit(const StdStringView &ssvSrc,
                      const bool bUseFullPath = false) :
     /* -- Initialisers ----------------------------------------------------- */
-    FileParts{ Init(strvSrc, bUseFullPath) }
+    FileParts{ Init(ssvSrc, bUseFullPath) }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- MOVE assign constructor on class creation -------------------------- */

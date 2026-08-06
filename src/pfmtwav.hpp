@@ -103,40 +103,43 @@ class CodecWAV :                       // WAV codec object
               XC("Wave format must be either integer PCM or IEEE FLOAT!",
                 "Actual", uFormatTag);
           } // Wave format data. Can't use #pragma pack nowadays :-(
-          if(!pdData.SetChannelsSafe(
+          if(!pdData.PcmDataSetChannelsSafe(
                static_cast<PcmChannelType>(fmData.FileMapReadVar16LE())))
              XC("Wave format has invalid channel count!",
-               "Channels", pdData.GetChannels());
+               "Channels", pdData.PcmDataGetChannels());
           // Check sample rate
-          pdData.SetRate(fmData.FileMapReadVar32LE());
-          if(pdData.GetRate() < HL_U32LE_MINRATE ||
-             pdData.GetRate() > HL_U32LE_MAXRATE)
+          pdData.PcmDataSetRate(fmData.FileMapReadVar32LE());
+          if(pdData.PcmDataGetRate() < HL_U32LE_MINRATE ||
+             pdData.PcmDataGetRate() > HL_U32LE_MAXRATE)
             XC("Wave format has invalid sample rate!",
-              "Rate", pdData.GetRate(), "Minimum", HL_U32LE_MINRATE,
+              "Rate", pdData.PcmDataGetRate(), "Minimum", HL_U32LE_MINRATE,
               "Maximum", HL_U32LE_MAXRATE);
           // Get bytes per second and block align
           const unsigned uAvgBytesPerSec = fmData.FileMapReadVar32LE(),
                          uBlockAlign = fmData.FileMapReadVar16LE();
           // Get bits and calculate bytes per channel
-          pdData.SetBits(static_cast<PcmBitType>(fmData.FileMapReadVar16LE()));
+          pdData.PcmDataSetBits(
+            static_cast<PcmBitType>(fmData.FileMapReadVar16LE()));
           // Get and check bytes per second
-          const unsigned uCalcAvgBytes =
-            pdData.GetRate() * pdData.GetChannels() * pdData.GetBytes();
+          const unsigned uCalcAvgBytes = pdData.PcmDataGetRate() *
+            pdData.PcmDataGetChannels() * pdData.PcmDataGetBytes();
           if(uCalcAvgBytes != uAvgBytesPerSec)
             XC("Average bytes per second mismatch!",
-              "Rate",     pdData.GetRate(),
-              "Channels", pdData.GetChannels(),
-              "BitsPC",   pdData.GetBits(), "BytesPC",    pdData.GetBytes(),
+              "Rate",     pdData.PcmDataGetRate(),
+              "Channels", pdData.PcmDataGetChannels(),
+              "BitsPC",   pdData.PcmDataGetBits(),
+              "BytesPC",  pdData.PcmDataGetBytes(),
               "Expected", uAvgBytesPerSec, "Calculated", uCalcAvgBytes);
           // Check block align
           const unsigned uCalcBlockAlign =
-            static_cast<unsigned>(pdData.GetChannels()) *
-              pdData.GetBytes();
+            static_cast<unsigned>(pdData.PcmDataGetChannels()) *
+              pdData.PcmDataGetBytes();
           if(uCalcBlockAlign != uBlockAlign)
             XC("Block align size mismatch!",
-              "Channels",   pdData.GetChannels(), "BitsPC",   pdData.GetBits(),
-              "BytesPC",    pdData.GetBytes(),    "Expected", uBlockAlign,
-              "Calculated", uCalcBlockAlign);
+              "Channels", pdData.PcmDataGetChannels(),
+              "BitsPC",   pdData.PcmDataGetBits(),
+              "BytesPC",  pdData.PcmDataGetBytes(),
+              "Expected", uBlockAlign, "Calculated", uCalcBlockAlign);
           // We got the format chunk
           chunkFlags.FlagSet(WL_GOTFORMAT);
           // Done
@@ -144,7 +147,7 @@ class CodecWAV :                       // WAV codec object
         } // This is a data chunk?
         case HL_U32LE_CNKT_DATA:
         { // Store pcm data, mark that we got the data chunk and break
-          pdData.aPcmL.MemInitData(uSize, fmData.FileMapReadPtr(uSize));
+          pdData.PcmDataPrepareData(fmData.FileMapReadPtr(uSize), uSize);
           chunkFlags.FlagSet(WL_GOTDATA);
           break;
         } // Unknown chunk?

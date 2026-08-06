@@ -685,8 +685,8 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       bdDDepth };
   }
   /* -- Download texture and dump it to disk ------------------------------- */
-  void Dump(const size_t stSubTexId, const StdStringView &strvFile) const
-    { Download(stSubTexId).SaveFile(strvFile, stSubTexId, IFMT_PNG); }
+  void Dump(const size_t stSubTexId, const StdStringView &ssvFile) const
+    { Download(stSubTexId).SaveFile(ssvFile, stSubTexId, IFMT_PNG); }
   /* -- Reload texture array as normal texture ----------------------------- */
   void ReloadTexture()
   { // If image was not loaded from disk? Just (re)load the image data
