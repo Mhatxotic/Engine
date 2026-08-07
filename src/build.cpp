@@ -397,7 +397,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* LDL        */ "-lc -lc++ -lSystem -framework AudioUnit "
                    "-framework AudioToolbox -framework Cocoa "
                    "-framework CoreAudio -framework CoreVideo "
-                   "-framework IOKit -framework OpenGL",
+                   "-framework IOKit -framework OpenGL -framework QuartzCore",
   /* LDMAP      */ "-Wl",
   /* LIB        */ ".ma",
   /* OBJ        */ ".o",
@@ -2560,7 +2560,7 @@ static void ReplaceTextMulti(const StdString &strFile,
       // Change made
       ++stChanges;
       // Find a new change
-      strNew = StrReplace(strOld, sspPair.first, sspPair.second);
+      strNew = StrReplaceRef(strOld, sspPair.first, sspPair.second);
     } // ...until nothing was changed.
     while(strOld != strNew);
   } // No changes? Soft fail

@@ -47,12 +47,8 @@ class Audio :                          // Audio manager class
   void AudioOnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
   { // Update the device context if supplied
     cOal->UpdateDevice(emeEvent.eaArgs.front().Ptr<ALCdevice>());
-    // Clear and refresh device list and update the name
-    svPBDevices.clear();
-    AudioEnumPlaybackDevices();
-    cOal->UpdatePlaybackDeviceName();
-    // Send Lua event with isplaybackdevice set to true
-    lfOnUpdate.LuaFuncDispatch(true);
+    // Re-initialise the device list
+    AudioDoReInit();
   }
   /* -- Capture device list was updated ------------------------------------ */
   void AudioOnCapDeviceUpdated(const EvtMainEvent&)
@@ -87,7 +83,7 @@ class Audio :                          // Audio manager class
   void AudioResetCheckTime()
     { ctpNextCheck = cmHiRes.GetTime() + acdCheckRate.load(); }
   /* -- ReInit requested --------------------------------------------------- */
-  void AudioOnReInit(const EvtMainEvent&) try
+  void AudioDoReInit() try
   { // Log re-initialisation
     cLog->LogDebugSafe("Audio class reinitialising...");
     // De-initialise audio thread
@@ -124,6 +120,8 @@ class Audio :                          // Audio manager class
     cOal->FlagClear(AFL_REINIT);
     throw;
   }
+  /* -- ReInit requested --------------------------------------------------- */
+  void AudioOnReInit(const EvtMainEvent&) { AudioDoReInit(); }
   /* -- Thread main function with system events support -------------------- */
   ThreadStatus AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
@@ -161,14 +159,14 @@ class Audio :                          // Audio manager class
           ++stDiscrepancies;
           cLog->LogDebugExSafe("Audio thread discrepancy $: "
             "Device index $ over limit of $!",
-              stDiscrepancies, stIndex, svPBDevices.size());
+            stDiscrepancies, stIndex, svPBDevices.size());
         } // Is the device name the same
         else if(svPBDevices[stIndex] != cpList)
         { // Log warning and add to discreprency list
           ++stDiscrepancies;
           cLog->LogDebugExSafe("Audio thread discrepancy $: "
             "Expected device '$' at $, not '$'!",
-              stDiscrepancies, svPBDevices[stIndex], stIndex, cpList);
+            stDiscrepancies, svPBDevices[stIndex], stIndex, cpList);
         } // Jump to next item
         cpList += strlen(cpList) + 1;
         // increment device index
@@ -241,6 +239,7 @@ class Audio :                          // Audio manager class
       "Audio received system event $<0x$$> with device type $$<0x$$>...\n"
       "- $.", aleEventType, StdIOSHex, aleEventType, StdIOSDec,
               aleDeviceType, StdIOSHex, aleDeviceType, ssvMsg);
+    // Currently 'aleEventType' is bugged and shows removed even when added.
     // Send event to process the event
     switch(aleDeviceType)
     { // It was a playback device?
