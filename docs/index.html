@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.8.5.22 -->
-<!-- Automatically built at Wed Aug 05 23:01:46 2026 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.8.5.22 -->
+<!-- Reference for the Mhatxotic Engine API version 26.8.8.17 -->
+<!-- Automatically built at Sat Aug 08 13:41:56 2026 +0100 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.8.8.17 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.8.5.22">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.8.8.17">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.8.5.22">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.8.8.17">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.8.5.22">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.8.8.17">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413">
-	<META name="og:title" content="Mhatxotic Engine 26.8.5.22 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.8.8.17 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.8.5.22 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.8.8.17 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.8.5.22 API reference</H1>
+	<H1>Mhatxotic Engine 26.8.8.17 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 926 functions (408 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 223 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 927 functions (409 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 223 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1578,7 +1578,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(106 members)</I>
+								<B>Members</B> <I>(107 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1677,6 +1677,7 @@
 									<LI><A href="#Util.Sign">Sign</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
+									<LI><A href="#Util.TableCopy">TableCopy</A></LI>
 									<LI><A href="#Util.TableSize">TableSize</A></LI>
 									<LI><A href="#Util.Trim">Trim</A></LI>
 									<LI><A href="#Util.UTF8Char">UTF8Char</A></LI>
@@ -11272,6 +11273,18 @@
 		<PRE>Scales the specified 2D inner rectangle to the outer bounds while preserving aspect ratio.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.TableCopy" style="display:none">
+		<H3>Util.TableCopy</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Table</U> = Util.TableCopy(<I><U>Table</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Table</U> <I>(table)</I> = The source table to copy<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Table</U> <I>(newtable)</I> = The new table that was copied<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Copys the source table to the new table. This is only a shallow copy and all the new members are references of the old table members.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.TableSize" style="display:none">
 		<H3>Util.TableSize</H3>
 		<H4>Syntax:-</H4>
@@ -13627,6 +13640,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Aug 05 23:01:46 2026 +0100</ADDRESS>
+	This document was generated at Sat Aug 08 13:41:56 2026 +0100</ADDRESS>
 </BODY>
 </HTML>

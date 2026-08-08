@@ -1497,12 +1497,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   { // Synchronise access to packet list
     return MutexCall([this, &mbD, &plList, &stX, &ssvKind]()->double
     { // Not empty? Return top memory block else through error
-      if(plList.empty())
-        XC("No single packet remaining in blocklist to pop!",
-          "Address", strAddr, "Port", uPort);
+      if(plList.empty()) return 0.0;
       // Get last packet, log the transfer and return the time
       const double dTime = GetPacket(mbD, plList, stX);
-      SocketLogUnsafe(LH_DEBUG, "compacted $ bytes of $ to LUA.",
+      SocketLogUnsafe(LH_DEBUG, "sent $ bytes $ to guest.",
         mbD.MemSize(), ssvKind);
       return dTime;
     });
@@ -1519,8 +1517,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Get packet count and compact all of them into this memory and log
       const size_t stCount = plList.size();
       Compact(mbD, plList, stX);
-      SocketLogUnsafe(LH_DEBUG, "sent $ packets of $ of $ bytes to LUA.",
-        stCount, ssvKind, mbD.MemSize());
+      SocketLogUnsafe(LH_DEBUG, "sent $ bytes of $ $ to guest.",
+        mbD.MemSize(), stCount, ssvKind);
     });
   }
   /* -- Events status ------------------------------------------------------ */

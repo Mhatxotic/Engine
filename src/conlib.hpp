@@ -1225,7 +1225,9 @@ using StrStrPairMap =
   StdMap<StrStrPairMapPair::first_type, StrStrPairMapPair::second_type>;
 StrStrPairMap ssmpmMap;
 // Make sure theres two elements
-for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
+for(LuaUtilPushNil(lS);
+    LuaUtilTableEnumerateKeyValues(lS, -2);
+    LuaUtilRmStack(lS))
 { // Index is an integer? Create item info struct and add to list
   if(LuaUtilIsInteger(lS, -2))
     ssmpmMap.insert({ StrFromNum(LuaUtilToInt(lS, -2)),

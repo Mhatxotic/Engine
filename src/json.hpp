@@ -170,7 +170,9 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     // We need two more free item on the stack, leave empty if not
     if(!LuaUtilIsStackAvail(lS, 2)) return rjvRoot;
     // Walk through all the object members
-    for(LuaUtilPushNil(lS); lua_next(lS, iObjId); LuaUtilRmStack(lS))
+    for(LuaUtilPushNil(lS);
+        LuaUtilTableEnumerateKeyValues(lS, iObjId);
+        LuaUtilRmStack(lS))
     { // Get keyname
       Value vKey{ ToStr(lS, -2) };
       // Set the key->value for the LUA variable

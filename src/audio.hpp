@@ -44,12 +44,7 @@ class Audio :                          // Audio manager class
   /* -- References ------------------------------------------------- */ public:
   LuaFunc          lfOnUpdate;         // Fire this when device updates
   /* -- Playback device list was updated ----------------------------------- */
-  void AudioOnPbkDeviceUpdated(const EvtMainEvent &emeEvent)
-  { // Update the device context if supplied
-    cOal->UpdateDevice(emeEvent.eaArgs.front().Ptr<ALCdevice>());
-    // Re-initialise the device list
-    AudioDoReInit();
-  }
+  void AudioOnPbkDeviceUpdated(const EvtMainEvent&) { return AudioDoReInit(); }
   /* -- Capture device list was updated ------------------------------------ */
   void AudioOnCapDeviceUpdated(const EvtMainEvent&)
   { // Clear and re-enumerate capture devices

@@ -260,7 +260,7 @@ class Lua :                            // Actual class body
     // Compile the specified script from the command line
     LuaCodeCompileString(LuaGetState(), strWhat, {});
     // Move compiled function for LuaUtilPCall argument
-    lua_insert(LuaGetState(), 1);
+    LuaUtilInsertTable(LuaGetState(), 1);
     // Call the protected function. We don't know how many return values.
     LuaUtilPCall(LuaGetState(), 0, LUA_MULTRET);
     // Scan for results

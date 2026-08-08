@@ -1060,6 +1060,14 @@ LLFUNC(StretchOuter, 4,
   UtilStretchToOuter(dOW, dOH, dIW, dIH);
   LuaUtilPushVar(lS, dOW, dOH, dIW, dIH))
 /* ========================================================================= */
+// $ Util.TableCopy
+// > Table:table=The source table to copy
+// < Table:newtable=The new table that was copied
+// ? Copys the source table to the new table. This is only a shallow copy and
+// ? all the new members are references of the old table members.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TableCopy, 1, LuaUtilCopyShallowTable(lS))
+/* ========================================================================= */
 // $ Util.TableSize
 // > Table:table=A key/value pairs table
 // < Count:integer=Number of items in a table
@@ -1235,11 +1243,11 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(SHA512SSA),                 LLRSFUNC(SHA512SSS),
   LLRSFUNC(Sanitise),                  LLRSFUNC(Sign),
   LLRSFUNC(StretchInner),              LLRSFUNC(StretchOuter),
-  LLRSFUNC(TableSize),                 LLRSFUNC(Trim),
-  LLRSFUNC(UrlDecode),                 LLRSFUNC(UrlEncode),
-  LLRSFUNC(UTF8Char),                  LLRSFUNC(UUIDDecode),
-  LLRSFUNC(UUIDEncode),                LLRSFUNC(UUIDRandom),
-  LLRSFUNC(WordWrap),
+  LLRSFUNC(TableCopy),                 LLRSFUNC(TableSize),
+  LLRSFUNC(Trim),                      LLRSFUNC(UrlDecode),
+  LLRSFUNC(UrlEncode),                 LLRSFUNC(UTF8Char),
+  LLRSFUNC(UUIDDecode),                LLRSFUNC(UUIDEncode),
+  LLRSFUNC(UUIDRandom),                LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* namespace functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

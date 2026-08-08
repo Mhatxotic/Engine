@@ -253,6 +253,12 @@ static void LuaUtilPushTable(lua_State*const lS, const IntType1 itIndexes = 0,
   const IntType2 itKeys = 0)
 { lua_createtable(lS, UtilIntOrMax<int>(itIndexes),
                       UtilIntOrMax<int>(itKeys)); }
+/* -- Get next key/value from a table -------------------------------------- */
+static bool LuaUtilTableEnumerateKeyValues(lua_State*const lS, const int iIndex)
+  { return lua_next(lS, iIndex) != 0; }
+/* -- Insert a value into the table ---------------------------------------- */
+static void LuaUtilInsertTable(lua_State*const lS, const int iIndex)
+  { lua_insert(lS, iIndex); }
 /* -- Push a nil onto the stack -------------------------------------------- */
 static void LuaUtilPushNil(lua_State*const lS) { lua_pushnil(lS); }
 /* -- Push specified integral as boolean on to the stack ------------------- */
@@ -1185,11 +1191,11 @@ static void LuaUtilToTable(lua_State*const lS, const DirEntMap &demList)
 { // Create the table, we're creating a indexed/value array
   LuaUtilPushTable(lS, demList.size());
   // Entry id
-  lua_Integer liId = 0;
+  lua_Integer liIndex = 0;
   // For each table item
   for(const DirEntMapPair &dempRef : demList)
   { // Push table index
-    LuaUtilPushInt(lS, ++liId);
+    LuaUtilPushInt(lS, ++liIndex);
     // Create the sub for file info, we're creating a indexed/value array
     LuaUtilPushTable(lS, 7);
     // Push file parts
@@ -1316,42 +1322,77 @@ static void LuaUtilImplodeEx(lua_State*const lS)
   }
 }
 /* -- Enumerate number of items in a table (non-indexed) ------------------- */
-static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS)
+static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS,
+  const int iIndex = 1)
 { // Check that we have a table of strings
-  LuaUtilCheckTable(lS, 1);
+  LuaUtilCheckTable(lS, iIndex);
   // Number of indexed items in table
-  const lua_Unsigned uIndexedCount = LuaUtilGetSize(lS, 1);
+  const lua_Unsigned luIndexedCount = LuaUtilGetSize(lS, 1 + iIndex);
+  // Value to remove when popped by enumeration function
+  const int iVIndex = iIndex + 1;
   // Number of items in table
-  lua_Unsigned uCount = 0;
+  lua_Unsigned luCount = 0;
   // Until there are no more items
-  for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS)) ++uCount;
+  for(LuaUtilPushNil(lS);
+      LuaUtilTableEnumerateKeyValues(lS, iIndex);
+      LuaUtilRmStack(lS, iVIndex)) ++luCount;
   // Remove key
   LuaUtilRmStack(lS);
   // Return count of key/value pairs in table
-  return uCount - uIndexedCount;
+  return luCount - luIndexedCount;
+}
+/* -- Creates a shallow copy of the table at the specified stack index. ---- */
+static void LuaUtilCopyShallowTable(lua_State*const lS, const int iIndex = 1)
+{ // Ensure the provided index actually points to a table.
+  LuaUtilCheckTable(lS, iIndex);
+  // Create the new table and place it on top of the stack.
+  LuaUtilPushTable(lS, LuaUtilGetSize<int>(lS, iIndex));
+  // Index of supplied table and index of table key
+  const int iTIndex = iIndex + 1, iKIndex = iIndex + 2;
+  // Push nil onto the stack to initialise the lua_next iteration and iterate
+  // through the original table. lua_next pops the key and pushes the next
+  // key-value pair.
+  for(LuaUtilPushNil(lS); LuaUtilTableEnumerateKeyValues(lS, iIndex);)
+  { // Current stack state: table, new_table, key, value. lua_settable will
+    // consume the key and the value. However, lua_next requires the current
+    // key to remain on the stack for the next iteration. Therefore, the key
+    //must be duplicated.
+    LuaUtilCopyValue(lS, iKIndex);
+    // Current stack state: table, new_table, key, value, key_copy
+    // Move the duplicated key immediately below the value.
+    LuaUtilInsertTable(lS, iKIndex);
+    // Current stack state: table, new_table, key, key_copy, value
+    // Assign the key-value pair to the new table.
+    // This operation consumes key_copy and value, leaving the original key at
+    // the top.
+    lua_settable(lS, iTIndex);
+    // Current stack state: table, new_table, key
+  }
 }
 /* -- Clear a table of key pairs ------------------------------------------- */
 static void LuaUtilClearObject(lua_State*const lS, const int iIndex)
 { // Create a new table which will hold keys to delete
   lua_newtable(lS);
-  const int iKIndex = LuaUtilStackSize(lS);
+  // Calculate index to newly added table, key name to add and value to remove
+  const int iTIndex = iIndex + 1,
+            iKIndex = iIndex + 2,
+            iVIndex = iIndex + 3;
+  // Number of keys added to the table
   int iKCount = 0;
-  // First key pair for lua_next()
-  LuaUtilPushNil(lS);
   // For each key pair
-  while(lua_next(lS, iIndex))
+  for(LuaUtilPushNil(lS); LuaUtilTableEnumerateKeyValues(lS, iIndex);)
   { // Copy the key name into the array
-    LuaUtilCopyValue(lS, -2);
-    lua_rawseti(lS, iKIndex, ++iKCount);
-    lua_pop(lS, 1);
+    LuaUtilCopyValue(lS, iKIndex);
+    lua_rawseti(lS, iTIndex, ++iKCount);
+    LuaUtilRmStack(lS, iVIndex);
   } // For each key in the table
   for(;iKCount > 0; --iKCount)
   { // Nil out each collected key using rawset (avoids metamethods)
-    LuaUtilGetRefEx(lS, iKIndex, iKCount);
+    LuaUtilGetRefEx(lS, iTIndex, iKCount);
     LuaUtilPushNil(lS);
     LuaUtilSetRaw(lS, iIndex);
   } // Remove keys table we created
-  lua_pop(lS, 1);
+  LuaUtilRmStack(lS, iTIndex);
 }
 /* -- Clear a table of key pairs with check -------------------------------- */
 static void LuaUtilClearObjectSafe(lua_State*const lS, const int iIndex)
@@ -1420,7 +1461,9 @@ static StdString LuaUtilReplaceMulti(lua_State*const lS,
   } // Until there are no more items, add value if key is a string
   else
   { // Push key/values into replacement table
-    for(LuaUtilPushNil(lS); lua_next(lS, -2); LuaUtilRmStack(lS))
+    for(LuaUtilPushNil(lS);
+        LuaUtilTableEnumerateKeyValues(lS, -2);
+        LuaUtilRmStack(lS))
       if(LuaUtilIsString(lS, -1))
         lList.push_back({ LuaUtilToCppString(lS, -2),
                           LuaUtilToCppString(lS) });
