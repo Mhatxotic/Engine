@@ -1219,7 +1219,7 @@ static int GenDoc()
       "content=\"Reference for the $ API version $.$.$.$\">\n"
     "\t<META name=\"og:image\" "
       "content=\"https://repository-images.githubusercontent.com/"
-                "611875607/ee7aa468-9797-4763-9a2d-ea3d782ef413\">\n"
+                "611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7\">\n"
     "\t<META name=\"og:title\" content=\"$ $.$.$.$ API reference\">\n"
     "\t<META name=\"og:url\" "
       "content=\"https://mhatxotic.github.io/Engine/\">\n"

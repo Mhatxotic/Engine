@@ -629,7 +629,7 @@ LLFUNC(HighWord, 1, LuaUtilPushVar(lS, UtilHighWord(AgUInt{lS, 1}())))
 // ? Appends each entry in the specified table to a string separated by the
 // ? specified separator string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Implode, 1, LuaUtilImplode(lS))
+LLFUNC(Implode, 1, LuaUtilCheckTable(lS, 1); LuaUtilImplode(lS, 1))
 /* ========================================================================= */
 // $ Util.ImplodeEx
 // > Table:table=The table to convert to a string.
@@ -640,7 +640,7 @@ LLFUNC(Implode, 1, LuaUtilImplode(lS))
 // ? 'Separator' and uses the specified 'LastSep' as the final separator to
 // ? form a human reable string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(ImplodeEx, 1, LuaUtilImplodeEx(lS))
+LLFUNC(ImplodeEx, 1, LuaUtilCheckTable(lS, 1); LuaUtilImplodeEx(lS, 1))
 /* ========================================================================= */
 // $ Util.IfBlank
 // > String:string=The string to test if empty.
@@ -958,7 +958,7 @@ LLFUNC(Replace, 1,
 LLFUNC(ReplaceEx, 1,
   AgNcString aDest{lS, 1};
   LuaUtilCheckTable(lS, 2);
-  LuaUtilPushVar(lS, LuaUtilReplaceMulti(lS, aDest)))
+  LuaUtilPushVar(lS, LuaUtilReplaceMulti(lS, aDest, 2)))
 /* ========================================================================= */
 // $ Util.Round
 // > Value:string=A number value
@@ -1066,7 +1066,9 @@ LLFUNC(StretchOuter, 4,
 // ? Copys the source table to the new table. This is only a shallow copy and
 // ? all the new members are references of the old table members.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TableCopy, 1, LuaUtilCopyShallowTable(lS))
+LLFUNC(TableCopy, 1,
+  LuaUtilCheckTable(lS, 1);
+  LuaUtilCopyShallowTable(lS, 1))
 /* ========================================================================= */
 // $ Util.TableSize
 // > Table:table=A key/value pairs table
@@ -1078,7 +1080,9 @@ LLFUNC(TableCopy, 1, LuaUtilCopyShallowTable(lS))
 // ? size yourself whilst building the key/value pairs table instead of using
 // ? this.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TableSize, 1, LuaUtilPushVar(lS, LuaUtilGetKeyValTableSize(lS)))
+LLFUNC(TableSize, 1,
+  LuaUtilCheckTable(lS, 1);
+  LuaUtilPushVar(lS, LuaUtilGetKeyValTableSize(lS, 1)))
 /* ========================================================================= */
 // $ Util.Trim
 // > String:string=The string to modify

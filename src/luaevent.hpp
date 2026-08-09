@@ -202,7 +202,7 @@ class LuaEvtSlave :
     // Not have function?
     if(!this->LuaRefGetFunc())
       XC("Could not get callback function!",
-        "Name", mtPtr->NameGet(),        "Event", emeEvent.cCmd,
+        "Name",      mtPtr->NameGet(),         "Event", emeEvent.cCmd,
         "HaveState", this->LuaRefStateIsSet(), "Ref", this->LuaRefGetId(),
         "Params",    emaArgs.size());
     // Enumerate add the rest of the parameters

@@ -57,16 +57,19 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // Save stack position and restore it on scope exit
     const LuaStackSaver lSS{ cLuaFuncs->LuaRefGetState() };
     // Call the Lua callback assigned. We're expecting one or two return values
+    // but Lua will add nil's what wasn't specified.
     lcvmpIt->second.first.LuaFuncProtectedDispatch(2, strVal, cviVar.GetVar());
-    // Get result of the callback which means a boolean HAS to be returned
-    const bool bResult = LuaUtilGetBool(cLuaFuncs->LuaRefGetState(), -2);
-    // Theres also an optional second string parameter. Return standard result
-    // of 'ACCEPT' if true or 'DENY' if false.
-    if(!LuaUtilIsString(cLuaFuncs->LuaRefGetState(), -1))
+    // Get location of success return value
+    const int iBIndex = LuaUtilStackSize(cLuaFuncs->LuaRefGetState()) - 1;
+    const bool bResult = LuaUtilGetBool(cLuaFuncs->LuaRefGetState(), iBIndex);
+    // Get location of optional second string parameter which will force a
+    // different value for the cvar and return cvar to engine if not a string.
+    const int iSIndex = iBIndex + 1;
+    if(!LuaUtilIsString(cLuaFuncs->LuaRefGetState(), iSIndex))
       return BoolToCVarReturn(bResult);
     // Replace the current value with the guest author specified value.
     cviVar.GetModifyableValue() =
-      LuaUtilToCppString(cLuaFuncs->LuaRefGetState(), -1);
+      LuaUtilToCppString(cLuaFuncs->LuaRefGetState(), iSIndex);
     // Return result of how to handle the returned string
     return bResult ? ACCEPT_HANDLED_FORCECOMMIT : ACCEPT_HANDLED;
   }
@@ -193,11 +196,11 @@ lceOther{{                             // Misc flags
 static StdString VariablesMakeInformation(const CVarItem &cviVar)
 { // Print data about the cvar
   return StrFormat("Status for '$'...\n"
-    "- Callback: $.\n"               "- Flags: 0x$$$.\n"
-    "- Types: $.\n"                  "- Conditions: $.\n"
-    "- Permissions: $.\n"            "- Source: $.\n"
-    "- Other: $.\n"                  "- Default: [$/$] \"$\".\n"
-    "- Modified: $.\n"               "- Current: [$/$] \"$\".",
+    "- Callback: $.\n"                 "- Flags: 0x$$$.\n"
+    "- Types: $.\n"                    "- Conditions: $.\n"
+    "- Permissions: $.\n"              "- Source: $.\n"
+    "- Other: $.\n"                    "- Default: [$/$] \"$\".\n"
+    "- Modified: $.\n"                 "- Current: [$/$] \"$\".",
       cviVar.GetVar(),
       StrFromBoolTF(cviVar.IsTriggerSet()),
       StdIOSHex, cviVar, StdIOSDec,

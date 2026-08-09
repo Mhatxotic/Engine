@@ -219,8 +219,10 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     { LuaFuncRmSetRef(iLiveReference, LuaFuncGetEmptyFunc()); }
   /* -- Set a new function ------------------------------------------------- */
   void LuaFuncSet()
-  { // If last item on stack is a C function?
-    if(LuaUtilIsCFunction(LuaFuncGetState(), -1))
+  { // Get last item on the stack
+    const int iIndex = LuaUtilStackSize(LuaFuncGetState());
+    // If last item on stack is a C function?
+    if(LuaUtilIsCFunction(LuaFuncGetState(), iIndex))
     { // De-init old reference if it not empty function
       LuaFuncClearRef();
       // Set reference to C function
@@ -233,7 +235,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       cLog->LogDebugExSafe("LuaFunc allocated refid #$ for C function '$'.",
         iLiveReference, NameGet());
     } // If last item on stack is a regular function?
-    else if(LuaUtilIsFunction(LuaFuncGetState(), -1))
+    else if(LuaUtilIsFunction(LuaFuncGetState(), iIndex))
     { // Set reference to c function. Do NOT de-initialise empty function
       LuaFuncClearRef();
       // Set reference to regular function
@@ -248,7 +250,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     } // Don't know what this was?
     else XC("Expected C or regular function type on stack!",
       "Name",  NameGet(),
-      "Type",  LuaUtilGetType(LuaFuncGetState(), -1),
+      "Type",  LuaUtilGetType(LuaFuncGetState(), iIndex),
       "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
   }
   /* -- Set empty function ------------------------------------------------- */

@@ -254,8 +254,8 @@ static void LuaUtilPushTable(lua_State*const lS, const IntType1 itIndexes = 0,
 { lua_createtable(lS, UtilIntOrMax<int>(itIndexes),
                       UtilIntOrMax<int>(itKeys)); }
 /* -- Get next key/value from a table -------------------------------------- */
-static bool LuaUtilTableEnumerateKeyValues(lua_State*const lS, const int iIndex)
-  { return lua_next(lS, iIndex) != 0; }
+static bool LuaUtilTableEnumerateKeyValues(lua_State*const lS,
+  const int iIndex) { return lua_next(lS, iIndex) != 0; }
 /* -- Insert a value into the table ---------------------------------------- */
 static void LuaUtilInsertTable(lua_State*const lS, const int iIndex)
   { lua_insert(lS, iIndex); }
@@ -264,7 +264,7 @@ static void LuaUtilPushNil(lua_State*const lS) { lua_pushnil(lS); }
 /* -- Push specified integral as boolean on to the stack ------------------- */
 static void LuaUtilPushBool(lua_State*const lS, const auto bValue)
   { lua_pushboolean(lS, static_cast<bool>(bValue)); }
-/* -- Push a number onto the stack ----------------------------------------- */
+/* -- Push a number onto the stack c----------------------------------------- */
 static void LuaUtilPushNum(lua_State*const lS, const auto nValue)
   { lua_pushnumber(lS, static_cast<lua_Number>(nValue)); }
 /* -- Push an integer onto the stack --------------------------------------- */
@@ -331,21 +331,24 @@ catch(const StdException &eReason)
 { // Throw error and return nothing (keep to a func to prevent duplicate code).
   return LuaUtilProcException(lS, eReason);
 } // Don't catch all as it will catch LUA's longjmp() throw.
-/* -- Get and pop string on top -------------------------------------------- */
-static StdString LuaUtilGetAndPopStr(lua_State*const lS)
+/* -- Get and pop string in the specified position ------------------------- */
+static StdString LuaUtilGetAndPopStr(lua_State*const lS, const int iIndex)
 { // If there is nothing on the stack then return a generic error
-  if(LuaUtilIsNone(lS, -1)) return "Error signalled with no reason";
+  if(LuaUtilIsNone(lS, iIndex)) return "Error signalled with no reason";
   // Not have a string on stack? Set embedded error!
-  if(!LuaUtilIsString(lS, -1))
-    return StrFormat("Error signalled with invalid '$' reason",
-      LuaUtilGetType(lS, -1));
+  if(!LuaUtilIsString(lS, iIndex))
+    return StrFormat("Error signalled with invalid $ reason",
+      LuaUtilGetType(lS, iIndex));
   // Get error string
   const StdString strError{ LuaUtilToCppString(lS) };
   // Remove the error string
-  LuaUtilRmStack(lS);
+  LuaUtilRmStack(lS, iIndex);
   // return the error
   return strError;
 }
+/* -- Get and pop string on top -------------------------------------------- */
+static StdString LuaUtilGetAndPopStr(lua_State*const lS)
+  { return LuaUtilGetAndPopStr(lS, LuaUtilStackSize(lS)); }
 /* -- Copy one value on the stack ------------------------------------------ */
 static void LuaUtilCopyValue(lua_State*const lS, const int iIndex)
   { lua_pushvalue(lS, iIndex); }
@@ -375,21 +378,10 @@ static bool LuaUtilGetRefFunc(lua_State*const lS, const int iReference)
   if(lS && LuaUtilIsRefValid(iReference))
   { // Push the userdata onto the stack and return success if successful
     LuaUtilGetRef(lS, iReference);
-    if(LuaUtilIsFunction(lS, -1)) return true;
+    const int iIndex = LuaUtilStackSize(lS);
+    if(LuaUtilIsFunction(lS, iIndex)) return true;
     // Failed so remove whatever it was
-    LuaUtilRmStack(lS);
-  } // Failure
-  return false;
-}
-/* -- Return referenced userdata ------------------------------------------- */
-static bool LuaUtilGetRefUsrData(lua_State*const lS, const int iReference)
-{ // If context and reference are valid?
-  if(lS && LuaUtilIsRefValid(iReference))
-  { // Push the userdata onto the stack and return success if successful
-    LuaUtilGetRef(lS, iReference);
-    if(LuaUtilIsUserData(lS, -1)) return true;
-    // Failed so remove whatever it was
-    LuaUtilRmStack(lS);
+    LuaUtilRmStack(lS, iIndex);
   } // Failure
   return false;
 }
@@ -483,7 +475,7 @@ static StdString LuaUtilStack(lua_State*const lST)
         ++iIndex)
     { // Translate the value
       osS << "\n-- " << iIndex << ": "
-          << cpVar << " = " << LuaUtilGetStackType( lSt, -1);
+          << cpVar << " = " << LuaUtilGetStackType(lSt, -1);
       // Pop the value added by lua_getlocal
       lua_pop(lSt, 1);
     }
@@ -605,8 +597,8 @@ static StrType LuaUtilGetCppFile(lua_State*const lS, const int iParam)
   const StrType strFile{ LuaUtilToCppString<StrType>(lS, iParam) };
   if(const ValidResult vrId = DirValidName(strFile))
     XC("Invalid parameter!",
-      "Param",    iParam,                          "File",     strFile,
-      "Reason",   cDirBase->DirBaseVNRtoStr(vrId), "ReasonId", vrId);
+      "Param",  iParam,                          "File",     strFile,
+      "Reason", cDirBase->DirBaseVNRtoStr(vrId), "ReasonId", vrId);
   // Return the constructed string
   return strFile;
 }
@@ -1058,8 +1050,11 @@ static bool LuaUtilGCRunning(lua_State*const lS)
   { return LuaUtilGC(lS, LUA_GCISRUNNING) != 0; }
 /* -- Get memory usage ----------------------------------------------------- */
 static size_t LuaUtilGetUsage(lua_State*const lS)
-  { return static_cast<size_t>(LuaUtilGC(lS, LUA_GCCOUNT) +
-      LuaUtilGC(lS, LUA_GCCOUNTB) / 1024) * 1024; }
+{  // Calculate LUA script usage in kilobytes
+  constexpr const int iKB = 1024;
+  return static_cast<size_t>(
+    LuaUtilGC(lS, LUA_GCCOUNT) + LuaUtilGC(lS, LUA_GCCOUNTB) / iKB) * iKB;
+}
 /* -- Get GC minor multiplier ---------------------------------------------- */
 static int LuaUtilGCMinorMul(lua_State*const lS, const int iValue = -1)
   { return LuaUtilGCParam(lS, LUA_GCPMINORMUL, iValue); }
@@ -1190,6 +1185,7 @@ static void LuaUtilSetTableIdxInt(lua_State*const lS,
 static void LuaUtilToTable(lua_State*const lS, const DirEntMap &demList)
 { // Create the table, we're creating a indexed/value array
   LuaUtilPushTable(lS, demList.size());
+  const int iTIndex = LuaUtilStackSize(lS);
   // Entry id
   lua_Integer liIndex = 0;
   // For each table item
@@ -1198,16 +1194,24 @@ static void LuaUtilToTable(lua_State*const lS, const DirEntMap &demList)
     LuaUtilPushInt(lS, ++liIndex);
     // Create the sub for file info, we're creating a indexed/value array
     LuaUtilPushTable(lS, 7);
+    const int iSTIndex = LuaUtilStackSize(lS);
     // Push file parts
-    LuaUtilSetTableIdxStr(lS, -3, 1, dempRef.first);               // File name
-    LuaUtilSetTableIdxInt(lS, -3, 2, dempRef.second.Id());         // Order id
-    LuaUtilSetTableIdxInt(lS, -3, 3, dempRef.second.Size());       // Size
-    LuaUtilSetTableIdxInt(lS, -3, 4, dempRef.second.Created());    // Created
-    LuaUtilSetTableIdxInt(lS, -3, 5, dempRef.second.Written());    // Updated
-    LuaUtilSetTableIdxInt(lS, -3, 6, dempRef.second.Accessed());   // Accessed
-    LuaUtilSetTableIdxInt(lS, -3, 7, dempRef.second.Attributes()); // Attrs
+    LuaUtilSetTableIdxStr(lS, iSTIndex, 1, // File name
+      dempRef.first);
+    LuaUtilSetTableIdxInt(lS, iSTIndex, 2, // Order id
+      dempRef.second.Id());
+    LuaUtilSetTableIdxInt(lS, iSTIndex, 3, // Size
+      dempRef.second.Size());
+    LuaUtilSetTableIdxInt(lS, iSTIndex, 4, // Created
+      dempRef.second.Created());
+    LuaUtilSetTableIdxInt(lS, iSTIndex, 5, // Updated
+      dempRef.second.Written());
+    LuaUtilSetTableIdxInt(lS, iSTIndex, 6, // Accessed
+      dempRef.second.Accessed());
+    LuaUtilSetTableIdxInt(lS, iSTIndex, 7, // Attrs
+       dempRef.second.Attributes());
     // Push file data table
-    LuaUtilSetRaw(lS, -3);
+    LuaUtilSetRaw(lS, iTIndex);
   }
 }
 /* -- Convert string vector to lua table and put it on stack --------------- */
@@ -1215,11 +1219,12 @@ static void LuaUtilToTable(lua_State*const lS, const auto &ltData)
 { // Create the table, we're creating a indexed/value array and return if empty
   LuaUtilPushTable(lS, ltData.size());
   if(ltData.empty()) return;
+  const int iTIndex = LuaUtilStackSize(lS);
   // Id number for array index
   lua_Integer iIndex = 0;
   // For each table item
   for(const auto &aItem : ltData)
-    LuaUtilSetTableIdxStr(lS, -3, ++iIndex, aItem);
+    LuaUtilSetTableIdxStr(lS, iTIndex, ++iIndex, aItem);
 }
 /* -- Explode LUA string into table ---------------------------------------- */
 static void LuaUtilExplode(lua_State*const lS)
@@ -1242,91 +1247,108 @@ static void LuaUtilExplodeEx(lua_State*const lS)
   // Else convert whats in the string
   LuaUtilToTable(lS, TokenStrView{ ssvStr, ssvSep, stMax });
 }
+/* -- Convert any value to human readable string and delete it ------------- */
+static void LuaUtilConvertToString(lua_State*const lS, const int iIndex)
+{ // Convert to string no matter what
+  luaL_tolstring(lS, iIndex, nullptr);
+  // Now remove it
+  LuaUtilRmStack(lS, iIndex);
+}
 /* -- Process initial implosion a table ------------------------------------ */
 static lua_Integer LuaUtilImplodePrepare(lua_State*const lS,
-  const int iMaxParams)
-{ // Must have this many parameters
-  LuaUtilCheckParams(lS, iMaxParams);
-  // Check table and get its size
-  LuaUtilCheckTable(lS, 1);
-  // Get size of table clamped since lua_rawlen returns unsigned and the
+  const int iIndex, const int iMaxParams)
+{ // Get size of table clamped since lua_rawlen returns unsigned and the
   // lua_rawgeti parameter is signed. Compare the result...
   switch(const lua_Integer liLen =
     UtilIntOrMax<lua_Integer>(LuaUtilGetSize(lS, 1)))
-  { // No entries? Just check the separator for consistency and push blank
-    case 0: LuaUtilCheckStr(lS, 2);
-            LuaUtilPushStr(lS, cCommon->CommonBlank());
-            break;
-    // One entry? Just check the separator and push the first item
-    case 1: LuaUtilCheckStr(lS, 2);
-            LuaUtilGetRefEx(lS);
-            break;
-    // More than one entry? Caller must process this;
+  { // No entries?
+    case 0:
+    { // Just check the separator
+      LuaUtilCheckStr(lS, iIndex + 1);
+      // Push a blank string
+      LuaUtilPushStr(lS, cCommon->CommonBlank());
+      // We handled it
+      break;
+    } // One entry?
+    case 1:
+    { // Just check the separator
+      LuaUtilCheckStr(lS, iIndex + 1);
+      // Push the first item in the table
+      LuaUtilGetRefEx(lS);
+      // Get the location of the popped first item and convert it to string
+      LuaUtilConvertToString(lS, iMaxParams + 1);
+      // We handled it
+      break;
+    } // More than one entry? Caller must process this;
     default: return liLen;
   } // We handled it
   return 0;
 }
 /* -- Pushes an item from the specified table onto the stack --------------- */
-static void LuaUtilImplodeItem(lua_State*const lS, const int iParam,
-  const lua_Integer liIndex, StdString &strOutput, const char *cpStr,
-  size_t stStr)
+static void LuaUtilImplodeItem(lua_State*const lS, const int iTIndex,
+  const int iVIndex, const lua_Integer liIndex, StdString &strOutput,
+  const char *cpStr, size_t stStr)
 { // Add separator to string
   strOutput.append(cpStr, stStr);
   // Get item from table
-  LuaUtilGetRefEx(lS, 1, liIndex);
+  LuaUtilGetRefEx(lS, iTIndex, liIndex);
   // Get the string from Lua stack and save the length
-  cpStr = LuaUtilToLString(lS, iParam, stStr);
+  cpStr = LuaUtilToLString(lS, iVIndex, stStr);
   // Append to supplied string
   strOutput.append(cpStr, stStr);
   // Remove item from stack
   LuaUtilRmStack(lS);
 }
 /* -- Implode LUA table into string ---------------------------------------- */
-static void LuaUtilImplode(lua_State*const lS)
+static void LuaUtilImplode(lua_State*const lS, const int iIndex)
 { // Prepare table for implosion and return if more than 1 entry in table?
-  if(const lua_Integer liLen = LuaUtilImplodePrepare(lS, 2))
-  { // Get separator
+  if(const lua_Integer liLen = LuaUtilImplodePrepare(lS, iIndex, 2))
+  { // Calculate indexes for separator and table value
+    const int iSIndex = iIndex + 1, iVIndex = iIndex + 2;
+    // Get separator
     size_t stSep;
-    const char*const cpSep = LuaUtilGetLStr<char>(lS, 2, stSep);
+    const char*const cpSep = LuaUtilGetLStr<char>(lS, iSIndex, stSep);
     // Write first item
     LuaUtilGetRefEx(lS);
-    StdString strOutput{ LuaUtilToCppString(lS) };
-    LuaUtilRmStack(lS);
+    StdString strOutput{ LuaUtilToCppString(lS, iVIndex) };
+    LuaUtilRmStack(lS, iVIndex);
     // Iterate through rest of table and implode the items
     for(lua_Integer liI = 2; liI <= liLen; ++liI)
-      LuaUtilImplodeItem(lS, 3, liI, strOutput, cpSep, stSep);
+      LuaUtilImplodeItem(lS, iIndex, iVIndex, liI, strOutput, cpSep, stSep);
     // Return string
     LuaUtilPushStr(lS, strOutput);
   }
 }
 /* -- Implode LUA table into human readable string ------------------------- */
-static void LuaUtilImplodeEx(lua_State*const lS)
+static void LuaUtilImplodeEx(lua_State*const lS, const int iIndex)
 { // Prepare table for implosion and return if more than 1 entry in table?
-  if(const lua_Integer liLen = LuaUtilImplodePrepare(lS, 3))
-  { // Get and check separators
+  if(const lua_Integer liLen = LuaUtilImplodePrepare(lS, iIndex, 3))
+  { // Calculate indexes for separator and table value
+    const int iS1Index = iIndex + 1, iS2Index = iIndex + 2, iVIndex = iIndex + 3;
+    // Get and check separators
     size_t stSep, stSep2;
     const char
-      *const cpSep = LuaUtilGetLStr<char>(lS, 2, stSep),
-      *const cpSep2 = LuaUtilGetLStr<char>(lS, 3, stSep2);
+      *const cpSep = LuaUtilGetLStr<char>(lS, iS1Index, stSep),
+      *const cpSep2 = LuaUtilGetLStr<char>(lS, iS2Index, stSep2);
     // Write first item
     LuaUtilGetRefEx(lS);
-    StdString strOutput{ LuaUtilToCppString(lS) };
-    LuaUtilRmStack(lS);
+    StdString strOutput{ LuaUtilToCppString(lS, iVIndex) };
+    LuaUtilRmStack(lS, iVIndex);
     // Iterator through rest of table except for last entry
     for(lua_Integer liI = 2; liI < liLen; ++liI)
-      LuaUtilImplodeItem(lS, 4, liI, strOutput, cpSep, stSep);
+      LuaUtilImplodeItem(lS, iIndex, iVIndex, liI, strOutput, cpSep, stSep);
     // If there was more than one item? StrImplode the last item
-    if(liLen > 1) LuaUtilImplodeItem(lS, 4, liLen, strOutput, cpSep2, stSep2);
+    if(liLen > 1)
+      LuaUtilImplodeItem(lS, iIndex, iVIndex, liLen, strOutput, cpSep2,
+        stSep2);
     // Return string
     LuaUtilPushStr(lS, strOutput);
   }
 }
 /* -- Enumerate number of items in a table (non-indexed) ------------------- */
 static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS,
-  const int iIndex = 1)
-{ // Check that we have a table of strings
-  LuaUtilCheckTable(lS, iIndex);
-  // Number of indexed items in table
+  const int iIndex)
+{ // Number of indexed items in table
   const lua_Unsigned luIndexedCount = LuaUtilGetSize(lS, 1 + iIndex);
   // Value to remove when popped by enumeration function
   const int iVIndex = iIndex + 1;
@@ -1342,7 +1364,7 @@ static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS,
   return luCount - luIndexedCount;
 }
 /* -- Creates a shallow copy of the table at the specified stack index. ---- */
-static void LuaUtilCopyShallowTable(lua_State*const lS, const int iIndex = 1)
+static void LuaUtilCopyShallowTable(lua_State*const lS, const int iIndex)
 { // Ensure the provided index actually points to a table.
   LuaUtilCheckTable(lS, iIndex);
   // Create the new table and place it on top of the stack.
@@ -1374,12 +1396,12 @@ static void LuaUtilClearObject(lua_State*const lS, const int iIndex)
 { // Create a new table which will hold keys to delete
   lua_newtable(lS);
   // Calculate index to newly added table, key name to add and value to remove
-  const int iTIndex = iIndex + 1,
-            iKIndex = iIndex + 2,
-            iVIndex = iIndex + 3;
+  const int iTIndex = LuaUtilStackSize(lS),
+            iKIndex = iIndex + 1,
+            iVIndex = iIndex + 2;
   // Number of keys added to the table
   int iKCount = 0;
-  // For each key pair
+  // Enumerate each key pair in the table
   for(LuaUtilPushNil(lS); LuaUtilTableEnumerateKeyValues(lS, iIndex);)
   { // Copy the key name into the array
     LuaUtilCopyValue(lS, iKIndex);
@@ -1431,7 +1453,7 @@ static void LuaUtilClearTables(lua_State*const lS, int iStart)
       LuaUtilClearTableSafe(lS, iStart); }
 /* -- Replace text with values from specified LUA table -------------------- */
 static StdString LuaUtilReplaceMulti(lua_State*const lS,
-  const StdStringView &ssvWhat)
+  const StdStringView &ssvWhat, const int iIndex)
 { // Return if source string is empty?
   if(ssvWhat.empty()) return {};
   // Table for replacements
@@ -1439,39 +1461,47 @@ static StdString LuaUtilReplaceMulti(lua_State*const lS,
   using StrViewPairList = StdList<StrViewPair>;
   StrViewPairList lList;
   // Prepare table for implosion and return if more than 1 entry in table?
-  if(const lua_Unsigned luiLen = LuaUtilGetSize(lS, 2))
+  if(const lua_Unsigned luiLen = LuaUtilGetSize(lS, iIndex))
   { // Must have even number of parameters
     if(luiLen % 2) XC("Array size invalid!", "Size", luiLen);
-    // Iterate through rest of table and implode the items
+    // Iterate through the indicies in the table
+    const int iVIndex = iIndex + 1;
     for(lua_Integer liIndex = 1,
                     liMax = static_cast<lua_Integer>(
                       UtilIntWillOverflow<lua_Integer>(luiLen) ?
                         StdLimits<lua_Integer>::max() - 1 : luiLen);
                     liIndex <= liMax;
                     liIndex += 2)
-    { // Get key from table
-      LuaUtilGetRefEx(lS, 2, liIndex);
-      const StdStringView ssvKey{ LuaUtilToCppString(lS) };
-      LuaUtilRmStack(lS);
-      // Get value from table
-      LuaUtilGetRefEx(lS, 2, liIndex + 1);
-      lList.push_back({ ssvKey, LuaUtilToCppString(lS) });
-      LuaUtilRmStack(lS);
-    }
+    { // Get key from table and convert it to string if it isn't
+      LuaUtilGetRefEx(lS, iIndex, liIndex);
+      if(!LuaUtilIsString(lS, iVIndex)) LuaUtilConvertToString(lS, iVIndex);
+      // Record the key name
+      const StdStringView ssvKey{ LuaUtilToCppString(lS, iVIndex) };
+      // Done with the key (value) name
+      LuaUtilRmStack(lS, iVIndex);
+      // Get value from table and convert it to string if it isn't
+      const lua_Integer liVIndex = liIndex + 1;
+      LuaUtilGetRefEx(lS, iIndex, liVIndex);
+      if(!LuaUtilIsString(lS, iVIndex)) LuaUtilConvertToString(lS, iVIndex);
+      // Add the recorded keyname and value into the list
+      lList.push_back({ ssvKey, LuaUtilToCppString(lS, iVIndex) });
+      // Done with the value (value) name
+      LuaUtilRmStack(lS, iVIndex);
+    } // Test: lexec return Util.ReplaceEx("test",{"t",1});
   } // Until there are no more items, add value if key is a string
   else
-  { // Push key/values into replacement table
-    for(LuaUtilPushNil(lS);
-        LuaUtilTableEnumerateKeyValues(lS, -2);
-        LuaUtilRmStack(lS))
-      if(LuaUtilIsString(lS, -1))
-        lList.push_back({ LuaUtilToCppString(lS, -2),
-                          LuaUtilToCppString(lS) });
-    // Remove string parameter
-    LuaUtilRmStack(lS);
-  } // Return nothing if empty
-  if(lList.empty()) return {};
-  // Do the replacement and return the string
+  { // Enumerate key/value pairs
+    const int iKIndex = iIndex + 1, iVIndex = iIndex + 2;
+    for(LuaUtilPushNil(lS); LuaUtilTableEnumerateKeyValues(lS, iIndex);)
+    { // Convert to string if needed
+      if(!LuaUtilIsString(lS, iVIndex)) LuaUtilConvertToString(lS, iVIndex);
+      // Push key and value into replacement list
+      lList.push_back({ LuaUtilToCppString(lS, iKIndex),
+                        LuaUtilToCppString(lS, iVIndex) });
+      // Remove the value
+      LuaUtilRmStack(lS, iVIndex);
+    } // Test: lexec return Util.ReplaceEx("test",{key="val"});
+  } // Do the replacement and return the string
   return StrReplaceEx(ssvWhat, lList);
 }
 /* -- Convert map tp table ------------------------------------------------- */
@@ -1480,42 +1510,46 @@ template<class MapType>
     auto &&fcbFunc)
 { // Create the table, we're creating non-indexed key/value pairs
   LuaUtilPushTable(lS, 0, mtRef.size());
+  // Get top of stack so we don't have to use pseudo index
+  const int iKIndex = LuaUtilStackSize(lS) + 1;
   // Enumerate each table item
   using ValueType = typename MapType::value_type;
   for(const ValueType &vtRef : mtRef)
   { // Push value and key name
     fcbFunc(vtRef.second);
-    LuaUtilSetField(lS, -2, vtRef.first.data());
+    LuaUtilSetField(lS, iKIndex, vtRef.first.data());
   }
 }
 /* -- Convert string/uint map to table ------------------------------------- */
 static void LuaUtilToTable(lua_State*const lS, const StrUIntMap &suimRef)
-  { LuaUtilToTable(lS, suimRef, [lS](const unsigned uValue)
-      { LuaUtilPushInt(lS, uValue); }); }
+  { LuaUtilToTable(lS, suimRef,
+      [lS](const unsigned uValue){ LuaUtilPushInt(lS, uValue); }); }
 /* -- Convert string/string map to table ----------------------------------- */
 static void LuaUtilToTable(lua_State*const lS, const StrNCStrMap &sncsmMap)
-  { LuaUtilToTable(lS, sncsmMap, [lS](const StdString &strValue)
-      { LuaUtilPushStr(lS, strValue); }); }
+  { LuaUtilToTable(lS, sncsmMap,
+      [lS](const StdString &strValue){ LuaUtilPushStr(lS, strValue); }); }
 /* -- Convert varlist to lua table and put it on stack --------------------- */
 template<class ListType>
-  static ListType LuaUtilToVector(lua_State*const lS, const int iArg,
+  static ListType LuaUtilToVector(lua_State*const lS, const int iIndex,
     auto &&fcbFunc)
 { // Create the table, we're creating non-indexed key/value pairs
-  LuaUtilCheckTable(lS, iArg);
+  LuaUtilCheckTable(lS, iIndex);
   // Get maximums
-  const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iArg));
+  const size_t stMax = UtilIntOrMax<size_t>(LuaUtilGetSize(lS, iIndex));
   const lua_Integer liMax = static_cast<lua_Integer>(stMax) + 1;
+  // Get top of stack so we don't have to use pseudo index
+  const int iVIndex = iIndex + 1;
   // Preallocate the table
   StdReserved<ListType> vtArray{ stMax };
   // Walk the array
   for(lua_Integer liI = 1; liI < liMax; ++liI)
   { // Get item from table
     LuaUtilPushInt(lS, liI);
-    lua_gettable(lS, -2);
+    lua_gettable(lS, iIndex);
     // Get the string from Lua stack and save the length
-    vtArray.push_back(fcbFunc());
-    // Remove item from stack
-    LuaUtilRmStack(lS);
+    vtArray.push_back(fcbFunc(iVIndex));
+    // Remove value item from stack
+    LuaUtilRmStack(lS, iVIndex);
   } // Recover memory
   vtArray.shrink_to_fit();
   // Return the container
@@ -1523,16 +1557,18 @@ template<class ListType>
 }
 /* -- Convert a table of numbers to vector --------------------------------- */
 template<class ListType>
-  static ListType LuaUtilToNumVector(lua_State*const lS, const int iArg)
+  static ListType LuaUtilToNumVector(lua_State*const lS, const int iIndex)
 { using VecValType = typename ListType::value_type;
-  return LuaUtilToVector<ListType>(lS, iArg,
-    [lS](){ return LuaUtilGetNum<VecValType>(lS, -1); }); }
+  return LuaUtilToVector<ListType>(lS, iIndex,
+    [lS](const int iVIndex){
+      return LuaUtilGetNum<VecValType>(lS, iVIndex); }); }
 /* -- Convert a table of integers to vector -------------------------------- */
 template<class ListType>
-  static ListType LuaUtilToIntVector(lua_State*const lS, const int iArg)
+  static ListType LuaUtilToIntVector(lua_State*const lS, const int iIndex)
 { using VecValType = typename ListType::value_type;
-  return LuaUtilToVector<ListType>(lS, iArg,
-    [lS](){ return LuaUtilGetInt<VecValType>(lS, -1); }); }
+  return LuaUtilToVector<ListType>(lS, iIndex,
+    [lS](const int iVIndex){
+      return LuaUtilGetInt<VecValType>(lS, iVIndex); }); }
 /* -- Get and set a global variable ---------------------------------------- */
 static void LuaUtilGetGlobal(lua_State*const lS, const char*const cpKey)
   { lua_getglobal(lS, cpKey); }

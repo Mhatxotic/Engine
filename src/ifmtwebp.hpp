@@ -61,7 +61,7 @@ class CodecWEBP :                      // WEBP codec object
       idData.SetPixelType(TT_RGBA);
       idData.SetReversed();
     } // Failure so clear input stream and rethrow
-    catch(...) { simplewebp_unload(swpData); throw; }
+    catch(const StdException&) { simplewebp_unload(swpData); throw; }
     // We are done!
     return true;
   }
