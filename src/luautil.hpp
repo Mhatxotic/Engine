@@ -37,8 +37,9 @@ static IntType LuaUtilGetSize(lua_State*const lS, const int iParam)
 static bool LuaUtilIsNone(lua_State*const lS, const int iParam)
   { return lua_isnone(lS, iParam) != 0; }
 /* -- Position on the stack doesn't exist or is a nil? --------------------- */
-static bool LuaUtilIsNoneOrNil(lua_State*const lS, const int iParam)
-  { return lua_isnoneornil(lS, iParam) != 0; }
+static bool LuaUtilIsNoneOrNil[[maybe_unused]]
+  (lua_State*const lS, const int iParam)
+    { return lua_isnoneornil(lS, iParam) != 0; }
 /* -- Type is a nil? ------------------------------------------------------- */
 static bool LuaUtilIsNil(lua_State*const lS, const int iParam)
   { return lua_isnil(lS, iParam) != 0; }
@@ -69,6 +70,10 @@ static bool LuaUtilIsNumber(lua_State*const lS, const int iParam)
 /* -- Type is a string? ---------------------------------------------------- */
 static bool LuaUtilIsString(lua_State*const lS, const int iParam)
   { return lua_isstring(lS, iParam) != 0; }
+/* -- Type is a relaxed string (or number)? -------------------------------- */
+static bool LuaUtilIsStringRelaxed[[maybe_unused]]
+  (lua_State*const lS, const int iParam)
+    { return lua_isstring(lS, iParam) != 0; }
 /* -- Type is a table? ----------------------------------------------------- */
 static bool LuaUtilIsTable(lua_State*const lS, const int iParam)
   { return lua_istable(lS, iParam) != 0; }
@@ -1139,18 +1144,17 @@ static void LuaUtilPCall(lua_State*const lS, const int iParams = 0,
 { LuaUtilPCallResultHandle(lS,
   LuaUtilPCallEx(lS, iParams, iReturns, iHandler)); }
 /* -- If string is blank then return other string -------------------------- */
-static void LuaUtilIfBlank(lua_State*const lS)
-{ // Get replacement string first
-  size_t stEmp;
-  const char*const cpEmp = LuaUtilGetLStr<char>(lS, 1, stEmp);
-  // If the second parameter doesn't exist then return the empty string
-  if(LuaUtilIsNoneOrNil(lS, 2)) { LuaUtilPushLStr(lS, cpEmp, stEmp); return; }
-  // Second parameter is valid, but return it if LUA says it is empty
-  size_t stStr;
-  const char*const cpStr = LuaUtilGetLStr<char>(lS, 2, stStr);
-  if(!stStr) { LuaUtilPushLStr(lS, cpEmp, stEmp); return; }
-  // It isn't empty so return original string
-  LuaUtilPushLStr(lS, cpStr, stStr);
+static void LuaUtilIfBlank(lua_State*const lS, const int iIndex)
+{ // Check that the alternate parameter is a string
+  const int iBIndex = iIndex + 1;
+  LuaUtilCheckStr(lS, iBIndex);
+  // Return alternate string if string to test parameter is nil
+  if(!LuaUtilIsNil(lS, iIndex))
+  { // Make sure string to test is a string and return alternate string if empty
+    LuaUtilCheckStr(lS, iIndex);
+    if(LuaUtilGetSize(lS, iIndex)) return LuaUtilCopyValue(lS, iIndex);
+  } // No length or nil so return alternate string
+  LuaUtilCopyValue(lS, iBIndex);
 }
 /* -- Convert string string map to lua table and put it on stack ----------- */
 static void LuaUtilToTableEx(lua_State*const lS, const auto &mctData)
@@ -1319,6 +1323,9 @@ static void LuaUtilImplode(lua_State*const lS, const int iIndex)
     LuaUtilPushStr(lS, strOutput);
   }
 }
+/* -- Implode LUA table into string with table check ----------------------- */
+static void LuaUtilImplodeSafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilImplode(lS, iIndex); }
 /* -- Implode LUA table into human readable string ------------------------- */
 static void LuaUtilImplodeEx(lua_State*const lS, const int iIndex)
 { // Prepare table for implosion and return if more than 1 entry in table?
@@ -1345,6 +1352,9 @@ static void LuaUtilImplodeEx(lua_State*const lS, const int iIndex)
     LuaUtilPushStr(lS, strOutput);
   }
 }
+/* -- Implode LUA table into human readable string ------------------------- */
+static void LuaUtilImplodeExSafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, iIndex); LuaUtilImplodeEx(lS, iIndex); }
 /* -- Enumerate number of items in a table (non-indexed) ------------------- */
 static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS,
   const int iIndex)
@@ -1363,6 +1373,10 @@ static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS,
   // Return count of key/value pairs in table
   return luCount - luIndexedCount;
 }
+/* -- Enumerate number of items in a table (non-indexed) ------------------- */
+static lua_Unsigned LuaUtilGetKeyValTableSizeSafe(lua_State*const lS,
+  const int iIndex)
+{ LuaUtilCheckTable(lS, 1); return LuaUtilGetKeyValTableSize(lS, iIndex); }
 /* -- Creates a shallow copy of the table at the specified stack index. ---- */
 static void LuaUtilCopyShallowTable(lua_State*const lS, const int iIndex)
 { // Ensure the provided index actually points to a table.
@@ -1391,14 +1405,17 @@ static void LuaUtilCopyShallowTable(lua_State*const lS, const int iIndex)
     // Current stack state: table, new_table, key
   }
 }
+/* -- Creates a shallow copy of the table with table check ----------------- */
+static void LuaUtilCopyShallowTableSafe(lua_State*const lS, const int iIndex)
+  { LuaUtilCheckTable(lS, 1); LuaUtilCopyShallowTable(lS, iIndex); }
 /* -- Clear a table of key pairs ------------------------------------------- */
 static void LuaUtilClearObject(lua_State*const lS, const int iIndex)
 { // Create a new table which will hold keys to delete
   lua_newtable(lS);
   // Calculate index to newly added table, key name to add and value to remove
   const int iTIndex = LuaUtilStackSize(lS),
-            iKIndex = iIndex + 1,
-            iVIndex = iIndex + 2;
+            iKIndex = iTIndex + 1,
+            iVIndex = iTIndex + 2;
   // Number of keys added to the table
   int iKCount = 0;
   // Enumerate each key pair in the table
@@ -1415,14 +1432,14 @@ static void LuaUtilClearObject(lua_State*const lS, const int iIndex)
     LuaUtilSetRaw(lS, iIndex);
   } // Remove keys table we created
   LuaUtilRmStack(lS, iTIndex);
-}
+} // Test: lexec a={a=1,b=2,c=3};Util.FlushObject(a);return Util.TableSize(a)
 /* -- Clear a table of key pairs with check -------------------------------- */
 static void LuaUtilClearObjectSafe(lua_State*const lS, const int iIndex)
   { LuaUtilCheckTable(lS, iIndex); LuaUtilClearObject(lS, iIndex); }
 /* -- Clear multiple tables of key pairs with check ------------------------ */
-static void LuaUtilClearObjects(lua_State*const lS, int iStart)
-  { for(const int iEnd = LuaUtilStackSize(lS); iStart <= iEnd; ++iStart)
-      LuaUtilClearObjectSafe(lS, iStart); }
+static void LuaUtilClearObjects(lua_State*const lS, int iIndex)
+  { for(const int iEnd = LuaUtilStackSize(lS); iIndex <= iEnd; ++iIndex)
+      LuaUtilClearObjectSafe(lS, iIndex); }
 /* -- Clear a table of indicies -------------------------------------------- */
 static void LuaUtilClearArray(lua_State*const lS, const int iIndex)
 { // If table array has size (clamp to lua_Integer to be future proof).
@@ -1504,6 +1521,11 @@ static StdString LuaUtilReplaceMulti(lua_State*const lS,
   } // Do the replacement and return the string
   return StrReplaceEx(ssvWhat, lList);
 }
+/* -- Replace text with values from specified LUA table with table check --- */
+static StdString LuaUtilReplaceMultiSafe(lua_State*const lS,
+  const StdStringView &ssvWhat, const int iIndex)
+{ LuaUtilCheckTable(lS, iIndex);
+  return LuaUtilReplaceMulti(lS, ssvWhat, iIndex); }
 /* -- Convert map tp table ------------------------------------------------- */
 template<class MapType>
   static void LuaUtilToTable(lua_State*const lS, const MapType &mtRef,

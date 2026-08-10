@@ -113,13 +113,14 @@ class CodecOGG :                       // OGG codec object
       ov_pcm_total(&vorbisFile, -1) * (vorbisInfo->channels * 2);
     if(llSize < 0) XC("OGG has invalid pcm size!", "Size", llSize);
     // Allocate memory for OGG decoded PCM data
-    Memory &mData = pdData.PcmDataPrepareData(static_cast<size_t>(llSize));
+    const MemConst &mcData =
+      pdData.PcmDataPrepare(static_cast<size_t>(llSize));
     // Decompress until done
     for(ogg_int64_t llPos = 0; llPos < llSize; )
     { // Read ogg stream and if not end of file?
       const size_t stToRead = static_cast<size_t>(llSize - llPos);
       if(const long lBytesRead = ov_read(&vorbisFile,
-           mData.MemRead(static_cast<size_t>(llPos), stToRead),
+           mcData.MemRead(static_cast<size_t>(llPos), stToRead),
         static_cast<int>(stToRead), 0, 2, 1, nullptr))
       { // Error occured? Bail out
         if(lBytesRead < 0)

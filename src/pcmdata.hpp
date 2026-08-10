@@ -70,19 +70,19 @@ class PcmData :                        // Audio data structure
     { return PcmDataGetLeftConst().MemSize(); }
   size_t PcmDataGetRightSize() const
     { return PcmDataGetRightConst().MemSize(); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Returns if initial memory not allocated ---------------------------- */
   bool PcmDataNotPrepared() const
     { return PcmDataGetLeftConst().MemIsEmpty(); }
-  /* ----------------------------------------------------------------------- */
-  Memory &PcmDataPrepareData(const size_t stSize)
+  /* -- Allocate memory and return unmodifiable class for it --------------- */
+  MemConst &PcmDataPrepare(const size_t stSize)
     { PcmDataGetLeft().MemResize(stSize); return PcmDataGetLeft(); }
-  /* ----------------------------------------------------------------------- */
+  /* -- Allocate memory for inital data and copy specified data to it ------ */
   void PcmDataPrepareData(const void*const vpData, const size_t stSize)
   { // The stereo data temporarily gets put into the left channel and if it is
     // really stereo then it will get deinterlaced into the right channel.
     PcmDataGetLeft().MemInitData(stSize, vpData);
   }
-  /* ----------------------------------------------------------------------- */
+  /* -- Macro helper to check and manipulate flags ------------------------- */
 #define FH(n, f) \
   bool PcmDataIs ## n() const { return FlagIsSet(f); } \
   bool PcmDataIsNot ## n() const { return !PcmDataIs ## n(); } \
