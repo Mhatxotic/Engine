@@ -1160,11 +1160,12 @@ static void LuaUtilIfBlank(lua_State*const lS, const int iIndex)
 static void LuaUtilToTableEx(lua_State*const lS, const auto &mctData)
 { // Create the table, we're creating non-indexed key/value pairs
   LuaUtilPushTable(lS, 0, mctData.size());
+  const int iTIndex = LuaUtilStackSize(lS);
   // For each table item
   for(auto &mctPair : mctData)
   { // Push value and key name
     LuaUtilPushStr(lS, mctPair.second);
-    LuaUtilSetField(lS, -2, mctPair.first.data());
+    LuaUtilSetField(lS, iTIndex, mctPair.first.data());
   }
 }
 /* -- Push the specified string at the specified index --------------------- */

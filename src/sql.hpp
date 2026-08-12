@@ -744,6 +744,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   void RecordsToLuaTable(lua_State*const lS)
   { // Create the table, we're creating a indexed/value array
     LuaUtilPushTable(lS, srKeys.size());
+    const int iAIndex = LuaUtilStackSize(lS);
     // Memory id
     lua_Integer liId = 1;
     // For each table item
@@ -752,6 +753,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       LuaUtilPushInt(lS, liId);
       // Create the table, we're creating non-indexed key/value pairs
       LuaUtilPushTable(lS, 0, srmRef.size());
+      const int iOIndex = LuaUtilStackSize(lS);
       // For each column data
       for(const SqlRecordsMapPair &srmpRef : srmRef)
       { // Get data list item
@@ -790,9 +792,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
             "Type",   sdRef.iType);
             break;
         } // Push key name
-        LuaUtilSetField(lS, -2, srmpRef.first.data());
+        LuaUtilSetField(lS, iOIndex, srmpRef.first.data());
       } // Push key pair as integer table
-      LuaUtilSetRaw(lS, -3);
+      LuaUtilSetRaw(lS, iAIndex);
       // Next result number
       ++liId;
     }

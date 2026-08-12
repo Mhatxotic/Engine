@@ -420,43 +420,6 @@ class Lua :                            // Actual class body
         "- $ ($:$) with $ methods, $ functions and $ tables with $ values.",
         llsRef.ssvName, llsRef.lciId, iReference, llsRef.stLLMFCount,
         llsRef.stLLCount, ltsList.size(), stStaticsNS);
-    } // Report summary of API usage
-    cLog->LogDebugExSafe(
-      "Lua registered $ of $ global namespaces...\n"
-      "- $ of $ method functions are registered.\n"
-      "- $ of $ member functions are registered.\n"
-      "- $ of $ static tables are registered.\n"
-      "- $ of $ static values are registered.\n"
-      "- $ of $ functions are registered in total.\n"
-      "- $ of $ variables are registered in total.",
-      stGlobals,           stTotalGlobals,
-      stMethods,           stTotalMethods,
-      stMembers,           stTotalMembers,
-      stTables,            stTotalTables,
-      stStatics,           stTotalStatics,
-      stMembers+stMethods,  stTotalMembers+stTotalMethods,
-      stMembers+stMethods+stTables+stStatics,
-      stTotalMembers+stTotalMethods+stTotalTables+stTotalStatics);
-    // Load default libraries and log progress
-    cLog->LogDebugSafe("Lua registering core namespaces...");
-    luaL_openlibs(LuaGetState());
-    cLog->LogDebugSafe("Lua registered core namespaces.");
-    // Initialise random number generator and if pre-defined?
-    if(liSeed)
-    { // Init pre-defined seed
-      LuaUtilInitRNGSeed(LuaGetState(), liSeed);
-      // Warn developer/user that there is a pre-defined random seed
-      cLog->LogWarningExSafe("Lua using pre-defined random seed $ (0x$$)!",
-        liSeed, StdIOSHex, liSeed);
-    } // Use a random number instead
-    else
-    { // Get the new random number seed
-      const lua_Integer liRandSeed = CryptRandom<lua_Integer>();
-      // Set the random number seed
-      LuaUtilInitRNGSeed(LuaGetState(), liRandSeed);
-      // Log it
-      cLog->LogDebugExSafe("Lua generated random seed $ (0x$$)!",
-        liRandSeed, StdIOSHex, liRandSeed);
     } // Get variables namespace
     LuaUtilGetGlobal(LuaGetState(), "Variable");
     const int iTIndex = LuaUtilStackSize(LuaGetState());
@@ -471,14 +434,49 @@ class Lua :                            // Actual class body
           InitInternal(cvmiIt);
         // Assign the id to the cvar name
         LuaUtilSetField(LuaGetState(), iCTIndex, cvmiIt->first.data());
-      }
-    // Push cvar id table into the core namespace
+      } // Push cvar id table into the core namespace
     LuaUtilSetField(LuaGetState(), iTIndex, "Internal");
     // Remove the table
     LuaUtilRmStack(LuaGetState());
-    // Log that we added the variables
-    cLog->LogDebugExSafe("Lua published $ engine cvars.",  CVAR_MAX);
-    // Use a timeout hook?
+    // Report summary of API usage
+    cLog->LogDebugExSafe(
+      "Lua registered $ of $ global namespaces...\n"
+      "- $ of $ method functions are registered.\n"
+      "- $ of $ member functions are registered.\n"
+      "- $ of $ static tables are registered.\n"
+      "- $ of $ static values are registered.\n"
+      "- $ of $ engine cvars are exposed.\n"
+      "- $ of $ functions are registered in total.\n"
+      "- $ of $ variables are registered in total.",
+      stGlobals, stTotalGlobals,
+      stMethods, stTotalMethods,
+      stMembers, stTotalMembers,
+      stTables, stTotalTables,
+      stStatics, stTotalStatics,
+      cCVars->GetVarCount(), CVAR_MAX,
+      stMembers + stMethods, stTotalMembers + stTotalMethods,
+      stMembers + stMethods + stTables + stStatics + cCVars->GetVarCount(),
+      stTotalMembers + stTotalMethods + stTotalTables + stTotalStatics +
+        CVAR_MAX);
+    // Load default libraries and log progress
+    cLog->LogDebugSafe("Lua registering core namespaces...");
+    luaL_openlibs(LuaGetState());
+    cLog->LogDebugSafe("Lua registered core namespaces.");
+    // Initialise random number generator and if pre-defined?
+    if(liSeed)
+    { // Init pre-defined seed
+      LuaUtilInitRNGSeed(LuaGetState(), liSeed);
+      // Warn guest/user that there is a pre-defined random seed
+      cLog->LogWarningExSafe("Lua using pre-defined random seed $ (0x$$)!",
+        liSeed, StdIOSHex, liSeed);
+    } // Use a random number instead
+    else
+    { // Get the new random number seed, set it and log it
+      const lua_Integer liRandSeed = CryptRandom<lua_Integer>();
+      LuaUtilInitRNGSeed(LuaGetState(), liRandSeed);
+      cLog->LogDebugExSafe("Lua generated random seed $ (0x$$)!",
+        liRandSeed, StdIOSHex, liRandSeed);
+    } // Use a timeout hook?
     if(iOperations > 0)
     { // Set the hook
       LuaUtilSetHookCallback(LuaGetState(),

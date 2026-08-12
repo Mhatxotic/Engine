@@ -1119,8 +1119,7 @@ LLFUNC(UUIDDecode, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(UUIDEncode, 2,
   const UuId uuidData{ AgString{lS, 1} };
-  LuaUtilPushVar(lS, uuidData.d.dbRandom.front(),
-                     uuidData.d.dbRandom.back()))
+  LuaUtilPushVar(lS, uuidData.d.dbRandom.front(), uuidData.d.dbRandom.back()))
 /* ========================================================================= */
 // $ Util.UUIDRandom
 // < High64:integer=The high-order 128-bit integer
@@ -1129,8 +1128,7 @@ LLFUNC(UUIDEncode, 2,
 /* ------------------------------------------------------------------------- */
 LLFUNC(UUIDRandom, 2,
   const UuId uuidData;
-  LuaUtilPushVar(lS, uuidData.d.dbRandom.front(),
-                     uuidData.d.dbRandom.back()))
+  LuaUtilPushVar(lS, uuidData.d.dbRandom.front(), uuidData.d.dbRandom.back()))
 /* ========================================================================= */
 // $ Util.UrlDecode
 // > Text:string=The URL string to decode.

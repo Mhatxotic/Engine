@@ -153,9 +153,8 @@ class Display :                        // Actual class body
   }
   /* -- Window set set cursor visibility ----------------------------------- */
   void DisplayOnRqSetCurVis(const EvtWinEvent &eweEvent)
-  { // Get requested state
+  { // Get requested state and set the new input if we can and log status
     const bool bState = eweEvent.eaArgs.front().Bool();
-    // Set the new input if we can and log status
     cGlFW->WinSetCursor(bState);
     cLog->LogDebugExSafe("Input updated cursor visibility status to $.",
       StrFromBoolTF(bState));
@@ -439,13 +438,13 @@ class Display :                        // Actual class body
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = eweEvent.eaArgs;
     // Get connected monitor name. Will be NULL if GLFW_CONNECTED
-    if(const char*const cpName = emaArgs[0].CStr())
+    if(const char*const cpName = emaArgs.front().CStr())
     { // Log if name is set or not?
       if(*cpName)
         cLog->LogInfoExSafe("Display detected new monitor '$'.", cpName);
       else cLog->LogInfoSafe("Display detected new unnamed monitor.");
     } // Get disconnected monitor data. Will be NULL if GLFW_DISCONNECTED
-    else if(const GlFWMonitor *gfwmPtr = emaArgs[1].Ptr<GlFWMonitor>())
+    else if(const GlFWMonitor *gfwmPtr = emaArgs.back().Ptr<GlFWMonitor>())
     { // If this was our monitor?
       if(gfwmPtr == gfwmActive)
       { // We recognise it so we can savely disconnect it
@@ -536,13 +535,13 @@ class Display :                        // Actual class body
   void DisplayOnRqResize(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send the new size to GLFW
     const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
-    cGlFW->WinSetSize({ ewaArgs[0].Int(), ewaArgs[1].Int() });
+    cGlFW->WinSetSize({ ewaArgs.front().Int(), ewaArgs.back().Int() });
   }
   /* -- Window move requested ---------------------------------------------- */
   void DisplayOnRqMove(const EvtWinEvent &eweEvent)
   { // Get reference to actual arguments vector and send new position to GLFW
     const EvtWinArgs &ewaArgs = eweEvent.eaArgs;
-    cGlFW->WinSetPos({ ewaArgs[0].Int(), ewaArgs[1].Int() });
+    cGlFW->WinSetPos({ ewaArgs.front().Int(), ewaArgs.back().Int() });
   }
   /* -- Window centre request ---------------------------------------------- */
   void DisplayOnRqCentre(const EvtWinEvent&)

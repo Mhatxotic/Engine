@@ -365,10 +365,10 @@ struct CVars :                         // Start of vars class
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  const CVarMap &GetVarList() { return cvmActive; }
+  CVarMap &GetVarList() { return cvmActive; }
   CVarMapIt GetVarListEnd() { return cvmActive.end(); }
-  size_t GetVarCount() { return cvmActive.size(); }
-  const CVarMap &GetInitialVarList() { return cvmPending; }
+  size_t GetVarCount() const { return cvmActive.size(); }
+  const CVarMap &GetInitialVarList() const { return cvmPending; }
   /* ----------------------------------------------------------------------- */
   bool SetExistingInitialVar(const StdString &strVar, const StdString &strVal,
     const CVarFlagsConst cvfcFlags = PCONSOLE)

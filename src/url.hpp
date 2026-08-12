@@ -42,8 +42,10 @@ enum Result : unsigned                 // Result codes
 /* == Class to break apart urls ============================================ */
 template<class StrType = StdString, class ParserType = ParserString>
   requires StdIsString<StrType>
-struct UrlBase : public ParserType     // Members initially public
-{ /* ----------------------------------------------------------------------- */
+struct UrlBase :
+  /* -- Base classes ------------------------------------------------------- */
+  public ParserType                    // Parameters list
+{ /* -- Public typedefs ---------------------------------------------------- */
   enum Port : unsigned                 // Frequently used ports
   { /* --------------------------------------------------------------------- */
     P_NONE                    =     0, // Not initialised

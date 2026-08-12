@@ -1682,6 +1682,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       if(!stCount || stCount % 2) return LuaUtilPushTable(lS);
       // Create the table, we're creating non-indexed key/value pairs
       LuaUtilPushTable(lS, 0, stCount / 2);
+      const int iOIndex = LuaUtilStackSize(lS);
       // Currently selected variable
       const char *cpVar = nullptr;
       // For each packet
@@ -1692,7 +1693,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         if(!cpVar) { cpVar = mbPacket.MemPtr<char>(); continue; }
         // Push value and set it as the variable
         LuaUtilPushStr(lS, mbPacket.MemToStringView());
-        LuaUtilSetField(lS, -2, cpVar);
+        LuaUtilSetField(lS, iOIndex, cpVar);
         // Done with variable
         cpVar = nullptr;
       } // Clear data and memory usage in queue

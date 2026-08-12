@@ -702,10 +702,10 @@ class SysCon :                         // Members initially private
   /* -- Update size -------------------------------------------------------- */
   void UpdateSize(const size_t _stW, const size_t _stH)
   { // Set new bounds minus one and two.
-    stWm1 = _stW-1;
-    stWm2 = _stW-2;
-    stHm1 = _stH-1;
-    stHm2 = _stH-2;
+    stWm1 = _stW - 1;
+    stWm2 = _stW - 2;
+    stHm1 = _stH - 1;
+    stHm2 = _stH - 2;
     // Buffer size is smaller than the current?
     if(_stW < stW || _stH < stH)
     { // Update window size before buffer size
