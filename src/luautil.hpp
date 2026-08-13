@@ -269,7 +269,7 @@ static void LuaUtilPushNil(lua_State*const lS) { lua_pushnil(lS); }
 /* -- Push specified integral as boolean on to the stack ------------------- */
 static void LuaUtilPushBool(lua_State*const lS, const auto bValue)
   { lua_pushboolean(lS, static_cast<bool>(bValue)); }
-/* -- Push a number onto the stack c----------------------------------------- */
+/* -- Push a number onto the stack c --------------------------------------- */
 static void LuaUtilPushNum(lua_State*const lS, const auto nValue)
   { lua_pushnumber(lS, static_cast<lua_Number>(nValue)); }
 /* -- Push an integer onto the stack --------------------------------------- */
@@ -1150,7 +1150,7 @@ static void LuaUtilIfBlank(lua_State*const lS, const int iIndex)
   LuaUtilCheckStr(lS, iBIndex);
   // Return alternate string if string to test parameter is nil
   if(!LuaUtilIsNil(lS, iIndex))
-  { // Make sure string to test is a string and return alternate string if empty
+  { // Make sure var to test is a string and return alternate string if empty
     LuaUtilCheckStr(lS, iIndex);
     if(LuaUtilGetSize(lS, iIndex)) return LuaUtilCopyValue(lS, iIndex);
   } // No length or nil so return alternate string
@@ -1332,7 +1332,9 @@ static void LuaUtilImplodeEx(lua_State*const lS, const int iIndex)
 { // Prepare table for implosion and return if more than 1 entry in table?
   if(const lua_Integer liLen = LuaUtilImplodePrepare(lS, iIndex, 3))
   { // Calculate indexes for separator and table value
-    const int iS1Index = iIndex + 1, iS2Index = iIndex + 2, iVIndex = iIndex + 3;
+    const int iS1Index = iIndex + 1,
+              iS2Index = iIndex + 2,
+              iVIndex = iIndex + 3;
     // Get and check separators
     size_t stSep, stSep2;
     const char
@@ -1393,7 +1395,7 @@ static void LuaUtilCopyShallowTable(lua_State*const lS, const int iIndex)
   { // Current stack state: table, new_table, key, value. lua_settable will
     // consume the key and the value. However, lua_next requires the current
     // key to remain on the stack for the next iteration. Therefore, the key
-    //must be duplicated.
+    // must be duplicated.
     LuaUtilCopyValue(lS, iKIndex);
     // Current stack state: table, new_table, key, value, key_copy
     // Move the duplicated key immediately below the value.

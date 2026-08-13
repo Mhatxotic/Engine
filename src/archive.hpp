@@ -187,11 +187,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         - 11644473600LL) : 0;
   }
   /* -- Get archive file/dir count as human readable string ---------------- */
-  static const StdString ArchiveGetFilesString(const auto iFiles)
+  static StdString ArchiveGetFilesString(const auto iFiles)
     { return StrPluraliseNum(iFiles, "file", "files"); }
   StdString ArchiveGetNumFilesString() const
     { return ArchiveGetFilesString(ArchiveGetNumFiles()); }
-  static const StdString ArchiveGetDirsString(const auto iDirs)
+  static StdString ArchiveGetDirsString(const auto iDirs)
     { return StrPluraliseNum(iDirs, "directory", "directories"); }
   StdString ArchiveGetNumDirsString() const
     { return ArchiveGetDirsString(ArchiveGetNumDirs()); }
@@ -306,9 +306,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     }, try_to_lock);
   }
   /* -- Loads a file from archive by filename ------------------------------ */
-  FileMap ArchiveExtract(const StdString &strFile)
+  FileMap ArchiveExtract(const StdStringView &ssvFile)
   { // Get iterator from filename and return empty file if not found
-    const StrUIntMapConstIt suimciIt{ ArchiveGetFileIterator(strFile) };
+    const StrUIntMapConstIt suimciIt{ ArchiveGetFileIterator(ssvFile) };
     if(suimciIt == suimFiles.cend()) return {};
     // Extract the file
     return ArchiveExtract(suimciIt);
@@ -402,11 +402,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     else cLog->LogWarningExSafe("Archive loaded empty '$'!", NameGet());
   }
   /* -- Loads archive synchronously at specified position ------------------ */
-  void InitFromFile(const StdString &strFile, const uint64_t ullPosition)
-  { // Store position
+  void InitFromFile(const StdStringView &ssvFile, const uint64_t ullPosition)
+  { // Store position and set filename without filename checking
     ullArchPos = ullPosition;
-    // Set filename without filename checking
-    SyncInitFileDisk(strFile);
+    SyncInitFileDisk(ssvFile);
   }
   /* -- Default constructor ------------------------------------------------ */
   Archive() :

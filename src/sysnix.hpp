@@ -75,7 +75,7 @@ class SysCore :
           const TokenStrView tsvStats{ strStat, cCommon->CommonSpaceV(), 8 };
           if(tsvStats.size() >= 3)
           { // We're only interested in the first value
-            memData.stMProcUse = StrToNum<size_t>(tsvStats[1]) * stPageSize;
+            memData.stMProcUse = StrToNum<size_t>(tsvStats[1]) * GetPageSize();
             // Check for new process peak
             if(memData.stMProcUse > memData.stMProcPeak)
               memData.stMProcPeak = memData.stMProcUse;
@@ -418,7 +418,7 @@ class SysCore :
   /* -- Constructor -------------------------------------------------------- */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
-    SysMutex{ piProcessId },           // Send pid to mutex vlass
+    SysMutex{ GetPid() },              // Send pid to mutex vlass
     SysCon{ EnumModules(), 0 },        // Build system module dependencies
     SysInfo{ GetExecutableData(),      // Build data about the executable
              GetOperatingSystemData(), // Build data about the OS

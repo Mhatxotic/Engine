@@ -41,9 +41,8 @@ class FStreamBase :                    // File stream base class
   int              iErrNo;             // Stored error number
   /* -- Accept a file stream from DoOpen() --------------------------------- */
   int FStreamDoAccept(const StdStringView &ssvFile, FILE*const fPtr)
-  { // Close original file if opened
+  { // Close original file if opened and set the new handle and file name
     FStreamCloseSafe();
-    // Set the new handle and file name
     FStreamSetHandle(fPtr);
     NameSet(ssvFile);
     // Success!
@@ -109,7 +108,7 @@ class FStreamBase :                    // File stream base class
   /* -- Swap stream handle ------------------------------------------------- */
   void FStreamSwap(FStreamBase &fsOther) { StdSwap(fStream, fsOther.fStream); }
   /* -- File is opened or closed?  ----------------------------------------- */
-  bool FStreamOpened() const { return !!FStreamGetCtx(); }
+  bool FStreamOpened() const { return FStreamGetCtx() != nullptr; }
   bool FStreamClosed() const { return !FStreamOpened(); }
   /* -- Return last error nuumber ------------------------------------------ */
   int FStreamGetErrNo() const { return iErrNo; }

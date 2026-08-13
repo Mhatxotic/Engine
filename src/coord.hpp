@@ -76,7 +76,8 @@ struct Coord :                         // Members initially public
   /* -- Default constructor that does not need to do anything -------------- */
   Coord() = default;
 };/* ----------------------------------------------------------------------- */
-using CoordInt = Coord<int>;           // Cordinates typedef
+using CoordInt   = Coord<int>;           // Cordinates int typedef
+using CoordSizeT = Coord<size_t>;        // Cordinates size_t typedef
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

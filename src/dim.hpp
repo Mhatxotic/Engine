@@ -89,6 +89,7 @@ using DimGLUInt  = Dimensions<GLuint>;   // Dimension of GLuints
 using DimDouble  = Dimensions<double>;   // Dimension of doubles
 using DimFloat   = Dimensions<float>;    // Dimension of floats
 using DimInt     = Dimensions<int>;      // Dimension of ints
+using DimSizeT   = Dimensions<size_t>;   // Dimension of size_ts
 using DimUInt    = Dimensions<unsigned>; // Dimension of unsigned ints
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

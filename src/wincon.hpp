@@ -10,13 +10,14 @@
 /* ------------------------------------------------------------------------- */
 namespace ISysCon {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IConDef::P;            using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IFormat::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ISysBase::P;           using namespace ISysUtil::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
+using namespace IConDef::P;            using namespace ICoord::P;
+using namespace IDim::P;               using namespace IDimCoord::P;
+using namespace IError::P;             using namespace IEvtMain::P;
+using namespace IFormat::P;            using namespace ILog::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISysBase::P;
+using namespace ISysUtil::P;           using namespace IUtf::P;
+using namespace IUtil::P;              using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 // -- Palette entry to WIN32 colour lookup --------------------------------- */
@@ -53,6 +54,7 @@ static const ColourList wNDXtoW32BC{
 /* -- Windows Console Class ------------------------------------------------ */
 class SysCon :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
+  public DimCoSizeT,                   // Termina dimensions and cursor coords
   public SysBase,                      // Defined in 'winbase.hpp'
   public SysConBase,                   // Defined in 'syscore.hpp'
   private MutexLock                    // Exit mutex
@@ -67,18 +69,13 @@ class SysCon :                         // Members initially private
   CharInfoVec      civBuf;             // Display buffers
   /* -- Co-ordinates and limits -------------------------------------------- */
   DWORD            dwCurSize;          // Current Win32Cursor size
-  SHORT            sCurX, sCurY;       // Current Win32 cursor position
-  size_t           stEndPos,           // End position
-                   stX, stY,           // X/Y cursor position
-                   stW, stH,           // Console width and height
-                   stWm1, stWm2,       // Console width minus 1 and 2
-                   stHm1, stHm2,       // Console height minus 1 and 2
-  /* -- Bounds ------------------------------------------------------------- */
-                   stX1, stY1,         // These are the bounds that have
-                   stX2, stY2;         // been updated in the last frame
+  Coord<SHORT>     sCur;               // Current Win32 cursor position
+  size_t           stEndPos;           // End position
+  DimSizeT         dsSizeM1, dsSizeM2; // Console dimensions minus 1 and 2
+  CoordSizeT       csTL, csBR;         // Top-left/lower-right redraw bounds
   /* -- Reset drawing bounds ----------------------------------------------- */
-  void ResetDrawingBounds() { stX1 = stY1 = StdMaxSizeT; stX2 = stY2 = 0; }
-  /* -- Control and break handler (thiscall) ------------------------------- */
+  void ResetDrawingBounds() { csTL.CoordSet(StdMaxSizeT); csBR.CoordSet(0); }
+  /* -- Control and break handler (static+thiscall) ------------------------ */
   static BOOL WINAPI CtrlHandlerStatic(DWORD);
   BOOL WINAPI CtrlHandler(DWORD dwCtrlType)
   { // Get event information
@@ -98,7 +95,7 @@ class SysCon :                         // Members initially private
     } // Log event
     cLog->LogWarningExSafe(
       "SysCon got operating system event $<$>, shutting down...",
-        ssvEvent.substr(1), dwCtrlType);
+      ssvEvent.substr(1), dwCtrlType);
     // Because windows will terminate my process after this function returns
     // We'll need to wait for the exit
     if(ssvEvent.front() == '!')
@@ -219,9 +216,10 @@ class SysCon :                         // Members initially private
     return ktType;
   }
   /* -- Return current absolute position ----------------------------------- */
-  size_t GetPos() const { return (stY * stW) + stX; }
+  size_t GetPos() const { return (CoordGetY() * DimGetWidth()) + CoordGetX(); }
   /* -- Return right most absolute line position --------------------------- */
-  size_t GetPosEOL() const { return (stY * stW) + stW; }
+  size_t GetPosEOL() const
+    { return (CoordGetY() * DimGetWidth()) + DimGetWidth(); }
   /* -- Return end position ------------------------------------------------ */
   size_t EndPos() const { return stEndPos; }
   /* -- Return absolute screen buffer end position with bounds check ------- */
@@ -234,15 +232,14 @@ class SysCon :                         // Members initially private
   { // Return if we already have this cursor siz
     const DWORD dwSize = bInsert ? 10 : 100;
     if(dwSize == dwCurSize) return;
-    // Set new size and update size if failed?
+    // Set new size and update size on success? Update cached value
     const CONSOLE_CURSOR_INFO
       cciInfo{ dwSize, FlagIsSetTwo(SCO_CURVISIBLE, TRUE, FALSE) };
-    if(!SetConsoleCursorInfo(hOut, &cciInfo))
-    { // Show error in log for failure
-      cLog->LogErrorExSafe("SysCon failed to set cursor size from $ to $: $!",
-        dwCurSize, dwSize, SysError());
-    } // Succeeded so update cached value
-    else dwCurSize = dwSize;
+    if(SetConsoleCursorInfo(hOut, &cciInfo))
+      { dwCurSize = dwSize; return; }
+    // Failed so show error in log
+    cLog->LogErrorExSafe("SysCon failed to set cursor size from $ to $: $!",
+      dwCurSize, dwSize, SysError());
   }
   /* -- Set cursor visibility ---------------------------------------------- */
   void SetCursorVisibility(const bool bVisible)
@@ -262,33 +259,34 @@ class SysCon :                         // Members initially private
   /* -- Set cursor position ------------------------------------------------ */
   void SetCursor(const COORD &cData)
   { // Return if cursor position the same
-    if(cData.X == sCurX && cData.Y == sCurY) return;
-    // Set new cursor co-ordinates and return if valid position else log error
+    if(cData.X == sCur.CoordGetX() && cData.Y == sCur.CoordGetY()) return;
+    // Set new cursor co-ordinates and return if valid position
     if(SetConsoleCursorPosition(hOut, cData))
-      { sCurX = cData.X; sCurY = cData.Y; return; }
+      return sCur.CoordSet(cData.X, cData.Y);
+    // Show error in log for failure
     cLog->LogErrorExSafe(
       "SysCon failed to set cursor position from $x$ to $x$: $!",
-      sCurX, sCurY, cData.X, cData.Y, SysError());
+      sCur.CoordGetX(), sCur.CoordGetY(), cData.X, cData.Y, SysError());
   }
   /* -- Commit buffer ------------------------------------------------------ */
   void CommitBuffer()
   { // Done if no bounds changed
-    if(stX1 == StdMaxSizeT || stY1 == StdMaxSizeT) return;
+    if(csTL.CoordGetX() == StdMaxSizeT || csTL.CoordGetY() == StdMaxSizeT)
+      return;
     // Set drawing region
-    SMALL_RECT srBounds = {static_cast<SHORT>(stX1),static_cast<SHORT>(stY1),
-                           static_cast<SHORT>(stX2),static_cast<SHORT>(stY2)};
-    // Do the clear
-    if(!WriteConsoleOutputW(hOut, civBuf.data(),
-      { static_cast<SHORT>(stW), static_cast<SHORT>(stH) },
-      { static_cast<SHORT>(stX1), static_cast<SHORT>(stY1) }, &srBounds))
-    { // Show error in log and leave drawing bounds as is
-      cLog->LogWarningExSafe("SysCon failed to write console output: $!",
-        SysError());
-    } // Reset drawing bounds
-    else ResetDrawingBounds();
+    SMALL_RECT srBounds{ csTL.CoordGetX<SHORT>(), csTL.CoordGetY<SHORT>(),
+                         csBR.CoordGetX<SHORT>(), csBR.CoordGetY<SHORT>() };
+    // Do the clear and if we wrote bytes?
+    if(WriteConsoleOutputW(hOut, civBuf.data(),
+       { DimGetWidth<SHORT>(), DimGetHeight<SHORT>() },
+       { csTL.CoordGetX<SHORT>(), csTL.CoordGetY<SHORT>() }, &srBounds))
+      ResetDrawingBounds();
+    // Else show error in log and leave drawing bounds as is
+    else cLog->LogWarningExSafe("SysCon failed to write console output: $!",
+      SysError());
   }
   /* -- Set a character at the specified screen buffer position ------------ */
-  void SetCharPos(const size_t stPos, const Codepoint coChar=' ')
+  void SetCharPos(const size_t stPos, const Codepoint coChar = ' ')
   { // Get pointer to character ata
     CHAR_INFO &ciCell = civBuf[stPos];
     // Convert parameters to native format
@@ -306,12 +304,12 @@ class SysCon :                         // Members initially private
       // Set new colour code
       if(wColour != ciCell.Attributes) ciCell.Attributes = wColour;
     } // Update drawing bounds if neccesary
-    const size_t stCX = stPos % stW;
-    if(stCX < stX1) stX1 = stCX;
-    if(stCX > stX2) stX2 = stCX;
-    const size_t stCY = stPos / stW;
-    if(stCY < stY1) stY1 = stCY;
-    if(stCY > stY2) stY2 = stCY;
+    const size_t stCX = stPos % DimGetWidth();
+    if(stCX < csTL.CoordGetX()) csTL.CoordSetX(stCX);
+    if(stCX > csBR.CoordGetX()) csBR.CoordSetX(stCX);
+    const size_t stCY = stPos / DimGetWidth();
+    if(stCY < csTL.CoordGetY()) csTL.CoordSetY(stCY);
+    if(stCY > csBR.CoordGetY()) csBR.CoordSetY(stCY);
   }
   /* -- Set a character at the current position ---------------------------- */
   void SetChar(const Codepoint coChar=' ') { SetCharPos(GetPos(), coChar); }
@@ -409,15 +407,19 @@ class SysCon :                         // Members initially private
     udStr.UtfIgnore(' ');
   }
   /* -- If co-ordinates are in valid range to draw ------------------------- */
-  bool ValidY(const size_t stYp) { return stYp >= 1 && stYp <= stHm1; }
+  bool ValidY(const size_t stYp)
+    { return stYp >= 1 && stYp <= dsSizeM1.DimGetHeight(); }
   /* -- Handle return on print --------------------------------------------- */
   void HandleReturn(UtfDecoder &udStr, const size_t stIn)
   { // If we can draw on this Y? Clear up till the end
-    if(ValidY(stY)) ClearLine();
+    if(ValidY(CoordGetY())) ClearLine();
     // If we can draw on the next line too? Clear up to indentation
-    if(ValidY(++stY)) for(stX = 0; stX < stIn; ++stX) SetChar();
+    CoordIncY();
+    if(ValidY(CoordGetY()))
+      for(CoordSetX(0); CoordGetX() < stIn; CoordIncX())
+        SetChar();
     // We cann't draw on the next line? Just set new indentation position
-    else stX = stIn;
+    else CoordSetX(stIn);
     // Discard further spaces and return string minus one space
     udStr.UtfIgnore(' ');
   }
@@ -425,7 +427,7 @@ class SysCon :                         // Members initially private
   void CleanupProcessing()
     { FormatHandleFinish([this](){ PopColour(); }, [](){}); }
   /* -- Write data upwards and wrapping (same as what Char::* does) -------- */
-  size_t WriteLineWU(UtfDecoder &&udStr)
+  size_t WriteLineWU(UtfDecoder &udStr)
   { // Indent
     const size_t stIndent = 1;
     // Simulated cursor position
@@ -445,14 +447,16 @@ class SysCon :                         // Members initially private
         // Ignore if the space character processed went over the limit OR
         // Check if the draw length of the next word would go off the limit
         // and if either did? Handle the return!
-        if(1 + stXp > stW || PrintGetWord(udStr, stXp, stW))
+        if(1 + stXp > DimGetWidth() ||
+           PrintGetWord(udStr, stXp, DimGetWidth()))
           HandleReturnSimulated(udStr, stXp, stYp, stIndent);
         // Done
         break;
       // Normal character
       default:
         // Printing next character would exceed wrap width? Wrap and indent
-        if(1 + stXp > stW) HandleReturnSimulated(udStr, stXp, stYp, stIndent);
+        if(1 + stXp > DimGetWidth())
+          HandleReturnSimulated(udStr, stXp, stYp, stIndent);
         // No exceed, move X position forward
         stXp += 1;
         // Done
@@ -464,16 +468,16 @@ class SysCon :                         // Members initially private
     // Reset the iterator on the UTF string.
     udStr.UtfReset();
     // Set actual cursor position
-    stX = 0;
-    stY -= stYp;
+    CoordSetX(0);
+    CoordDecY(stYp);
     // Record original X and Y position
-    const size_t stXO = stX + stIndent;
+    const size_t stXO = CoordGetX() + stIndent;
     // Until null character, which character?
     NextCharacter2: switch(const Codepoint coChar = udStr.UtfNext())
     { // End of string?
       case '\0':
         // Clear the rest of the line
-        if(ValidY(stY)) ClearLine();
+        if(ValidY(CoordGetY())) ClearLine();
         // Restore colour
         CleanupProcessing();
         // Return height of printed text
@@ -485,35 +489,36 @@ class SysCon :                         // Members initially private
       // Whitespace character?
       case ' ':
         // Do the print if we can
-        if(ValidY(stY)) SetChar(coChar);
+        if(ValidY(CoordGetY())) SetChar(coChar);
         // Move the next X position
-        stX++;
+        CoordIncX();
         // Ignore if the space character processed went over the limit OR
         // Check if the draw length of the next word would go off the limit
         // and if either did? Handle the wrapping
-        if(1 + stX > stW || PrintGetWord(udStr, stX, stW))
+        if(1 + CoordGetX() > DimGetWidth() ||
+           PrintGetWord(udStr, CoordGetX(), DimGetWidth()))
           HandleReturn(udStr, stXO);
         // Done
         break;
         // Normal character
       default:
         // Printing next character would exceed wrap width?
-        if(stX + 1 > stW)
+        if(CoordGetX() + 1 > DimGetWidth())
         { // Handle the wrapping
           HandleReturn(udStr, stXO);
           // If we can print the character? Print the character
-          if(ValidY(stY)) SetChar(coChar);
+          if(ValidY(CoordGetY())) SetChar(coChar);
         } // Wouldn't wrap so if we can print the character? Print the char
-        else if(ValidY(stY)) SetChar(coChar);
+        else if(ValidY(CoordGetY())) SetChar(coChar);
         // Move along the X position
-        stX++;
+        CoordIncX();
         // Done
         break;
     } // Enumerate to next character again if we can
     goto NextCharacter2;
   }
   /* -- Write data --------------------------------------------------------- */
-  void WriteLine(UtfDecoder &&udStr, const size_t stMax, const bool bClrEOL)
+  void WriteLine(UtfDecoder &udStr, const size_t stMax, const bool bClrEOL)
   { // Get current absolute character position in screen buffer
     size_t stPos = GetPos();
     // Get end of line position
@@ -538,15 +543,14 @@ class SysCon :                         // Members initially private
   /* -- Redraw status input text ------------------------------------------- */
   void RedrawInputBar(const StdString &strIL, const StdString &strIR)
   { // Set cursor position
-    stX = 0;
-    stY = stHm1;
+    CoordSet(0, dsSizeM1.DimGetHeight());
     // Set input bar colour
     SetColour(FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE|
       BACKGROUND_INTENSITY|FOREGROUND_INTENSITY|BACKGROUND_RED);
     // Clear the line with the above colour
     ClearLine();
     // Length of left part of text
-    stX = 1;
+    CoordSetX(1);
     // Left string length
     size_t stLen;
     // Have left side text?
@@ -560,92 +564,98 @@ class SysCon :                         // Members initially private
       // Skip characters to the point we're scrolled at. Forcing the first
       // argument to 'int' to make sure a negative value is clamped properly.
       udStr.UtfSkip(static_cast<size_t>
-        (UtilMaximum(static_cast<ssize_t>(stLen - stWm2),
+        (UtilMaximum(static_cast<ssize_t>(stLen - dsSizeM2.DimGetWidth()),
                      static_cast<ssize_t>(0))));
       // Draw start of input text
-      WriteLine(StdMove(udStr), stWm2, false);
+      WriteLine(udStr, dsSizeM2.DimGetWidth(), false);
     } // Left size of text is zero long
     else stLen = 0;
+    // Calculate length plus one
+    const size_t stLenP1 = 1 + stLen;
     // Have right side of text and have characters left on screen to spare?
-    if(!strIR.empty() && stLen < stWm2)
+    if(!strIR.empty() && stLen < dsSizeM2.DimGetWidth())
     { // Set cursor position
-      stX = 1 + stLen;
-      stY = stHm1;
+      CoordSet(stLenP1, dsSizeM1.DimGetHeight());
       // Reset again and write the string
-      WriteLine(UtfDecoder{ strIR }, stWm2 - stLen, false);
+      UtfDecoder udInput{ strIR };
+      WriteLine(udInput, dsSizeM2.DimGetWidth() - stLen, false);
     } // Set cursor position
-    SetCursor({ static_cast<SHORT>(UtilMinimum(stWm1, 1 + stLen)),
-                static_cast<SHORT>(stHm1) });
+    SetCursor({
+      UtilMinimum(dsSizeM1.DimGetWidth<SHORT>(), static_cast<SHORT>(stLenP1)),
+      dsSizeM1.DimGetHeight<SHORT>() });
     // Set cursor visiiblity
     SetCursorVisibility(true);
   }
   /* -- Set a space at the specified X position ---------------------------- */
-  void SetWhitespace(const size_t stPos=0)
+  void SetWhitespace(const size_t stPos = 0)
   { // Set start position
-    stX = stPos;
+    CoordSetX(stPos);
     // Set the whitespace
     SetChar();
     // Move on
-    ++stX;
+    CoordIncX();
   }
   /* -- Redraw a status bar ------------------------------------------------ */
   void RedrawStatus(const size_t stSY, const StdString &strL,
     const StdString &strR)
   { // Reset drawing row
-    stY = stSY;
+    CoordSetY(stSY);
     // Set colour
     SetColour(FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE|
       FOREGROUND_INTENSITY|BACKGROUND_BLUE);
     // Get length of left and right part of string
     UtfDecoder udLeft{ strL }, udRight{ strR };
-    const size_t stL = udLeft.UtfLength(), stLC = UtilMinimum(stL, stWm2),
-                 stR = udRight.UtfLength(), stRC = UtilMinimum(stR, stWm2);
+    const size_t stL = udLeft.UtfLength(),
+                 stLC = UtilMinimum(stL, dsSizeM2.DimGetWidth()),
+                 stR = udRight.UtfLength(),
+                 stRC = UtilMinimum(stR, dsSizeM2.DimGetWidth());
     // If we have left status text length?
     if(stLC)
     { // If the right text would not completely obscure the left text?
-      if(stRC < stWm2)
+      if(stRC < dsSizeM2.DimGetWidth())
       { // Set start position, clear the character and move forward
         SetWhitespace();
         // Reset left text position
         udLeft.UtfReset();
         // Put string in a container and draw the string with left align
-        WriteLine(StdMove(udLeft), stLC, false);
+        WriteLine(udLeft, stLC, false);
         // Update X position
-        stX += stLC;
+        CoordIncX(stLC);
         // If there is no right text we can just clear to the end of line
         if(!stRC) return ClearLine();
       } // No length of left text? Set initial position.
-      else stX = 1;
+      else CoordSetX(1);
     } // If there is no right next
     else if(!stRC)
     { // Select start of line
-      stX = 0;
+      CoordSetX(0);
       // Clear to end of line
       return ClearLine();
     } // No length of left text and have right text? Set starting whitespace.
     else SetWhitespace();
     // Both texts can only share 'stWm2' characters so they need to share
     // this limited space. If there is enough space for both?
-    const size_t stTotal = UtilMinimum(stWm2, stLC + stRC);
-    if(stTotal < stWm2)
+    const size_t stTotal = UtilMinimum(dsSizeM2.DimGetWidth(), stLC + stRC);
+    if(stTotal < dsSizeM2.DimGetWidth())
     { // Get position to write at
       size_t stPos = GetPos();
-      const size_t stSpaces = stWm2 - stTotal;
-      const size_t stEnd = SafeEnd(stPos + stSpaces);
+      const size_t stSpaces = dsSizeM2.DimGetWidth() - stTotal,
+                   stEnd = SafeEnd(stPos + stSpaces);
       // Repeat writing spaces until we've reached the end position
       do SetCharPos(stPos); while(++stPos < stEnd);
       // Move X along the number of spaces we wrote
-      stX += stSpaces;
+      CoordIncX(stSpaces);
     } // We didn't need to draw any spaces? Set final whitespace.
-    else SetWhitespace(stWm2 - stRC);
+    else SetWhitespace(dsSizeM2.DimGetWidth() - stRC);
     // Reset right string position
     udRight.UtfReset();
     // Write the line and clear the rest
-    WriteLine(StdMove(udRight), stRC, true);
+    WriteLine(udRight, stRC, true);
   }
   /* -- Redraw bottom status bar ------------------------------------------- */
   void RedrawStatusBar(const StdString &strSL, const StdString &strSR)
-    { RedrawStatus(stHm1, strSL, strSR); SetCursorVisibility(false); }
+    { RedrawStatus(dsSizeM1.DimGetHeight(), strSL, strSR);
+      SetCursorVisibility(false); }
   /* -- Redraw title status bar -------------------------------------------- */
   void RedrawTitleBar(const StdString &strTL, const StdString &strTR)
     { RedrawStatus(0, strTL, strTR); }
@@ -653,13 +663,12 @@ class SysCon :                         // Members initially private
   void RedrawBuffer(const ConLines &clLines,
     const ConLinesConstRevIt &clcriStart)
   { // Reset cursor position to top left of drawing area
-    stX = 0;
-    stY = stHm1;
+    CoordSet(0, dsSizeM1.DimGetHeight());
     // Set default text colour
     SetColour(FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE);
     // Draw until we go off the top of the screen
     for(ConLinesConstRevIt clcriIt{ clcriStart };
-                           clcriIt != clLines.crend() && ValidY(stY);
+                           clcriIt != clLines.crend() && ValidY(CoordGetY());
                          ++clcriIt)
     { // Get structure
       const ConLine &clLine = *clcriIt;
@@ -670,13 +679,14 @@ class SysCon :                         // Members initially private
       // we can make sure we don't access any OOB memory by just checking that
       // the co-ordinates while drawing, we don't have to worry about the
       // integer wrapping at all we are not drawing.
-      stY -= WriteLineWU(UtfDecoder{ clLine.strLine }) - 1;
+      UtfDecoder udLine{ clLine.strLine };
+      CoordDecY(WriteLineWU(udLine) - 1);
     } // Done if there is no lines to clear up to the top
-    if(!ValidY(stY)) return;
+    if(!ValidY(CoordGetY())) return;
     // Goto beginning so we can clear lines
-    stX = 0;
+    CoordSetX(0);
     // Clear extra lines we didn't draw too
-    while(stY-- > 1) ClearLine();
+    for(CoordDecY(); CoordGetY(); CoordDecY()) ClearLine();
   }
   /* -- Update console window info ----------------------------------------- */
   void UpdateWindowInfo(const SHORT sRight, const SHORT sBottom)
@@ -685,8 +695,7 @@ class SysCon :                         // Members initially private
     if(!SetConsoleWindowInfo(hOut, TRUE, &rBounds))
       cLog->LogErrorExSafe(
         "SysCon failed to set window info bounds to $x$x$x$: $!",
-        rBounds.Left, rBounds.Top, rBounds.Right,
-        rBounds.Bottom, SysError());
+        rBounds.Left, rBounds.Top, rBounds.Right, rBounds.Bottom, SysError());
   }
   /* -- Update console screen buffer size ---------------------------------- */
   void UpdateScreenBufferSize(const SHORT sX, const SHORT sY)
@@ -697,53 +706,46 @@ class SysCon :                         // Members initially private
         "SysCon failed to set screen buffer size to $x$: $!",
         cSize.X, cSize.Y, SysError());
   }
-  /* -- Size updated event (unused on win32) ------------------------------- */
-  void OnResize() {}
   /* -- Update size -------------------------------------------------------- */
   void UpdateSize(const size_t _stW, const size_t _stH)
   { // Set new bounds minus one and two.
-    stWm1 = _stW - 1;
-    stWm2 = _stW - 2;
-    stHm1 = _stH - 1;
-    stHm2 = _stH - 2;
+    dsSizeM1.DimSet(_stW - 1, _stH - 1);
+    dsSizeM2.DimSet(_stW - 2, _stH - 2);
     // Buffer size is smaller than the current?
-    if(_stW < stW || _stH < stH)
+    if(_stW < DimGetWidth() || _stH < DimGetHeight())
     { // Update window size before buffer size
-      UpdateWindowInfo(static_cast<SHORT>(stWm1),
-                       static_cast<SHORT>(stHm1));
+      UpdateWindowInfo(dsSizeM1.DimGetWidth<SHORT>(),
+        dsSizeM1.DimGetHeight<SHORT>());
       UpdateScreenBufferSize(static_cast<SHORT>(_stW),
-                             static_cast<SHORT>(_stH));
+        static_cast<SHORT>(_stH));
     } // Buffer size is equal or greater than the current?
     else
     { // Update buffer size before the window size
       UpdateScreenBufferSize(static_cast<SHORT>(_stW),
-                             static_cast<SHORT>(_stH));
-      UpdateWindowInfo(static_cast<SHORT>(stWm1),
-                       static_cast<SHORT>(stHm1));
+        static_cast<SHORT>(_stH));
+      UpdateWindowInfo(dsSizeM1.DimGetWidth<SHORT>(),
+        dsSizeM1.DimGetHeight<SHORT>());
     } // Calculate total number of characters
     const size_t stWtH = _stW * _stH;
     // Resize character buffer used for writing to the buffer
     civBuf.resize(stWtH);
     // Free any excess memory when resized down
     civBuf.shrink_to_fit();
-    // This is the char and attribute to fill with
-    const CHAR_INFO ciItem{ { 32 },
-      FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED };
     // Fill the entire cached screen buffer with the default character. This
     // make sure every character is rewritten to when the entire screen buffer
     // has changed.
-    fill(civBuf.begin(), civBuf.end(), ciItem);
+    const CHAR_INFO ciItem{ { 32 },
+      FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED };
+    StdFill(par_unseq, civBuf.begin(), civBuf.end(), ciItem);
     // Initialise drawing bounds
     ResetDrawingBounds();
     // Set maximum buffer character count
     stEndPos = stWtH + _stW;
-    // Update new size
-    stW = _stW;
-    stH = _stH;
-    // Set default position
-    stX = stY = 0;
+    // Update new size and reset default cursor position to zero
+    DimSet(_stW, _stH);
+    CoordSet();
     // Force a console buffer update
-    cEvtMain->Add(EMC_CON_UPDATE, stW, stH);
+    cEvtMain->Add(EMC_CON_UPDATE, DimGetWidth(), DimGetHeight());
   }
   /* -- Initialise --------------------------------------------------------- */
   void LoadDefaults()
@@ -752,8 +754,7 @@ class SysCon :                         // Members initially private
     if(!GetConsoleScreenBufferInfo(hOut, &csbInfo))
       XCS("Failed to get cursor position!");
     // Update system cursor position
-    sCurX = csbInfo.dwCursorPosition.X;
-    sCurY = csbInfo.dwCursorPosition.Y;
+    sCur.CoordSet(csbInfo.dwCursorPosition.X, csbInfo.dwCursorPosition.Y);
     wColour = csbInfo.wAttributes;
     // Get console cursor information so we don't have to send api commands
     // when the current cursor info is the same.
@@ -763,8 +764,9 @@ class SysCon :                         // Members initially private
     dwCurSize = cciData.dwSize;
     FlagSetOrClear(SCO_CURVISIBLE, cciData.bVisible);
   }
-  /* -- Redraw ------------------------------------------------------------- */
-  void ForceRedrawTerminal() {}
+  /* -- Update window size and redraw buffer ------------------------------- */
+  void ForceRedrawTerminal()
+    { UpdateSize(DimGetWidth(), DimGetHeight()); CommitBuffer(); }
   /* -- DeInitialise ------------------------------------------------------- */
   void SysConDeInit()
   { // Done if console not opened
@@ -844,14 +846,7 @@ class SysCon :                         // Members initially private
     wColour(0),                        // Default colour
     wColourSaved(0),                   // Saved colour
     dwCurSize(0),                      // Current cursor size
-    sCurX(0), sCurY(0),                // Cursor to top-left of screen
-    stEndPos(0),                       // Ending position
-    stX(0), stY(0),                    // Drawing position to top-left
-    stW(0), stH(0),                    // Width and height of window not set
-    stWm1(0), stWm2(0),                // Width and height of window-1 not set
-    stHm1(0), stHm2(0),                // Width and height of window-2 not set
-    stX1(0), stY1(0),                  // Minimum drawing extent not set
-    stX2(0), stY2(0)                   // Maximum drawing extent not set
+    stEndPos(0)                        // Ending position
     /* -- Set console output codepage to UTF-8 ----------------------------- */
     { SetConsoleOutputCP(CP_UTF8); }
   /* -- Set maximum console line length ---------------------------- */ public:
@@ -859,7 +854,7 @@ class SysCon :                         // Members initially private
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.
     if(stRows < 25 || UtilIntWillOverflow<SHORT>(stRows)) return DENY;
     // Update the buffer size if console is opened
-    if(IsWindowHandleSet()) UpdateSize(stW, stRows);
+    if(IsWindowHandleSet()) UpdateSize(DimGetWidth(), stRows);
     // Value allowed
     return ACCEPT;
   }
@@ -868,7 +863,7 @@ class SysCon :                         // Members initially private
   { // Deny if out of range. The maximum value is a SHORT from Win32 API.
     if(stCols < 80 || UtilIntWillOverflow<SHORT>(stCols)) return DENY;
     // Update the buffer size
-    if(IsWindowHandleSet()) UpdateSize(stCols, stH);
+    if(IsWindowHandleSet()) UpdateSize(stCols, DimGetHeight());
     // Value allowed
     return ACCEPT;
   }

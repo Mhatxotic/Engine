@@ -249,22 +249,22 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   void ThreadInit(const CbThFunc &cbfC)
     { ctfFunc = cbfC; this->CollectorRegister(); }
   /* -- Initialise with name and callback ---------------------------------- */
-  void ThreadInit(const StdString &strN, const CbThFunc &cbfC)
-    { NameSet(strN); ThreadInit(cbfC); }
+  void ThreadInit(const StdStringView &ssvN, const CbThFunc &cbfC)
+    { NameSet(ssvN); ThreadInit(cbfC); }
   /* -- Initialise with name, callback, parameter and start execute -------- */
-  void ThreadInit(const StdString &strN, const CbThFunc &cbfC,
+  void ThreadInit(const StdStringView &ssvN, const CbThFunc &cbfC,
     void*const vpPtr)
-  { ThreadInit(strN, cbfC); ThreadStart(vpPtr); }
+  { ThreadInit(ssvN, cbfC); ThreadStart(vpPtr); }
   /* -- Initialise with callback, parameter and start execute -------------- */
   void ThreadInit(const CbThFunc &cbfC, void*const vpPtr)
     { ThreadInit(cbfC); ThreadStart(vpPtr); }
   /* -- Full initialise and execute constructor ---------------------------- */
-  Thread(const StdString &strN,        // Requested Thread name
+  Thread(const StdStringView &ssvN,    // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
          const CbThFunc &cbfC,         // Requested callback function
          void*const vpPtr) :           // User parameter to store
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strN },                      // Initialise requested thread name
+    Name{ ssvN },                      // Initialise requested thread name
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
     SerialSlave{ cParent->Serial() },  // Initialise identification number
     ThreadBase{ sP, vpPtr, cbfC },     // Set perf, parameter and callback
@@ -272,21 +272,21 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Standby constructor (set everything except user parameter) --------- */
-  Thread(const StdString &strN,        // Requested Thread name
+  Thread(const StdStringView &ssvN,    // Requested Thread name
          const SysThread sP,           // Thread needs high performance?
          const CbThFunc &cbfC) :       // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strN },                      // Set requested identifier
+    Name{ ssvN },                      // Set requested identifier
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
     SerialSlave{ cParent->Serial() },  // Initialise identification number
     ThreadBase{ sP, nullptr, cbfC }    // Just set callback function
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Standby constructor ------------------------------------------------ */
-  Thread(const StdString &strN,        // Requested Thread name
+  Thread(const StdStringView &ssvN,    // Requested Thread name
          const SysThread sP) :         // Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ strN },                      // Set requested identifer
+    Name{ ssvN },                      // Set requested identifer
     ICHelperThread{ cThreads },        // No automatic registration
     SerialSlave{ cParent->Serial() },  // Initialise identification number
     ThreadBase{ sP, nullptr, nullptr } // Initialise nothing else

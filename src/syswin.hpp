@@ -23,8 +23,10 @@ using namespace ISysMod::P;            using namespace ISysReg::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
 using namespace IUtil::P;              using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
-class SysProcess                       // Need this before of System init order
-{ /* ------------------------------------------------------------ */ protected:
+class SysProcess :                     // Need this before of System init order
+  /* -- Base classes ------------------------------------------------------- */
+  private NameStr                      // Mutex identifier
+{ /* -- Protected variables ------------------------------------- */ protected:
   uint64_t         ullSKL, ullSUL,     // Kernel kernel and user time
                    ullPKL, ullPUL,     // Process kernel and user time
                    ullPTL;             // Current system time
@@ -33,11 +35,9 @@ class SysProcess                       // Need this before of System init order
   const HANDLE     hProcess;           // Process handle
   const HINSTANCE  hInstance;          // Process instance
   HANDLE           hMutex;             // Global mutex handle
-  /* -- Return process and thread id ------------------------------ */ private:
+  /* -- Private variables ----------------------------------------- */ private:
   const DWORD      ulProcessId,        // Process id
                    ulThreadId;         // Thread id (WinMain())
-  /* -- Mutex name --------------------------------------------------------- */
-  NameStr          nsMutex;            // Mutex identifier
   /* ----------------------------------------------------------------------- */
   static BOOL WINAPI EnumWindowsProc(HWND hH, LPARAM lP)
   { // Get title of window and cancel if empty
@@ -53,8 +53,9 @@ class SysProcess                       // Need this before of System init order
       StdCompare(wstrN.data(), wstrT.data(), wstrN.size()*sizeof(wchar_t)))
         return TRUE;
     // We found the window
-    cLog->LogDebugExSafe("- Found window handle at $$.\n"
-                 "- Window name is '$'.",
+    cLog->LogDebugExSafe(
+      "- Found window handle at $$.\n"
+      "- Window name is '$'.",
       StdIOSHex, reinterpret_cast<void*>(hH), WS16toUTF(wstrT));
     // First try showing the window and if successful? Log the successful
     // command else if showing the window failed? Log the failure with reason
@@ -244,9 +245,9 @@ class SysProcess                       // Need this before of System init order
   /* --------------------------------------------------------------- */ public:
   bool InitGlobalMutex(const StdStringView &ssvTitle)
   { // Set mutex name
-    nsMutex.NameSet(ssvTitle);
+    NameSet(ssvTitle);
     // Convert UTF title to wide string
-    const StdWideString wstrTitle{ UTFtoS16(nsMutex.NameGet()) };
+    const StdWideString wstrTitle{ UTFtoS16(NameGet()) };
     // Create the global mutex handle with the specified name and check error
     hMutex = CreateMutex(nullptr, FALSE, wstrTitle.data());
     switch(const DWORD dwResult = SysErrorCode<DWORD>())
@@ -272,7 +273,7 @@ class SysProcess                       // Need this before of System init order
         return false;
       // Other error
       default: XCS("Failed to create global mutex object!",
-        "Title",  nsMutex.NameGet(),
+        "Title",  NameGet(),
         "Result", static_cast<unsigned>(dwResult),
         "mutex",  reinterpret_cast<void*>(hMutex));
     } // Getting here is impossible
@@ -308,7 +309,7 @@ class SysProcess                       // Need this before of System init order
     // If mutex initialised? Close the handle and log if failed
     if(hMutex && !CloseHandle(hMutex))
       cLog->LogWarningExSafe("System failed to close mutex handle '$'! $.",
-        nsMutex.NameGet(), SysError());
+        NameGet(), SysError());
   )
 };/* == Class ============================================================== */
 class SysCore :
@@ -802,7 +803,7 @@ class SysCore :
   }
   /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData()
-  { // Operating system data. Fuck you Microsoft. I'm still supporting XP.
+  { // Operating system data
     // > https://docs.microsoft.com/en-us/windows/win32/api/
     //     sysinfoapi/nf-sysinfoapi-getversionexw
     OSVERSIONINFOEX osviData;
@@ -822,8 +823,7 @@ class SysCore :
       const char*const cpLabel;
       // Major, minor and service pack of OS which applies to this label
       const unsigned uHi, uLo, uBd, uSp;
-    };
-    // List of recognised Windows versions
+    }; // List of recognised Windows versions
     static const StdArray<const OSListItem,41>osList{ {
       { "11 26H1+", 10, 0, 28000, 0 },
       { "11 25H2",  10, 0, 26200, 0 }, { "11 24H2",  10, 0, 26100, 0 },
@@ -917,17 +917,20 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   CPUData GetProcessorData()
   { // Try to open the specified below registry key and if successful?
-    const StdString strK{ "HARDWARE\\DESCRIPTION\\System\\CentralProcessor" };
-    if(const SysReg srRoot{ HKEY_LOCAL_MACHINE, strK, KEY_ENUMERATE_SUB_KEYS })
+    const StdStringView
+      ssvKey{ "HARDWARE\\DESCRIPTION\\System\\CentralProcessor" };
+    if(const SysReg srRoot{ HKEY_LOCAL_MACHINE, ssvKey,
+      KEY_ENUMERATE_SUB_KEYS })
     { // Enumerate subkeys
-      const StrVector svKeys{ srRoot.QuerySubKeys() };
+      const StrVector svKeys{ srRoot.SysRegQuerySubKeys() };
       // Open first subkey, usually "0" and if succeeded?
       const StdString &strSK = *svKeys.cbegin();
-      if(const SysReg srSub{ srRoot.GetHandle(), strSK, KEY_QUERY_VALUE })
+      if(const SysReg srSub{ srRoot.SysRegGetHandle(),
+        strSK, KEY_QUERY_VALUE })
       { // Query required values
-        StdString strVendor{ srSub.QueryString("VendorIdentifier") },
-                  strName{ srSub.QueryString("ProcessorNameString") },
-                  strIdent{ srSub.QueryString("Identifier") };
+        StdString strVendor{ srSub.SysRegQueryString("VendorIdentifier") },
+                  strName{ srSub.SysRegQueryString("ProcessorNameString") },
+                  strIdent{ srSub.SysRegQueryString("Identifier") };
         // Remove unnecessary whitespaces from strings
         if(strVendor.empty()) strVendor = cCommon->CommonUnspec();
         else StrCompactRef(strVendor);
@@ -947,14 +950,14 @@ class SysCore :
         } // Invalid syntax
         else uFamily = uModel = uStepping = 0;
         // Return data
-        return { srSub.Query<DWORD>("~MHz"), uFamily, uModel, uStepping,
+        return { srSub.SysRegQuery<DWORD>("~MHz"), uFamily, uModel, uStepping,
           StdMove(strName) };
       } // Log that we couldn't open the subkey
       else cLog->LogWarningExSafe("System could not open registry key $ "
-        "sub-key $! $", strK, strSK, SysError());
+        "sub-key $! $", ssvKey, strSK, SysError());
     } // Log that we couldn't open the root key
     else cLog->LogWarningExSafe("System could not open registry key $! $",
-      strK, SysError());
+      ssvKey, SysError());
     // Return default data we could not read
     return {};
   }
@@ -1100,9 +1103,9 @@ class SysCore :
     return SysErrorCode<int>();
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
-  const StdString BuildRoamingDir() const
+  StdString BuildRoamingDir() const
     { return cCmdLine->CmdLineMakeEnvPath("APPDATA", cCommon->CommonBlank()); }
-  /* -- Constructor (only derivable) --------------------------------------- */
+  /* -- Constructor -------------------------------------------------------- */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
     SysVersion{ EnumModules(),         // Enumerate modules
@@ -1111,7 +1114,7 @@ class SysCore :
     SysInfo{ GetExecutableData(),      // Get and store executable data
              GetOperatingSystemData(), // Get and store operating system data
              GetProcessorData() },     // Get and store processor data
-    SysCon { this->OSNameEx() },       // Send Wine version to console
+    SysCon{ this->OSNameEx() },        // Send Wine version to console
     hIconLarge(nullptr),               // Large icon not initialised yet
     hIconSmall(nullptr)                // Small icon not initialised yet
     /* -- No code ---------------------------------------------------------- */

@@ -177,9 +177,8 @@ static StdString TimeLocalTTtoStr(const StdTimeT ttTimestamp,
 /* -- Convert specified timestamp to string (UTC) -------------------------- */
 static StdString TimeUTCTTtoStr(const StdTimeT ttTimestamp,
   const char*const cpFormat = cpTimeFormat)
-{ // Convert it to local time
+{ // Convert it to local time, do the parse and return the string
   StdTMStruct tmsData; StdGMTime(&tmsData, &ttTimestamp);
-  // Do the parse and return the string
   return TimeTMToStr(tmsData, cpFormat);
 }
 /* -- Convert time to short duration --------------------------------------- */
@@ -198,14 +197,14 @@ static StdString TimeToShortDuration(const double dDuration,
   osS << StdIOSFixed << StdIOSSetFill('0') << StdIOSSetPrecision(0);
   // Have days?
   if(dInt >= 86400)
-    osS <<                           floor(dInt/86400)     << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/3600), 24) << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
+    osS <<                           floor(dInt / 86400)     << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt / 3600), 24) << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt / 60),   60) << ':'
         << StdIOSSetWidth(2);
   // No days, but hours?
   else if(dInt >= 3600)
-    osS <<                      fmod(floor(dInt/3600), 24) << ':'
-        << StdIOSSetWidth(2) << fmod(floor(dInt/60),   60) << ':'
+    osS <<                      fmod(floor(dInt / 3600), 24) << ':'
+        << StdIOSSetWidth(2) << fmod(floor(dInt / 60),   60) << ':'
         << StdIOSSetWidth(2);
   // No hours, but minutes?
   else if(dInt >= 60)
