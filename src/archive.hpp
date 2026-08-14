@@ -102,13 +102,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       unsigned uBlockIndex = StdMaxUInt;
       // Decompress the buffer using our base handles and throw error if it
       // failed
-      if(const int iCode = SzArEx_Extract(&csaeRef, &cltrRef.vt,
-        uSrcId, &uBlockIndex, &ucpData, &stUncompressed, &stOffset,
-        &stCompressed, &cParent->isaData, &cParent->isaData))
-          XC("Failed to extract file",
-            "Archive", NameGet(), "File", ssvFile,
-            "Index",   uSrcId,    "Code", iCode,
-            "Reason",  CodecGetLzmaErrString(iCode));
+      if(const int iCode = SzArEx_Extract(&csaeRef, &cltrRef.vt, uSrcId,
+         &uBlockIndex, &ucpData, &stUncompressed, &stOffset, &stCompressed,
+         &cParent->isaData, &cParent->isaData))
+        XC("Failed to extract file",
+          "Archive", NameGet(), "File", ssvFile,
+          "Index",   uSrcId,    "Code", iCode,
+          "Reason",  CodecGetLzmaErrString(iCode));
       // No data returned meaning a zero-byte file?
       if(!ucpData)
       { // Allocate a zero-byte array to a new class. Remember we need to send
@@ -342,12 +342,9 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     FlagSet(AE_ARCHIVEINIT);
     // Initialise archive database and if failed, just log it
     if(const int iCode = SzArEx_Open(&csaeData, &cltrData.vt,
-      &cParent->isaData, &cParent->isaData))
-    { // Log warning and return
-      cLog->LogWarningExSafe("Archive '$' not opened with code $ ($)!",
+       &cParent->isaData, &cParent->isaData))
+      return cLog->LogWarningExSafe("Archive '$' not opened with code $ ($)!",
         NameGet(), iCode, CodecGetLzmaErrString(iCode));
-      return;
-    }
     // Alocate memory for quick access via index vector. 7-zip won't tell us
     // how many files and directories there are individually so we'll reserve
     // memory for the maximum amount of entries in the 7-zip file. We'll shrink
@@ -469,16 +466,13 @@ static bool ArchiveFileExists(const StdStringView &ssvFile)
 /* -- Create and check a dynamic archive ----------------------------------- */
 static Archive *ArchiveInitNew(const StdString &strFile, const size_t stSize=0)
 { // Dynamically create the archive. The pointer is recorded in the parent
-  // collector class.
+  // Archives collector class. Load the archive and return archive if there are
+  // entries inside it.
   using ArchivePtr = StdUniquePtr<Archive>;
-  if(ArchivePtr oClass{ new Archive })
-  { // Load the archive and return archive if there are entries inside it
-    Archive &oRef = *oClass.get();
-    oRef.InitFromFile(strFile, stSize);
-    if(!oRef.ArchiveGetFileList().empty() || !oRef.ArchiveGetDirList().empty())
-      return oClass.release();
-  } // Return nothing
-  return nullptr;
+  ArchivePtr apClass{ new Archive };
+  apClass->InitFromFile(strFile, stSize);
+  return !apClass->ArchiveGetFileList().empty() ||
+    !apClass->ArchiveGetDirList().empty() ? apClass.release() : nullptr;
 }
 /* -- Set extraction buffer size ------------------------------------------- */
 static CVarReturn ArchiveSetBufferSize(const size_t stSize)
@@ -503,8 +497,8 @@ static CVarReturn ArchiveInitExe(const bool bCheck)
   return ACCEPT;
 }
 /* -- Scan for the specified archives in the specified directory ----------- */
-static CVarReturn ArchiveScan(const char*const cpType,
-  const StdString &ssvDir, const StdString &ssvExt)
+static CVarReturn ArchiveScan(const char*const cpType, const StdString &ssvDir,
+  const StdString &ssvExt)
 { // Build archive listing and if none found?
   cLog->LogDebugExSafe("Archives scanning $ directory for '$' files...",
     cpType, ssvExt);
