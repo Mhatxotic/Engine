@@ -429,14 +429,16 @@ class Lua :                            // Actual class body
     // Enumerate cvars and if stored iterator is registered?
     for(const CVarMapIt &cvmiIt : cCVars->GetInternalListConst())
       if(cvmiIt != cCVars->GetVarListEnd())
-      { // Push internal id value name
+      { // Push internal id value name and assign the id to the cvar name. Note
+        // that these classes won't be registered in the 'cVariables' list so
+        // the guest/user doesn't see them (they can already see them in the
+        // normal cvars list thus Lua solely manages the allocation for it and
+        // frees it when destructed.
         LuaUtilClassCreate<Variable>(LuaGetState(), cVariables)->
           InitInternal(cvmiIt);
-        // Assign the id to the cvar name
         LuaUtilSetField(LuaGetState(), iCTIndex, cvmiIt->first.data());
-      } // Push cvar id table into the core namespace
+      } // Push cvar id table into the core namespace and remove the table
     LuaUtilSetField(LuaGetState(), iTIndex, "Internal");
-    // Remove the table
     LuaUtilRmStack(LuaGetState());
     // Report summary of API usage
     cLog->LogDebugExSafe(

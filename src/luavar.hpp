@@ -52,9 +52,9 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // variable is initialising for the first time. We haven't added the
     // variable to cvmActive yet and we don't want to until the CVARS system
     // has created the variable.
-    const LuaCVarMapIt lcvmpIt{ cVariables->lcvmMap.find(cviVar.GetVar()) };
-    if(lcvmpIt == cVariables->lcvmMap.cend()) return ACCEPT;
-    // Save stack position and restore it on scope exit
+    const LuaCVarMapIt lcvmpIt{ GetLuaVarList().find(cviVar.GetVar()) };
+    if(lcvmpIt == GetLuaVarListEnd()) return ACCEPT;
+    // Save stack position and restore it on exception or scope exit
     const LuaStackSaver lSS{ cLuaFuncs->LuaRefGetState() };
     // Call the Lua callback assigned. We're expecting one or two return values
     // but Lua will add nil's what wasn't specified.
@@ -73,21 +73,26 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // Return result of how to handle the returned string
     return bResult ? ACCEPT_HANDLED_FORCECOMMIT : ACCEPT_HANDLED;
   }
+  /* -- Get lua cvar list pair --------------------------------------------- */
+  LuaCVarPair &Pair() const { return lcvmiIt->second; }
+  /* -- Get engine cvar list iterator -------------------------------------- */
+  const CVarMapIt &Iterator() const { return Pair().second; }
   /* -- Unregister the console command from lua -------------------- */ public:
   const StdString &Name() const { return lcvmiIt->first; }
+  /* -- Get cvar data ------------------------------------------------------ */
+  CVarItem &Data() const { return Iterator()->second; }
   /* -- Get current value as string ---------------------------------------- */
-  StdString Get() const { return cCVars->GetStr(lcvmiIt->second.second); }
+  StdString Get() const { return cCVars->GetStr(Iterator()); }
   /* -- Get default value as string ---------------------------------------- */
-  StdString Default() const
-    { return cCVars->GetDefStr(lcvmiIt->second.second); }
+  StdString Default() const { return cCVars->GetDefStr(Iterator()); }
   /* -- Reset default value ------------------------------------------------ */
-  void Reset() const { cCVars->Reset(lcvmiIt->second.second); }
+  void Reset() const { cCVars->Reset(Iterator()); }
   /* -- Returns if value is empty ------------------------------------------ */
   bool Empty() const { return Get().empty(); }
   bool NotEmpty() const { return !Empty(); }
   /* -- Set value from different types ------------------------------------- */
   CVarSetEnums SetString(const StdStringView &ssvValue) const
-    { return cCVars->Set(lcvmiIt->second.second, ssvValue); }
+    { return cCVars->Set(Iterator(), ssvValue); }
   CVarSetEnums Clear() const
     { return SetString(cCommon->CommonBlank()); }
   CVarSetEnums SetBoolean(const bool bState) const
@@ -121,29 +126,30 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // class which calls luaL_ref will fail as it ONLY reads position -1.
     LuaUtilCopyValue(lS, 4);
     // Save the function at the top of the stack used for the callback
-    lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), {
+    lcvmiIt = cParent->lcvmMap.insert(GetLuaVarListEnd(), {
       StdString{ ssvName },
       make_pair(LuaFunc{ StrAppend("CV:", ssvName), true },
         cCVars->GetVarListEnd())
     }); // Register the variable and set the iterator to the new cvar.
-    lcvmiIt->second.second = cCVars->RegisterVar(ssvName, ssvDefault,
+    Pair().second = cCVars->RegisterVar(ssvName, ssvDefault,
       LuaCallbackStatic, cvfcFlags|TLUA|PANY);
+    // Register the object in collector
+    CollectorRegister();
   }
   /* -- Register existing internal engine variable as a Lua variable ------- */
   void InitInternal(const CVarMapIt &cvmiIt)
   { // Get cvar name
     const StdString &ssvName = cvmiIt->first;
     // Insert a new variable
-    lcvmiIt = cVariables->lcvmMap.insert(GetLuaVarListEnd(), { ssvName,
+    lcvmiIt = cParent->lcvmMap.insert(GetLuaVarListEnd(), { ssvName,
       make_pair(LuaFunc{ ssvName, false }, cCVars->GetVarListEnd()) });
     // Register the variable and set the iterator to the new cvar.
-    lcvmiIt->second.second = cvmiIt;
+    Pair().second = cvmiIt;
   }
   /* -- Basic constructor with no init ------------------------------------- */
   Variable() :
     /* -- Initialisers ----------------------------------------------------- */
-    ICHelperVariable{                  // Initialise and register the object
-      cVariables, this },
+    ICHelperVariable{ cVariables },    // Initialise with NO registration
     SerialSlave{ cParent->Serial() },  // Initialise identification number
     lcvmiIt{ GetLuaVarListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
@@ -153,7 +159,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // Return if the iterator is invalid?
     if(lcvmiIt == GetLuaVarListEnd()) return;
     // Unregister the cvar if valid and registered by Lua
-    const CVarMapIt &cvmiIt = lcvmiIt->second.second;
+    const CVarMapIt &cvmiIt = Iterator();
     if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(TLUA))
       cCVars->UnregisterVar(cvmiIt);
     // Remove the lua var

@@ -178,7 +178,8 @@ static StdString TimeLocalTTtoStr(const StdTimeT ttTimestamp,
 static StdString TimeUTCTTtoStr(const StdTimeT ttTimestamp,
   const char*const cpFormat = cpTimeFormat)
 { // Convert it to local time, do the parse and return the string
-  StdTMStruct tmsData; StdGMTime(&tmsData, &ttTimestamp);
+  StdTMStruct tmsData;
+  StdGMTime(&tmsData, &ttTimestamp);
   return TimeTMToStr(tmsData, cpFormat);
 }
 /* -- Convert time to short duration --------------------------------------- */

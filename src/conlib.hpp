@@ -1382,10 +1382,18 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 // ! lvars
 // ? Shows all created 'Variable' object classes created by LUA.
 /* ========================================================================= */
-{ "lvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
+{ "lvars", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cConsole->ConsoleAddLine(VariablesMakeList(cVariables->lcvmMap,
-  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
+// Formatted output. Can assume all variables will be printed
+Statistic sTable;
+sTable.Header("FLAGS").Header("NAME", false).Header("VALUE", false)
+      .Reserve(cVariables->size());
+// Write information for each lua variable
+for(Variable*const vPtr : *cVariables)
+  VariablesMakeInformationTokens(sTable, vPtr->Data());
+// Show matches
+cConsole->ConsoleAddLineF("$$ Lua cvars.",
+  sTable.Finish(), cVariables->size());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lvars' function
 /* ========================================================================= */
