@@ -249,8 +249,8 @@ static StdString LuaUtilGetVarStack(lua_State*const lS)
 /* -- Set hook ------------------------------------------------------------- */
 static void LuaUtilSetHookCallback(lua_State*const lS,
   lua_Hook fcbCb, const int iC)
-    { lua_sethook(lS, fcbCb, LUA_MASKCOUNT, iC); }
-/* -- Push a table onto the stack ------------------------------------------ */
+{ lua_sethook(lS, fcbCb, LUA_MASKCOUNT, iC); }
+/* -- Push a table onto the stack of the specified preallocated s----------- */
 template<typename IntType1 = int, typename IntType2 = int>
   requires (StdIsIntegral<IntType1> || StdIsEnum<IntType1>) &&
            (StdIsIntegral<IntType2> || StdIsEnum<IntType2>)
@@ -260,7 +260,15 @@ static void LuaUtilPushTable(lua_State*const lS, const IntType1 itIndexes = 0,
                       UtilIntOrMax<int>(itKeys)); }
 /* -- Get next key/value from a table -------------------------------------- */
 static bool LuaUtilTableEnumerateKeyValues(lua_State*const lS,
-  const int iIndex) { return lua_next(lS, iIndex) != 0; }
+  const int iIndex)
+{ // You must push a 'nil' onto the stack before calling this and it is
+  // consumed when done so. When this function returns success (true), a key
+  // and a value are pushed onto the stack which the caller is responsible for
+  // removing the value before reiterating and when there are no more entries
+  // (false), there will be nothing left on the stack but the table argument
+  // that was sent.
+  return lua_next(lS, iIndex) != 0;
+}
 /* -- Insert a value into the table ---------------------------------------- */
 static void LuaUtilInsertTable(lua_State*const lS, const int iIndex)
   { lua_insert(lS, iIndex); }
@@ -1364,15 +1372,13 @@ static lua_Unsigned LuaUtilGetKeyValTableSize(lua_State*const lS,
 { // Number of indexed items in table
   const lua_Unsigned luIndexedCount = LuaUtilGetSize(lS, 1 + iIndex);
   // Value to remove when popped by enumeration function
-  const int iVIndex = iIndex + 1;
+  const int iVIndex = iIndex + 2;
   // Number of items in table
   lua_Unsigned luCount = 0;
   // Until there are no more items
   for(LuaUtilPushNil(lS);
       LuaUtilTableEnumerateKeyValues(lS, iIndex);
       LuaUtilRmStack(lS, iVIndex)) ++luCount;
-  // Remove key
-  LuaUtilRmStack(lS);
   // Return count of key/value pairs in table
   return luCount - luIndexedCount;
 }

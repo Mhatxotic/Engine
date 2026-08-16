@@ -722,7 +722,7 @@ class Core final :                     // Members initially private
       SetExitReason(EMC_QUIT);
       // Show error and try to carry on and clean everything up
       SysMsgEx("Window Loop Fatal Exception!", eReason.what(), MB_ICONSTOP);
-   } // Engine should terminate from here-on
+    } // Engine should terminate from here-on
   }
   /* -- Wait async on all systems ---------------------------------- */ public:
   void CoreWaitAllAsync()

@@ -27,6 +27,8 @@ class SysCorePosix                     // Paired with SysProcess
   /* -- Send signal -------------------------------------------------------- */
   static int SendSignal(const unsigned uPid, const int iSignal)
     { return kill(static_cast<pid_t>(uPid), iSignal); }
+  /* -- Get reference to pid (SysMutex) ------------------------------------ */
+  const pid_t &GetPidRef() const { return piProcessId; }
   /* -- Terminate a process ---------------------------------------- */ public:
   static bool TerminatePid(const unsigned uPid)
     { return !SendSignal(uPid, SIGTERM); }

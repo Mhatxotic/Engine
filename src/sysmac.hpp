@@ -716,7 +716,7 @@ class SysCore :
   /* -- Default constructor ------------------------------------------------ */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */
-    SysMutex{ GetPid() },              // Send pid to mutex vlass
+    SysMutex{ GetPidRef() },           // Send pid to mutex vlass
     SysCon{ EnumModules(), 0 },        // Build system module dependencies
     SysInfo{ GetExecutableData(),      // Build data about the executable
              GetOperatingSystemData(), // Build data about the OS
