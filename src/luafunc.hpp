@@ -11,11 +11,11 @@
 namespace ILuaFunc {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaRef::P;
-using namespace ILuaUtil::P;           using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaRef::P;            using namespace ILuaUtil::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- LuaFunc ollector class for collector data and custom variables ------- */
@@ -60,7 +60,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   { // Return if reference not valid and unreference if not empty function
     if(LuaUtilIsNotRefValid(iReference)) return;
     if(LuaFuncIsNotRefEmptyFunc(iReference))
-      LuaUtilRmRef(LuaFuncGetState(), iReference);
+      LuaBaseUnref(LuaFuncGetState(), iReference);
     // Reset the reference to the requested value
     iReference = iNewReference;
   }
@@ -96,7 +96,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   bool LuaFuncCheckAddParams(const size_t stParams,
     const char*const cpType) const
   { // Return if value is valid
-    if(LuaUtilIsStackAvail(LuaFuncGetState(), stParams)) return true;
+    if(LuaBaseCheckStack(LuaFuncGetState(), stParams)) return true;
     // Write warning to log
     cLog->LogWarningExSafe("LuaFunc cannot add $ more $ parameters for "
       "calling '$' due to integer or potential stack overflow!",
@@ -142,16 +142,16 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     LuaFuncParams(++iParams, StdForward<VarArgs>(vaArgs)...); \
   }
   /* -- A function for each type ------------------------------------------- */
-  MP(long long,          "int64",  LuaUtilPushInt)
-  MP(unsigned long long, "uint64", LuaUtilPushInt)
-  MP(int,                "int",    LuaUtilPushInt)
-  MP(unsigned,           "uint",   LuaUtilPushInt)
+  MP(long long,          "int64",  LuaBasePushInt)
+  MP(unsigned long long, "uint64", LuaBasePushInt)
+  MP(int,                "int",    LuaBasePushInt)
+  MP(unsigned,           "uint",   LuaBasePushInt)
 #if !defined(WINDOWS)
-  MP(size_t,             "size_t", LuaUtilPushInt)
+  MP(size_t,             "size_t", LuaBasePushInt)
 #endif
-  MP(float,              "float",  LuaUtilPushNum)
-  MP(double,             "double", LuaUtilPushNum)
-  MP(bool,               "bool",   LuaUtilPushBool)
+  MP(float,              "float",  LuaBasePushNum)
+  MP(double,             "double", LuaBasePushNum)
+  MP(bool,               "bool",   LuaBasePushBool)
   /* -- Done with helper function ------------------------------------------ */
 #undef MP
   /* -- Send a function ---------------------------------------------------- */
@@ -178,14 +178,14 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     int iParams = 0;
     // Push all the parameters and do the call
     LuaFuncParams(iParams, vArgs...);
-    LuaUtilCallFuncEx(LuaFuncGetState(), iParams);
+    LuaBaseCall(LuaFuncGetState(), iParams);
   }
   /* -- Dispatch the requested variables safely ---------------------------- */
   template<typename ...VarArgs>
     void LuaFuncProtectedDispatch(const int iReturns, VarArgs &&...vArgs)
       const
   { // Save stack position so we can restore it on error
-    const int iStack = LuaUtilStackSize(LuaFuncGetState()),
+    const int iStack = LuaBaseGetTop(LuaFuncGetState()),
     // Push generic error function. This needs to be cleaned up after
     // LuaUtilPCall use
     iErrorCallback = LuaUtilPushAndGetGenericErrId(LuaFuncGetState());
@@ -200,7 +200,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     } // Exception occured?
     catch(const StdException &)
     { // Restore stack position because we don't know what might have added
-      LuaUtilPruneStack(LuaFuncGetState(), iStack);
+      LuaBaseSetTop(LuaFuncGetState(), iStack);
       // Rethrow the error
       throw;
     }
@@ -220,13 +220,13 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   /* -- Set a new function ------------------------------------------------- */
   void LuaFuncSet()
   { // Get last item on the stack
-    const int iIndex = LuaUtilStackSize(LuaFuncGetState());
+    const int iIndex = LuaBaseGetTop(LuaFuncGetState());
     // If last item on stack is a C function?
-    if(LuaUtilIsCFunction(LuaFuncGetState(), iIndex))
+    if(LuaBaseIsCFunc(LuaFuncGetState(), iIndex))
     { // De-init old reference if it not empty function
       LuaFuncClearRef();
       // Set reference to C function
-      iLiveReference = LuaUtilRefInit(LuaFuncGetState());
+      iLiveReference = LuaBaseRef(LuaFuncGetState());
       if(LuaUtilIsNotRefValid(iLiveReference))
         XC("Failed to create refid to C function!",
           "Name",  NameGet(),
@@ -235,11 +235,11 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       cLog->LogDebugExSafe("LuaFunc allocated refid #$ for C function '$'.",
         iLiveReference, NameGet());
     } // If last item on stack is a regular function?
-    else if(LuaUtilIsFunction(LuaFuncGetState(), iIndex))
+    else if(LuaBaseIsFunc(LuaFuncGetState(), iIndex))
     { // Set reference to c function. Do NOT de-initialise empty function
       LuaFuncClearRef();
       // Set reference to regular function
-      iLiveReference = LuaUtilRefInit(LuaFuncGetState());
+      iLiveReference = LuaBaseRef(LuaFuncGetState());
       if(LuaUtilIsNotRefValid(iLiveReference))
         XC("Failed to create refid to function!",
           "Name",  NameGet(),
@@ -250,7 +250,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     } // Don't know what this was?
     else XC("Expected C or regular function type on stack!",
       "Name",  NameGet(),
-      "Type",  LuaUtilGetType(LuaFuncGetState(), iIndex),
+      "Type",  LuaBaseTypeName(LuaFuncGetState(), iIndex),
       "Stack", LuaUtilGetVarStack(LuaFuncGetState()));
   }
   /* -- Set empty function ------------------------------------------------- */
@@ -294,7 +294,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       for(int iReference : aReferences)
         if(LuaUtilIsRefValid(iReference) &&
            LuaFuncIsNotRefEmptyFunc(iReference))
-          LuaUtilRmRef(LuaFuncGetState(), iReference);
+          LuaBaseUnref(LuaFuncGetState(), iReference);
   )
 };/* ----------------------------------------------------------------------- */
 /* -- De-init state and all references ------------------------------------- */
@@ -327,7 +327,7 @@ static void LuaFuncInitRef(lua_State*const lS)
   // Write to log that we're deinitialising
   cLog->LogDebugSafe("LuaFuncs manager initialising...");
   // Push empty function and reference it into the lua stack
-  LuaUtilPushCFunc(lS, LuaFuncEmptyCFunction);
+  LuaBasePushCFunc(lS, LuaFuncEmptyCFunction);
   cLuaFuncs->LuaRefInit(lS);
   // Log result
   cLog->LogDebugExSafe("LuaFunc allocated refid #$ for empty function.",

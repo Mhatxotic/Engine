@@ -534,15 +534,19 @@ static StdString StrCapitalise(StrType &&strStr)
   { StdString strNew{ strStr }; return StrCapitaliseRef(strNew); }
 /* -- Evaluate a list of booleans and return a character value ------------- */
 static StdString StrFromEvalTokens(const BoolCharPairVector &bcpvList)
-  { return bcpvList.empty() ? cCommon->CommonBlank() :
-      StdAccumulate(bcpvList.cbegin(), bcpvList.cend(), cCommon->CommonBlank(),
-        [](const StdString &strOut, const BoolCharPair &bcpPair)
-          { return bcpPair.first ? StrAppend(strOut,
-            bcpPair.second) : strOut; }); }
-/* -- Return true of false ------------------------------------------------- */
-static const StdString &StrFromBoolTF(const bool bCondition)
+{ // Stream to build the token string from
+  StdOStringStream osS;
+  // Walk through the table that was sent and if it's evaluation is true then
+  // add the supplied token to the string
+  for(const BoolCharPair &bcpPair : bcpvList)
+    if(bcpPair.first) osS << bcpPair.second;
+  // Return the string generated
+  return osS.str();
+}
+/* -- Return true or false based on supplied condition --------------------- */
+static const StdStringView &StrFromBoolTF(const bool bCondition)
   { return bCondition ? cCommon->CommonTrue() : cCommon->CommonFalse(); }
-static const StdString &StrFromBoolYN(const bool bCondition)
+static const StdStringView &StrFromBoolYN(const bool bCondition)
   { return bCondition ? cCommon->CommonYes() : cCommon->CommonNo(); }
 /* -- Count occurence of string -------------------------------------------- */
 template<class StrType, class StrWhatType>

@@ -1159,7 +1159,7 @@ for(const LuaFunc*const lfPtr : *cLuaFuncs)
         .DataN(lfRef.LuaFuncGet()).DataN(lfRef.LuaFuncGetSaved())
         .Data(lfRef.NameGet());
   // Remove what we pushed
-  LuaUtilRmStack(cLuaFuncs->LuaRefGetState());
+  LuaBaseRemove(cLuaFuncs->LuaRefGetState(), -1);
 } // Number of items in buffer
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cLuaFuncs->size(), "function.", "functions."));
@@ -1180,7 +1180,7 @@ lua_State*const lS = cLua->LuaGetState();
 // class creation simplifies the cleanup process.
 const LuaStackSaver lssSaved{ lS };
 // We need free items on the stack, leave empty if not
-if(!LuaUtilIsStackAvail(lS, aArgs.size()))
+if(!LuaBaseCheckStack(lS, aArgs.size()))
   return cConsole->ConsoleAddLine("Too many path components!");
 // Get iterator to second argument. First is actually the command name. The
 // second argument in this instance is the root table name in globals.
@@ -1192,13 +1192,13 @@ if(svciIt != aArgs.cend())
   if(strRoot.empty()) return cConsole->ConsoleAddLine("Empty table name!");
   // Push variable specified on command line and if it's not a table?
   // Tell user the table is invalid and return
-  LuaUtilGetGlobal(lS, strRoot.data());
-  if(!LuaUtilIsTable(lS, -1))
+  LuaBaseGetGlobal(lS, strRoot.data());
+  if(!LuaBaseIsTable(lS, -1))
     return cConsole->ConsoleAddLineF("Table '$' $!", strRoot,
-      LuaUtilIsNil(lS, -1) ? "does not exist" : "is not valid");
+      LuaBaseIsNil(lS, -1) ? "does not exist" : "is not valid");
   // Save index so we can keep recursing the same table and check if each
   // remaining argument is a table until we reach no more arguments.
-  for(const int iIndex = LuaUtilStackSize(lS); ++svciIt != aArgs.cend();)
+  for(const int iIndex = LuaBaseGetTop(lS); ++svciIt != aArgs.cend();)
   { // Get name of parameter and if it's empty? Return empty sub-table
     const StdString &strParam = *svciIt;
     if(strParam.empty())
@@ -1206,34 +1206,34 @@ if(svciIt != aArgs.cend())
     // ...and if its a valid number?
     if(StrIsInt(strParam))
     { // Get value by index and keep searching for more tables
-      LuaUtilGetRefEx(lS, -1, StrToNum<lua_Integer>(strParam));
-      if(LuaUtilIsTable(lS, -1)) continue;
+      LuaBaseRawGetI(lS, -1, StrToNum<lua_Integer>(strParam));
+      if(LuaBaseIsTable(lS, -1)) continue;
       // Restore where we were in the stack
-      LuaUtilPruneStack(lS, iIndex);
+      LuaBaseSetTop(lS, iIndex);
     } // Find subtable. It must be a table
-    LuaUtilGetField(lS, -1, strParam.data());
-    if(LuaUtilIsTable(lS, -1)) continue;
+    LuaBaseGetField(lS, -1, strParam.data());
+    if(LuaBaseIsTable(lS, -1)) continue;
     // Tell user the table is invalid and return
     return cConsole->ConsoleAddLineF("Sub-table '$' $!", strParam,
-      LuaUtilIsNil(lS, -1) ? "does not exist" : "is not valid");
+      LuaBaseIsNil(lS, -1) ? "does not exist" : "is not valid");
   }
-} // Push global namspace and throw error if it is invalid
-else lua_pushglobaltable(lS);
+} // Push global namspace
+else LuaBasePushGlobalsTable(lS);
 // Items for sorting (Name, Value, Tokens)
 using StrStrPairMapPair = StdPair<const StdString, const StrStrMapPair>;
 using StrStrPairMap =
   StdMap<StrStrPairMapPair::first_type, StrStrPairMapPair::second_type>;
 StrStrPairMap ssmpmMap;
 // Make sure theres two elements
-for(LuaUtilPushNil(lS);
-    LuaUtilTableEnumerateKeyValues(lS, -2);
-    LuaUtilRmStack(lS))
+for(LuaBasePushNil(lS);
+    LuaBaseNext(lS, -2);
+    LuaBaseRemove(lS, -1))
 { // Index is an integer? Create item info struct and add to list
-  if(LuaUtilIsInteger(lS, -2))
-    ssmpmMap.insert({ StrFromNum(LuaUtilToInt(lS, -2)),
+  if(LuaBaseIsInt(lS, -2))
+    ssmpmMap.insert({ StrFromNum(LuaBaseToInt(lS, -2)),
       { LuaUtilGetStackType(lS, -1), LuaUtilGetStackTokens(lS, -1) } });
   // For everything else. Create item info struct and add to list
-  else ssmpmMap.insert({ LuaUtilToString<char>(lS, -2),
+  else ssmpmMap.insert({ LuaBaseToStr<char>(lS, -2),
     { LuaUtilGetStackType(lS, -1), LuaUtilGetStackTokens(lS, -1) } });
 } // Build string to output
 Statistic sTable;
@@ -1362,7 +1362,7 @@ cEvtMain->Add(EMC_LUA_RESUME);
 // Get lua state
 lua_State*const lS = cLua->LuaGetState();
 // Get number of items in stack
-const int iCount = LuaUtilStackSize(lS);
+const int iCount = LuaBaseGetTop(lS);
 // Setup output spreadsheet
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("NAME", false).Header("VALUE")
@@ -1787,7 +1787,7 @@ cConsole->ConsoleAddLineF("$$ and $.", sTable.Finish(),
 LuaUtilClassCreate<SShot>(cLua->LuaGetState(), cSShots)->DumpMain();
 // Although SShot is asynchronous, theres no way to clean up the stack so
 // we'll just delete it straight away.
-LuaUtilRmStack(cLua->LuaGetState(), 1);
+LuaBaseRemove(cLua->LuaGetState(), 1);
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'shot' function
 /* ========================================================================= */
@@ -1811,7 +1811,7 @@ if(aArgs.size() == 2)
   // Get socket flags
   const SocketFlagsConst sfcFlags{ sRef.FlagGet() };
   // Tokens for status
-  const StdString strStatus
+  const StdStringView ssvStatus
       ((sfcFlags.FlagIsSet(SS_CLOSEDBYCLIENT)) ? "ClientClosed"
     : ((sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER)) ? "ServerClosed"
     : ((sfcFlags.FlagIsSet(SS_STANDBY))        ? "Disconnected"
@@ -1823,7 +1823,7 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_CONNECTED))      ? "Connected"
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
-    :                                            "Unknown")))))))))));
+    : cCommon->CommonUnknownV())))))))))));
   // Initial connection status
   const StdString strOutput{
     StrFormat("Status for socket $<$>...\n"
@@ -1832,7 +1832,7 @@ if(aArgs.size() == 2)
       "$"
       "$",
       uId, sRef.NameGet(),
-      strStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
+      ssvStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
         sRef.GetFD(), StdIOSHex, sRef.GetFD(),
       sRef.GetAddress(), StdIOSDec, sRef.GetPort(), sRef.GetIPAddress(),
       sRef.FlagIsSet(SS_VHOST) ?

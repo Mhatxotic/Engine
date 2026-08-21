@@ -14,10 +14,11 @@ using namespace IConsole::P;           using namespace ICVarDef::P;
 using namespace ICVar::P;              using namespace ICVarLib::P;
 using namespace IError::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace ILuaFunc::P;
-using namespace ISerial::P;            using namespace IString::P;
-using namespace IStat::P;              using namespace IStd::P;
+using namespace ILuaBase::P;           using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace ILuaFunc::P;           using namespace ISerial::P;
+using namespace IString::P;            using namespace IStat::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 using LumCvEnums = LookupMap<CVarFlagsType>;
 /* ------------------------------------------------------------------------- */
@@ -60,12 +61,12 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // but Lua will add nil's what wasn't specified.
     lcvmpIt->second.first.LuaFuncProtectedDispatch(2, strVal, cviVar.GetVar());
     // Get location of success return value
-    const int iBIndex = LuaUtilStackSize(cLuaFuncs->LuaRefGetState()) - 1;
+    const int iBIndex = LuaBaseGetTop(cLuaFuncs->LuaRefGetState()) - 1;
     const bool bResult = LuaUtilGetBool(cLuaFuncs->LuaRefGetState(), iBIndex);
     // Get location of optional second string parameter which will force a
     // different value for the cvar and return cvar to engine if not a string.
     const int iSIndex = iBIndex + 1;
-    if(!LuaUtilIsString(cLuaFuncs->LuaRefGetState(), iSIndex))
+    if(!LuaBaseIsStr(cLuaFuncs->LuaRefGetState(), iSIndex))
       return BoolToCVarReturn(bResult);
     // Replace the current value with the guest author specified value.
     cviVar.GetModifyableValue() =
@@ -124,7 +125,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // Since the userdata for this class object is at arg 5, we need to make
     // sure the callback function is ahead of it in arg 6 or the LuaFunc()
     // class which calls luaL_ref will fail as it ONLY reads position -1.
-    LuaUtilCopyValue(lS, 4);
+    LuaBasePushValue(lS, 4);
     // Save the function at the top of the stack used for the callback
     lcvmiIt = cParent->lcvmMap.insert(GetLuaVarListEnd(), {
       StdString{ ssvName },

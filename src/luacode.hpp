@@ -12,10 +12,11 @@ namespace ILuaCode {                   // Start of private module namespace
 using namespace IAsset::P;             using namespace IClock::P;
 using namespace ICredit::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFileMap::P;
-using namespace ILog::P;               using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace ISql::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace Lib::OS::SevenZip;     using namespace Lib::Sqlite;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace ISql::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace Lib::OS::SevenZip;
+using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -100,7 +101,8 @@ static Memory LuaCodeCompileFunction(lua_State*const lS, const bool bDebug)
   using namespace LuaCodeDumpHelper;
   MemData mdData;
   // Dump the code to binary and if error occured?
-  if(lua_dump(lS, PopulateMemoryListCallback, &mdData, bDebug ? 0 : 1))
+  if(LuaBaseDump(lS,
+       PopulateMemoryListCallback, &mdData, bDebug ? 0 : 1))
     XC("Failure dumping function!");
   // Error if no blocks
   if(mdData.mlBlocks.empty() || !mdData.stTotal) XC("Empty function dump!");

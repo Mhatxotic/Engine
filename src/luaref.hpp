@@ -10,8 +10,8 @@
 namespace ILuaRef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IFillCon::P;           using namespace ILog::P;
-using namespace ILuaUtil::P;           using namespace IStd::P;
-using namespace IUtil::P;
+using namespace ILuaBase::P;           using namespace ILuaUtil::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -27,7 +27,7 @@ template<size_t Refs = 1>class LuaRef  // Lua easy reference class
   bool LuaRefDoDeInit(const int iReference) const
   { // Return failure if not valid else remove it and return success
     if(LuaUtilIsNotRefValid(iReference)) return false;
-    LuaUtilRmRef(LuaRefGetState(), iReference);
+    LuaBaseUnref(LuaRefGetState(), iReference);
     return true;
   }
   /* -- Release and reset specific reference ------------------------------- */
@@ -36,7 +36,7 @@ template<size_t Refs = 1>class LuaRef  // Lua easy reference class
   /* -- Initialise a specific reference ------------------------------------ */
   bool LuaRefDoInitEx(const size_t stIndex)
   { // Init the ref and return on failure else assign to the specifide ref ndx
-    const int iReference = LuaUtilRefInit(LuaRefGetState());
+    const int iReference = LuaBaseRef(LuaRefGetState());
     if(LuaUtilIsNotRefValid(iReference)) return false;
     aReferences[stIndex] = iReference;
     return true;
@@ -61,10 +61,10 @@ template<size_t Refs = 1>class LuaRef  // Lua easy reference class
       { // Get the value pointed by the reference
         LuaUtilGetRef(LuaRefGetState(), iReference);
         // Get the id of the last item on the stack and return if it's userdata
-        const int iIndex = LuaUtilStackSize(LuaRefGetState());
-        if(LuaUtilIsUserData(LuaRefGetState(), iIndex)) return true;
+        const int iIndex = LuaBaseGetTop(LuaRefGetState());
+        if(LuaBaseIsUData(LuaRefGetState(), iIndex)) return true;
         // Failed so remove whatever it was
-        LuaUtilRmStack(LuaRefGetState(), iIndex);
+        LuaBaseRemove(LuaRefGetState(), iIndex);
       } // Reference invalid
     } // No state
     return false;

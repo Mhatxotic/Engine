@@ -15,14 +15,15 @@ class Common;                          // Prototype
 static Common *cCommon = nullptr;      // Global access to class
 class Common                           // Common variables class
 { /* -- Common string views ------------------------------------------------ */
-  const StdStringView ssvDir, ssvEnt, ssvFs, ssvHttp, ssvHttps,
-    ssvLuaName, ssvTimeout, ssvPipe, ssvColon, ssvSpace, ssvQuote,
-    ssvEquals, ssvBlank, ssvZero, ssvOne, ssvDblSpace, ssvFSlash;
+  const StdStringView ssvDir, ssvEnt, ssvFs, ssvHttp, ssvHttps, ssvLuaName,
+    ssvTimeout, ssvPipe, ssvColon, ssvSpace, ssvQuote, ssvEquals, ssvBlank,
+    ssvZero, ssvOne, ssvDblSpace, ssvFSlash, ssvUnknown, ssvTrue, ssvFalse,
+    ssvY, ssvN;
   /* -- Common strings ----------------------------------------------------- */
-  const StdString strTrue, strFalse, strY, strN, strSpace, strBlank, strCr,
-    strLf, strCrLf, strCrLf2, strLfCr, strUnspec, strNull,
-    strPeriod, str2Period, strEllipsis, strPrivate, strProtected, strEmpty,
-    strInvalid, strAsterisk, strNil, strUnresolved, strZero, strOne;
+  const StdString strSpace, strBlank, strCr, strLf, strCrLf, strCrLf2, strLfCr,
+    strUnspec, strNull, strPeriod, str2Period, strEllipsis, strPrivate,
+    strProtected, strEmpty, strInvalid, strAsterisk, strNil, strUnresolved,
+    strZero, strOne;
   /* -- Miscellaneous common variables ------------------------------------- */
   const char*const cpBlank;            // Blank C-String
   StdLocale        lLocaleCurrent;     // Current locale
@@ -48,12 +49,13 @@ class Common                           // Common variables class
   const StdStringView &CommonOneV() const { return ssvOne; }
   const StdStringView &CommonDblSpaceV() const { return ssvDblSpace; }
   const StdStringView &CommonFSlashV() const { return ssvFSlash; }
+  const StdStringView &CommonUnknownV() const { return ssvUnknown; }
+  const StdStringView &CommonTrue() const { return ssvTrue; }
+  const StdStringView &CommonFalse() const { return ssvFalse; }
+  const StdStringView &CommonYes() const { return ssvY; }
+  const StdStringView &CommonNo() const { return ssvN; }
   /* -- Return string functions -------------------------------------------- */
   const StdString &CommonBlank() const { return strBlank; }
-  const StdString &CommonTrue() const { return strTrue; }
-  const StdString &CommonFalse() const { return strFalse; }
-  const StdString &CommonYes() const { return strY; }
-  const StdString &CommonNo() const { return strN; }
   const StdString &CommonCr() const { return strCr; }
   const StdString &CommonLf() const { return strLf; }
   const StdString &CommonCrLf() const { return strCrLf; }
@@ -86,9 +88,10 @@ class Common                           // Common variables class
     ssvQuote{ "\"" },                  ssvEquals{ "=" },
     ssvZero{ "0" },                    ssvOne{ "1" },
     ssvDblSpace{ "  " },               ssvFSlash{ "/" },
+    ssvUnknown{ "Unknown" },           ssvTrue{ "true" },
+    ssvFalse{ "false" },               ssvY{ "Y" },
+    ssvN{ "N" },
     /* -- String initialisers ---------------------------------------------- */
-    strTrue{ "true" },                 strFalse{ "false" },
-    strY{ "Y" },                       strN{ "N" },
     strSpace{ ssvSpace },              strCr{ "\r" },
     strLf{ "\n" },                     strCrLf{ "\r\n" },
     strCrLf2{ "\r\n\r\n" },            strLfCr{ "\n\r" },

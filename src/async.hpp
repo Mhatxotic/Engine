@@ -38,12 +38,13 @@ using namespace IAsset::P;             using namespace IClock::P;
 using namespace IChrono::P;            using namespace ICollector::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFileMap::P;           using namespace ILog::P;
-using namespace ILuaEvt::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace IRefCtr::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ITime::P;
-using namespace ISysPipe::P;           using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace ILuaBase::P;           using namespace ILuaEvt::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IName::P;              using namespace IRefCtr::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ITime::P;              using namespace ISysPipe::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -511,7 +512,7 @@ template<class MemberType, class ColType>class AsyncLoader :
           { // Push the sent parameters onto the stack
             const size_t stMax = emaArgs.size();
             for(size_t stIndex = 3; stIndex < stMax; ++stIndex)
-              LuaUtilPushInt(lecAsync.LuaRefGetState(),
+              LuaBasePushInt(lecAsync.LuaRefGetState(),
                 emaArgs[stIndex].LongLong());
             // Execute the progress callback
             AsyncDoLuaProtectedDispatch(emeEvent, static_cast<int>(stMax - 3),
@@ -537,7 +538,7 @@ template<class MemberType, class ColType>class AsyncLoader :
             { // Push the class ref and if both succeeded?
               if(lecAsync.LuaRefGetUData())
               { // Push the specified parameter
-                LuaUtilPushInt(lecAsync.LuaRefGetState(),
+                LuaBasePushInt(lecAsync.LuaRefGetState(),
                   emaArgs[3].LongLong());
                 // Dispatch the event with two parameters
                 AsyncDoFinishLuaProtectedDispatch(emeEvent, 2, iErrorHandler);

@@ -272,7 +272,7 @@ LLFUNC(Library, 4,
   const CreditLib &clItem = cCredits->CreditGetItem(aCredit);
   LuaUtilPushExtStr(lS, clItem.GetName());
   LuaUtilPushExtStr(lS, clItem.GetVersion());
-  LuaUtilPushBool(lS, clItem.IsCopyright());
+  LuaBasePushBool(lS, clItem.IsCopyright());
   LuaUtilPushExtStr(lS, clItem.GetAuthor()))
 /* ========================================================================= */
 // $ Core.License

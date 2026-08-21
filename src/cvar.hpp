@@ -147,7 +147,7 @@ class CVarItem :                       // Members initially private
       return StrFromNum(StrToNum<double>(GetValue()), 0, 12);
     // Is a boolean
     if(FlagIsSet(TBOOLEAN))
-      return StrFromBoolTF(StrToNum<bool>(GetValue()));
+      return StdString{ StrFromBoolTF(StrToNum<bool>(GetValue())) };
     // If is a integer, return number + hex
     if(FlagIsSet(TINTEGER))
     { // Get value as 64-bit integer

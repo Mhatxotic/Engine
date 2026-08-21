@@ -75,6 +75,7 @@ namespace E {                          // Put everything in engine namespace
 #include "syscore.hpp"                 // Operating system interface header
 #include "filemap.hpp"                 // Virtual file IO interface
 #include "refctr.hpp"                  // Reference counter class header
+#include "luabase.hpp"                 // Lua base functions header
 #include "luautil.hpp"                 // Lua utility functions header
 #include "luaref.hpp"                  // Lua reference helper class header
 #include "luaevent.hpp"                // Lua event helper class header

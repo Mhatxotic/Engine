@@ -15,16 +15,17 @@ using namespace ICrypt::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IMutex::P;             using namespace IName::P;
-using namespace IParser::P;            using namespace IRefCtr::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IToken::P;             using namespace IUtil::P;
-using namespace IUtf::P;               using namespace Lib::OS::OpenSSL;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IName::P;              using namespace IParser::P;
+using namespace IRefCtr::P;            using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace IToken::P;
+using namespace IUtil::P;              using namespace IUtf::P;
+using namespace Lib::OS::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -1611,8 +1612,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         { // Push class reference onto stack
           if(LuaRefGetUData())
           { // Push the status code that was fired and if valid?
-            LuaUtilPushInt(lsState, uStatus);
-            if(LuaUtilIsInteger(lsState, -1))
+            LuaBasePushInt(lsState, uStatus);
+            if(LuaBaseIsInt(lsState, -1))
             { // Call callback
               LuaUtilCallFuncRefCtrEx(lsState, this, 2);
               // Clear references and state if this is the last event
@@ -1679,10 +1680,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     MutexCall([this, lS]{
       // Return if there are packets and divisble by 2
       const size_t stCount = GetTXQCount();
-      if(!stCount || stCount % 2) return LuaUtilPushTable(lS);
+      if(!stCount || stCount % 2) return LuaBasePushTable(lS);
       // Create the table, we're creating non-indexed key/value pairs
-      LuaUtilPushTable(lS, 0, stCount / 2);
-      const int iOIndex = LuaUtilStackSize(lS);
+      LuaUtilPushObject(lS, stCount / 2);
+      const int iOIndex = LuaBaseGetTop(lS);
       // Currently selected variable
       const char *cpVar = nullptr;
       // For each packet
@@ -1693,7 +1694,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         if(!cpVar) { cpVar = mbPacket.MemPtr<char>(); continue; }
         // Push value and set it as the variable
         LuaUtilPushStr(lS, mbPacket.MemToStringView());
-        LuaUtilSetField(lS, iOIndex, cpVar);
+        LuaBaseSetField(lS, iOIndex, cpVar);
         // Done with variable
         cpVar = nullptr;
       } // Clear data and memory usage in queue

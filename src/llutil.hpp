@@ -664,7 +664,7 @@ LLFUNC(IsASCII, 1,
 // < Result:boolean=Is a valid boolean.
 // ? Returns if specified parameter is a boolean.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsBoolean, 1, LuaUtilPushVar(lS, LuaUtilIsBoolean(lS, 1)))
+LLFUNC(IsBoolean, 1, LuaUtilPushVar(lS, LuaBaseIsBool(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsExtASCII
 // > String:string=The string to test if empty.
@@ -680,42 +680,42 @@ LLFUNC(IsExtASCII, 1,
 // < Result:boolean=Is a valid function.
 // ? Returns if specified parameter is a function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsFunction, 1, LuaUtilPushVar(lS, LuaUtilIsFunction(lS, 1)))
+LLFUNC(IsFunction, 1, LuaUtilPushVar(lS, LuaBaseIsFunc(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsInteger
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid integer.
 // ? Returns if specified parameter is a integer.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsInteger, 1, LuaUtilPushVar(lS, LuaUtilIsInteger(lS, 1)))
+LLFUNC(IsInteger, 1, LuaUtilPushVar(lS, LuaBaseIsInt(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsNumber
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid number.
 // ? Returns if specified parameter is a number.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsNumber, 1, LuaUtilPushVar(lS, LuaUtilIsNumber(lS, 1)))
+LLFUNC(IsNumber, 1, LuaUtilPushVar(lS, LuaBaseIsNum(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsString
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid string.
 // ? Returns if specified parameter is a string.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsString, 1, LuaUtilPushVar(lS, LuaUtilIsString(lS, 1)))
+LLFUNC(IsString, 1, LuaUtilPushVar(lS, LuaBaseIsStr(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsTable
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid table.
 // ? Returns if specified parameter is a table.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsTable, 1, LuaUtilPushVar(lS, LuaUtilIsTable(lS, 1)))
+LLFUNC(IsTable, 1, LuaUtilPushVar(lS, LuaBaseIsTable(lS, 1)))
 /* ========================================================================= */
 // $ Util.IsUserdata
 // > Var:*=Any parameter.
 // < Result:boolean=Is a valid userdata object.
 // ? Returns if specified parameter is a userdata object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsUserdata, 1, LuaUtilPushVar(lS, LuaUtilIsUserData(lS, 1)))
+LLFUNC(IsUserdata, 1, LuaUtilPushVar(lS, LuaBaseIsUData(lS, 1)))
 /* ========================================================================= */
 // $ Util.LineType
 // > String:string=The string to check

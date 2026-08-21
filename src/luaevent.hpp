@@ -13,9 +13,10 @@ namespace ILuaEvt {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IEvtCore::P;
 using namespace IEvtMain::P;           using namespace ILog::P;
-using namespace ILuaRef::P;            using namespace ILuaUtil::P;
-using namespace IMutex::P;             using namespace IRefCtr::P;
-using namespace IStd::P;               using namespace IUtf::P;
+using namespace ILuaBase::P;           using namespace ILuaRef::P;
+using namespace ILuaUtil::P;           using namespace IMutex::P;
+using namespace IRefCtr::P;            using namespace IStd::P;
+using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -194,7 +195,7 @@ class LuaEvtSlave :
         this->LuaRefGetId(), emaArgs.size());
       return;
     } // Check to see if we can write the function and it's parameters, if not?
-    if(!LuaUtilIsStackAvail(this->LuaRefGetState(), emaArgs.size() - 1))
+    if(!LuaBaseCheckStack(this->LuaRefGetState(), emaArgs.size() - 1))
       XC("Not enough stack space or memory, or param count overflowed!",
         "Name",      mtPtr->NameGet(),         "Event", emeEvent.cCmd,
         "HaveState", this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
@@ -214,11 +215,11 @@ class LuaEvtSlave :
       switch(eavArg.Type())
       { // Boolean?
         case EAVT_BOOL:
-          LuaUtilPushBool(this->LuaRefGetState(), eavArg.Bool());
+          LuaBasePushBool(this->LuaRefGetState(), eavArg.Bool());
           break;
         // C-String?
         case EAVT_CSTR:
-          LuaUtilPushCStr(this->LuaRefGetState(), eavArg.CStr());
+          LuaBasePushCStr(this->LuaRefGetState(), eavArg.CStr());
           break;
         // STL String?
         case EAVT_STR:
@@ -226,32 +227,32 @@ class LuaEvtSlave :
           break;
         // Float?
         case EAVT_FLOAT:
-          LuaUtilPushNum(this->LuaRefGetState(),
+          LuaBasePushNum(this->LuaRefGetState(),
             static_cast<lua_Number>(eavArg.Float()));
           break;
         // Double?
         case EAVT_DOUBLE:
-          LuaUtilPushNum(this->LuaRefGetState(),
+          LuaBasePushNum(this->LuaRefGetState(),
             static_cast<lua_Number>(eavArg.Double()));
           break;
         // Signed or unsigned integer?
         case EAVT_UINT: [[fallthrough]]; case EAVT_INT:
-          LuaUtilPushInt(this->LuaRefGetState(),
+          LuaBasePushInt(this->LuaRefGetState(),
             static_cast<lua_Integer>(eavArg.Int()));
           break;
         // Signed or unsigned long long?
         case EAVT_ULONGLONG: [[fallthrough]]; case EAVT_LONGLONG:
-          LuaUtilPushInt(this->LuaRefGetState(),
+          LuaBasePushInt(this->LuaRefGetState(),
             static_cast<lua_Integer>(eavArg.LongLong()));
           break;
         // Signed or unsigned long int?
         case EAVT_LONGUINT: [[fallthrough]]; case EAVT_LONGINT:
-          LuaUtilPushInt(this->LuaRefGetState(),
+          LuaBasePushInt(this->LuaRefGetState(),
             static_cast<lua_Integer>(eavArg.Long()));
           break;
         // Unsupported type? Push nil
         default: [[fallthrough]]; case EAVT_MAX:
-          LuaUtilPushNil(this->LuaRefGetState());
+          LuaBasePushNil(this->LuaRefGetState());
           break;
       }
     } // Call the callback function.

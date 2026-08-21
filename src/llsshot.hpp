@@ -89,9 +89,10 @@ LLFUNC(Screen, 1, AcSShot{lS}().DumpMain())
 // ? Takes a screenshot of the specified Fbo. You must completely omit the
 // ? 'file' parameter to use an engine generated filename.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Fbo, 1, const AgFbo aFbo{lS,1};
-  AcSShot{lS}().DumpFbo(aFbo, // cCommon->CommonBlank()
-    LuaUtilStackSize(lS) < 3 ? "" : AgFilename{lS,2}()))
+LLFUNC(Fbo, 1,
+  const AgFbo aFbo{lS, 1};
+  AcSShot{lS}().DumpFbo(aFbo,
+    LuaBaseGetTop(lS) < 3 ? cCommon->CommonBlankV() : AgFilename{lS,2}()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## SShot.* namespace functions structure                               ## **

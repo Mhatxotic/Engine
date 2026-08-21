@@ -38,27 +38,28 @@ using namespace IImage::P;             using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
 using namespace IInput::P;             using namespace IInterval::P;
 using namespace IJson::P;              using namespace ILog::P;
-using namespace ILua::P;               using namespace ILuaCode::P;
-using namespace ILuaCommand::P;        using namespace ILuaFunc::P;
-using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
-using namespace IMask::P;              using namespace IMemory::P;
-using namespace IMixer::P;             using namespace IMutex::P;
-using namespace IOal::P;               using namespace IOgl::P;
-using namespace IPSplit::P;            using namespace IPalette::P;
-using namespace IPcm::P;               using namespace IPcmLib::P;
-using namespace ISShot::P;             using namespace ISample::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace ISocket::P;            using namespace ISource::P;
-using namespace ISql::P;               using namespace IStat::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IStream::P;            using namespace IString::P;
-using namespace ISysMod::P;            using namespace ISysUtil::P;
-using namespace ISystem::P;            using namespace ITexture::P;
-using namespace IThread::P;            using namespace ITime::P;
-using namespace IToken::P;             using namespace IUrl::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace IVideo::P;             using namespace Lib::OS::GlFW::Types;
-using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
+using namespace ILua::P;               using namespace ILuaBase::P;
+using namespace ILuaCode::P;           using namespace ILuaCommand::P;
+using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
+using namespace ILuaVariable::P;       using namespace IMask::P;
+using namespace IMemory::P;            using namespace IMixer::P;
+using namespace IMutex::P;             using namespace IOal::P;
+using namespace IOgl::P;               using namespace IPSplit::P;
+using namespace IPalette::P;           using namespace IPcm::P;
+using namespace IPcmLib::P;            using namespace ISShot::P;
+using namespace ISample::P;            using namespace IShader::P;
+using namespace IShaders::P;           using namespace ISocket::P;
+using namespace ISource::P;            using namespace ISql::P;
+using namespace IStat::P;              using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IStream::P;
+using namespace IString::P;            using namespace ISysMod::P;
+using namespace ISysUtil::P;           using namespace ISystem::P;
+using namespace ITexture::P;           using namespace IThread::P;
+using namespace ITime::P;              using namespace IToken::P;
+using namespace IUrl::P;               using namespace IUtf::P;
+using namespace IUtil::P;              using namespace IVideo::P;
+using namespace Lib::OS::GlFW::Types;  using namespace Lib::OpenAL::Types;
+using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -368,8 +369,8 @@ class Core final :                     // Members initially private
     { // Allow Lue to process error. WARNING!! This prevents destructors on all
       // statically initialised classes to NEVER call so make sure we do not
       // statically create something above!
-      LuaUtilPushCStr(lS, eReason.what());
-      LuaUtilErrThrow(lS);
+      LuaBasePushCStr(lS, eReason.what());
+      LuaBaseError(lS);
     } // Returning no values
     return 0;
   }
@@ -378,7 +379,7 @@ class Core final :                     // Members initially private
   { // Get pointer to class
     Core*const cPtr = LuaUtilGetSimplePtr<Core>(lS, 1);
     // Remove light user data pointer
-    LuaUtilRmStack(lS);
+    LuaBaseRemove(lS, -1);
     // Call sandbox function
     return cPtr->CoreThreadSandbox(lS);
   }

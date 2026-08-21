@@ -17,14 +17,14 @@ using namespace ICVarDef::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IFlags::P;
 using namespace IFrame::P;             using namespace IInterval::P;
 using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILookupArray::P;       using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IPSplit::P;            using namespace IMemory::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITime::P;              using namespace IUtil::P;
-using namespace Lib::Sqlite;
+using namespace ILookupArray::P;       using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IPSplit::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITime::P;
+using namespace IUtil::P;              using namespace Lib::Sqlite;
 /* -- Replacement for SQLITE_TRANSIENT which cases warnings ---------------- */
 static sqlite3_destructor_type fcbSqliteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);
@@ -654,7 +654,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       // Get maximum parameters allowed before we have to send them
       if(const int iMax = sqlite3_bind_parameter_count(stmtData))
       { // No parameters specified? Just execute the statement
-        if(LuaUtilIsNone(lS, iParam)) SqlSetError(SQLITE_FORMAT);
+        if(LuaBaseIsNone(lS, iParam)) SqlSetError(SQLITE_FORMAT);
         // Parameter is valid?
         else
         { // Column id
@@ -662,13 +662,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
           // Repeat...
           do
           { // Get lua variable type and compare its type
-            switch(const int iType = lua_type(lS, iParam))
+            switch(const int iType = LuaBaseType(lS, iParam))
             { // Variable is a number?
               case LUA_TNUMBER:
               { // Variable is actually an integer?
-                if(LuaUtilIsInteger(lS, iParam))
+                if(LuaBaseIsInt(lS, iParam))
                 { // Get integer, log it and add it as integer
-                  const lua_Integer liInt = LuaUtilToInt(lS, iParam);
+                  const lua_Integer liInt = LuaBaseToInt(lS, iParam);
                   cLog->LogDebugExSafe("- Arg #$<Integer/Int> = $ <$0x$>.",
                     iCol, liInt, StdIOSHex, liInt);
                   SqlSetError(sqlite3_bind_int64(stmtData, iCol,
@@ -676,7 +676,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
                 } // Variable is actually a number
                 else
                 { // Get double, log it and add it as number
-                  const lua_Number lnFloat = LuaUtilToNum(lS, iParam);
+                  const lua_Number lnFloat = LuaBaseToNum(lS, iParam);
                   cLog->LogDebugExSafe("- Arg #$<Number/Float> = $$.",
                     iCol, StdIOSFixed, lnFloat);
                   SqlSetError(sqlite3_bind_double(stmtData, iCol,
@@ -687,7 +687,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
               case LUA_TSTRING:
               { // Get string, store size, log parameter, add as string
                 size_t stS;
-                const char*const cpStr = LuaUtilToLString(lS, iParam, stS);
+                const char*const cpStr = LuaBaseToLStr(lS, iParam, stS);
                 cLog->LogDebugExSafe(
                   "- Arg #$<String/Text> = \"$\" ($ bytes).",
                   iCol, cpStr, stS);
@@ -697,7 +697,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
               } // Variable is a boolean
               case LUA_TBOOLEAN:
               { // Get boolean, log parameter, convert and add as integer
-                const bool bBool = LuaUtilToBool(lS, iParam);
+                const bool bBool = LuaBaseToBool(lS, iParam);
                 cLog->LogDebugExSafe("- Arg #$<Bool/Int> = $.",
                   iCol, StrFromBoolTF(bBool));
                 SqlSetError(sqlite3_bind_int64(stmtData, iCol,
@@ -723,11 +723,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
               } // Other variable (ignore)
               default: XC("Unsupported parameter type!",
                 "Param", iParam, "LuaType", iType,
-                "Typename", LuaUtilGetType(lS, iType));
+                "Typename", LuaBaseTypeName(lS, iType));
             } // Do the step if needed break if not needed or error
             if(!SqlDoExecuteParamCheckCommit(stmtData, iCol, iMax)) break;
           } // ...until no parameters left
-          while(!LuaUtilIsNone(lS, ++iParam));
+          while(!LuaBaseIsNone(lS, ++iParam));
         }
       } // We can't add parameters so just execute the statement
       else SqlDoStep(stmtData);
@@ -743,17 +743,17 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Convert records to lua table --------------------------------------- */
   void RecordsToLuaTable(lua_State*const lS)
   { // Create the table, we're creating a indexed/value array
-    LuaUtilPushTable(lS, srKeys.size());
-    const int iAIndex = LuaUtilStackSize(lS);
+    LuaUtilPushArray(lS, srKeys.size());
+    const int iAIndex = LuaBaseGetTop(lS);
     // Memory id
     lua_Integer liId = 1;
     // For each table item
     for(const SqlRecordsMap &srmRef : srKeys)
     { // Table index
-      LuaUtilPushInt(lS, liId);
+      LuaBasePushInt(lS, liId);
       // Create the table, we're creating non-indexed key/value pairs
-      LuaUtilPushTable(lS, 0, srmRef.size());
-      const int iOIndex = LuaUtilStackSize(lS);
+      LuaUtilPushObject(lS, srmRef.size());
+      const int iOIndex = LuaBaseGetTop(lS);
       // For each column data
       for(const SqlRecordsMapPair &srmpRef : srmRef)
       { // Get data list item
@@ -766,11 +766,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
             break;
           // 64-bit integer?
           case SQLITE_INTEGER:
-            LuaUtilPushInt(lS, sdRef.MemReadInt<lua_Integer>());
+            LuaBasePushInt(lS, sdRef.MemReadInt<lua_Integer>());
             break;
           // 64-bit IEEE float?
           case SQLITE_FLOAT:
-            LuaUtilPushNum(lS, sdRef.MemReadInt<lua_Number>());
+            LuaBasePushNum(lS, sdRef.MemReadInt<lua_Number>());
             break;
           // Raw data? Save as array
           case SQLITE_BLOB:
@@ -783,7 +783,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
             // Done
             break;
           } // No data? Push a 'false' since we can't have 'nil' in keypairs.
-          case SQLITE_NULL: LuaUtilPushBool(lS, false); break;
+          case SQLITE_NULL: LuaUtilPushFalse(lS); break;
           // Since we don't store anything invalid in srKeys, this will NEVER
           // get here, but we'll hard fail just incase. GCC needs the typecast.
           default: XC("Invalid record type in results!",
@@ -792,9 +792,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
             "Type",   sdRef.iType);
             break;
         } // Push key name
-        LuaUtilSetField(lS, iOIndex, srmpRef.first.data());
+        LuaBaseSetField(lS, iOIndex, srmpRef.first.data());
       } // Push key pair as integer table
-      LuaUtilSetRaw(lS, iAIndex);
+      LuaBaseRawSet(lS, iAIndex);
       // Next result number
       ++liId;
     }
