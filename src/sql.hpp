@@ -923,7 +923,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   int SqlAffected() const { return sqlite3_changes(sqlDB); }
   /* -- Process a count(*) requested --------------------------------------- */
   size_t SqlGetRecordCount(const StdStringView &ssvTable,
-    const StdStringView &ssvCondition=cCommon->CommonCBlank())
+    const StdStringView &ssvCondition = cCommon->CommonBlank())
   { // Do a table count lookup. If succeeded and have records?
     if(SqlExecuteAndSuccess(StrFormat("SELECT count(*) FROM `$`$",
       ssvTable, ssvCondition)) && !srKeys.empty())

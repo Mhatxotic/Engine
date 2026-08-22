@@ -139,7 +139,7 @@ class Lua :                            // Actual class body
   { // Return if timer is not timed out
     if(cFrame->FrameIsNotTimedOut()) [[likely]] return;
     // Push error message and throw error
-    LuaUtilPushExtStr(lS, cCommon->CommonTimeoutV());
+    LuaUtilPushExtStr(lS, cCommon->CommonTimeout());
     LuaBaseError(lS);
   }
   /* -- Warning callback --------------------------------------------------- */
@@ -401,7 +401,7 @@ class Lua :                            // Actual class body
       // Push the name of the object for 'tostring()' LUA function.
       LuaUtilPushExtStr(LuaGetState(), llsRef.ssvName);
       LuaBaseSetField(LuaGetState(), iMTIndex,
-        cCommon->CommonLuaNameV().data());
+        cCommon->CommonLuaName().data());
       // Set function methods so var:func() works.
       LuaUtilPushObject(LuaGetState(), llsRef.stLLMFCount);
       luaL_setfuncs(LuaGetState(), llsRef.libmfList, 0);

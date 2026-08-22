@@ -72,7 +72,7 @@ class SysCore :
         { // Truncate the end of string. We only care about the top line.
           strStat.resize(stLF);
           // Grab tokens and if we have enough?
-          const TokenStrView tsvStats{ strStat, cCommon->CommonSpaceV(), 8 };
+          const TokenStrView tsvStats{ strStat, cCommon->CommonSpace(), 8 };
           if(tsvStats.size() >= 3)
           { // We're only interested in the first value
             memData.stMProcUse = StrToNum<size_t>(tsvStats[1]) * GetPageSize();
@@ -136,7 +136,7 @@ class SysCore :
           // First item must be cpu and second should be empty. We created the
           // string so this tokeniser class is allowed to modify it for
           // increased performance of processing it.
-          const TokenStrView tsvStats{ strStat, cCommon->CommonSpaceV(), 6 };
+          const TokenStrView tsvStats{ strStat, cCommon->CommonSpace(), 6 };
           if(tsvStats.size() >= 5)
           { // Get idle time
             const clock_t cUserNow = StrToNum<clock_t>(tsvStats[2]),
@@ -319,7 +319,7 @@ class SysCore :
     StdString strCode{ cCmdLine->CmdLineGetEnv("LANG") };
     ProcessAndActivateLocale(strCode);
     // Return operating system info
-    return { utsnData.sysname, cCommon->CommonBlank(),
+    return { utsnData.sysname, cCommon->CommonBlankStr(),
       tsvVersion.empty()    ? 0 : StrToNum<unsigned>(tsvVersion[0]),
       tsvVersion.size() < 2 ? 0 : StrToNum<unsigned>(tsvVersion[1]),
       tsvVersion.size() < 3 ? 0 : StrToNum<unsigned>(tsvVersion[2]),
@@ -337,12 +337,12 @@ class SysCore :
       { // Parse the variables and if we got some?
         if(ParserStringVC psvParser{ strFile, cCommon->CommonLf(), ':' })
         { // Move strings from loaded variables
-          StdString strCpuId{ StdMove(psvParser.ParserGet("model name")) },
-                    strSpeed{ StdMove(psvParser.ParserGet("cpu MHz")) },
-                    strVendor{ StdMove(psvParser.ParserGet("vendor_id")) },
-                    strFamily{ StdMove(psvParser.ParserGet("cpu family")) },
-                    strModel{ StdMove(psvParser.ParserGet("model")) },
-                    strStepping{ StdMove(psvParser.ParserGet("stepping")) };
+          StdString strCpuId{ psvParser.ParserGet("model name") },
+                    strSpeed{ psvParser.ParserGet("cpu MHz") },
+                    strVendor{ psvParser.ParserGet("vendor_id") },
+                    strFamily{ psvParser.ParserGet("cpu family") },
+                    strModel{ psvParser.ParserGet("model") },
+                    strStepping{ psvParser.ParserGet("stepping") };
           // Fail-safe any empty strings
           if(strSpeed.empty()) strSpeed = cCommon->CommonZero();
           else StrCompactRef(strCpuId);

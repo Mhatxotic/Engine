@@ -225,7 +225,7 @@ for(const Certs::X509Pair &xPair : cSockets->GetCertList())
         .Data(xPair.first);
   // Split subject key/value pairs. We couldn't split the data if empty
   const ParserString psSubject{
-    CertGetSubject(xPair), cCommon->CommonFSlashV(), '=' };
+    CertGetSubject(xPair), cCommon->CommonFSlash(), '=' };
   if(psSubject.empty()) { sTable.Data("??").Data("<No sub>"); continue; }
   // Print country and certificate name
   const ParserStringConstIt psciC{ psSubject.find("C") },
@@ -296,7 +296,7 @@ cConsole->Flush();
 // Build commands list and if commands were matched? Print them all
 StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cConsole->GetCmdsList(),
-     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
+     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlankStr(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrPluraliseNum(stMatched,
     "matching command", "matching commands"), strMatched);
 // No commands matched
@@ -414,7 +414,7 @@ sTable.Header("ID").Header("NAME", false).Header("VERSION")
 for(const CreditLib &clRef : cCredits->CreditGetLibList())
   sTable.DataN(clRef.GetID()).Data(clRef.GetName()).Data(clRef.GetVersion())
         .DataA(clRef.IsCopyright() ?
-    "\xC2\xA9 " : cCommon->CommonBlank(), clRef.GetAuthor());
+    "\xC2\xA9 " : cCommon->CommonBlankStr(), clRef.GetAuthor());
 // Show number of libs
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cCredits->CreditGetItemCount(),
@@ -444,7 +444,7 @@ cConsole->ConsoleAddLineA("Redraw of terminal window requested!");
 { "cvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(VariablesMakeList(cCVars->GetVarList(),
-  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
+  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlankStr()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvars' function
 /* ========================================================================= */
@@ -504,7 +504,7 @@ else cConsole->ConsoleAddLine("Failed to create new private key!");
 { "cvpend", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(VariablesMakeList(cCVars->GetInitialVarList(),
-  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlank()));
+  aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlankStr()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvpend' function
 /* ========================================================================= */
@@ -526,19 +526,21 @@ cConsole->ConsoleAddLineA(StrPluraliseNum(
 /* ========================================================================= */
 { "dir", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-// Make and checkfilename
-const StdString &strVal =
-  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod();
-switch(const ValidResult vrResult = DirValidName(strVal))
+// Get relative path if specified or root working directory if not specified
+const StdStringView ssvVal{
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonPeriod() };
+// Test if the directory is valid, get and compare result
+switch(const ValidResult vrResult = DirValidName(ssvVal))
 { // Continue if valid directory or current directory
   case VR_CURRENT: case VR_OK: break;
   // Error if anything else
   default: return cConsole->ConsoleAddLineF("Cannot check directory '$': $!",
-    strVal, cDirBase->DirBaseVNRtoStr(vrResult));
+    ssvVal, cDirBase->DirBaseVNRtoStr(vrResult));
 } // Enumerate local directories on disk
-const Dir dPath{ StdMove(strVal) };
+const Dir dPath{ ssvVal };
 // Set directory and get directories and files
-const StdString &strDir = aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank();
+const StdStringView ssvDir{
+  aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank() };
 // Directory data we are enumerating
 struct Item { const uint64_t ullId, ullSize;
               const StdTimeT stCreate, stModified, stAccess;
@@ -555,9 +557,9 @@ for(const Archive*const aPtr : *cArchives)
   const StrUIntMap &suimDirs = aRef.ArchiveGetDirList();
   for(const StrUIntMapPair &suimpPair : suimDirs)
   { // Skip directory if start of directory does not match
-    if(strDir != suimpPair.first.substr(0, strDir.size())) continue;
+    if(ssvDir != suimpPair.first.substr(0, ssvDir.size())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    StdString strName{ suimpPair.first.substr(strDir.size()) };
+    StdString strName{ suimpPair.first.substr(ssvDir.size()) };
     StrTrimRef(strName, '/');
     if(strName.find('/') != StdNPos) continue;
     // Add to directory list and increment directory count
@@ -569,9 +571,9 @@ for(const Archive*const aPtr : *cArchives)
   const StrUIntMap &suimFiles = aRef.ArchiveGetFileList();
   for(const StrUIntMapPair &suimpPair : suimFiles)
   { // Skip file if start of directory does not match
-    if(strDir != suimpPair.first.substr(0, strDir.size())) continue;
+    if(ssvDir != suimpPair.first.substr(0, ssvDir.size())) continue;
     // Get filename, and continue again if it is a sub-directory/file
-    StdString strName{ suimpPair.first.substr(strDir.size()) };
+    StdString strName{ suimpPair.first.substr(ssvDir.size()) };
     StrTrimRef(strName, '/');
     if(strName.find('/') != StdNPos) continue;
     // Add to file list and increment total bytes and file count
@@ -586,14 +588,14 @@ for(const DirEntMapPair &dempPair : dPath.GetDirs())
   const DirItem &diDir = dempPair.second;
   silDirs.insert({ StdMove(dempPair.first),
     { diDir.Id(), StdMaxUInt64, diDir.Created(), diDir.Written(),
-      diDir.Accessed(), cCommon->CommonBlank() } });
+      diDir.Accessed(), cCommon->CommonBlankStr() } });
 } // Enumerate local files
 for(const DirEntMapPair &dempPair : dPath.GetFiles())
 { // Add to file list and increment byte and file count
   const DirItem &diFile = dempPair.second;
   silFiles.insert({ StdMove(dempPair.first),
     { diFile.Id(), diFile.Size(), diFile.Created(), diFile.Written(),
-      diFile.Accessed(), cCommon->CommonBlank() } });
+      diFile.Accessed(), cCommon->CommonBlankStr() } });
 } // Prepare data table for archive display
 Statistic sTable;
 sTable.Header("#").Header().Header("SIZE").Header().Header("CA").Header("MA")
@@ -605,12 +607,12 @@ const StdTimeT ttTime = cmSys.GetTimeS();
 for(const StrItemPair &sipPair : silDirs)
 { // Get item data and add directory information
   const Item &itData = sipPair.second;
-  sTable.DataN(stIndex++).DataN(itData.ullId).Data(cCommon->CommonDirV())
+  sTable.DataN(stIndex++).DataN(itData.ullId).Data(cCommon->CommonDir())
         .Data().DataSD(ttTime - itData.stCreate, 1)
         .DataSD(ttTime - itData.stModified, 1)
         .DataSD(ttTime - itData.stAccess, 1)
         .Data(itData.strArc.empty() ?
-          cCommon->CommonFsV() : itData.strArc).Data(StdMove(sipPair.first));
+          cCommon->CommonFs() : itData.strArc).Data(StdMove(sipPair.first));
 } // For each file we found
 uint64_t ullBytes = 0;
 for(const StrItemPair &sipPair : silFiles)
@@ -621,7 +623,7 @@ for(const StrItemPair &sipPair : silFiles)
         .DataSD(ttTime - itData.stModified, 1)
         .DataSD(ttTime - itData.stAccess, 1)
         .Data(itData.strArc.empty() ?
-          cCommon->CommonFsV() : itData.strArc).Data(StdMove(sipPair.first));
+          cCommon->CommonFs() : itData.strArc).Data(StdMove(sipPair.first));
   ullBytes += itData.ullSize;
 } // Show summary
 cConsole->ConsoleAddLineF("$$ and $ totalling $ ($) in $.",
@@ -763,7 +765,7 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 { "find", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Find text in console backlog and if not found, show message
-cConsole->FindText(StrImplode(aArgs, cCommon->CommonSpaceV(), 1));
+cConsole->FindText(StrImplode(aArgs, cCommon->CommonSpace(), 1));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'find' function
 /* ========================================================================= */
@@ -851,7 +853,7 @@ cConsole->ConsoleAddLineF(
   cOgl->FlagIsSet(GFL_HAVEMEM) ?
     StrFormat("Memory: $ mBytes ($ mBytes available).\n",
       cOgl->GetVRAMTotal() / 1048576, cOgl->GetVRAMFree() / 1048576) :
-    cCommon->CommonBlank(),
+    cCommon->CommonBlankStr(),
   cInput->DimGetWidth(), cInput->DimGetHeight(),
     StrFromRatio(cInput->DimGetWidth(), cInput->DimGetHeight()),
     cDisplay->DisplayGetWindowPosX(), cDisplay->DisplayGetWindowPosY(),
@@ -1085,7 +1087,7 @@ cConsole->ConsoleAddLineA(StrPluraliseNum(cJsons->size(), "json.", "jsons."));
 { "lcalc", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
-  StrFormat("return $", StrImplode(aArgs, cCommon->CommonSpaceV(), 1))));
+  StrFormat("return $", StrImplode(aArgs, cCommon->CommonSpace(), 1))));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lcalc' function
 /* ========================================================================= */
@@ -1097,7 +1099,7 @@ cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
 // Build LUA commands list and if commands were matched? Print them all
 StdString strMatched;
 if(const size_t stMatched = CommandsBuildList(cCommands->lcmMap,
-     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlank(), strMatched))
+     aArgs.size() > 1 ? aArgs[1] : cCommon->CommonBlankStr(), strMatched))
   cConsole->ConsoleAddLineF("$:$.", StrPluraliseNum(stMatched,
     "matching LUA command", "matching LUA commands"), strMatched);
 // No LUA commands matched
@@ -1130,7 +1132,7 @@ cConsole->ConsoleAddLine(cLua->LuaTryEventOrForce(EMC_LUA_END) ?
 { "lexec", 2, 0, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
-  StrImplode(aArgs, cCommon->CommonSpaceV(), 1)));
+  StrImplode(aArgs, cCommon->CommonSpace(), 1)));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lexec' function
 /* ========================================================================= */
@@ -1540,7 +1542,7 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 // Typedefs for building memory usage data
 struct MemoryUsageItem{
   const StdStringView &strName; size_t stCount, stBytes; }
-    muiTotal{ cCommon->CommonBlank(), 0, 0 };
+    muiTotal{ cCommon->CommonBlankStr(), 0, 0 };
 using MemoryUsageItems = StdList<MemoryUsageItem>;
 // Helper macros so there is not as much spam
 #define MSSX(s,c) { c->NameGet(), \
@@ -1591,7 +1593,7 @@ const StdString &strExtName = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Extension '$' is$ supported by the selected graphics device.",
     strExtName, cOgl->HaveExtension(strExtName.data()) ?
-      cCommon->CommonBlank() : " NOT");
+      cCommon->CommonBlankStr() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglext' function
 /* ========================================================================= */
@@ -1606,7 +1608,7 @@ const StdString &strFunction = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Function '$' is$ supported by the selected graphics device.",
     strFunction, GlFWProcExists(strFunction.data()) ?
-      cCommon->CommonBlank() : " NOT");
+      cCommon->CommonBlankStr() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglfunc' function
 /* ========================================================================= */
@@ -1823,7 +1825,7 @@ if(aArgs.size() == 2)
     : ((sfcFlags.FlagIsSet(SS_CONNECTED))      ? "Connected"
     : ((sfcFlags.FlagIsSet(SS_CONNECTING))     ? "Connecting"
     : ((sfcFlags.FlagIsSet(SS_INITIALISING))   ? "Initialising"
-    : cCommon->CommonUnknownV())))))))))));
+    : cCommon->CommonUnknown())))))))))));
   // Initial connection status
   const StdString strOutput{
     StrFormat("Status for socket $<$>...\n"
@@ -1837,11 +1839,11 @@ if(aArgs.size() == 2)
       sRef.GetAddress(), StdIOSDec, sRef.GetPort(), sRef.GetIPAddress(),
       sRef.FlagIsSet(SS_VHOST) ?
         StrFormat("\n- Real host: $.", sRef.GetRealHost()) :
-        cCommon->CommonBlank(),
+        cCommon->CommonBlankStr(),
       sRef.IsSecure() ?
         StrFormat("\n- Encryption: $.",
           StrIsBlank(sRef.GetCipher(), cCommon->CommonUnresolved())) :
-        cCommon->CommonBlank()) };
+        cCommon->CommonBlankStr()) };
   // If the socket is not connected?
   if(sfcFlags.FlagIsClear(SS_CONNECTED))
     return cConsole->ConsoleAddLine(strOutput);
@@ -2034,7 +2036,7 @@ if(cSql->SqlNotActive())
   return cConsole->ConsoleAddLine("Sql transaction not active!");
 // End transaction
 cConsole->ConsoleAddLineF("Sql transaction$ ended.",
-  cSql->SqlEnd() == SQLITE_OK ? cCommon->CommonBlank() : " NOT");
+  cSql->SqlEnd() == SQLITE_OK ? cCommon->CommonBlankStr() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqlend' function
 /* ========================================================================= */
@@ -2048,7 +2050,7 @@ cConsole->ConsoleAddLineF("Sql transaction$ ended.",
 if(cSql->SqlActive())
   return cConsole->ConsoleAddLine("Sql transaction already active!");
 // Execute the string and catch exceptions
-if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, cCommon->CommonSpaceV(), 1)))
+if(cSql->SqlExecuteAndSuccess(StrImplode(aArgs, cCommon->CommonSpace(), 1)))
 { // Get records and if we did not have any?
   const SqlResult &srRef = cSql->SqlGetRecords();
   if(srRef.empty())

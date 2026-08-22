@@ -162,13 +162,13 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
         NameGet(),
         stOld != PcmDataGetAlloc() ?
           StrFormat("\n- Memory usage: $ -> $ bytes.",
-            stOld, PcmDataGetAlloc()) : cCommon->CommonBlank(),
+            stOld, PcmDataGetAlloc()) : cCommon->CommonBlankStr(),
         PcmDataIsActiveSPUCompat() ? "\n- Data made OpenAL compatible." :
-          cCommon->CommonBlank(),
+          cCommon->CommonBlankStr(),
         PcmDataIsActiveLittleEndian() ? "\n- Data made little-endian." :
-          cCommon->CommonBlank(),
+          cCommon->CommonBlankStr(),
         PcmDataIsActiveUnsigned() ? "\n- Data made unsigned." :
-          cCommon->CommonBlank());
+          cCommon->CommonBlankStr());
   }
   /* -- Load sample from memory ------------------------------------ */ public:
   void AsyncReady(FileMap &fmData)

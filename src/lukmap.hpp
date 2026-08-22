@@ -37,7 +37,7 @@ struct LookupMap :                     // Members initially public
     /* -- Parameters ------------------------------------------------------- */
     const MapType &mtList,             // Source map
     const StdStringView &ssvIdent =    // Unknown item string...
-      cCommon->CommonBlank()) :        // ...default blank string
+      cCommon->CommonBlankStr()) :     // ...default blank string
     /* -- Initialisers ----------------------------------------------------- */
     NameConst{ ssvIdent },             // Unknown item string
     MapType{ mtList }                  // Items map

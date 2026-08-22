@@ -219,15 +219,15 @@ static unsigned SysMessage(void*const, StdString strTitle,
    ssvTitleParam, ssvMessageParam; };
   // The dialog box elf binary database
   const StdArray<const DlgBoxApplication, 5> dbaaApps{ {
-    { "yad",                   cCommon->CommonBlank(),
-      "--title=",              "--text=" },
-    { "zenity",                "--info --no-markup",
-      "--title=",              "--text=" },
-    { "kdialog",               cCommon->CommonBlank(),
-      "--title ",              "--msgbox " },
-    { "gxmessage",             "-center -buttons OK:0",
+    { "yad",                    cCommon->CommonBlankStr(),
+      "--title=",               "--text=" },
+    { "zenity",                 "--info --no-markup",
+      "--title=",               "--text=" },
+    { "kdialog",                cCommon->CommonBlankStr(),
+      "--title ",               "--msgbox " },
+    { "gxmessage",              "-center -buttons OK:0",
       cCommon->CommonBlank(),  cCommon->CommonSpace() },
-    { "xmessage",              "-center",
+    { "xmessage",               "-center",
       cCommon->CommonBlank(),  cCommon->CommonSpace() }
   } }; // Command-line safety replacements
   const StrPairList splReplace
@@ -245,10 +245,10 @@ static unsigned SysMessage(void*const, StdString strTitle,
       const StdString strCmdLine{
         StrFormat("$ $ $ $", strPath, dbaApp.ssvCompulsoryParam,
           (dbaApp.ssvTitleParam.empty() ?
-           cCommon->CommonBlank() :
+           cCommon->CommonBlankStr() :
              StrFormat("$\"$\"", dbaApp.ssvTitleParam, strTitle)),
           (dbaApp.ssvMessageParam.empty() ?
-           cCommon->CommonBlank() :
+           cCommon->CommonBlankStr() :
              StrFormat("$\"$\"", dbaApp.ssvMessageParam, strMessage))) };
       // Now execute and break if successful
       if(!system(strCmdLine.data())) return 0;

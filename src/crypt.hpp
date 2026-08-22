@@ -451,7 +451,7 @@ static StdString CryptEntEncodePtr(const char*const cpPtr, const size_t stSize)
        // Any code point where low 16 bits are 0xFFFE or 0xFFFF?
        (cChar & 0xffff) >= 0xfffe)
       // Write the hexedecimal notation for the character instead
-      osS << cCommon->CommonEntV() << cChar << ';';
+      osS << cCommon->CommonEnt() << cChar << ';';
     // Character is usable as is
     else osS << static_cast<char>(cChar);
   } // Return string

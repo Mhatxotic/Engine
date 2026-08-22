@@ -198,90 +198,90 @@ class SysBase                          // Members initially private
       << StdIOSSetWidth(16) << *reinterpret_cast<const uint64_t*>(&cData.x) \
       << StdIOSSetWidth(16) \
       << *(reinterpret_cast<const uint64_t*>(&cData.x)+1) << e
-    const StdString &strCrLf = cCommon->CommonCrLf();
-    const StdStringView &ssvSpc = cCommon->CommonDblSpaceV();
+    const StdStringView &ssvCrLf = cCommon->CommonCrLf();
+    const StdStringView &ssvSpc = cCommon->CommonDblSpace();
     // Return registers
 #if defined(X64)
     // Write basic registers
     osS << StdIOSHex << StdIOSSetFill('0')
       << D64("Rax", Rax, ssvSpc) << D64("Rbx", Rbx, ssvSpc)
-      << D64("Rcx", Rcx, strCrLf) << D64("Rdx", Rdx, ssvSpc)
-      << D64("Rsp", Rsp, ssvSpc) << D64("Rbp", Rbp, strCrLf)
+      << D64("Rcx", Rcx, ssvCrLf) << D64("Rdx", Rdx, ssvSpc)
+      << D64("Rsp", Rsp, ssvSpc) << D64("Rbp", Rbp, ssvCrLf)
       << D64("Rip", Rip, ssvSpc) << D64("Rsi", Rsi, ssvSpc)
-      << D64("Rdi", Rdi, strCrLf) << strCrLf
+      << D64("Rdi", Rdi, ssvCrLf) << ssvCrLf
       << D16("SegCs", SegCs, ssvSpc) << D16("SegDs", SegDs, ssvSpc)
       << D16("SegEs", SegEs, ssvSpc) << D16("SegFs", SegFs, ssvSpc)
-      << D16("SegGs", SegGs, ssvSpc) << D16("SegSs", SegSs, strCrLf)<< strCrLf
+      << D16("SegGs", SegGs, ssvSpc) << D16("SegSs", SegSs, ssvCrLf)<< ssvCrLf
       << D32("CFlags", ContextFlags, ssvSpc) << D32("MxCsr", MxCsr, ssvSpc)
-      << D32("EFlags", EFlags, strCrLf) << strCrLf
+      << D32("EFlags", EFlags, ssvCrLf) << ssvCrLf
       << D64("P1H", P1Home, ssvSpc) << D64("P2H", P2Home, ssvSpc)
-      << D64("P3H", P3Home, strCrLf) << D64("P4H", P4Home, ssvSpc)
-      << D64("P5H", P5Home, ssvSpc) << D64("P6H", P6Home, strCrLf) << strCrLf
+      << D64("P3H", P3Home, ssvCrLf) << D64("P4H", P4Home, ssvSpc)
+      << D64("P5H", P5Home, ssvSpc) << D64("P6H", P6Home, ssvCrLf) << ssvCrLf
       << D64("Dr0", Dr0, ssvSpc) << D64("Dr1", Dr1, ssvSpc)
-      << D64("Dr2", Dr2, strCrLf) << D64("Dr3", Dr3, ssvSpc)
-      << D64("Dr6", Dr6, ssvSpc) << D64("Dr7", Dr7, strCrLf) << strCrLf
+      << D64("Dr2", Dr2, ssvCrLf) << D64("Dr3", Dr3, ssvSpc)
+      << D64("Dr6", Dr6, ssvSpc) << D64("Dr7", Dr7, ssvCrLf) << ssvCrLf
       << D64("R08", R8,  ssvSpc) << D64("R09", R9,  ssvSpc)
-      << D64("R10", R10, strCrLf) << D64("R11", R11, ssvSpc)
-      << D64("R12", R12, ssvSpc) << D64("R13", R13, strCrLf)
-      << D64("R14", R14, ssvSpc) << D64("R15", R15, strCrLf) << strCrLf
+      << D64("R10", R10, ssvCrLf) << D64("R11", R11, ssvSpc)
+      << D64("R12", R12, ssvSpc) << D64("R13", R13, ssvCrLf)
+      << D64("R14", R14, ssvSpc) << D64("R15", R15, ssvCrLf) << ssvCrLf
       << D64("VCon", VectorControl, ssvSpc)
       << D64("DCon", DebugControl, ssvSpc)
-      << D64("LBtR", LastBranchToRip, strCrLf)
+      << D64("LBtR", LastBranchToRip, ssvCrLf)
       << D64("LBfR", LastBranchFromRip, ssvSpc)
       << D64("LEtR", LastExceptionToRip, ssvSpc)
-      << D64("LEfR", LastExceptionFromRip, strCrLf) << strCrLf;
+      << D64("LEfR", LastExceptionFromRip, ssvCrLf) << ssvCrLf;
     // Write floating point header state
     for(size_t stQuad = 0; stQuad < 2; stQuad += 2)
       osS << D128X("XmmH" << StdIOSDec << stQuad << StdIOSHex <<,
         Header[stQuad], ssvSpc)
           << D128X("XmmH" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
-        Header[stQuad+1], strCrLf);
+        Header[stQuad+1], ssvCrLf);
     // Write floating point legacy state
     for(size_t stQuad = 0; stQuad < 8; stQuad += 2)
       osS << D128X("XmmL" << StdIOSDec << stQuad << StdIOSHex <<,
         Legacy[stQuad], ssvSpc)
           << D128X("XmmL" << StdIOSDec << (stQuad+1) << StdIOSHex <<,
-        Legacy[stQuad+1], strCrLf);
+        Legacy[stQuad+1], ssvCrLf);
     // Write floating point state
 # define XMM(x,e) << \
       D128X("Xmm" << StdIOSSetWidth(2) << StdIOSDec << x << StdIOSHex <<, \
         Xmm ## x, e)
-    osS XMM( 0,ssvSpc)  XMM( 1,strCrLf) XMM( 2,ssvSpc)  XMM( 3,strCrLf)
-        XMM( 4,ssvSpc)  XMM( 5,strCrLf) XMM( 6,ssvSpc)  XMM( 7,strCrLf)
-        XMM( 8,ssvSpc)  XMM( 9,strCrLf) XMM(10,ssvSpc)  XMM(11,strCrLf)
-        XMM(12,ssvSpc)  XMM(13,strCrLf) XMM(14,ssvSpc)  XMM(15,strCrLf)
-     << strCrLf;
+    osS XMM( 0,ssvSpc)  XMM( 1,ssvCrLf) XMM( 2,ssvSpc)  XMM( 3,ssvCrLf)
+        XMM( 4,ssvSpc)  XMM( 5,ssvCrLf) XMM( 6,ssvSpc)  XMM( 7,ssvCrLf)
+        XMM( 8,ssvSpc)  XMM( 9,ssvCrLf) XMM(10,ssvSpc)  XMM(11,ssvCrLf)
+        XMM(12,ssvSpc)  XMM(13,ssvCrLf) XMM(14,ssvSpc)  XMM(15,ssvCrLf)
+     << ssvCrLf;
 # undef XMM
     // Write vector state
     for(size_t stQuad = 0; stQuad < 26; stQuad += 2)
       osS << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << stQuad
           << StdIOSHex <<, VectorRegister[stQuad], ssvSpc)
           << D128X("Vec" << StdIOSSetWidth(2) << StdIOSDec << (stQuad+1)
-          << StdIOSHex <<, VectorRegister[stQuad+1], strCrLf);
+          << StdIOSHex <<, VectorRegister[stQuad+1], ssvCrLf);
     // Using 32-bit compiler?
 #elif defined(X86)
     // Write basic registers
     osS << StdIOSHex << StdIOSSetFill('0')
       << D32("Eax", Eax, ssvSpc) << D32("Ebx", Ebx, ssvSpc)
-      << D32("Ecx", Ecx, ssvSpc) << D32("Edx", Edx, strCrLf)
+      << D32("Ecx", Ecx, ssvSpc) << D32("Edx", Edx, ssvCrLf)
       << D32("Esp", Esp, ssvSpc) << D32("Ebp", Ebp, ssvSpc)
       << D32("Esi", Esi, ssvSpc) << D32("Edi", Edi, ssvSpc)
-      << D32("Eip", Eip, strCrLf) << strCrLf
+      << D32("Eip", Eip, ssvCrLf) << ssvCrLf
       << D32("SegCs", SegCs, ssvSpc) << D32("SegDs", SegDs, ssvSpc)
-      << D32("SegEs", SegEs, strCrLf) << D32("SegFs", SegFs, ssvSpc)
-      << D32("SegGs", SegGs, ssvSpc) << D32("SegSs", SegSs, strCrLf)<< strCrLf
+      << D32("SegEs", SegEs, ssvCrLf) << D32("SegFs", SegFs, ssvSpc)
+      << D32("SegGs", SegGs, ssvSpc) << D32("SegSs", SegSs, ssvCrLf)<< ssvCrLf
       << D32("CFlags", ContextFlags, ssvSpc)
-      << D32("EFlags", EFlags, strCrLf) << strCrLf
+      << D32("EFlags", EFlags, ssvCrLf) << ssvCrLf
       << D32("Dr0", Dr0, ssvSpc) << D32("Dr1", Dr1, ssvSpc)
-      << D32("Dr2", Dr2, strCrLf) << D32("Dr3", Dr3, ssvSpc)
-      << D32("Dr6", Dr6, ssvSpc) << D32("Dr7", Dr7, strCrLf) << strCrLf
+      << D32("Dr2", Dr2, ssvCrLf) << D32("Dr3", Dr3, ssvSpc)
+      << D32("Dr6", Dr6, ssvSpc) << D32("Dr7", Dr7, ssvCrLf) << ssvCrLf
       << D32("FCW", FloatSave.ControlWord, ssvSpc)
       << D32("FSW", FloatSave.StatusWord, ssvSpc)
       << D32("FTW", FloatSave.TagWord, ssvSpc)
-      << D32("FES", FloatSave.ErrorSelector, strCrLf)
+      << D32("FES", FloatSave.ErrorSelector, ssvCrLf)
       << D32("FDO", FloatSave.DataOffset, ssvSpc)
       << D32("FDS", FloatSave.DataSelector, ssvSpc)
-      << D32("FNS", FloatSave.Spare0, strCrLf) << strCrLf;
+      << D32("FNS", FloatSave.Spare0, ssvCrLf) << ssvCrLf;
     // Write floating point state
     for(size_t stI = 0, stY = 0, stZ = 5 % WOW64_SIZE_OF_80387_REGISTERS;
                stY < WOW64_SIZE_OF_80387_REGISTERS;
@@ -289,8 +289,8 @@ class SysBase                          // Members initially private
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
         osS << D32X("FRA" << StdIOSSetWidth(2) << StdIOSDec << stI
             << StdIOSHex <<, FloatSave.RegisterArea[stY+(stX*sizeof(DWORD))],
-              (stX == 4 ? strCrLf : ssvSpc));
-    osS << strCrLf;
+              (stX == 4 ? ssvCrLf : ssvSpc));
+    osS << ssvCrLf;
     // Write extended registers state
     for(size_t stI = 0, stY = 0, stZ = 5 % WOW64_MAXIMUM_SUPPORTED_EXTENSION;
                stY < WOW64_MAXIMUM_SUPPORTED_EXTENSION;
@@ -298,7 +298,7 @@ class SysBase                          // Members initially private
       for(size_t stX = 0; stX < stZ; ++stX, ++stI)
         osS << D32X("ER" << StdIOSSetWidth(3) << StdIOSDec << stI << StdIOSHex
             <<, ExtendedRegisters[stY+(stX*sizeof(DWORD))],
-                  (stX == 4 ? strCrLf : ssvSpc));
+                  (stX == 4 ? ssvCrLf : ssvSpc));
 #endif
     // Set fill back to space
     osS << StdIOSSetFill(' ');

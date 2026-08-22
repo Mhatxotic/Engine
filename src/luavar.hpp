@@ -95,10 +95,10 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   CVarSetEnums SetString(const StdStringView &ssvValue) const
     { return cCVars->Set(Iterator(), ssvValue); }
   CVarSetEnums Clear() const
-    { return SetString(cCommon->CommonBlank()); }
+    { return SetString(cCommon->CommonBlankStr()); }
   CVarSetEnums SetBoolean(const bool bState) const
     { return SetString(bState ?
-        cCommon->CommonOneV() : cCommon->CommonZeroV()); }
+        cCommon->CommonOne() : cCommon->CommonZero()); }
   CVarSetEnums SetInteger(const lua_Integer liValue) const
     { return SetString(StrFromNum(liValue)); }
   CVarSetEnums SetNumber(const lua_Number lnValue) const

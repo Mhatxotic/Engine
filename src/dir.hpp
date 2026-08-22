@@ -72,8 +72,8 @@ class DirBase                          // Members initially private
       "Invalid character in part", /*0809*/ "Current sub-directory denied",
       "Current directory denied",  /*1011*/ "Explode pathname failed",
       "Trailing whitespace denied",/*1213*/ "Leading whitespace denied",
-    }},                                 // Finished ValidNameResult strings
-    svusReserved{{                      // Init reserved names
+    }},                                // Finished ValidNameResult strings
+    svusReserved{{                     // Init reserved names
       "aux",  "auX",  "aUx",  "aUX",  "Aux",  "AuX",  "AUx",  "AUX",
       "com1", "coM1", "cOm1", "cOM1", "Com1", "CoM1", "COm1", "COM1",
       "com2", "coM2", "cOm2", "cOM2", "Com2", "CoM2", "COm2", "COM2",
@@ -170,7 +170,7 @@ static ValidResult DirValidName(const StdStringView &ssvName,
       else if(strChosen[1] == ':')
         return DirIsValidDrive(strChosen.front()) ? VR_NODRIVE : VR_INVDRIVE;
       // Get parts from pathname and compare size
-      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlashV() };
+      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlash() };
       switch(tsvParts.size())
       { // Tokeniser failed (should be impossible)
         case 0: return VR_EXPLODE;
@@ -217,7 +217,7 @@ static ValidResult DirValidName(const StdStringView &ssvName,
     } // Trusted filename?
     case VT_TRUSTED:
     { // Get parts from pathname and compare size
-      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlashV() };
+      const TokenStrView tsvParts{ strChosen, cCommon->CommonFSlash() };
       switch(tsvParts.size())
       { // Tokeniser failed (should be impossible)
         case 0: return VR_EXPLODE;
@@ -411,7 +411,7 @@ class DirCore :                        // System specific implementation
   explicit DirCore(const StdStringView &ssvDir) :
     /* -- Initialisers ----------------------------------------------------- */
     iHandle(_wfindfirst64(UTFtoS16(ssvDir.empty() ?
-      cCommon->CommonAsterisk() :
+      StdString{ cCommon->CommonAsterisk() } :
         StrAppend(StrTrimSuffix(ssvDir, '/'), '/',
           cCommon->CommonAsterisk())).data(),
       &wfData)),
@@ -468,9 +468,9 @@ class DirCore :                        // System specific implementation
       strDir.empty() ?                 // If requested directory is empty?
         cCommon->CommonPeriod() :      // Set to scan current directory
         StrTrimSuffix(strDir, '/'),    // Trim forward-slash trailing slashes
-      cCommon->CommonFSlashV()) },      // Add our own slash at the end
+      cCommon->CommonFSlash()) },      // Add our own slash at the end
     dupHandle{                         // Initialise directory handle
-      opendir(strPrefix.data()) }     // Open the directory and store handle
+      opendir(strPrefix.data()) }      // Open the directory and store handle
     /* -- Unload and clear the dir handle if init and no first file -------- */
     { if(dupHandle && !GetNextFile()) dupHandle.reset(); }
   /* ----------------------------------------------------------------------- */
@@ -480,9 +480,9 @@ class Dir :                            // Directory information class
   /* -- Base classes ------------------------------------------------------- */
   public DirFile                       // Files container class
 { /* -- Do scan --------------------------------------------------- */ private:
-  static void RemoveEntry(DirEntMap &dfemMap, const StdString &strEntry)
+  static void RemoveEntry(DirEntMap &dfemMap, const StdStringView &ssvEntry)
   { // Remove specified entry
-    const DirEntMapIt demiIt{ dfemMap.find(strEntry) };
+    const DirEntMapIt demiIt{ dfemMap.find(ssvEntry) };
     if(demiIt != dfemMap.cend()) dfemMap.erase(demiIt);
   }
   /* -- Remove current and parent directory entries ------------------------ */
@@ -492,7 +492,8 @@ class Dir :                            // Directory information class
     RemoveEntry(dfemMap, cCommon->CommonTwoPeriod());
   }
   /* -- Scan with no match checking ---------------------------------------- */
-  static DirFile ScanDir(const StdStringView &ssvDir = cCommon->CommonBlank())
+  static DirFile ScanDir(const StdStringView
+    &ssvDir = cCommon->CommonBlankStr())
   { // Directory and file list
     DirEntMap demNDirs, demNFiles;
     // Load up the specification and return if failed
@@ -596,7 +597,7 @@ static bool DirMkDirEx(const StdStringView &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   if(const TokenStr tsParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->CommonFSlashV() })
+    cCommon->CommonFSlash() })
   { // This will be the string that wile sent to mkdir multiple times
     // gradually.
     StdOStringStream osS; osS << psParts.strDrive;
@@ -630,7 +631,7 @@ static bool DirRmDirEx(const StdStringView &strDir)
   const PathSplit psParts{ strDir };
   // Break apart so we can check the directories. Will always be non-empty.
   TokenStr tsParts{ StrAppend(psParts.strDir, psParts.strFileExt),
-    cCommon->CommonFSlashV() };
+    cCommon->CommonFSlash() };
   // Get the first item and if it is not empty?
   while(!tsParts.empty())
   { // This will be the string that wile sent to mkdir multiple times

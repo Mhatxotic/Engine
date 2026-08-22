@@ -180,7 +180,7 @@ class FStreamBase :                    // File stream base class
   }
   StdString FStreamReadStringSafe(const size_t stBytes)
     { return FStreamIsReadyRead() && stBytes ?
-        FStreamReadString(stBytes) : cCommon->CommonBlank(); }
+        FStreamReadString(stBytes) : cCommon->CommonBlankStr(); }
   StdString FStreamReadStringSafe()
   { // Read if ready to read and there are remaining characters
     if(FStreamIsReadyRead())
@@ -229,7 +229,7 @@ class FStreamBase :                    // File stream base class
   /* -- Read entire file without knowing the size of the file -------------- */
   StdString FStreamReadStringChunkedSafe(const size_t stBytes = 4096)
     { return FStreamIsReadyRead() && stBytes ?
-        FStreamReadStringChunked(stBytes) : cCommon->CommonBlank(); }
+        FStreamReadStringChunked(stBytes) : cCommon->CommonBlankStr(); }
   /* -- Read data and return memory block ---------------------------------- */
   Memory FStreamReadBlock(const size_t stBytes)
   { // Allocate initial memory of expected bytes to read

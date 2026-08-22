@@ -460,10 +460,24 @@ template<class StrType>
 static StdString StrUrlEncodeSpaces(StrType &&strText)
   { return StrReplaceChar(StdForward<StrType>(strText), ' ', '+'); }
 /* ------------------------------------------------------------------------- */
-template<class StrTypeIn, class StrTypeAlt = StrTypeIn>
-  requires StdIsStrOrCStr<StrTypeIn> && StdIsSame<StrTypeIn, StrTypeAlt>
-static auto &StrIsBlank(StrTypeIn &&strIn, StrTypeAlt &&strAlt)
-  { return strIn.empty() ? strAlt : strIn; }
+template<class StrTypeIn, class StrTypeAlt>
+  requires StdIsString<StrTypeIn> && StdIsString<StrTypeAlt>
+static auto StrIsBlank(StrTypeIn &&strIn, StrTypeAlt &&strAlt)
+{ // If both types are not the same?
+  if constexpr(!StdIsSame<StrTypeIn, StrTypeAlt>)
+  { // Types differ: return a lightweight view of whichever is not blank.
+    // Note: Ensure both underlying data sources outlive the returned view.
+    return strIn.empty() ?
+      StdStringView{ std::forward<StrTypeAlt>(strAlt) } :
+      StdStringView{ std::forward<StrTypeIn>(strIn) };
+  } // Both types are the same?
+  else
+  { // Types are the same: preserve the exact reference category.
+    return strIn.empty() ?
+      StdForward<StrTypeAlt>(strAlt) :
+      StdForward<StrTypeIn>(strIn);
+  }
+}
 /* -- Pluralise (returns a reference to an lvalue argument) ---------------- */
 template<typename IntType, typename StrTypeSing, typename StrTypePlur>
   requires StdIsIntegral<IntType> &&
@@ -643,7 +657,7 @@ template<typename OutType, typename InType, class SuffixClass>
   static OutType StrToReadableSuffix(const InType itValue,
     const char**const cpSuffix, int &iPrecision, const SuffixClass &scLookup)
 { return StrToReadableSuffix<OutType, InType, SuffixClass>(itValue,
-    cpSuffix, iPrecision, scLookup, cCommon->CommonCBlank()); }
+    cpSuffix, iPrecision, scLookup, caBlank); }
 /* ------------------------------------------------------------------------- */
 template<typename IntType>
   static double StrToBytesHelper(const IntType itBytes,

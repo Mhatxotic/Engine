@@ -67,7 +67,7 @@ struct ShaderCore                      // Actual body
   /* -- Add vertex shader with template ------------------------------------ */
   static void AddVertexShaderWith3DTemplate(Shader &shS,
     const StdString &strName)
-  { AddVertexShaderWith3DTemplate(shS, strName, cCommon->CommonCBlank()); }
+  { AddVertexShaderWith3DTemplate(shS, strName, caBlank); }
   /* -- Add fragment shader with template ---------------------------------- */
   static void AddFragmentShaderWithTemplate(Shader &shS,
     const StdString &strName, const char*const cpCode,
@@ -91,13 +91,11 @@ struct ShaderCore                      // Actual body
   /* -- Add fragment shader with template ---------------------------------- */
   static void AddFragmentShaderWithTemplate(Shader &shS,
     const StdString &strName)
-  { AddFragmentShaderWithTemplate(shS, strName, cCommon->CommonCBlank(),
-      cCommon->CommonCBlank()); }
+  { AddFragmentShaderWithTemplate(shS, strName, caBlank, caBlank); }
   /* -- Add fragment shader with template ---------------------------------- */
   static void AddFragmentShaderWithTemplate(Shader &shS,
     const StdString &strName, const char*const cpCode)
-  { AddFragmentShaderWithTemplate(shS,
-      strName, cpCode, cCommon->CommonCBlank()); }
+  { AddFragmentShaderWithTemplate(shS, strName, cpCode, caBlank); }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const StdString &strName,
     const char*const cpCode)
@@ -109,7 +107,7 @@ struct ShaderCore                      // Actual body
   }
   /* -- Add vertex shader with template ------------------------------------ */
   void AddVertexShaderWith2DTemplate(Shader &shS, const StdString &strName)
-    { AddVertexShaderWith2DTemplate(shS, strName, cCommon->CommonCBlank()); }
+    { AddVertexShaderWith2DTemplate(shS, strName, caBlank); }
   /* ----------------------------------------------------------------------- */
   void Init3DShader()
   { // Add our basic 3D shader
@@ -297,7 +295,7 @@ struct ShaderCore                      // Actual body
     sh2D8Pal{ sh2DBuiltIns[3] },       sh2D16{ sh2DBuiltIns[4] },
     /* -- Rounding list ---------------------------------------------------- */
     rList{{                            // Initialise rounding strings list
-      cCommon->CommonBlank(),          // [0] No rounding
+      cCommon->CommonBlankStr(),          // [0] No rounding
       "floor",                         // [1] Floor rounding
       "ceil",                          // [2] Ceil rounding
       "round",                         // [3] Nearest whole number

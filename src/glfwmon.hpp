@@ -83,9 +83,9 @@ class GlFWMonitor :                    // Members initially private
     { // If monitor name is blank return blank name
       if(*cpName) return cpName;
       // Return blank name
-      return cCommon->CommonUnspec();
+      return StdString{ cCommon->CommonUnspec() };
     } // Return null name
-    return cCommon->CommonNull();
+    return StdString{ cCommon->CommonNull() };
   }
   /* -- Get monitor context ---------------------------------------- */ public:
   GLFWmonitor *Context() const { return mContext; }

@@ -113,30 +113,30 @@ class Duration
     } // Add months?
     if(tD.tm_mon && uCompMax > 0)
     { // Do add months
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_mon << StrPluraliseRef(tD.tm_mon, strMonth, strMonths);
       --uCompMax;
     } // Add days? (removing the added 1)
     if(--tD.tm_mday && uCompMax > 0)
     { // Do add days
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_mday << StrPluraliseRef(tD.tm_mday, strDay, strDays);
       --uCompMax;
     } // Add hours?
     if(tD.tm_hour && uCompMax > 0)
     { // Do add hours
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_hour << StrPluraliseRef(tD.tm_hour, strHour, strHours);
       --uCompMax;
     } // Add Minutes?
     if(tD.tm_min && uCompMax > 0)
     { // Do add minutes
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_min << StrPluraliseRef(tD.tm_min, strMin, strMins);
       --uCompMax;
     } // Check seconds
     if((tD.tm_sec || !strDuration) && uCompMax > 0)
-      osS << (osS.tellp() ? cCommon->CommonSpaceV() : cCommon->CommonBlankV())
+      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
           << tD.tm_sec << StrPluraliseRef(tD.tm_sec, strSec, strSecs);
     // Return string
     return osS.str();

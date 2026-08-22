@@ -486,19 +486,28 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
   } /* --------------------------------------------------------------------- */
   namespace WebP                       // SIMPLEWEBP API FUNCTIONS
   { /* --------------------------------------------------------------------- */
-#if defined(MSVC_VANILLA)
-# pragma warning(push)
+#if defined(MSVC_VANILLA)              // Using Microsoft Visual C++ compiler?
+# pragma warning(push)                 // Save warning settings
 # pragma warning(disable:4244)         // Possible loss of data on narrowing
 # pragma warning(disable:4701)         // Potentially uninitialized local
-#endif
+# pragma push_macro("free")            // Save these macros because simplewebp
+# pragma push_macro("malloc")          // ...redefines them and when compiling
+# pragma push_macro("realloc")         // ...and conflicts with 'crtdbg.hpp' so
+# undef free                           // ...make sure these macros are saved
+# undef malloc                         // ...and then undefine them so we can
+# undef realloc                        // ...safely include simplewebp.
+#endif                                 // MSVC_VANILLA
 #define SIMPLEWEBP_DISABLE_STDIO       // Don't need STDIO functions
 #define SIMPLEWEBP_IMPLEMENTATION      // Define body functions
 #include <swp/simplewebp.h>            // Main header
 #undef SIMPLEWEBP_IMPLEMENTATION       // Done with this define
 #undef SIMPLEWEBP_DISABLE_STDIO        // Done with this define
-#if defined(MSVC_VANILLA)
-# pragma warning(pop)
-#endif
+#if defined(MSVC_VANILLA)              // Using Microsoft Visual C++ compiler?
+# pragma pop_macro("realloc")          // Restore the original allocation
+# pragma pop_macro("malloc")           // macros so that the rest of the
+# pragma pop_macro("free")             // project can benefit from these funcs.
+# pragma warning(pop)                  // Restore original warning settings
+#endif                                 // MSVC_VANILLA
   } /* --------------------------------------------------------------------- */
   namespace RapidJson                  // RAPIDJSON API FUNCTIONS
   { /* --------------------------------------------------------------------- */

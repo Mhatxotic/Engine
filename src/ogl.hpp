@@ -1137,7 +1137,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   double GetVRAMFreePC() const
     { return 100.0 - UtilMakePercentage(GetVRAMFree(), GetVRAMTotal()); }
   /* -- Get free memory on nvidia cards ------------------------------------ */
-  void UpdateVRAMAvailableNV()
+  void UpdateVRAMAvailableN()
   { // - https://www.khronos.org/registry/OpenGL/extensions/
     //     NVX/NVX_gpu_memory_info.txt
     glullFreeVRAM = GetInteger<GLuint64>(0x9049) * 1024;
@@ -1161,7 +1161,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Get memory information --------------------------------------------- */
   void UpdateVRAMAvailable()
   { // Have NVIDIA free memory?
-    if(FlagIsSet(GFL_HAVENVMEM)) UpdateVRAMAvailableNV();
+    if(FlagIsSet(GFL_HAVENVMEM)) UpdateVRAMAvailableN();
     // Have ATI free memory
     else if(FlagIsSet(GFL_HAVEATIMEM)) UpdateVRAMAvailableATI();
     // Have shared memory
@@ -1176,7 +1176,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       glullTotalVRAM =
         static_cast<GLuint64>(GetInteger<GLuint>(0x9048)) * 1024;
       // Update available VRAM
-      UpdateVRAMAvailableNV();
+      UpdateVRAMAvailableN();
       // Report VRAM information to log
       cLog->LogDebugSafe("- Using NVIDIA memory functions.");
     } // Have ATI memory info?

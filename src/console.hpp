@@ -922,8 +922,8 @@ struct Console :                       // Members initially private
           clqOutput.push({ dTime, ccColour, StdString{ ssvLine } });
         // Push a truncated line
         else clqOutput.push({ dTime, ccColour,
-          StdString{ ssvLine.substr(0, stMaxOutputLineE) } +
-            cCommon->CommonEllipsis() });
+          StrAppend(ssvLine.substr(0, stMaxOutputLineE),
+            cCommon->CommonEllipsis()) });
       }
     }
   }

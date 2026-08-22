@@ -52,14 +52,14 @@ class SysCore :
   { // Get the size and return blank string if empty
     size_t stSize = 0;
     if(sysctlbyname(cpS, nullptr, &stSize, nullptr, 0) < 0)
-      return cCommon->CommonNull();
+      return StdString{ cCommon->CommonNull() };
     // Return blank string if empty
     if(!stSize) return {};
     // Resize and fill string returning generic string if failed
     StdResized<StdString> strOut{ stSize - 1 };
     if(sysctlbyname(cpS, StdToNonConstCast<char*>(strOut.data()),
-      &stSize, nullptr, 0) < 0)
-        return cCommon->CommonNull();
+         &stSize, nullptr, 0) < 0)
+      return StdString{ cCommon->CommonNull() };
     // Move generated string
     return StdMove(strOut);
   }
@@ -499,8 +499,8 @@ class SysCore :
   /* ----------------------------------------------------------------------- */
   OSData GetOperatingSystemData()
   { // Get operating system name
-    const TokenStr tsVersion{ GetSysCTLInfoString("kern.osproductversion"),
-      cCommon->CommonPeriod() };
+    const TokenStr tsVersion{
+      GetSysCTLInfoString("kern.osproductversion"), cCommon->CommonPeriod() };
     unsigned uMajor = tsVersion.empty() ? 0 : StrToNum<unsigned>(tsVersion[0]),
       uMinor = tsVersion.size() < 2 ? 0 : StrToNum<unsigned>(tsVersion[1]),
       uBuild = tsVersion.size() < 3 ? 0 : StrToNum<unsigned>(tsVersion[2]);

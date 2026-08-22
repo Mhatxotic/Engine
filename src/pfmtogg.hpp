@@ -73,10 +73,9 @@ class CodecOGG :                       // OGG codec object
       if(char*const cpPtr = strchr(cpStr, '='))
       { // Remove separator (safe), add key/value pair and readd separator
         *cpPtr = '\0';
-        ssMetaData.insert(ssMetaData.cend(), { cpStr, cpPtr+1 });
+        ssMetaData.insert(ssMetaData.cend(), { cpStr, cpPtr + 1 });
       } // We at least have a string so add it as key with empty value
-      else ssMetaData.insert(ssMetaData.cend(),
-        { cpStr, cCommon->CommonCBlank() });
+      else ssMetaData.insert(ssMetaData.cend(), { cpStr, caBlank });
     }); // Return built metadata
     return ssMetaData;
   }

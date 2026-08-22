@@ -58,7 +58,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
   }
   /* -- Capture screenshot from Fbo -------------------------------- */ public:
   bool DumpFbo(const Fbo &fboRef,
-    const StdStringView &ssvFile = cCommon->CommonBlankV())
+    const StdStringView &ssvFile = cCommon->CommonBlank())
   { // Cancel if thread is still running
     if(tThread.ThreadIsJoinable()) return false;
     // DeInit old thread, we need to reuse it

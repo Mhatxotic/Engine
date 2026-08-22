@@ -139,16 +139,16 @@ struct UrlBase :
       pPort = StrToNum<Port>(strPort);
       if(pPort < P_MIN || pPort >= P_MAX) { UrlSetCode(R_INVPORT); return; }
       // Check if non-standard port
-      bNSPort = (pPort != P_HTTP && strScheme == cCommon->CommonHttpV()) ||
-                (pPort != P_HTTPS && strScheme == cCommon->CommonHttpsV());
+      bNSPort = (pPort != P_HTTP && strScheme == cCommon->CommonHttp()) ||
+                (pPort != P_HTTPS && strScheme == cCommon->CommonHttps());
     } // Port delimiter not found
     else
     { // We have the host
       strHost = strAHP;
       // But we need to guess the port
-      if(strScheme == cCommon->CommonHttpV())
+      if(strScheme == cCommon->CommonHttp())
         { pPort = P_HTTP; bSecure = false; }
-      else if(strScheme == cCommon->CommonHttpsV())
+      else if(strScheme == cCommon->CommonHttps())
         { pPort = P_HTTPS; bSecure = true; }
       else { UrlSetCode(R_UNKSCHEME); return; }
       // Is a standard port
@@ -216,12 +216,12 @@ struct UrlBase :
       else { UrlSetCode(R_EMPARAMS); return; }
     } // Rebuild final url
     strCanonicalised = StrAppend(UrlGetScheme(), "://",
-      UrlGetUsername().empty() ? cCommon->CommonBlank() :
+      UrlGetUsername().empty() ? cCommon->CommonBlankStr() :
         (UrlGetPassword().empty() ?
            StrAppend(UrlGetUsername(), '@') :
            StrAppend(UrlGetUsername(), ':', UrlGetPassword(), '@')),
       UrlGetHost(),
-      bNSPort ? StrAppend(':', strPort) : cCommon->CommonBlank(),
+      bNSPort ? StrAppend(':', strPort) : cCommon->CommonBlankStr(),
       UrlGetResource());
     // Perfect
     UrlSetCode(R_GOOD);

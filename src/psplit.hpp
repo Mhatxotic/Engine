@@ -144,7 +144,7 @@ class PathSplit :
         else strDir.resize(strlen(strDir.data()));
         // Finalise directory and append slash if there is not one to match how
         // Win32's splitpath works which is better really.
-        if(strDir.back() != '/') strDir.append(cCommon->CommonFSlashV());
+        if(strDir.back() != '/') strDir.append(cCommon->CommonFSlash());
       } // We're not interested in pointlessly prepending the current dir
       else strDir.clear();
     } // Fiailed so clear the directory name

@@ -218,7 +218,7 @@ class System :                         // The main system class
       StrToBytes(RAMTotal()), StrToBytes(RAMFree()), StrToBytes(RAMProcUse()),
       OSName(), OSMajor(), OSMinor(), OSBuild(), OSBits(), OSLocale(),
         IsOSNameExSet() ? StrAppend(" via ", OSNameEx()) :
-                          cCommon->CommonBlank(),
+                          cCommon->CommonBlankStr(),
       durLong.Parse(GetUptime()),
       cmSys.FormatTime(), cmSys.FormatTimeUTC(),
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));

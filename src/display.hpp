@@ -363,7 +363,7 @@ class Display :                        // Actual class body
           gfwrRes.Index(), gfwrRes.Width(), gfwrRes.Height(), gfwrRes.Depth(),
           gfwrRes.Red(), gfwrRes.Green(), gfwrRes.Blue(), gfwrRes.Refresh(),
           &gfwrRes == gfwmMon.PrimaryPtr() ?
-            " (Active)" : cCommon->CommonBlank());
+            " (Active)" : cCommon->CommonBlankStr());
       });
     }); // Custom monitor selected (-2) and valid monitor? Set it
     constexpr static size_t stM2 = StdMaxSizeT - 1;
@@ -986,7 +986,7 @@ class Display :                        // Actual class body
     // strings eventually because if they get to the file system C function, we
     // will have sent the full list of file names (ssvNames) instead since
     // those functions just parse the whole .data() part.
-    if(const TokenStrView tsvIcons{ ssvNames, cCommon->CommonColonV(), 3 })
+    if(const TokenStrView tsvIcons{ ssvNames, cCommon->CommonColon(), 3 })
     { // If using interactive mode?
       if(cSystem->SysIsGraphicalMode())
       { // Clear images and icons

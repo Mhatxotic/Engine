@@ -364,7 +364,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Done
       return;
     } // Split ciphers into two tokens
-    const TokenStrView tsvData{ ssvCipher, cCommon->CommonPipeV() };
+    const TokenStrView tsvData{ ssvCipher, cCommon->CommonPipe() };
     // If we only have one part
     switch(tsvData.size())
     { // No tokens (insecure connection)
@@ -461,7 +461,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       return SetErrorSafe("Resolve failed!");
     // Log and do secure connection
     SocketLogSafe(LH_DEBUG, "$connecting to '$'...",
-      IsSecure() ? "securely " : cCommon->CommonBlank(), GetAddressAndPort());
+      IsSecure() ? "securely " : cCommon->CommonBlankStr(),
+      GetAddressAndPort());
     // Set connecting flag. Do send an event for this
     AddStatus(SS_CONNECTING, acdConnect);
     // Abort if requested
@@ -1136,7 +1137,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         vlR{ GetRegistryIterator(cParent->strRegVarRESPONSE) };
       if(vlR == psvRegistry.cend()) return SetErrorStaticSafe("Bad response!");
       // Split into words. We should have got at least three words
-      const TokenStrView tsvWords{ vlR->second, cCommon->CommonSpaceV() };
+      const TokenStrView tsvWords{ vlR->second, cCommon->CommonSpace() };
       if(tsvWords.size() < 3) return SetErrorStaticSafe("Unknown response!");
       // Get protocol and if it is not valid?
       const StdStringView &ssvProtoRecv = tsvWords.front();

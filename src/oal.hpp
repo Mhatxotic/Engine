@@ -145,7 +145,7 @@ class Oal :                            // Actual class body
   { LogErrorGeneric<AL_NO_ERROR>(
       []()->ALenum{ return GetError(); },
       [this](const ALenum aleError){ return GetALErr(aleError); },
-      cCommon->CommonCBlank(), StdForward<StrType>(strFormat),
+      caBlank, StdForward<StrType>(strFormat),
       StdForward<VarArgs>(vaArgs)...); }
   /* -- AL context error handler ------------------------------------------- */
   template<typename ...VarArgs>
@@ -160,7 +160,7 @@ class Oal :                            // Actual class body
   { CheckErrorGeneric<AL_NO_ERROR>(
       []()->ALenum{ return GetError(); },
       [this](const ALenum aleError) { return GetALErr(aleError); },
-      cCommon->CommonCBlank(), cpReason, StdForward<VarArgs>(vaArgs)...); }
+      caBlank, cpReason, StdForward<VarArgs>(vaArgs)...); }
   /* -- Upload data to audio device ---------------------------------------- */
   static void BufferData(const ALuint aluBuffer, const ALenum aleFormat,
     const ALvoid*const vpData, const ALsizei siSize,
@@ -602,7 +602,7 @@ class Oal :                            // Actual class body
     // Build context extensions list
     size_t stCount = 0;
     Tokeniser<StdStringView>(GetCString(ALC_EXTENSIONS),
-      cCommon->CommonSpaceV(), [&mExts, &stCount](const StdStringView &ssvExt)
+      cCommon->CommonSpace(), [&mExts, &stCount](const StdStringView &ssvExt)
         { mExts.insert({ StdMove(ssvExt), stCount++ }); });
     // Log context initialisation
     cLog->LogNLCDebugExSafe(
@@ -666,7 +666,7 @@ class Oal :                            // Actual class body
     Map mExts;
     // Build extensions list
     size_t stCount = 0;
-    Tokeniser<StdStringView>(GetString(AL_EXTENSIONS), cCommon->CommonSpaceV(),
+    Tokeniser<StdStringView>(GetString(AL_EXTENSIONS), cCommon->CommonSpace(),
       [&mExts, &stCount](const StdStringView &ssvExt)
         { mExts.insert({ StdMove(ssvExt), stCount++ }); });
     // Log device info and basic capabilities

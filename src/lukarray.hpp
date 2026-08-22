@@ -35,7 +35,7 @@ struct LookupArray :                   // Members initially public
   /* -- Constructor with blank alternative string -------------------------- */
   explicit LookupArray(const List &lNI) :
     /* -- Initialisers ----------------------------------------------------- */
-    LookupArray{ lNI, cCommon->CommonBlank() }
+    LookupArray{ lNI, cCommon->CommonBlankStr() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get name from id --------------------------------------------------- */

@@ -66,7 +66,7 @@ template<typename StrType>
   static bool StdUnSetEnv(StrType &&strStr)
 { return StrDenormaliseString(StdForward<StrType>(strStr),
     [](const char*const cpStr)->bool
-      { return !_putenv_s(cpStr, cCommon->CommonCBlank()); }); }
+      { return !_putenv_s(cpStr, caBlank); }); }
 /* -- Wrapper for _waccess() ----------------------------------------------- */
 template<typename StrType>
   static bool StdAccess(StrType &&strStr, const int iMode)

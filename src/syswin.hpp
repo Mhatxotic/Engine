@@ -873,7 +873,7 @@ class SysCore :
       if(LPWINEGETVERSION fcbWGV =
            GetSharedFunc<LPWINEGETVERSION>(hDLL, "wine_get_version"))
       { // Call it and store the Wine version
-        strExtra = StrAppend("Wine ", fcbWGV());
+        strExtra = StrAppend("Wine ", fcbWG());
         bExtra = true;
       } // No extra details
       else bExtra = false;
@@ -940,7 +940,7 @@ class SysCore :
         else StrCompactRef(strIdent);
         // Detect family model and stepping from string (A F 0 M 0 S)
         unsigned uFamily, uModel, uStepping;
-        const TokenStrView tsvTokens{ strIdent, cCommon->CommonSpaceV() };
+        const TokenStrView tsvTokens{ strIdent, cCommon->CommonSpace() };
         if(tsvTokens.size() >= 7 && tsvTokens[1] == "Family" &&
           tsvTokens[3] == "Model" && tsvTokens[5] == "Stepping")
         { // Convert strings to numbers
@@ -1104,7 +1104,8 @@ class SysCore :
   }
   /* -- Build user roaming directory ---------------------------- */ protected:
   StdString BuildRoamingDir() const
-    { return cCmdLine->CmdLineMakeEnvPath("APPDATA", cCommon->CommonBlank()); }
+    { return cCmdLine->CmdLineMakeEnvPath("APPDATA",
+        cCommon->CommonBlankStr()); }
   /* -- Constructor -------------------------------------------------------- */
   SysCore() :
     /* -- Initialisers ----------------------------------------------------- */

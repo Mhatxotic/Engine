@@ -121,7 +121,7 @@ class Credits                          // Members initially private
     for(const CreditLib &lD : CreditGetLibList())
       cLog->LogNLCInfoExSafe("- Using $ (v$) $$", lD.GetName(),
         lD.GetVersion(), lD.IsCopyright() ? "\xC2\xA9 " :
-          cCommon->CommonBlank(), lD.GetAuthor());
+          cCommon->CommonBlankStr(), lD.GetAuthor());
   }
   /* -- Dump credits to log (cvar version) --------------------------------- */
   CVarReturn CreditDumpList(const bool bDoIt) const

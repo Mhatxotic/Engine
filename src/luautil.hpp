@@ -70,7 +70,7 @@ static StdString LuaUtilGetStackType(lua_State*const lS, const int iIndex)
 { // What type of variable?
   switch(LuaBaseType(lS, iIndex))
   { // Nil?
-    case LUA_TNIL: return cCommon->CommonNil(); break;
+    case LUA_TNIL: return StdString{ cCommon->CommonNil() }; break;
     // A number?
     case LUA_TNUMBER:
     { // If not actually an integer? Write as normal floating-point number
@@ -103,14 +103,14 @@ static StdString LuaUtilGetStackType(lua_State*const lS, const int iIndex)
       if(!LuaBaseIsTable(lS, iMTIndex))
         return StrFormat("<userdata:$>", vpPtr);
       // Query the engine names key's value and get it's value
-      LuaUtilPushExtStr(lS, cCommon->CommonLuaNameV());
+      LuaUtilPushExtStr(lS, cCommon->CommonLuaName());
       LuaBaseRawGet(lS, iMTIndex);
       const int iMTTypeIndex = iMTIndex + 1;
       // Show the value as string if we found it, else it's an unknown type
       return StrFormat("<$:$>",
         LuaBaseIsStr(lS, iMTTypeIndex) ?
           LuaUtilToCppString(lS, iMTTypeIndex) :
-          cCommon->CommonUnknownV(),
+          cCommon->CommonUnknown(),
         vpPtr);
     } // Who knows? Function? Userdata?
     default: return StrFormat("<$:$>",
@@ -1107,7 +1107,7 @@ static lua_Integer LuaUtilImplodePrepare(lua_State*const lS,
     case 0:
     { // Just check the separator and push a blank string
       LuaUtilCheckStr(lS, iIndex + 1);
-      LuaUtilPushStr(lS, cCommon->CommonBlank());
+      LuaUtilPushStr(lS, cCommon->CommonBlankStr());
       // We handled it
       break;
     } // One entry?

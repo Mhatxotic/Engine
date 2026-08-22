@@ -49,7 +49,7 @@ class SysBase :                        // Safe exception handler namespace
     Dl_info diData;
     // Tokenise the stack after removing duplicate whitespaces. Note that objc
     // calls will have spaces in them.
-    const TokenStr tsData{ StrCompact(cpStack), cCommon->CommonSpaceV() };
+    const TokenStr tsData{ StrCompact(cpStack), cCommon->CommonSpace() };
     // Need some extra work on Apple
 #if defined(MACOS)
     // The last two tokens should always be a + and a number which we will
@@ -186,7 +186,9 @@ class SysBase :                        // Safe exception handler namespace
     // Dump the stack
     DumpStack(osS);
     // Add extra information if set
-    if(*cpExtra) osS << cCommon->CommonLf() << cpExtra << cCommon->CommonLf();
+    if(*cpExtra) osS << cCommon->CommonLf()
+                     << cpExtra
+                     << cCommon->CommonLf();
  // Not building the command line too?
 #if !defined(BUILD) && !defined(ALPHA)
     // Shut down the stderr monitoring thread
@@ -229,7 +231,7 @@ class SysBase :                        // Safe exception handler namespace
   }
   /* ----------------------------------------------------------------------- */
   ExitState DebugMessage(const char*const cpSignal)
-    { return DebugMessage(cpSignal, cCommon->CommonCBlank()); }
+    { return DebugMessage(cpSignal, caBlank); }
   /* ----------------------------------------------------------------------- */
   ExitState ConditionalExit(const StdString &strName, unsigned &uAttempts)
   { // If events system is available?

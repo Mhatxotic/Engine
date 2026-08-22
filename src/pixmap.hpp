@@ -68,7 +68,7 @@ class SysMap :
     } // File is empty
     else
     { // Set no data available
-      cpNewMem = const_cast<char*>(cCommon->CommonCBlank());
+      cpNewMem = const_cast<char*>(caBlank);
       // Close the file. Whats the point in keeping it open?
       if(!FStreamClose())
         XCS("Failed to close empty file!", "File", NameGet());
@@ -82,7 +82,7 @@ class SysMap :
     requires (!StdIsPointer<PtrType>)
   PtrType *SysMapGetMemory() const
     { return reinterpret_cast<PtrType*>(cpMem); }
-  bool SysMapIsEmpty() const { return cpMem == cCommon->CommonCBlank(); }
+  bool SysMapIsEmpty() const { return cpMem == caBlank; }
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
   bool SysMapIsAvailable() const { return SysMapGetMemory() != nullptr; }
   bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }

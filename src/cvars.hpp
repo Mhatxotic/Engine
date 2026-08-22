@@ -117,7 +117,7 @@ struct CVars :                         // Start of vars class
   { // Get internal iterator and return value or empty string if invalid
     const CVarMapConstIt cvmciIt{ GetInternalListConst()[cveId] };
     return cvmciIt != cvmActive.cend() ? cvmciIt->second.GetValue() :
-      cCommon->CommonBlank();
+      cCommon->CommonBlankStr();
   }
   /* -- Return the cvar id's value as a string ----------------------------- */
   const char *GetCStrInternal(const CVarEnums cveId)
@@ -388,7 +388,7 @@ struct CVars :                         // Start of vars class
   { // Find item and return invalid if not found
     const CVarMapConstIt cvmciIt{ FindVariableConst(strVar) };
     return cvmciIt == cvmActive.cend() ?
-      cCommon->CommonInvalid() : GetValueSafe(cvmciIt);
+      StdString{ cCommon->CommonInvalid() } : GetValueSafe(cvmciIt);
   }
   /* ----------------------------------------------------------------------- */
   size_t MarkAllEncodedVarsAsCommit()
@@ -455,7 +455,7 @@ struct CVars :                         // Start of vars class
   { // Find var and return empty string or the var
     const CVarMapConstIt cvmciIt{ cvmPending.find(strKey) };
     return cvmciIt != cvmPending.cend() ?
-      cvmciIt->second.GetValue() : cCommon->CommonBlank();
+      cvmciIt->second.GetValue() : cCommon->CommonBlankStr();
   }
   /* ----------------------------------------------------------------------- */
   size_t Clean()
@@ -779,7 +779,7 @@ struct CVars :                         // Start of vars class
           break;
         case Lib::RapidJson::kFalseType:
           if(CVarsSetVarOrInitial(rjvKey.GetString(),
-             cCommon->CommonZeroV(), cvfcFlags, cvcfcFlags))
+             cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
             ++stGood; else ++stBad;
           break;
         // Everything else is unsupported
@@ -846,7 +846,7 @@ struct CVars :                         // Start of vars class
             break;
           case Lib::RapidJson::kFalseType:
             if(CVarsSetVarOrInitial(rjvKey.GetString(),
-               cCommon->CommonZeroV(), cvfcFlags, cvcfcFlags))
+               cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
               ++stGood; else ++stBad;
             break;
           // Everything else is unsupported

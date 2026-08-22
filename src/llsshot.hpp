@@ -92,7 +92,7 @@ LLFUNC(Screen, 1, AcSShot{lS}().DumpMain())
 LLFUNC(Fbo, 1,
   const AgFbo aFbo{lS, 1};
   AcSShot{lS}().DumpFbo(aFbo,
-    LuaBaseGetTop(lS) < 3 ? cCommon->CommonBlankV() : AgFilename{lS,2}()))
+    LuaBaseGetTop(lS) < 3 ? cCommon->CommonBlank() : AgFilename{lS,2}()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## SShot.* namespace functions structure                               ## **

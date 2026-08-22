@@ -808,7 +808,7 @@ static int GenDoc()
         case '!':
         { // Add to current class description
           ansCurrent.slDesc.push_back(strLine.size() > 5 ?
-            strLine.substr(5) : cCommon->CommonBlank());
+            strLine.substr(5) : cCommon->CommonBlankStr());
           // Done
           break;
         } // New CONST table?
@@ -1570,7 +1570,7 @@ static int GenDoc()
           "\t\t<H4>Syntax:-</H4>\n"
           "\t\t<PRE>$$$$$</PRE>\n",
           strCF, strCF, strOutParams, strCF, mmItem.strLeft,
-          strInParams.empty() ? cCommon->CommonBlank() :
+          strInParams.empty() ? cCommon->CommonBlankStr() :
             StrAppend("<I>", strInParams, "</I>"), mmItem.strRight);
         // Start writing parameters
         if(!afData.lParameters.empty())
@@ -1871,7 +1871,7 @@ static void DoClean(const StrVector svExts)
   // For each extension we don't want. Grab files and clean them
   for(const StdString &strExt : svExts)
     DoClean(svDeleted, svNotDeleted,
-      strExt.empty() ? Dir{} : Dir{ cCommon->CommonBlank(), strExt });
+      strExt.empty() ? Dir{} : Dir{ cCommon->CommonBlankStr(), strExt });
   // Report result
   if(!svDeleted.empty())
     ConWrite(StrFormat("*** Deleted $ files from '$': $.",
@@ -1917,8 +1917,7 @@ static int SpecialExecute(const StdString strCmd, const size_t stML,
   const ClkTimePoint tpBegin{ cmHiRes.GetTime() };
   // Execute process and capture output. throw StdRunTimeError if failed
   FILE*const fpPipe = POpen(StrAppend(strCmd,
-    (ullFlags & PF_SYSNOERR) || bErrOverride ?
-      " 2>&1" : cCommon->CommonCBlank()));
+    (ullFlags & PF_SYSNOERR) || bErrOverride ? " 2>&1" : caBlank));
   if(!fpPipe)
     XCL("Could not open pipe to execute process!",
         "CmdLine", strCmd, "Directory", DirGetCWD());
@@ -2943,37 +2942,31 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
   if(strLib.size() >= 8 && strLib.substr(0, 8) == "openssl-")
   { // Mandatory directory replacements
 #define STRMANDATORY \
-      { "\\\\lib\\\\engines-3",    cCommon->CommonCBlank() },\
-      { "///",                     cCommon->CommonCBlank() },\
-      { "\\\\lib\\\\ossl-modules", cCommon->CommonCBlank() },\
-      { "  -del /Q /F doc\\",      "# !doc\\"              },\
-      { ".h\r\n\t-del /Q /F",      ".h"                    },\
-      { ".c\r\n\t-del /Q /F",      ".c"                    },\
-      { ".asm\r\n\t-del /Q /F",    ".asm"                  },\
-      { ".pl\r\n\t-del /Q /F",     ".pl"                   },\
-      { ".pm\r\n\t-del /Q /F",     ".pm"                   }
+      { "\\\\lib\\\\engines-3",    caBlank    },\
+      { "///",                     caBlank    },\
+      { "\\\\lib\\\\ossl-modules", caBlank    },\
+      { "  -del /Q /F doc\\",      "# !doc\\" },\
+      { ".h\r\n\t-del /Q /F",      ".h"       },\
+      { ".c\r\n\t-del /Q /F",      ".c"       },\
+      { ".asm\r\n\t-del /Q /F",    ".asm"     },\
+      { ".pl\r\n\t-del /Q /F",     ".pl"      },\
+      { ".pm\r\n\t-del /Q /F",     ".pm"      }
     // 64-bit directory replacements
 #define STRBASE64 \
-      { "C:\\\\Program Files\\\\Common Files\\\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "C:\\\\Program Files\\\\OpenSSL",\
-        cCommon->CommonCBlank() },\
-      { "C:\\\\Program Files\\\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files\\OpenSSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files\\Common Files\\SSL",\
-        cCommon->CommonCBlank() },\
-      { "\\Program Files\\OpenSSL\\lib\\engines-1_1",\
-        cCommon->CommonCBlank() }
+      { "C:\\\\Program Files\\\\Common Files\\\\SSL", caBlank },\
+      { "C:\\\\Program Files\\\\OpenSSL",             caBlank },\
+      { "C:\\\\Program Files\\\\SSL",                 caBlank },\
+      { "\\Program Files\\OpenSSL",                   caBlank },\
+      { "\\Program Files\\Common Files\\SSL",         caBlank },\
+      { "\\Program Files\\OpenSSL\\lib\\engines-1_1", caBlank }
     // Release mode replacement flags
 #define STRRELEASE \
-      { "/Zs",                    cCommon->CommonCBlank() },\
-      { "/Gs0",                   "/GS-"                  },\
-      { "/Zi /Fdossl_static.pdb", cCommon->CommonCBlank() },\
-      { "/debug",                 cCommon->CommonCBlank() },\
-      { "/dll",                   cCommon->CommonCBlank() },\
-      { "-D\"NDEBUG\"",           "-DNDEBUG"              } \
+      { "/Zs",                    caBlank    },\
+      { "/Gs0",                   "/GS-"     },\
+      { "/Zi /Fdossl_static.pdb", caBlank    },\
+      { "/debug",                 caBlank    },\
+      { "/dll",                   caBlank    },\
+      { "-D\"NDEBUG\"",           "-DNDEBUG" } \
     // Actual merged flags
 #define STRREPRELEASE64 { STRMANDATORY, STRBASE64, STRRELEASE,\
       { "/MD /O2", StrFormat("/MT /O2 $", strRel64Extra) } }
@@ -3621,29 +3614,29 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Patch makefile for linux/mac -------------------------------------------
     ReplaceTextMulti("src/makefile", {
       { "CC= gcc -std=gnu99", "CC=g++ -std=" STANDARD },
-      { "-DLUA_COMPAT_5_3 ",  cCommon->CommonCBlank() },
-      { "LUA_T=	lua",         "LUA_T=" },
-      { "LUA_O=	lua.o",       "LUA_O=" },
+      { "-DLUA_COMPAT_5_3 ",  caBlank   },
+      { "LUA_T=	lua",         "LUA_T="  },
+      { "LUA_O=	lua.o",       "LUA_O="  },
       { "LUAC_T=	luac",      "LUAC_T=" },
       { "LUAC_O=	luac.o",    "LUAC_O=" },
-      { " liolib.o",          cCommon->CommonCBlank() },
-      { " loslib.o",          cCommon->CommonCBlank() },
-      { " loadlib.o",         cCommon->CommonCBlank() },
+      { " liolib.o",          caBlank   },
+      { " loslib.o",          caBlank   },
+      { " loadlib.o",         caBlank   },
     });
     // Performing removal of libs from LUA core lib ---------------------------
     ReplaceTextMulti("src/linit.c", {
-      { "{LUA_IOLIBNAME, luaopen_io},",        cCommon->CommonCBlank() },
-      { "{LUA_OSLIBNAME, luaopen_os},",        cCommon->CommonCBlank() },
-      { "{LUA_LOADLIBNAME, luaopen_package},", cCommon->CommonCBlank() },
+      { "{LUA_IOLIBNAME, luaopen_io},",        caBlank },
+      { "{LUA_OSLIBNAME, luaopen_os},",        caBlank },
+      { "{LUA_LOADLIBNAME, luaopen_package},", caBlank },
     });
     // Performing removal of unneeded core function ---------------------------
     ReplaceTextMulti("src/lbaselib.c", {
-      { "{\"dofile\", luaB_dofile},",     cCommon->CommonCBlank() },
-      { "{\"loadfile\", luaB_loadfile},", cCommon->CommonCBlank() },
-      { "{\"load\", luaB_load},",         cCommon->CommonCBlank() },
-      { "{\"print\", luaB_print},",       cCommon->CommonCBlank() },
-      { "{\"_VERSION\", nullptr},",       cCommon->CommonCBlank() },
-      { "{\"_G\", nullptr},",             cCommon->CommonCBlank() },
+      { "{\"dofile\", luaB_dofile},",     caBlank },
+      { "{\"loadfile\", luaB_loadfile},", caBlank },
+      { "{\"load\", luaB_load},",         caBlank },
+      { "{\"print\", luaB_print},",       caBlank },
+      { "{\"_VERSION\", nullptr},",       caBlank },
+      { "{\"_G\", nullptr},",             caBlank },
     });
     // Perform increase of limits ---------------------------------------------
     ReplaceText("src/lparser.c", "MAXVARS\t\t200", "MAXVARS\t\t253");
@@ -4128,7 +4121,7 @@ static int DebugApp()
 static bool CheckCommandLine(StdString &strX1, StdString &strX2)
 { // Get first argument
   const StdString &strTokens = cCmdLine->CmdLineGetArgList().empty() ?
-    cCommon->CommonBlank() : cCmdLine->CmdLineGetArgList()[0];
+    cCommon->CommonBlankStr() : cCmdLine->CmdLineGetArgList()[0];
   // Function data structure
   struct FuncData {
     const unsigned   uArg;          // Requires argument

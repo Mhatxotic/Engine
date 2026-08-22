@@ -10,100 +10,91 @@
 namespace ICommon {                    // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* ------------------------------------------------------------------------- */
+const char caBlank[] = "";             // Blank C-String on the stack
 /* -- Common class with common objects ------------------------------------- */
 class Common;                          // Prototype
 static Common *cCommon = nullptr;      // Global access to class
 class Common                           // Common variables class
-{ /* -- Common string views ------------------------------------------------ */
-  const StdStringView ssvDir, ssvEnt, ssvFs, ssvHttp, ssvHttps, ssvLuaName,
-    ssvTimeout, ssvPipe, ssvColon, ssvSpace, ssvQuote, ssvEquals, ssvBlank,
-    ssvZero, ssvOne, ssvDblSpace, ssvFSlash, ssvUnknown, ssvTrue, ssvFalse,
-    ssvY, ssvN;
-  /* -- Common strings ----------------------------------------------------- */
-  const StdString strSpace, strBlank, strCr, strLf, strCrLf, strCrLf2, strLfCr,
-    strUnspec, strNull, strPeriod, str2Period, strEllipsis, strPrivate,
-    strProtected, strEmpty, strInvalid, strAsterisk, strNil, strUnresolved,
-    strZero, strOne;
+{ /* -- Common strings ----------------------------------------------------- */
+  const StdString strBlank;
+  /* -- Common string views ------------------------------------------------ */
+  const StdStringView ssv2Period, ssvAsterisk, ssvBlank, ssvColon, ssvCr,
+    ssvCrLf, ssvCrLf2, ssvDblSpace, ssvDir, ssvEllipsis, ssvEmpty, ssvEnt,
+    ssvEquals, ssvFalse, ssvFs, ssvFSlash, ssvHttp, ssvHttps, ssvInvalid,
+    ssvLf, ssvLfCr, ssvLuaName, ssvN, ssvNil, ssvNull, ssvOne, ssvPeriod,
+    ssvPipe, ssvQuote, ssvSpace, ssvTimeout, ssvTrue, ssvUnknown,
+    ssvUnresolved, ssvUnspec, ssvY, ssvZero;
   /* -- Miscellaneous common variables ------------------------------------- */
-  const char*const cpBlank;            // Blank C-String
   StdLocale        lLocaleCurrent;     // Current locale
-  /* --------------------------------------------------------------- */ public:
+  /* -- Locale methods --------------------------------------------- */ public:
   const StdLocale &CommonLocale() const { return lLocaleCurrent; }
   void CommonSetLocale(const StdString &strLocale)
     { lLocaleCurrent = StdLocale{ strLocale }; }
   /* -- Return string view functions --------------------------------------- */
-  const StdStringView &CommonFsV() const { return ssvFs; }
-  const StdStringView &CommonDirV() const { return ssvDir; }
-  const StdStringView &CommonEntV() const { return ssvEnt; }
-  const StdStringView &CommonHttpV() const { return ssvHttp; }
-  const StdStringView &CommonHttpsV() const { return ssvHttps; }
-  const StdStringView &CommonLuaNameV() const { return ssvLuaName; }
-  const StdStringView &CommonTimeoutV() const { return ssvTimeout; }
-  const StdStringView &CommonPipeV() const { return ssvPipe; }
-  const StdStringView &CommonColonV() const { return ssvColon; }
-  const StdStringView &CommonSpaceV() const { return ssvSpace; }
-  const StdStringView &CommonQuoteV() const { return ssvQuote; }
-  const StdStringView &CommonEqualsV() const { return ssvEquals; }
-  const StdStringView &CommonBlankV() const { return ssvBlank; }
-  const StdStringView &CommonZeroV() const { return ssvZero; }
-  const StdStringView &CommonOneV() const { return ssvOne; }
-  const StdStringView &CommonDblSpaceV() const { return ssvDblSpace; }
-  const StdStringView &CommonFSlashV() const { return ssvFSlash; }
-  const StdStringView &CommonUnknownV() const { return ssvUnknown; }
-  const StdStringView &CommonTrue() const { return ssvTrue; }
+  const StdStringView &CommonAsterisk() const { return ssvAsterisk; }
+  const StdStringView &CommonBlank() const { return ssvBlank; }
+  const StdStringView &CommonColon() const { return ssvColon; }
+  const StdStringView &CommonCrLf2() const { return ssvCrLf2; }
+  const StdStringView &CommonCrLf() const { return ssvCrLf; }
+  const StdStringView &CommonCr() const { return ssvCr; }
+  const StdStringView &CommonDblSpace() const { return ssvDblSpace; }
+  const StdStringView &CommonDir() const { return ssvDir; }
+  const StdStringView &CommonEllipsis() const { return ssvEllipsis; }
+  const StdStringView &CommonEmpty() const { return ssvEmpty; }
+  const StdStringView &CommonEnt() const { return ssvEnt; }
+  const StdStringView &CommonEquals() const { return ssvEquals; }
   const StdStringView &CommonFalse() const { return ssvFalse; }
-  const StdStringView &CommonYes() const { return ssvY; }
+  const StdStringView &CommonFSlash() const { return ssvFSlash; }
+  const StdStringView &CommonFs() const { return ssvFs; }
+  const StdStringView &CommonHttps() const { return ssvHttps; }
+  const StdStringView &CommonHttp() const { return ssvHttp; }
+  const StdStringView &CommonInvalid() const { return ssvInvalid; }
+  const StdStringView &CommonLfCr() const { return ssvLfCr; }
+  const StdStringView &CommonLf() const { return ssvLf; }
+  const StdStringView &CommonLuaName() const { return ssvLuaName; }
+  const StdStringView &CommonNil() const { return ssvNil; }
   const StdStringView &CommonNo() const { return ssvN; }
+  const StdStringView &CommonNull() const { return ssvNull; }
+  const StdStringView &CommonOne() const { return ssvOne; }
+  const StdStringView &CommonPeriod() const { return ssvPeriod; }
+  const StdStringView &CommonPipe() const { return ssvPipe; }
+  const StdStringView &CommonQuote() const { return ssvQuote; }
+  const StdStringView &CommonSpace() const { return ssvSpace; }
+  const StdStringView &CommonTimeout() const { return ssvTimeout; }
+  const StdStringView &CommonTrue() const { return ssvTrue; }
+  const StdStringView &CommonTwoPeriod() const { return ssv2Period; }
+  const StdStringView &CommonUnknown() const { return ssvUnknown; }
+  const StdStringView &CommonUnresolved() const { return ssvUnresolved; }
+  const StdStringView &CommonUnspec() const { return ssvUnspec; }
+  const StdStringView &CommonYes() const { return ssvY; }
+  const StdStringView &CommonZero() const { return ssvZero; }
   /* -- Return string functions -------------------------------------------- */
-  const StdString &CommonBlank() const { return strBlank; }
-  const StdString &CommonCr() const { return strCr; }
-  const StdString &CommonLf() const { return strLf; }
-  const StdString &CommonCrLf() const { return strCrLf; }
-  const StdString &CommonCrLf2() const { return strCrLf2; }
-  const StdString &CommonLfCr() const { return strLfCr; }
-  const StdString &CommonSpace() const { return strSpace; }
-  const StdString &CommonEllipsis() const { return strEllipsis; }
-  const StdString &CommonUnspec() const { return strUnspec; }
-  const StdString &CommonUnresolved() const { return strUnresolved; }
-  const StdString &CommonNull() const { return strNull; }
-  const StdString &CommonPeriod() const { return strPeriod; }
-  const StdString &CommonTwoPeriod() const { return str2Period; }
-  const StdString &CommonPrivate() const { return strPrivate; }
-  const StdString &CommonProtected() const { return strProtected; }
-  const StdString &CommonEmpty() const { return strEmpty; }
-  const StdString &CommonInvalid() const { return strInvalid; }
-  const StdString &CommonAsterisk() const { return strAsterisk; }
-  const StdString &CommonNil() const { return strNil; }
-  const StdString &CommonZero() const { return strZero; }
-  const StdString &CommonOne() const { return strOne; }
-  const char *CommonCBlank() const { return cpBlank; }
+  const StdString &CommonBlankStr() const { return strBlank; }
   /* -- Default constructor ------------------------------------- */ protected:
   Common() :
     /* -- String view initialisers ----------------------------------------- */
-    ssvDir{ "<DIR>" },                 ssvEnt{ "&#x" },
-    ssvFs{ "<FS>" },                   ssvHttp{ "http" },
-    ssvHttps{ "https" },               ssvLuaName{ "__name" },
-    ssvTimeout{ "Frame timeout!" },    ssvPipe{ "|" },
-    ssvColon{ ":" },                   ssvSpace{ " " },
-    ssvQuote{ "\"" },                  ssvEquals{ "=" },
-    ssvZero{ "0" },                    ssvOne{ "1" },
-    ssvDblSpace{ "  " },               ssvFSlash{ "/" },
-    ssvUnknown{ "Unknown" },           ssvTrue{ "true" },
-    ssvFalse{ "false" },               ssvY{ "Y" },
-    ssvN{ "N" },
-    /* -- String initialisers ---------------------------------------------- */
-    strSpace{ ssvSpace },              strCr{ "\r" },
-    strLf{ "\n" },                     strCrLf{ "\r\n" },
-    strCrLf2{ "\r\n\r\n" },            strLfCr{ "\n\r" },
-    strUnspec{ "<Unspecified>" },      strNull{ "<Null>" },
-    strPeriod{ "." },                  str2Period{ ".." },
-    strEllipsis{ "..." },              strPrivate{ "<Private>" },
-    strProtected{ "<Protected>" },     strEmpty{ "<Empty>" },
-    strInvalid{ "<Invalid>" },         strAsterisk{ "*" },
-    strNil{ "nil" },                   strUnresolved{ "<Unresolved>" },
-    strZero{ ssvZero },                strOne{ ssvOne },
+    ssv2Period{ ".." },                ssvAsterisk{ "*" },
+    ssvBlank{ strBlank },              ssvColon{ ":" },
+    ssvCr{ "\r" },                     ssvCrLf{ "\r\n" },
+    ssvCrLf2{ "\r\n\r\n" },            ssvDblSpace{ "  " },
+    ssvDir{ "<DIR>" },                 ssvEllipsis{ "..." },
+    ssvEmpty{ "<Empty>" },             ssvEnt{ "&#x" },
+    ssvEquals{ "=" },                  ssvFalse{ "false" },
+    ssvFs{ "<FS>" },                   ssvFSlash{ "/" },
+    ssvHttp{ "http" },                 ssvHttps{ "https" },
+    ssvInvalid{ "<Invalid>" },         ssvLf{ "\n" },
+    ssvLfCr{ "\n\r" },                 ssvLuaName{ "__name" },
+    ssvN{ "N" },                       ssvNil{ "nil" },
+    ssvNull{ "<Null>" },               ssvOne{ "1" },
+    ssvPeriod{ "." },                  ssvPipe{ "|" },
+    ssvQuote{ "\"" },                  ssvSpace{ " " },
+    ssvTimeout{ "Frame timeout!" },    ssvTrue{ "true" },
+    ssvUnknown{ "Unknown" },           ssvUnresolved{ "<Unresolved>" },
+    ssvUnspec{ "<Unspecified>" },      ssvY{ "Y" },
+    ssvZero{ "0" },
     /* -- Other initialisers ----------------------------------------------- */
-    cpBlank(strBlank.data()),          lLocaleCurrent{ strBlank }
+    lLocaleCurrent{ strBlank }
     /* -- Set global pointer to static class ------------------------------- */
     { cCommon = this; }
 };/* ----------------------------------------------------------------------- */

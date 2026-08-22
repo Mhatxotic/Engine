@@ -542,7 +542,7 @@ static CVarReturn ArchiveInit(const StdString &ssvExt, StdString&)
   cArchives->strArchiveExt = StdMove(ssvExt);
   // Scan executable directory
   return ArchiveScan("working",
-    cCommon->CommonBlank(), cArchives->strArchiveExt);
+    cCommon->CommonBlankStr(), cArchives->strArchiveExt);
 }
 /* -- Loads the specified archive ------------------------------------------ */
 static CVarReturn ArchiveInitPersist(const bool bState)

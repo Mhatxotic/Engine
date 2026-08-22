@@ -925,17 +925,17 @@ class Core final :                     // Members initially private
         // Not empty argument? Tokenise the argument into a key/value pair. We
         // only want a maximum of two tokens, the seperator is allowed on the
         // second token and if succeeded?
-        else if(const TokenStrView tsvKeyVal{
-          strArg, cCommon->CommonEqualsV(), 2 })
+        else if(const TokenStrView
+          tsvKeyVal{ strArg, cCommon->CommonEquals(), 2 })
         { // Set the variable from command line with full permission because we
           // should allow any variable to be overridden from the command line.
           // Also show an error if the variable could not be set.
           if(CVarsSetVarOrInitial(tsvKeyVal.front(), tsvKeyVal.size() > 1 ?
-            tsvKeyVal.back() : cCommon->CommonBlank(),
+            tsvKeyVal.back() : cCommon->CommonBlankStr(),
             SCMDLINE|PCMDLINE, CCF_NOTHING))
           { // Append argument to accepted command line and add a space
             strV.append(strArg);
-            strV.append(cCommon->CommonSpaceV());
+            strV.append(cCommon->CommonSpace());
             // Good variable
             ++stGood;
           } // Failure? Log the failure

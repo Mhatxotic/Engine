@@ -286,7 +286,7 @@ struct AssetList :
     StrSet{ bOnlyDirs ? StdMove(Dir{ ssvDir }.DirsToSet()) :
                         StdMove(Dir{ ssvDir }.FilesToSet()) }
     /* -- Add archive files to list ---------------------------------------- */
-    { ArchiveEnumerate(ssvDir, cCommon->CommonBlank(), bOnlyDirs, *this); }
+    { ArchiveEnumerate(ssvDir, cCommon->CommonBlankStr(), bOnlyDirs, *this); }
   /* -- Return files in directories with extension matching ---------------- */
   AssetList(const StdStringView &ssvDir, const StdStringView &ssvExt,
     const bool bOnlyDirs) :
