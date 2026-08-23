@@ -166,7 +166,7 @@ class EvtMain :                        // Event list for render thread
       IdToString(emcReason), emcReason);
   }
   /* -- Incase of error we need to update the exit code -------------------- */
-  bool ExitRequested() const { return !!uConfirm; }
+  bool ExitRequested() const { return uConfirm != 0; }
   /* -- Incase of error we need to update the exit code -------------------- */
   void UpdateConfirmExit()
   { // Ignore if not in a confirmation request

@@ -15,7 +15,7 @@ using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IFboBlend::P;
 using namespace IFboCmd::P;            using namespace IColour::P;
 using namespace IFlags::P;             using namespace IGlFW::P;
-using namespace IGlFWUtil::P;          using namespace IHelper::P;
+using namespace IGlFWBase::P;          using namespace IHelper::P;
 using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
@@ -257,7 +257,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   }
   /* -- Flag setter ----------------------------------------------- */ private:
   void SetFlagExt(const char*const cpName, const OglFlagsConst &ofcFlags)
-    { FlagSetOrClear(ofcFlags, HaveExtension(cpName)); }
+    { FlagSetOrClear(ofcFlags, GlFWBaseExtensionSupported(cpName)); }
   /* -- Load GL capabilities ----------------------------------------------- */
   void DetectCapabilities()
   { // Current current OpenGL strings
@@ -392,9 +392,6 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       sizeof(sAPI) / sizeof(void*));
   }
   /* == OpenGL features ============================================ */ public:
-  static bool HaveExtension(const char*const cpName)
-    { return !!glfwExtensionSupported(cpName); }
-  /* ----------------------------------------------------------------------- */
   template<typename IntType = decltype(gluTexSize)>
     requires StdIsIntegral<IntType>
   IntType MaxTexSize() const { return static_cast<IntType>(gluTexSize); }

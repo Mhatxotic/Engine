@@ -326,7 +326,7 @@ class SysBase                          // Members initially private
       PROCESSENTRY32 pedData;
       pedData.dwSize = sizeof(pedData);
       // Get first item and iterate through each process
-      if(Process32First(hSnapshot, &pedData) == TRUE) do
+      if(Process32First(hSnapshot, &pedData)) do
       { // Add pid, parent pid, thread count and name
         tData.DataW(pedData.szExeFile)
              .DataN(pedData.th32ProcessID)
@@ -381,7 +381,7 @@ class SysBase                          // Members initially private
           throw;
         }
       } // Continue if there is more
-      while(Process32Next(hSnapshot, &pedData) == TRUE);
+      while(Process32Next(hSnapshot, &pedData));
       // Done with snapshot
       CloseHandle(hSnapshot);
     } // exception occured?
@@ -409,7 +409,7 @@ class SysBase                          // Members initially private
       MODULEENTRY32 medData;
       medData.dwSize = sizeof(medData);
       // Get first module and iterate each one
-      if(Module32First(hSnapshot, &medData) == TRUE) do
+      if(Module32First(hSnapshot, &medData)) do
       { // Get module information
         const SysModuleData vD{
           StdMove(SysModule{ S16toUTF(medData.szExePath) }) };

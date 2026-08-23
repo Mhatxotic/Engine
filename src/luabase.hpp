@@ -69,6 +69,9 @@ static void LuaBasePushLightUData(lua_State*const lS, void*const vpPtr)
 /* -- Get string and size of it -------------------------------------------- */
 static const char *LuaBaseToLStr(lua_State*const lS, const int iIndex,
   size_t &stSize) { return lua_tolstring(lS, iIndex, &stSize); }
+/* -- Get string and size of it (type safe) -------------------------------- */
+static const char *LuaBaseToLStrTS(lua_State*const lS, const int iIndex,
+  size_t *stpSize = nullptr) { return luaL_tolstring(lS, iIndex, stpSize); }
 /* -- Get a number from the stack ------------------------------------------ */
 template<typename FloatType = lua_Number>
   requires StdIsFloat<FloatType>

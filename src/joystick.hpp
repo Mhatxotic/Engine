@@ -11,22 +11,12 @@ namespace IJoystick {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace IEvtMain::P;
 using namespace IEvtWin::P;            using namespace IFillCon::P;
-using namespace IFlags::P;             using namespace IGlFWUtil::P;
+using namespace IFlags::P;             using namespace IGlFWBase::P;
 using namespace IJoyInfo::P;           using namespace ILog::P;
 using namespace ILuaFunc::P;           using namespace IStd::P;
 using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Input,                     // Input flags
-  /* ----------------------------------------------------------------------- */
-  IF_NONE                   {Flag(0)}, // No flags
-  IF_CURSOR                 {Flag(1)}, // Mouse cursor is enabled?
-  IF_FSTOGGLER              {Flag(2)}, // Full-screen toggler enabled?
-  IF_MOUSEFOCUS             {Flag(3)}, // Mouse cursor has focus?
-  IF_INITEVENTS             {Flag(4)}, // Send events at startup?
-  IF_POLLJOYSTICKS          {Flag(5)}  // Do joystick polling?
-);/* ----------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 class Joystick :
   /* -- Base classes ------------------------------------------------------- */

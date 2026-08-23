@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtWin {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IEvtCore::P;           using namespace IGlFWUtil::P;
+using namespace IEvtCore::P;           using namespace IGlFWBase::P;
 using namespace ILog::P;               using namespace ILookupArray::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace IThread::P;

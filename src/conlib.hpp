@@ -1062,10 +1062,22 @@ for(const JoyInfo &jiRef : jlList)
     .Data(jiRef.NameGet());
 } // Print totals.
 cConsole->ConsoleAddLineF("$$ connected ($ supported).\n"
-                   "Input flags are 0x$$.",
+                          "Input flags are $.",
   sTable.Finish(),
     StrPluraliseNum(cInput->JoyGetConnected(), "input", "inputs"),
-    jlList.size(), StdIOSHex, cInput->FlagGet());
+    jlList.size(), StrFromEvalTokens({
+      { cGlFW->WinIsLockKeyModsInputModeEnabled(),        'K' },
+      { cGlFW->WinIsRawMouseInputModeEnabled(),           'R' },
+      { cGlFW->WinIsStickyKeysInputModeEnabled(),         'S' },
+      { cGlFW->WinIsStickyMouseButtonsInputModeEnabled(), 'B' },
+      { cInput->FlagIsSet(IF_CLAMPMOUSE),                 'L' },
+      { cInput->FlagIsSet(IF_CURSOR),                     'C' },
+      { cInput->FlagIsSet(IF_FSTOGGLER),                  'F' },
+      { cInput->FlagIsSet(IF_INITEVENTS),                 'E' },
+      { cInput->FlagIsSet(IF_MOUSEFOCUS),                 'M' },
+      { cInput->FlagIsSet(IF_POLLJOYSTICKS),              'P' },
+      { cInput->FlagIsSet(IF_RESTORE),                    'O' },
+    }), StdIOSHex);
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'input' function
 /* ========================================================================= */
@@ -1592,8 +1604,8 @@ cConsole->ConsoleAddLineF("$$ totalling $ ($).", stData.Finish(),
 const StdString &strExtName = aArgs[1];
 cConsole->ConsoleAddLineF(
   "Extension '$' is$ supported by the selected graphics device.",
-    strExtName, cOgl->HaveExtension(strExtName.data()) ?
-      cCommon->CommonBlankStr() : " NOT");
+    strExtName, GlFWBaseExtensionSupported(strExtName.data()) ?
+      cCommon->CommonBlank() : " NOT");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'oglext' function
 /* ========================================================================= */
@@ -1954,9 +1966,9 @@ for(const Source*const sPtr : *cSources)
   const ALuint uType = sRef.GetType();
   // Add data to text table
   sTable.DataN(sRef.Serial()).DataN(sRef.GetSource())
-        .DataE({{ sRef.GetClass(),     'C' }, { sRef.LockIsSet(),     'L' },
-                { !!sRef.GetLooping(), 'O' }, { !!sRef.GetRelative(), 'R' },
-                { sRef.GetExternal(),  'X' }})
+        .DataE({{ sRef.GetClass(),    'C' }, { sRef.LockIsSet(),   'L' },
+                { sRef.GetLooping(),  'O' }, { sRef.GetRelative(), 'R' },
+                { sRef.GetExternal(), 'X' }})
         .DataC(alState == AL_INITIAL ? 'I' : (alState == AL_PLAYING ? 'P' :
               (alState == AL_PAUSED  ? 'H' : (alState == AL_STOPPED ? 'S' :
                                        '?'))))

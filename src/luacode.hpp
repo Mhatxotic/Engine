@@ -70,22 +70,18 @@ static CVarReturn LuaCodeCheckVersion(const StdString &strVal,
   } // Version not changed or problem occured
   return ACCEPT;
 }
-/* -- Callback for lua_dump ------------------------------------------------ */
-namespace LuaCodeDumpHelper
-{ /* -- Memory blocks structure for dump function -------------------------- */
-  struct MemData
-  { /* -- Public variables ------------------------------------------------- */
+/* -- Compile a function to binary ----------------------------------------- */
+static Memory LuaCodeCompileFunction(lua_State*const lS, const bool bDebug)
+{ // Memory blocks structure for dump function
+  struct MemData {
     MemoryList     mlBlocks;           // List of memory blocks
     size_t         stTotal;            // Size of all memory blocks
-    /* -- Initialiser constructor ------------------------------------------ */
     MemData(MemoryList &&mlNBlocks, const size_t stNTotal) :
       mlBlocks{StdMove(mlNBlocks)}, stTotal(stNTotal) {}
-    /* -- Default constructor ---------------------------------------------- */
     MemData() : stTotal(0) {}
-  };/* --------------------------------------------------------------------- */
-  /* -- The callback function ---------------------------------------------- */
-  static int PopulateMemoryListCallback(lua_State*const,
-    const void*const vpAddr, const size_t stSize, void*const vpUser)
+  }; // LuaBaseDump Callback function
+  auto PopulateMemoryListCallback = [](lua_State*const,
+    const void*const vpAddr, const size_t stSize, void*const vpUser)->int
   { // Get memory data
     MemData &mdData = *reinterpret_cast<MemData*>(vpUser);
     // Make a new memory block
@@ -94,15 +90,10 @@ namespace LuaCodeDumpHelper
     mdData.stTotal += stSize;
     // Return success
     return 0;
-  }
-};/* -- Compile a function to binary --------------------------------------- */
-static Memory LuaCodeCompileFunction(lua_State*const lS, const bool bDebug)
-{ // Include utility namespace
-  using namespace LuaCodeDumpHelper;
+  }; // Include utility namespace
   MemData mdData;
   // Dump the code to binary and if error occured?
-  if(LuaBaseDump(lS,
-       PopulateMemoryListCallback, &mdData, bDebug ? 0 : 1))
+  if(LuaBaseDump(lS, PopulateMemoryListCallback, &mdData, bDebug ? 0 : 1))
     XC("Failure dumping function!");
   // Error if no blocks
   if(mdData.mlBlocks.empty() || !mdData.stTotal) XC("Empty function dump!");

@@ -12,9 +12,10 @@ namespace IGlFWWindow {                // Start of private module namespace
 using namespace ICollector::P;         using namespace ICommon::P;
 using namespace ICoord::P;             using namespace IDim::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IGlFWUtil::P;          using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtf::P;               using namespace Lib::OS::GlFW;
+using namespace IGlFWBase::P;          using namespace IGlFWUtil::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace IUtf::P;
+using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -196,7 +197,7 @@ class GlFWWindow :                     // GLFW window class
   /* -- Get files -------------------------------------------------- */ public:
   StrVector &WinGetFiles() { return svFiles; }
   /* -- Is the window handle set? ------------------------------------------ */
-  bool WinIsAvailable() const { return !!WinGetHandle(); }
+  bool WinIsAvailable() const { return WinGetHandle() != nullptr; }
   bool WinIsNotAvailable() const { return !WinIsAvailable(); }
   /* -- Set window icon ---------------------------------------------------- */
   void WinSetIcon(const int iCount, const GLFWimage*const giImages) const
@@ -292,17 +293,13 @@ class GlFWWindow :                     // GLFW window class
     { return glfwGetMouseButton(WinGetHandle(), iB); }
   int WinGetKey(const int iK) const
     { return glfwGetKey(WinGetHandle(), iK); }
-  /* -- Get window attributes ---------------------------------------------- */
-  int WinGetAttrib(const int iA) const
-    { return glfwGetWindowAttrib(WinGetHandle(), iA); }
   /* -- Get window hint boolean -------------------------------------------- */
   bool WinGetAttribBoolean(const int iVar) const
-    { return GlFWGBooleanToBoolean(WinGetAttrib(iVar)); }
+    { return GlFWBaseGetWindowAttrib(WinGetHandle(), iVar); }
   /* -- Update window attributes ------------------------------------------- */
   void WinSetAttrib(const int iAttrib, const int iValue) const
-  { // Set the window attribute
+  { // Set the window attribute and log the attribute change
     glfwSetWindowAttrib(WinGetHandle(), iAttrib, iValue);
-    // Log the attribute change
     cLog->LogDebugExSafe("GlFW set attrib $<0x$$> to $$<0x$$>.",
       GlFWGetHintAttribStr(iAttrib), StdIOSHex, iAttrib, StdIOSDec, iValue,
       StdIOSHex, iValue);
@@ -342,7 +339,7 @@ class GlFWWindow :                     // GLFW window class
   void WinSwapGLBuffers() const { glfwSwapBuffers(WinGetHandle()); }
   /* -- Set window attribute core functions -------------------------------- */
   void WinSetAttribBoolean(const int iVar, const bool bVal) const
-    { WinSetAttrib(iVar, GlFWBooleanToGBoolean(bVal)); }
+    { WinSetAttrib(iVar, GlFWBaseBooleanToGBoolean(bVal)); }
   void WinSetAttribEnabled(const int iVar) const
     { WinSetAttribBoolean(iVar, true); }
   void WinSetAttribDisabled(const int iVar) const
@@ -357,7 +354,7 @@ class GlFWWindow :                     // GLFW window class
   void WinSet ## nc ## AttribDisabled[[maybe_unused]]() const \
     { WinSetAttribDisabled(GLFW_ ## nu); } \
   bool WinIs ## nc ## AttribEnabled[[maybe_unused]]() const \
-    { return GlFWGBooleanToBoolean(WinGetAttrib(GLFW_ ## nu)); } \
+    { return WinGetAttribBoolean(GLFW_ ## nu); } \
   bool WinIs ## nc ## AttribDisabled[[maybe_unused]]() const \
     { return !WinIs ## nc ## AttribEnabled(); }
   /* ----------------------------------------------------------------------- */
@@ -402,43 +399,43 @@ class GlFWWindow :                     // GLFW window class
   void WinRequestAttention() const
     { glfwRequestWindowAttention(WinGetHandle()); }
   /* -- Get or set input mode ---------------------------------------------- */
-  int WinGetInputMode(const int iM) const
-    { return glfwGetInputMode(WinGetHandle(), iM); }
-  bool WinGetInputModeBoolean(const int iM) const
-    { return GlFWGBooleanToBoolean(WinGetInputMode(iM)); }
-  void WinSetInputMode(const int iM, const int iV) const
-    { glfwSetInputMode(WinGetHandle(), iM, iV); }
-  void WinSetInputModeBoolean(const int iM, const bool bS) const
-    { WinSetInputMode(iM, GlFWBooleanToGBoolean(bS)); }
-  /* -- Set/get raw mouse motion ------------------------------------------- */
-  void WinSetRawMouseMotion(const bool bS) const
-    { WinSetInputModeBoolean(GLFW_RAW_MOUSE_MOTION, bS); }
-  bool WinGetRawMouseMotion() const
-    { return WinGetInputModeBoolean(GLFW_RAW_MOUSE_MOTION); }
-  /* -- Set/get lock key mods ---------------------------------------------- */
-  void WinSetLockKeyMods(const bool bS) const
-    { WinSetInputModeBoolean(GLFW_LOCK_KEY_MODS, bS); }
-  bool WinGetLockKeyMods() const
-    { return WinGetInputModeBoolean(GLFW_LOCK_KEY_MODS); }
-  /* -- Set/get sticky mouse buttons --------------------------------------- */
-  void WinSetStickyMouseButtons(const bool bS) const
-    { WinSetInputModeBoolean(GLFW_STICKY_MOUSE_BUTTONS, bS); }
-  bool WinGetStickyMouseButtons() const
-    { return WinGetInputModeBoolean(GLFW_STICKY_MOUSE_BUTTONS); }
-  /* -- Set/get sticky keys ------------------------------------------------ */
-  void WinSetStickyKeys(const bool bS) const
-    { WinSetInputModeBoolean(GLFW_STICKY_KEYS, bS); }
-  bool WinGetStickyKeys() const
-    { return WinGetInputModeBoolean(GLFW_STICKY_KEYS); }
+  bool WinGetInputMode(const int iMode) const
+    { return GlFWGetInputMode(WinGetHandle(), iMode); }
+  void WinSetInputMode(const int iMode, const bool bEnabled) const
+    { GlFWSetInputMode(WinGetHandle(), iMode, bEnabled); }
+  void WinSetInputModeEnabled(const int iMode) const
+    { WinSetInputMode(iMode, true); }
+  void WinSetInputModeDisabled(const int iMode) const
+    { WinSetInputMode(iMode, false); }
+  /* -- Create functions to set and get input mode ------------------------- */
+#define SET(nc,nu) \
+  /* ---------------------------------------------------------------------- */\
+  void WinSet ## nc ## InputMode[[maybe_unused]](const bool bState) const \
+    { WinSetInputMode(GLFW_ ## nu, bState); } \
+  void WinSet ## nc ## InputModeEnabled[[maybe_unused]]() const \
+    { WinSet ## nc ## InputMode(true); } \
+  void WinSet ## nc ## InputModeDisabled[[maybe_unused]]() const \
+    { WinSet ## nc ## InputMode(false); } \
+  bool WinIs ## nc ## InputModeEnabled[[maybe_unused]]() const \
+    { return WinGetInputMode(GLFW_ ## nu); } \
+  bool WinIs ## nc ## InputModeDisabled[[maybe_unused]]() const \
+    { return !WinIs ## nc ## InputModeEnabled(); }
+  /* ----------------------------------------------------------------------- */
+  SET(RawMouse,           RAW_MOUSE_MOTION)     // Raw mouse motion
+  SET(LockKeyMods,        LOCK_KEY_MODS)        // Mod key locking behaviour
+  SET(StickyMouseButtons, STICKY_MOUSE_BUTTONS) // Mouse buttons behaviour
+  SET(StickyKeys,         STICKY_KEYS)          // Key locking behaviour
+  /* ----------------------------------------------------------------------- */
+#undef SET                             // Done with this macro
   /* -- Get mouse buttons tatus--------------------------------------------- */
   int WinGetMouseButton(const int iB) const
-    { return glfwGetMouseButton(this->WinGetHandle(), iB); }
+    { return GlFWGetMouseButton(this->WinGetHandle(), iB); }
   /* -- Destroy the GLFW window -------------------------------------------- */
   void WinDeInit()
   { // Done if theres no window class
     if(WinIsNotAvailable()) return;
     // Destroy the window
-    glfwDestroyWindow(WinGetHandle());
+    GlFWBaseDestroyWindow(WinGetHandle());
     // Nullify the handle
     WinClearHandle();
     // Unregister remaining events
@@ -451,7 +448,7 @@ class GlFWWindow :                     // GLFW window class
       XC("Window already created!",
         "Class", WinGetHandle(), "Title", cpT, "Monitor", mM);
     // Set handle and create window, throw exception if failed
-    if(!WinSetHandleResult(glfwCreateWindow(1, 1, cpT, mM, nullptr)))
+    if(!WinSetHandleResult(GlFWBaseCreateWindow(1, 1, cpT, mM)))
       XC("Failed to create window!", "Title", cpT, "Monitor", mM);
     // Set user pointer to this class
     WinSetData(this);

@@ -160,7 +160,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     { return cParent->imCodes.Get(ThreadGetExitCode()); }
   /* ----------------------------------------------------------------------- */
   const CbThFunc &ThreadGetCallback() const { return ctfFunc; }
-  bool ThreadHaveCallback() const { return !!ThreadGetCallback(); }
+  bool ThreadHaveCallback() const { return ThreadGetCallback() != nullptr; }
   /* ----------------------------------------------------------------------- */
   void ThreadCancelExit() { ThreadSetExitFlag(false); }
   /* ----------------------------------------------------------------------- */

@@ -54,9 +54,9 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     if(IsLoaded()) cFreeType->FreeTypeDestroyFont(ftfFace);
   }
   /* -- Returns if face is loaded----------------------------------- */ public:
-  bool IsLoaded() const { return !!ftfFace; }
-  bool IsStrokerLoaded() const { return !!ftsStroker; }
+  bool IsLoaded() const { return ftfFace != nullptr; }
   FT_Stroker GetStroker() const { return ftsStroker; }
+  bool IsStrokerLoaded() const { return GetStroker() != nullptr; }
   unsigned GetDPIWidth() const { return duDPI.DimGetWidth(); }
   unsigned GetDPIHeight() const { return duDPI.DimGetHeight(); }
   GLfloat GetOutline() const { return fOutline; }

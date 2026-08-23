@@ -18,8 +18,8 @@ using namespace IDimCoord::P;          using namespace IDir::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFboCore::P;           using namespace IFlags::P;
 using namespace IFont::P;              using namespace IGlFW::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
-using namespace IGlFWUtil::P;          using namespace IHelper::P;
+using namespace IGlFWBase::P;          using namespace IGlFWCursor::P;
+using namespace IGlFWMonitor::P;       using namespace IHelper::P;
 using namespace IImage::P;             using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IInput::P;
 using namespace ILog::P;               using namespace ILookupArray::P;
@@ -147,9 +147,9 @@ class Display :                        // Actual class body
   /* -- Window set set lock key mods state --------------------------------- */
   void DisplayOnRqSetLKMods(const EvtWinEvent &eweEvent)
   { // Set the new lock key mod state and log status
-    cGlFW->WinSetLockKeyMods(eweEvent.eaArgs.front().Bool());
+    cGlFW->WinSetLockKeyModsInputMode(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated lock key mod status to $.",
-      StrFromBoolTF(cGlFW->WinGetLockKeyMods()));
+      StrFromBoolTF(cGlFW->WinIsLockKeyModsInputModeEnabled()));
   }
   /* -- Window set set cursor visibility ----------------------------------- */
   void DisplayOnRqSetCurVis(const EvtWinEvent &eweEvent)
@@ -164,9 +164,9 @@ class Display :                        // Actual class body
   { // If raw mouse support is supported?
     if(cGlFW->GlFWIsNotRawMouseMotionSupported()) return;
     // Set the new input if we can and log status
-    cGlFW->WinSetRawMouseMotion(eweEvent.eaArgs.front().Bool());
+    cGlFW->WinSetRawMouseInputMode(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated raw mouse status to $.",
-      StrFromBoolTF(cGlFW->WinGetRawMouseMotion()));
+      StrFromBoolTF(cGlFW->WinIsRawMouseInputModeEnabled()));
   }
   /* -- On request window attenti on event --------------------------------- */
   void DisplayOnRqAttention(const EvtWinEvent&)
@@ -182,16 +182,16 @@ class Display :                        // Actual class body
   /* -- Window set sticky keys request ------------------------------------- */
   void DisplayOnRqStickyKeys(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyKeys(eweEvent.eaArgs.front().Bool());
+    cGlFW->WinSetStickyKeysInputMode(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated sticky keys status to $.",
-      StrFromBoolTF(cGlFW->WinGetStickyKeys()));
+      StrFromBoolTF(cGlFW->WinIsStickyKeysInputModeEnabled()));
   }
   /* -- Window set sticky mouse request ------------------------------------ */
   void DisplayOnRqStickyMouse(const EvtWinEvent &eweEvent)
   { // Set the new input if we can and log status
-    cGlFW->WinSetStickyMouseButtons(eweEvent.eaArgs.front().Bool());
+    cGlFW->WinSetStickyMouseButtonsInputMode(eweEvent.eaArgs.front().Bool());
     cLog->LogDebugExSafe("Input updated sticky mouse status to $.",
-      StrFromBoolTF(cGlFW->WinGetStickyMouseButtons()));
+      StrFromBoolTF(cGlFW->WinIsStickyMouseButtonsInputModeEnabled()));
   }
   /* -- Window was asked to be hidden or shown ----------------------------- */
   void DisplayOnRqHide(const EvtWinEvent&) { cGlFW->WinHide(); }

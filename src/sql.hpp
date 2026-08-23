@@ -908,7 +908,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Return formatted query time ---------------------------------------- */
   StdString SqlTimeStr() const { return TimeToShortDuration(SqlTime()); }
   /* -- Returns if sql is in a transaction --------------------------------- */
-  bool SqlNotActive() const { return !!sqlite3_get_autocommit(sqlDB); }
+  bool SqlNotActive() const { return sqlite3_get_autocommit(sqlDB) != 0; }
   bool SqlActive() const { return !SqlNotActive(); }
   /* -- Return string map of records --------------------------------------- */
   const SqlResult &SqlGetRecords() const { return srKeys; }

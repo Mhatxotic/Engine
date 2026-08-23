@@ -89,10 +89,10 @@ template<class ClockType>struct Clock final
   static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
     { return UtilMaximum(TimePointToDouble(ctpTime), 0.0); }
   /* -- Convert local time to string --------------------------------------- */
-  StdString FormatTime(const char*const cpFormat = cpTimeFormat) const
+  StdString FormatTime(const char*const cpFormat = caTimeFormat) const
     { return TimeLocalTTtoStr(GetTimeS(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
-  StdString FormatTimeUTC(const char*const cpFormat = cpTimeFormat) const
+  StdString FormatTimeUTC(const char*const cpFormat = caTimeFormat) const
     { return TimeUTCTTtoStr(GetTimeS(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
   static StdString ToDurationString(unsigned uPrecision = 6)

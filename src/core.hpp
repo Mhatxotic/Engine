@@ -33,7 +33,7 @@ using namespace IFbo::P;               using namespace IFboCore::P;
 using namespace IFile::P;              using namespace IFont::P;
 using namespace IFrame::P;             using namespace IFreeType::P;
 using namespace IFtf::P;               using namespace IGlFW::P;
-using namespace IGlFWMonitor::P;       using namespace IGlFWUtil::P;
+using namespace IGlFWBase::P;          using namespace IGlFWMonitor::P;
 using namespace IImage::P;             using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
 using namespace IInput::P;             using namespace IInterval::P;

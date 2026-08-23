@@ -918,7 +918,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           // Server should not send a mask (bit 8)
           if(uSecond & 0x80) return SetErrorStaticSafe("Mask bit set!");
           // Set if a final packet (bit 0)
-          bFinal = !!(uFirst & 0x80);
+          bFinal = (uFirst & 0x80) != 0;
           // Set the opcode (bit 4-7)
           uOpCode = static_cast<OpCode>(uFirst & 0x0F);
           // Get initial payload value (bits 9 to 15)

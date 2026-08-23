@@ -82,19 +82,19 @@ static bool SysSetThreadPriority(const SysThread stLevel)
     THREAD_PRIORITY_NORMAL,            // STP_HIGH
     THREAD_PRIORITY_LOWEST,            // STP_LOW
   }; // Set thread priorty and return result
-  return !!SetThreadPriority(GetCurrentThread(), aValues[stLevel]);
+  return static_cast<bool>(
+    SetThreadPriority(GetCurrentThread(), aValues[stLevel]));
 }
-/* ------------------------------------------------------------------------- */
+/* -- Set thread name in Windows Debugger ---------------------------------- */
 static void SysSetThreadName(const char*const cpName)
 { // Keep structure aligned
-#pragma pack(push, 8)
-  struct WinDBGThreadData {
-    DWORD  dwType;                     // Must be 0x1000.
+#pragma pack(push, 8)                  // Applies to both 32 and 64-bit
+  struct WinDBGThreadData {            // Data to send to Windows Debugger
+    DWORD  dwType;                     // Magic type, must be 0x1000.
     LPCSTR szName;                     // Pointer to name (in user addr space).
     DWORD  dwThreadID;                 // Thread ID (-1=caller thread).
     DWORD  dwFlags;                    // Reserved for future use, keep zero.
-  } // Initialiser
-  tInfo { 0x1000, cpName, static_cast<DWORD>(-1), 0 }; // Was ~DWORD{0}
+  } tInfo{ 0x1000, cpName, static_cast<DWORD>(-1), 0 };
 #pragma pack(pop)
   // This next bit of code is required for debugger which causes a warning but
   // on CLang-CL but however is still parsed and machine code emitted.
@@ -104,8 +104,7 @@ static void SysSetThreadName(const char*const cpName)
 #endif
   // Send message to debugger to name the thread
   __try {
-    RaiseException(0x406D1388, 0,
-      sizeof(tInfo) / sizeof(ULONG_PTR),
+    RaiseException(0x406D1388, 0, sizeof(tInfo) / sizeof(ULONG_PTR),
       reinterpret_cast<ULONG_PTR*>(&tInfo)); }
   __except(EXCEPTION_CONTINUE_EXECUTION) {}
   // Restore original warning

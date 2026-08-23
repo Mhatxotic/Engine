@@ -143,7 +143,7 @@ class FStreamBase :                    // File stream base class
   bool FStreamFlushSafe() const
     { return FStreamOpened() ? FStreamFlush() : false; }
   /* -- File stream is set to error status? -------------------------------- */
-  bool FStreamFError() const { return !!ferror(FStreamGetCtx()); }
+  bool FStreamFError() const { return ferror(FStreamGetCtx()) != 0; }
   bool FStreamFErrorSafe() const
     { return FStreamOpened() ? FStreamFError() : true; }
   /* -- File stream is ready to be read or written ------------------------- */

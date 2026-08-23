@@ -114,7 +114,7 @@ class SysMap :                         // Members initially private
     { return reinterpret_cast<PtrType*>(cpMem); }
   bool SysMapIsEmpty() const { return cpMem == caBlank; }
   bool SysMapIsNotEmpty() const { return !SysMapIsEmpty(); }
-  bool SysMapIsAvailable() const { return !!SysMapGetMemory(); }
+  bool SysMapIsAvailable() const { return SysMapGetMemory() != nullptr; }
   bool SysMapIsNotAvailable() const { return !SysMapIsAvailable(); }
   uint64_t SysMapGetSize() const { return ullSize; }
   StdTimeT SysMapGetCreation() const { return atTime.front(); }

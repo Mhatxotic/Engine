@@ -562,7 +562,7 @@ class SysCore :
       mcSrc); }
   /* -- Free the library handle -------------------------------------------- */
   static bool LibFree(void*const vpModule)
-    { return vpModule && !!FreeLibrary(reinterpret_cast<HMODULE>(vpModule)); }
+    { return vpModule && FreeLibrary(reinterpret_cast<HMODULE>(vpModule)); }
   /* -- Get dll procedure address ------------------------------------------ */
   template<typename PtrType>
     requires StdIsPointer<PtrType>
@@ -873,7 +873,7 @@ class SysCore :
       if(LPWINEGETVERSION fcbWGV =
            GetSharedFunc<LPWINEGETVERSION>(hDLL, "wine_get_version"))
       { // Call it and store the Wine version
-        strExtra = StrAppend("Wine ", fcbWG());
+        strExtra = StrAppend("Wine ", fcbWGV());
         bExtra = true;
       } // No extra details
       else bExtra = false;
@@ -988,7 +988,7 @@ class SysCore :
   }
   /* ----------------------------------------------------------------------- */
   bool DebuggerRunning() const
-    { return !!IsDebuggerPresent(); }
+    { return static_cast<bool>(IsDebuggerPresent()); }
   /* -- Get process affinity masks ----------------------------------------- */
   uint64_t GetAffinity(const bool bS)
   { // Get current affinity and return if successful
@@ -1023,7 +1023,7 @@ class SysCore :
       // Running as admin if running as full elevation
       bAdmin = tokenElevationType == TokenElevationTypeFull;
     // Else use standard function (if XP or no linked token)
-    else bAdmin = !!IsUserAnAdmin();
+    else bAdmin = static_cast<bool>(IsUserAnAdmin());
     // If handle not opened we're done
     if(hToken != INVALID_HANDLE_VALUE) CloseHandle(hToken);
     // Return result

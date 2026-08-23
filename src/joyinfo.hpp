@@ -10,7 +10,7 @@
 namespace IJoyInfo {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IFlags::P;
-using namespace IGlFWUtil::P;          using namespace IJoyAxis::P;
+using namespace IGlFWBase::P;          using namespace IJoyAxis::P;
 using namespace IJoyButton::P;         using namespace ILog::P;
 using namespace IName::P;
 /* ------------------------------------------------------------------------- */

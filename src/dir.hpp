@@ -433,7 +433,7 @@ class DirCore :                        // System specific implementation
   const StdString strPrefix;           // Prefix for filenames with stat()
   DirUPtr         dupHandle;           // Context for opendir()
   /* -- Return if directory was opened on POSIX system ------------- */ public:
-  bool IsOpened() const { return !!dupHandle; }
+  bool IsOpened() const { return dupHandle != nullptr; }
   /* -- Prepare next file for POSIX system --------------------------------- */
   bool GetNextFile()
   { // Read the filename and if failed

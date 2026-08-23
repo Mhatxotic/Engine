@@ -653,7 +653,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   long GetSampleRate() const { return viData.rate; }
   int GetChannels() const { return viData.channels; }
   uint64_t GetLength() const { return fmFile.MemSize(); }
-  bool IsSourceAvailable() const { return !!soSource; }
+  bool IsSourceAvailable() const { return soSource != nullptr; }
   bool IsSourceUnavailable() const { return !IsSourceAvailable(); }
   ALenum GetAudioFormat() const { return aleFormat; }
   const StdStringView &GetFormatAsIdentifier() const

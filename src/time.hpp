@@ -25,7 +25,7 @@ static auto TimeParse(StdTMStruct*const stdData, const PtrType*const ptFormat)
 /* -- Public functions ----------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Some helpful globals so not to repeat anything ----------------------- */
-static const char*const cpTimeFormat = "%a %b %d %H:%M:%S %Y %z";
+static const char caTimeFormat[] = "%a %b %d %H:%M:%S %Y %z";
 /* -- Convert special formatted string to unix timestamp ------------------- */
 template<typename StrType>
   requires StdIsString<StrType>
@@ -168,7 +168,7 @@ static StdString TimeTMToStr(const StdTMStruct &tmsData,
 { return StrAppend(TimeFormat(&tmsData, cpFormat)); }
 /* -- Convert specified timestamp to string -------------------------------- */
 static StdString TimeLocalTTtoStr(const StdTimeT ttTimestamp,
-  const char*const cpFormat = cpTimeFormat)
+  const char*const cpFormat = caTimeFormat)
 { // Convert it to local time in a structure
   StdTMStruct tmsData; StdLocalTime(&tmsData, &ttTimestamp);
   // Do the parse and return the string
@@ -176,7 +176,7 @@ static StdString TimeLocalTTtoStr(const StdTimeT ttTimestamp,
 }
 /* -- Convert specified timestamp to string (UTC) -------------------------- */
 static StdString TimeUTCTTtoStr(const StdTimeT ttTimestamp,
-  const char*const cpFormat = cpTimeFormat)
+  const char*const cpFormat = caTimeFormat)
 { // Convert it to local time, do the parse and return the string
   StdTMStruct tmsData;
   StdGMTime(&tmsData, &ttTimestamp);

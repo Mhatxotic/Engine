@@ -62,7 +62,7 @@ class Lua :                            // Actual class body
                    lrMainEnd,          // End function callback
                    lrMainRedraw;       // Redraw function callback
   /* -- LUA state is set or not? ------------------------------------------- */
-  bool LuaStateIsSet() const { return !!LuaGetState(); }
+  bool LuaStateIsSet() const { return LuaGetState() != nullptr; }
   bool LuaStateIsNotSet() const { return !LuaStateIsSet(); }
   /* -- Resume execution --------------------------------------------------- */
   bool LuaResumeExecution()
@@ -265,8 +265,10 @@ class Lua :                            // Actual class body
     LuaUtilPCall(LuaGetState(), 0, LUA_MULTRET);
     // Scan for results
     StrList slResults;
-    for(int iI = lssSaved.Value() + 1; !LuaBaseIsNone(LuaGetState(), iI); ++iI)
-      slResults.emplace_back(LuaUtilGetStackType(LuaGetState(), iI));
+    for(int iIndex = lssSaved.Value() + 1;
+        !LuaBaseIsNone(LuaGetState(), iIndex);
+        ++iIndex)
+      slResults.emplace_back(LuaUtilGetStackType(LuaGetState(), iIndex));
     // Print result
     return slResults.empty() ?
       StrFormat("Request took $.",

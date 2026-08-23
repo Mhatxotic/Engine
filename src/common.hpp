@@ -75,7 +75,7 @@ class Common                           // Common variables class
   Common() :
     /* -- String view initialisers ----------------------------------------- */
     ssv2Period{ ".." },                ssvAsterisk{ "*" },
-    ssvBlank{ strBlank },              ssvColon{ ":" },
+    ssvBlank{ caBlank },               ssvColon{ ":" },
     ssvCr{ "\r" },                     ssvCrLf{ "\r\n" },
     ssvCrLf2{ "\r\n\r\n" },            ssvDblSpace{ "  " },
     ssvDir{ "<DIR>" },                 ssvEllipsis{ "..." },

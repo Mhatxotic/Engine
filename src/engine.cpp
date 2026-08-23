@@ -61,6 +61,7 @@ namespace E {                          // Start of engine namespace
 #include "thread.hpp"                  // Thread helper class header
 #include "evtcore.hpp"                 // Thread-safe event system core header
 #include "evtmain.hpp"                 // Main engine events system header
+#include "glfwbase.hpp"                // GLFW wrapper functions header
 #include "glfwutil.hpp"                // GLFW utility class header
 #include "evtwin.hpp"                  // Window thread events system header
 #include "glfwcrsr.hpp"                // GLFW cursor class header

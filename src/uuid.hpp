@@ -57,6 +57,25 @@ class UuId                             // Members initially public
       p{}                            // Run default constructor (required)
       /* -- No code -------------------------------------------------------- */
       {}
+    /* -- Initialise from two 64-bit values -------------------------------- */
+    Struct(const uint64_t ull1, const uint64_t ull2) :
+      /* -- Initialisers --------------------------------------------------- */
+      dbRandom{ ull1, ull2 }         // Initialise the two shared 64-bit ints
+      /* -- No code -------------------------------------------------------- */
+      {}
+    /* -- Initialise random data ------------------------------------------- */
+    Struct(bool) :
+      /* -- Initialisers --------------------------------------------------- */
+      sdcRandom{ CryptRandom<Sexdecuple>() }
+      /* -- Initialise version --------------------------------------------- */
+      { // Set the UUID variant to RFC 4122 (bits 6-7 set to 10 binary / 0x80)
+        p.ucClkSeqHiRes =
+          static_cast<uint8_t>((p.ucClkSeqHiRes & 0x3F) | 0x80);
+        // Set the UUID version to 4 - Randomly generated (bits 12-15 set to
+        // 0100 binary / 0x4000)
+        p.wTimeHiAndVer =
+          static_cast<uint16_t>((p.wTimeHiAndVer & 0x0FFF) | 0x4000);
+      }
     /* -- Initialiser constructor ------------------------------------------ */
     Struct(const uint32_t dwNTimeLow, const uint16_t wNTimeMid,
       const uint16_t wNTimeHiAndVer, const uint8_t ucNClkSeqHiRes,
@@ -68,28 +87,7 @@ class UuId                             // Members initially public
       {}
     /* --------------------------------------------------------------------- */
   } d;                                 // Member to hold uuid data
-  /* -- Initialise randomised UUID -------------------------------- */ private:
-  static Struct UuIdRandom()
-  { // Initialise a random struct
-    Struct uuidData;
-    CryptRandomPtr(&uuidData.sdcRandom, sizeof(uuidData.sdcRandom));
-    // https://tools.ietf.org/html/rfc4122#section-4.2
-    uuidData.p.ucClkSeqHiRes =
-      static_cast<uint8_t>((uuidData.p.ucClkSeqHiRes & 0x3F) | 0x80);
-    uuidData.p.wTimeHiAndVer =
-      static_cast<uint16_t>((uuidData.p.wTimeHiAndVer & 0x0FFF) | 0x4000);
-    // Return UUID
-    return uuidData;
-  }
-  /* -- Initialise UUID from two quads ------------------------------------- */
-  static Struct UuIdReadTwoQuads(const uint64_t ull1, const uint64_t ull2)
-  { // Structure to return
-    Struct uuidData;
-    uuidData.dbRandom[0] = ull1;
-    uuidData.dbRandom[1] = ull2;
-    return uuidData;
-  }
-  /* -- Initialise UUID from a container (thick) --------------------------- */
+  /* -- Initialise UUID from a container (thick) ------------------ */ private:
   static Struct UuIdReadStringStr(auto &&aData)
   { // Check that the uuid is formatted properly
     if(aData.size() != 36 ||           // 00000000-0000-0000-000000000000 [36]
@@ -154,13 +152,13 @@ class UuId                             // Members initially public
   /* -- Default constructor to initialise random uuid ---------------------- */
   UuId() :
     /* -- Initialisers ----------------------------------------------------- */
-    d{ UuIdRandom() }                  // Generate random UUID and store result
+    d{ true }                          // Generate random UUID and store result
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor to intiialise from two quads --------------------------- */
   UuId(const uint64_t ull1, const uint64_t ull2) :
     /* -- Initialisers ----------------------------------------------------- */
-    d{ UuIdReadTwoQuads(ull1, ull2) }  // Read two integers and store result
+    d{ ull1, ull2 }                    // Read two integers and store result
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

@@ -287,8 +287,9 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Init joystick system
     JoyInit();
     // Log progress
-    cLog->LogDebugExSafe("Input interface initialised (R:$;J:$).",
-      StrFromBoolTF(GlFWIsRawMouseMotionSupported()), JoyGetCount());
+    cLog->LogDebugExSafe(
+      "Input interface initialised with support for $ game control devices.",
+      JoyGetCount());
   }
   /* -- DeInit ------------------------------------------------------------- */
   void InputDeInit()

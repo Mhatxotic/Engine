@@ -10,16 +10,10 @@
 namespace IGlFWUtil {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace Lib::OS::GlFW;
+using namespace IGlFWBase::P;          using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Returns GLFW_TRUE or GLFW_FALSE depending on expression -------------- */
-static int GlFWBooleanToGBoolean(const bool bC)
-  { return bC ? GLFW_TRUE : GLFW_FALSE; }
-/* -- Returns false if GLFW_FALSE or true if anything else ----------------- */
-static bool GlFWGBooleanToBoolean(const int iR)
-  { return iR != GLFW_FALSE; }
 /* ------------------------------------------------------------------------- */
 class GlFWUtil                         // Members initially private
 { /* -- Private typedefs --------------------------------------------------- */
@@ -31,7 +25,7 @@ class GlFWUtil                         // Members initially private
   /* -- Set window hint ---------------------------------------------------- */
   void GlFWSetHint(const int iVar, const int iVal)
   { // Set window hint directly
-    glfwWindowHint(iVar, iVal);
+    GlFWWindowHint(iVar, iVal);
     // Log the change
     cLog->LogDebugExSafe("GlFW set hint $<0x$$> to $$<0x$$>.",
       GlFWGetHintAttribStr(iVar), StdIOSHex, iVar, StdIOSDec, iVal, StdIOSHex,
@@ -39,7 +33,7 @@ class GlFWUtil                         // Members initially private
   }
   /* -- Set window hint core functions ------------------------------------- */
   void GlFWSetHintBoolean(const int iVar, const bool bVal)
-    { GlFWSetHint(iVar, GlFWBooleanToGBoolean(bVal)); }
+    { GlFWSetHint(iVar, GlFWBaseBooleanToGBoolean(bVal)); }
   void GlFWSetHintEnabled(const int iVar)
     { GlFWSetHintBoolean(iVar, true); }
   void GlFWSetHintDisabled(const int iVar)
@@ -47,7 +41,7 @@ class GlFWUtil                         // Members initially private
   /* -- Set window hint string --------------------------------------------- */
   void GlFWSetHintString(const int iHint, const char*const cpValue)
   { // Set window hint directly
-    glfwWindowHintString(iHint, cpValue);
+    GlFWWindowHintString(iHint, cpValue);
     // Log the change
     cLog->LogDebugExSafe("GlFW set hint $<0x$$> to '$'.",
       GlFWGetHintAttribStr(iHint), StdIOSHex, iHint, cpValue);
@@ -55,26 +49,28 @@ class GlFWUtil                         // Members initially private
   /* -- OS specific routines ----------------------------------------------- */
 #if defined(MACOS)                     // Targeting MacOS?
   /* -- Set frame name in MacOS -------------------------------------------- */
-  void GlFWSetCocoaFrameName([[maybe_unused]] const char*const cpName)
+  void GlFWSetCocoaFrameName(const char*const cpName)
     { GlFWSetHintString(GLFW_COCOA_FRAME_NAME, cpName); }
   /* ----------------------------------------------------------------------- */
 #elif defined(LINUX)                   // Targeting Linux?
   /* -- Set class name in X11 ---------------------------------------------- */
-  void GlFWSetX11ClassName([[maybe_unused]] const char*const cpName)
+  void GlFWSetX11ClassName(const char*const cpName)
     { GlFWSetHintString(GLFW_X11_CLASS_NAME, cpName); }
   /* -- Set instance name in X11 ------------------------------------------- */
-  void GlFWSetX11InstanceName([[maybe_unused]] const char*const cpName)
+  void GlFWSetX11InstanceName(const char*const cpName)
     { GlFWSetHintString(GLFW_X11_INSTANCE_NAME, cpName); }
   /* ----------------------------------------------------------------------- */
 #endif                                 // End of target checks
   /* -- Set window frame names --------------------------------------------- */
-  void GlFWSetFrameName([[maybe_unused]] const char*const cpName)
+  void GlFWSetFrameName(const char*const cpName)
   { // Set custom frame names based on operating system
 #if defined(MACOS)
     GlFWSetCocoaFrameName(cpName);
 #elif defined(LINUX)
     GlFWSetX11ClassName(cpName);
     GlFWSetX11InstanceName(cpName);
+#else
+    static_cast<void>(cpName);
 #endif
   }
   /* -- Create functions to access all attributes -------------------------- */
@@ -168,81 +164,6 @@ class GlFWUtil                         // Members initially private
   /* -- No code ------------------------------------------------------------ */
   {}
 };/* ----------------------------------------------------------------------- */
-/* -- Get monitor data pointer --------------------------------------------- */
-template<typename AnyType = void*>
-  requires StdIsPointer<AnyType>
-static AnyType GlFWGetMonitorUserPointer(GLFWmonitor*const mC)
-  { return reinterpret_cast<AnyType>(glfwGetMonitorUserPointer(mC)); }
-/* -- Get window data pointer ---------------------------------------------- */
-template<typename AnyType = void*>
-  requires StdIsPointer<AnyType>
-static AnyType GlFWGetWindowUserPointer(GLFWwindow*const wC)
-  { return reinterpret_cast<AnyType>(glfwGetWindowUserPointer(wC)); }
-/* -- Set window data pointer ---------------------------------------------- */
-template<typename AnyType = void*const>
-  requires StdIsPointer<AnyType>
-static void GlFWSetWindowUserPointer(GLFWwindow*const wC, AnyType acData)
-  { glfwSetWindowUserPointer(wC, reinterpret_cast<void*>(acData)); }
-/* ------------------------------------------------------------------------- */
-static void GlFWForceEventHack() { glfwPostEmptyEvent(); }
-/* -- Joystick axes -------------------------------------------------------- */
-static const float *GlFWGetJoystickAxes(int iJ, int &iJAC)
-  { return glfwGetJoystickAxes(iJ, &iJAC); }
-/* -- Joystick buttons ----------------------------------------------------- */
-static const unsigned char *GlFWGetJoystickButtons(int iJ, int &iJAB)
-  { return glfwGetJoystickButtons(iJ, &iJAB); }
-/* -- Joystick other ------------------------------------------------------- */
-static const char *GlFWGetJoystickName(const int iJ)
-  { return glfwGetJoystickName(iJ); }
-/* -- Joystick is actually a game controller ------------------------------- */
-static bool GlFWJoystickIsGamepad(const int iJ)
-  { return glfwJoystickIsGamepad(iJ); }
-/* -- Get gamepad name ----------------------------------------------------- */
-static const char *GlFWGetGamepadName(const int iJ)
-  { return glfwGetGamepadName(iJ); }
-/* -- Get joystick unique identification number ---------------------------- */
-static const char *GlFWGetJoystickGUID(const int iJ)
-  { return glfwGetJoystickGUID(iJ); }
-/* -- Return if joystick is present ---------------------------------------- */
-static bool GlFWJoystickPresent(const int iJ)
-  { return glfwJoystickPresent(iJ); }
-/* -- Set joystick callback ------------------------------------------------ */
-static GLFWjoystickfun GlFWSetJoystickCallback(GLFWjoystickfun gjfCb)
-  { return glfwSetJoystickCallback(gjfCb); }
-/* -- Set monitor change callback ------------------------------------------ */
-static GLFWmonitorfun GlFWSetMonitorCallback(GLFWmonitorfun gmfCb)
-  { return glfwSetMonitorCallback(gmfCb); }
-/* -- Set swap interval ---------------------------------------------------- */
-static void GlFWSetVSync(const int iI) { glfwSwapInterval(iI); }
-/* -- Wait for window event ------------------------------------------------ */
-static void GlFWWaitEvents() { glfwWaitEvents(); }
-/* -- Release current context ---------------------------------------------- */
-static void GlFWSetContext(GLFWwindow*const wWindow=nullptr)
-  { glfwMakeContextCurrent(wWindow); }
-/* -- Set gamma ------------------------------------------------------------ */
-static void GlFWSetGamma(GLFWmonitor*const mDevice, const GLfloat fValue)
-  { glfwSetGamma(mDevice, fValue); }
-/* -- Get function address-------------------------------------------------- */
-static bool GlFWProcExists(const char*const cpFunction)
-  { return !!glfwGetProcAddress(cpFunction); }
-/* -- Get internal name of key --------------------------------------------- */
-static const char *GlFWGetKeyName(const int iK, const int iSC)
-  { return glfwGetKeyName(iK, iSC); }
-/* -- Return if raw mouse is supported? ------------------------------------ */
-static bool GlFWIsRawMouseMotionSupported()
-  { return GlFWGBooleanToBoolean(glfwRawMouseMotionSupported()); }
-/* -- Return monitor name -------------------------------------------------- */
-static const char *GlFWGetMonitorName(GLFWmonitor*const mDevice)
-  { return glfwGetMonitorName(mDevice); }
-/* -- Is the context not set ----------------------------------------------- */
-static GLFWwindow *GlFWContext() { return glfwGetCurrentContext(); }
-/* ------------------------------------------------------------------------- */
-static void GlFWSetCursor(GLFWwindow*const gwCtx, GLFWcursor*const gcCtx)
-  { glfwSetCursor(gwCtx, gcCtx); }
-/* ------------------------------------------------------------------------- */
-static GLFWglproc GlFWGetProcAddress(const char*const cpFunction)
-  { return glfwGetProcAddress(cpFunction); }
-/* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
 }                                      // End of private module namespace

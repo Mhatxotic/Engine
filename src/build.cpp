@@ -2,8 +2,13 @@
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## This is the Mhatxotic Design Project Management utility which helps ## **
-** ## build and maintain the components of the Mhatxotic engine.          ## **
+** ## This is the Mhatxotic Design Project Management Utility (PMU) which ## **
+** ## helps build and maintain the components of the Mhatxotic engine. Of ## **
+** ## course, you need to use the 'scripts/build-*' scripts to compile it ## **
+** ## from scratch or if a problem occurs recompiling it with 'build S'.  ## **
+** ## This utility originally existed becuase of the miniscule amount of  ## **
+** ## CLI support from Windows XP in 2006 but is now chosen to manage the ## **
+** ## engine on all of Windows, Linux and MacOS!                          ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #define BUILD                          // Indicates command-line tool compile
@@ -138,7 +143,8 @@ static struct Environment              // Preconfigured environment settings
    cpLDX8,      cpLDM,       cpLDAA,      cpLDAB,     cpLDAR,      cpLDE4,
    cpLDE8,      cpLDB4,      cpLDB8,      cpLD4,      cpLD8,       cpLDL,
    cpLDMAP,     cpLIB,       cpOBJ,       cpASM,      cpPDB,       cpLDEXE,
-   cpMAP,       cpEXE,       cpDBGSUF;
+   cpMAP,       cpEXE,       cpDBGSUF,    cpAR,       cpAR4,       cpAR8,
+   cpARM,       cpARO,       cpARLIB;
 } /* ----------------------------------------------------------------------- */
 envWindowsMSVC =                       // Microsoft Visual C++ environment
 { /* ----------------------------------------------------------------------- */
@@ -159,7 +165,7 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* CCX        */ "CL.EXE",
   /* CCM        */ "-nologo -c -Zc:__cplusplus -MP4 -GA -Gy -GF -EHsc -bigobj",
   /* CCMX       */ "-std:$ -utf-8 -W4 -I$ -I$/ft",
-  /* CCLIB      */ "-DUNICODE -D_UNICODE",
+  /* CCLIB      */ "-DUNICODE -D_UNICODE -Zl",
   /* CCINCDBG   */ "-showIncludes",
   /* CCASM      */ "-Fa -WX",
   /* CCANAL     */ "-analyze -WX",
@@ -202,6 +208,12 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* MAP        */ ".map",
   /* EXE        */ ".exe",
   /* DBGSUF     */ "",
+  /* AR         */ "LIB.EXE",
+  /* AR4        */ "-machine:X86",
+  /* AR8        */ "-machine:X64",
+  /* ARM        */ "-nologo -ltcg",
+  /* ARO        */ "-out:\"$/$$\"",
+  /* ARLIB      */ envWindowsMSVC.cpLIB,
 },/* ----------------------------------------------------------------------- */
 envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
 { /* ----------------------------------------------------------------------- */
@@ -269,6 +281,12 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* MAP        */ envWindowsMSVC.cpMAP,
   /* EXE        */ envWindowsMSVC.cpEXE,
   /* DBGSUF     */ "",
+  /* AR         */ envWindowsMSVC.cpAR,
+  /* AR4        */ envWindowsMSVC.cpAR4,
+  /* AR8        */ envWindowsMSVC.cpAR8,
+  /* ARM        */ envWindowsMSVC.cpARM,
+  /* ARO        */ envWindowsMSVC.cpARO,
+  /* ARLIB      */ envWindowsMSVC.cpARLIB,
 },/* ----------------------------------------------------------------------- */
 envWindowsLLVM =                       // LLVM on Windows
 { /* ----------------------------------------------------------------------- */
@@ -288,7 +306,7 @@ envWindowsLLVM =                       // LLVM on Windows
   /* CCX        */ "CLANG++.EXE",      // -ftime-report
   /* CCM        */ "-c -Wextra -static -Xclang -flto-visibility-public-std",
   /* CCMX       */ "-std=$ -I$ -I$/ft",
-  /* CCLIB      */ envWindowsMSVC.cpCCLIB,
+  /* CCLIB      */ "-DUNICODE -D_UNICODE -nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-Fa",
   /* CCANAL     */ envWindowsLLVMcompat.cpCCAnal,
@@ -332,6 +350,12 @@ envWindowsLLVM =                       // LLVM on Windows
   /* MAP        */ envWindowsMSVC.cpMAP,
   /* EXE        */ envWindowsMSVC.cpEXE,
   /* DBGSUF     */ envWindowsLLVMcompat.cpDBGSUF,
+  /* AR         */ envWindowsMSVC.cpAR,
+  /* AR4        */ envWindowsMSVC.cpAR4,
+  /* AR8        */ envWindowsMSVC.cpAR8,
+  /* ARM        */ envWindowsMSVC.cpARM,
+  /* ARO        */ envWindowsMSVC.cpARO,
+  /* ARLIB      */ envWindowsMSVC.cpARLIB,
 },/* ----------------------------------------------------------------------- */
 envMacOSLLVM =                         // XCode/LLVM on MacOS
 { /* ----------------------------------------------------------------------- */
@@ -357,10 +381,10 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* ACM        */ "",
   /* ACA        */ "-g",
   /* ACB        */ envWindowsMSVC.cpACB,
-  /* CCX        */ "g++",
+  /* CCX        */ "gcc",
   /* CCM        */ "-c -stdlib=libc++ -ffast-math",
   /* CCMX       */ "-Wextra -Wall -std=$ -I$ -I" SRCDIR " -I$/curses -I$/ft",
-  /* CCLIB      */ "",
+  /* CCLIB      */ "-nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-S -D__ASMFILE__=",
   /* CCANAL     */ envWindowsLLVM.cpCCAnal,
@@ -408,6 +432,12 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* MAP        */ ".map",
   /* EXE        */ ".mac",
   /* DBGSUF     */ "",
+  /* AR         */ "ar",
+  /* AR4        */ "",
+  /* AR8        */ "",
+  /* ARM        */ "rcs",
+  /* ARO        */ "\"$/$$\"",
+  /* ARLIB      */ ".a",
   /* ----------------------------------------------------------------------- */
 #undef MACOS_BASE
 },/* ----------------------------------------------------------------------- */
@@ -437,11 +467,11 @@ envLinuxGCC =                          // GCC on Linux
   /* ACM        */ envMacOSLLVM.cpACM,
   /* ACA        */ envMacOSLLVM.cpACA,
   /* ACB        */ envMacOSLLVM.cpACB,
-  /* CCX        */ "g++",
+  /* CCX        */ "gcc",
   /* CCM        */ "-c -shared-libgcc -mtune=generic -fmax-errors=1 "
                    "-funwind-tables",
   /* CCMX       */ "-Wextra -std=$ -I$ -I$/ft",
-  /* CCLIB      */ "",
+  /* CCLIB      */ "-nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-Fa",
   /* CCANAL     */ envWindowsLLVM.cpCCAnal,
@@ -507,6 +537,12 @@ envLinuxGCC =                          // GCC on Linux
   /* MAP        */ ".map",
   /* EXE        */ ".elf",
   /* DBGSUF     */ "",
+  /* AR         */ envMacOSLLVM.cpAR,
+  /* AR4        */ envMacOSLLVM.cpAR4,
+  /* AR8        */ envMacOSLLVM.cpAR8,
+  /* ARM        */ envMacOSLLVM.cpARM,
+  /* ARO        */ envMacOSLLVM.cpARO,
+  /* ARLIB      */ envMacOSLLVM.cpARLIB,
   /* ----------------------------------------------------------------------- */
 #undef LINUX_GCCEXDIR64
 #undef LINUX_GCCEXDIR32
@@ -1889,6 +1925,17 @@ static void SetDirectory(const StdString &strDir)
   { if(!DirSetCWD(strDir))
       XCL("Failed to set new directory!", "Directory", strDir); }
 /* ------------------------------------------------------------------------- */
+static void SetBaseDirectory()
+{ // Force current working directory to the base directory
+  SetDirectory(
+#if defined(WINDOWS)
+    cSystem->ENGLoc()                  // Exe dir will be where link is
+#else
+    StrAppend(cSystem->ENGLoc(), "..") // Links always run in bin dir
+#endif
+  );
+}
+/* ------------------------------------------------------------------------- */
 static void MakeAndSetDirectory(const StdString &strDir)
   { MakeDirectory(strDir); SetDirectory(strDir); }
 /* ------------------------------------------------------------------------- */
@@ -2812,8 +2859,9 @@ static void GenericExtLibBuild(const StdString &strCmdLine,
 { // Execution compilation
   System(strCmdLine);
   // Build the library
-  SystemF("$ *$ -out:\"$/$$\"",
-    strLib, envActive.cpOBJ, strTempDir, strPrefix, envActive.cpLIB);
+  SystemF("$ $ *$", strLib,
+    StrFormat(envActive.cpARO, strTempDir, strPrefix, envActive.cpARLIB),
+    envActive.cpOBJ);
   // Clean up the object files
   DoClean({ StdString{ envActive.cpOBJ } });
 }
@@ -2823,6 +2871,28 @@ static void GenericExtLibBuildBits(const StdString &strCLRel,
   const unsigned uBits)
 { // Compile release version
   GenericExtLibBuild(strCLRel, strLib, strTmp, StrAppend(strPrefix, uBits));
+}
+/* ------------------------------------------------------------------------- */
+static void FinishLibs(const StdString &strTmp, const StdString &strLib)
+{ // Reset directory back to where the root is
+  SetBaseDirectory();
+  // Generate lib filenames
+  const StdString
+    str32{ StrFormat("$/$32$", strTmp, strLib, envActive.cpARLIB) },
+    str64{ StrFormat("$/$64$", strTmp, strLib, envActive.cpARLIB) };
+  // Using MacOS? We merge the libraries into one
+#if defined(MACOS)
+  // Do the merge of both libs into the destination library
+  SystemF("lipo \"$\" \"$\" -create -output \"lib/$64$\"",
+    str32, str64, strLib, envActive.cpLIB);
+#else
+  // Move the library in place
+  SystemF("mv -f \"$\" \"lib/$64$\"", str64, strLib, envActive.cpLIB);
+  static_cast<void>(str32);
+#endif
+  // Remove archives as we're done with them
+  DirFileUnlink(str32);
+  DirFileUnlink(str64);
 }
 /* ------------------------------------------------------------------------- */
 static const StdString GetFiles(const StdString &strExt,
@@ -2858,7 +2928,7 @@ static void SetupZipRepo(const StdString &strLibPath, const StdString &strTmp,
   const StdString strDir{ StrAppend(strTmp, '/', strPSFile) },
                strDirNo{ StrAppend(strDir, bNoDir ? "" : "/..") };
   // Extract the .7z to the temporary directory
-  SystemF("$ x -aoa \"$\" -o\"$\"", envActive.cp7z, strLibPath, strDirNo);
+  SystemF("$ x -y -aoa \"$\" -o\"$\"", envActive.cp7z, strLibPath, strDirNo);
   // Set code directory
   SetDirectory(strDir);
 }
@@ -2873,9 +2943,9 @@ static void SetupTarRepoNSD(const StdString &strLibPath,
   const StdString strTar{ StrAppend(strTmp, '/', strPSFile) };
   // Extract the .gz to the temporary directory
   if(!DirLocalFileExists(strTar))
-    SystemNF("$ x -so \"$\" > \"$\"", envActive.cp7z, strLibPath, strTar);
+    SystemNF("$ x -y -so \"$\" > \"$\"", envActive.cp7z, strLibPath, strTar);
   // Extract the .tar to the temporary directory
-  SystemF("$ x -aoa \"$\" -o\"$/\"", envActive.cp7z, strTar, strTmp);
+  SystemF("$ x -y -aoa \"$\" -o\"$/\"", envActive.cp7z, strTar, strTmp);
   // Remove tar archive
   if(!DirFileUnlink(strTar))
     XCL("Failed to delete tar file!", "File", strTar);
@@ -2919,10 +2989,11 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     strRelA64{ StrAppend(strA64, ' ', envActive.cpACB) },
     strC{ StrFormat("$ $ $ ",
       envActive.cpCCX, envActive.cpCCM, envActive.cpCCLIB) },
-    strL{ "LIB.EXE -nologo -ltcg" },
-    strL64{ StrAppend(strL, " -machine:X64") },
+    strLM{ StrFormat("$ $", envActive.cpAR, envActive.cpARM) },
+    strL{ StrFormat("$ $", strLM, envActive.cpAR4) },
+    strL64{ StrFormat("$ $", strLM, envActive.cpAR8) },
     strRelFlags{
-      StrFormat("$ -DNDEBUG -D_NDEBUG $ -Zl", strC, envActive.cpCCAB) },
+      StrFormat("$ -DNDEBUG -D_NDEBUG $", strC, envActive.cpCCAB) },
     strCMakeBase{
       StrAppend(envActive.cpCMake, " "
         "-DCMAKE_BUILD_TYPE=Release "
@@ -2936,8 +3007,10 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
         "-Wno-dev") },
     strCMake{ StrAppend(strCMakeBase, " .") },
     strNMake{ "NMAKE.EXE /nologo" },
+    strRel32Extra{ envActive.cpCC4 },
     strRel64Extra{ envActive.cpCC8 };
-  StdString strRelFlags64{ StrFormat("$ $ ", strRelFlags, strRel64Extra) };
+  StdString strRelFlags32{ StrFormat("$ $ ", strRelFlags, strRel32Extra) },
+            strRelFlags64{ StrFormat("$ $ ", strRelFlags, strRel64Extra) };
   // = OPENSSL SCRIPT (TOO BIG TO DO MANUALLY!) ===============================
   if(strLib.size() >= 8 && strLib.substr(0, 8) == "openssl-")
   { // Mandatory directory replacements
@@ -3528,17 +3601,34 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
           strLib.substr(0, 20) == "sqlite-amalgamation-")
   { // Set destination temp directory
     SetupZipRepo(strLibPath, strTmp, PSLib.strFile);
-    // Remove unneeded code
-    System("if exist \"shell.c\" rm -rf \"shell.c\"");
+    // Remove shell file as this is a CLI which we don't need
+    if(DirLocalFileExists("shell.c") && !DirFileUnlink("shell.c"))
+      XCL("Could not delete file!", "File", "shell.c");
     // Add sqlite specific flags
-    const StdString strSQLiteSpecific(
-      "-DSQLITE_DEFAULT_AUTOVACUUM=2 -DSQLITE_TEMP_STORE=2 "
-      "-DSQLITE_ENABLE_NULL_TRIM -DSQLITE_OS_WINNT -DSQLITE_WIN32_NO_ANSI "
+    const StdString strSQLiteSpecific{ "-DSQLITE_DEFAULT_AUTOVACUUM=2 "
+      "-DSQLITE_TEMP_STORE=2 -DSQLITE_ENABLE_NULL_TRIM "
       "-DSQLITE_OMIT_LOAD_EXTENSION -DSQLITE_OMIT_DEPRECATED "
-      "-DSQLITE_THREADSAFE -DSQLITE_ENABLE_MATH_FUNCTIONS *.c");
-    strRelFlags64 += strSQLiteSpecific;
+      "-DSQLITE_THREADSAFE -DSQLITE_ENABLE_MATH_FUNCTIONS -DSQLITE_OMIT_WAL "
+      "sqlite3.c" },
+    // Operating system specific flags
+    strOS{
+#if defined(WINDOWS)
+      "-DSQLITE_OS_WINNT -DSQLITE_WIN32_NO_ANSI"
+#else
+      "-DSQLITE_OS_UNIX -DSQLITE_OMIT_UTF16"
+#endif
+    };
+    strRelFlags32 += StrAppend(strOS, ' ', strSQLiteSpecific);
+    strRelFlags64 += StrAppend(strOS, ' ', strSQLiteSpecific);
     // Compile 64-bit release version -----------------------------------------
     GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "sqlite", 64);
+    // Using MacOS?
+#if defined(MACOS)
+    // Compile 32-bit release version -----------------------------------------
+    GenericExtLibBuildBits(strRelFlags32, strL, strTmp, "sqlite", 32);
+#endif
+    // Do finish libraries
+    FinishLibs(strTmp, "sqlite");
   } // = XMP SCRIPT ===========================================================
   else if(strLib.size() >= 12 && strLib.substr(0, 12) == "libxmp-lite-")
   { // Setup the archive
@@ -4358,14 +4448,8 @@ static int Build(const int iArgC, ArgType**const saArgV,
   { Engine(const int iArgC, ArgType**const saArgV, ArgType**const saEnv) :
       CmdLine{ iArgC, saArgV, saEnv } {}
   } engEngine{ iArgC, saArgV, saEnv };
-  // Force current working directory to the base directory
-  SetDirectory(
-#if defined(WINDOWS)
-    cSystem->ENGLoc()                  // Exe dir will be where link is
-#else
-    StrAppend(cSystem->ENGLoc(), "..") // Links always run in bin dir
-#endif
-  );
+  // Set base directory
+  SetBaseDirectory();
   // Check for unfinished install of new build executable
   CheckForNewBuildExecutable();
   // Show header

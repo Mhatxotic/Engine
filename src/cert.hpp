@@ -155,7 +155,7 @@ struct Certs                            // Certificates store
   const X509List &GetCertList() const { return lCAStore; }
   size_t GetCertListSize() const { return GetCertList().size(); }
   /* ----------------------------------------------------------------------- */
-  bool CertsIsStoreAvailable() const { return !!CertsGetStore(); }
+  bool CertsIsStoreAvailable() const { return CertsGetStore() != nullptr; }
   /* -- Find a X509 error -------------------------------------------------- */
   X509ErrConstIt CertsGetError(const size_t stId) const
     { return xErrDB.find(stId); }

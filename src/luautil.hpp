@@ -995,7 +995,9 @@ template<typename IntType>
 { LuaBasePushTableAlloc(lS, 0, itType); }
 /* -- Convert string string map to lua table and put it on stack ----------- */
 static void LuaUtilToTableEx(lua_State*const lS, const auto &mctData)
-{ // Create the table, we're creating non-indexed key/value pairs
+{ // Return an empty table if supplied array is empty
+  if(mctData.empty()) return LuaBasePushTable(lS);
+  // Create the table, we're creating non-indexed key/value pairs
   LuaUtilPushObject(lS, mctData.size());
   const int iTIndex = LuaBaseGetTop(lS);
   // For each table item
@@ -1025,7 +1027,9 @@ static void LuaUtilSetTableIdxInt(lua_State*const lS,
 }
 /* -- Convert a directory info object and put it on stack ------------------ */
 static void LuaUtilToTable(lua_State*const lS, const DirEntMap &demList)
-{ // Create the table, we're creating a indexed/value array
+{ // Return an empty table if supplied array is empty
+  if(demList.empty()) return LuaBasePushTable(lS);
+  // Create the table, we're creating a indexed/value array
   LuaUtilPushArray(lS, demList.size());
   const int iTIndex = LuaBaseGetTop(lS);
   // Entry id
@@ -1058,9 +1062,10 @@ static void LuaUtilToTable(lua_State*const lS, const DirEntMap &demList)
 }
 /* -- Convert string vector to lua table and put it on stack --------------- */
 static void LuaUtilToTable(lua_State*const lS, const auto &ltData)
-{ // Create the table, we're creating a indexed/value array and return if empty
+{ // Return an empty table if supplied array is empty
+  if(ltData.empty()) return LuaBasePushTable(lS);
+  // Create the table, we're creating a indexed/value array
   LuaUtilPushArray(lS, ltData.size());
-  if(ltData.empty()) return;
   const int iTIndex = LuaBaseGetTop(lS);
   // Id number for array index
   lua_Integer iIndex = 0;
@@ -1091,11 +1096,7 @@ static void LuaUtilExplodeEx(lua_State*const lS)
 }
 /* -- Convert any value to human readable string and delete it ------------- */
 static void LuaUtilConvertToString(lua_State*const lS, const int iIndex)
-{ // Convert to string no matter what
-  luaL_tolstring(lS, iIndex, nullptr);
-  // Now remove it
-  LuaBaseRemove(lS, iIndex);
-}
+  { LuaBaseToLStrTS(lS, iIndex); LuaBaseRemove(lS, iIndex); }
 /* -- Process initial implosion a table ------------------------------------ */
 static lua_Integer LuaUtilImplodePrepare(lua_State*const lS,
   const int iIndex, const int iMaxParams)

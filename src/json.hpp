@@ -42,7 +42,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Build a human readable string when we know the value not a string -- */
   Value ToStrNotStr(lua_State*const lS, const int iIndex)
   { // Not a string so we need to convert it to human readable
-    luaL_tolstring(lS, iIndex, nullptr);
+    LuaBaseToLStrTS(lS, iIndex);
     const int iSIndex = LuaBaseGetTop(lS);
     // Get string and length from LUA
     size_t stStr;

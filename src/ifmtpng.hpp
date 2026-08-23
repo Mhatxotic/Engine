@@ -221,7 +221,7 @@ class CodecPNG :                       // PNG codec object
     png_colorp palData = nullptr;
     int iPalette = 0;
     // Do we have alpha?
-    const bool bAlpha = !!png_get_valid(psData, piData, PNG_INFO_tRNS);
+    const bool bAlpha = png_get_valid(psData, piData, PNG_INFO_tRNS) != 0;
     // Get and check bits-per-CHANNEL (may change)
     switch(const unsigned uBPC = png_get_bit_depth(psData, piData))
     { // 1 bits-per-CHANNEL? (binary image)

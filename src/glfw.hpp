@@ -11,12 +11,12 @@ namespace IGlFW {                      // Start of module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IEvtMain::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWUtil::P;
-using namespace IGlFWWindow::P;        using namespace IHelper::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IToken::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace IGlFWBase::P;          using namespace IGlFWUtil::P;
+using namespace IGlFWCursor::P;        using namespace IGlFWWindow::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace IToken::P;             using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::OS::GlFW;
 /* ------------------------------------------------------------------------- */
 using CursorStandard = StdArray<GlFWCursor, CUR_MAX>;
 /* ------------------------------------------------------------------------- */
@@ -177,7 +177,7 @@ class GlFW :                           // Root engine class
     glfwSetErrorCallback(GlFWOnHandleErrorStatic);
     GlFWResetErrorLevel();
     // Initialise GlFW and throw exception if failed
-    if(!glfwInit()) XC("GlFW initialisation failed!");
+    if(!GlFWBaseInit()) XC("GlFW initialisation failed!");
     // Report internal library version
     GlFWVerifyVersion();
     // Class initialised
@@ -185,9 +185,9 @@ class GlFW :                           // Root engine class
     // Initialise standard built-in operating system cursors
     GlFWInitCursors();
     // Set if raw mouse motion supported
-    bRawMouseSupported = GlFWIsRawMouseMotionSupported();
+    bRawMouseSupported = GlFWBaseRawMouseMotionSupported();
     cLog->LogDebugExSafe("GlFW raw mouse motion support is $.",
-      GlFWIsRawMouseMotionSupported() ? "available" : "unavailable");
+      bRawMouseSupported ? "available" : "unavailable");
     // Set monitor change callback
     GlFWSetMonitorCallback(GlFWOnMonitorChangedStatic);
     // Report initialisation successful

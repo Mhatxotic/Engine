@@ -154,7 +154,7 @@ class SysCon :                         // Members initially private
     // If we have a key event and a key is down?
     if(iData.EventType & KEY_EVENT)
     { // Key is down?
-      if(iData.Event.KeyEvent.bKeyDown == TRUE)
+      if(iData.Event.KeyEvent.bKeyDown)
       { // What virtual key was pressed?
         switch(iData.Event.KeyEvent.wVirtualKeyCode)
         { // Valid key
