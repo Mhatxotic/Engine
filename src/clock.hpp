@@ -60,21 +60,25 @@ template<class ClockType>struct Clock final
   static double GetTimeDouble()
     { return ClockDurationToDouble(GetEpochTime()); }
   /* -- Return time since epoch count as integer --------------------------- */
-  template<typename IntType = StdTimeT> requires StdIsArithmatic<IntType>
-    IntType GetTimeS() const
-  { return GetTimeEx<duration<IntType>,IntType>(); }
+  template<typename IntType = StdTimeT>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeS() const
+    { return GetTimeEx<duration<IntType>,IntType>(); }
   /* -- Return time in microseconds ---------------------------------------- */
-  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
-    IntType GetTimeUS() const
-  { return GetTimeEx<microseconds,IntType>(); }
+  template<typename IntType = uint64_t>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeUS() const
+    { return GetTimeEx<microseconds,IntType>(); }
   /* -- Return time in milliseconds ---------------------------------------- */
-  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
-    IntType GetTimeMS() const
-  { return GetTimeEx<milliseconds,IntType>(); }
+  template<typename IntType = uint64_t>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeMS() const
+    { return GetTimeEx<milliseconds,IntType>(); }
   /* -- Return time in nanoseconds ----------------------------------------- */
-  template<typename IntType = uint64_t> requires StdIsArithmatic<IntType>
-    IntType GetTimeNS() const
-  { return GetTimeEx<nanoseconds,IntType>(); }
+  template<typename IntType = uint64_t>
+    requires StdIsArithmatic<IntType>
+  IntType GetTimeNS() const
+    { return GetTimeEx<nanoseconds,IntType>(); }
   /* -- Get offset time ---------------------------------------------------- */
   static ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
     { return GetTime() - ctpCurrent; }

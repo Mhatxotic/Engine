@@ -7,8 +7,13 @@
 ** ## course, you need to use the 'scripts/build-*' scripts to compile it ## **
 ** ## from scratch or if a problem occurs recompiling it with 'build S'.  ## **
 ** ## This utility originally existed becuase of the miniscule amount of  ## **
-** ## CLI support from Windows XP in 2006 but is now chosen to manage the ## **
-** ## engine on all of Windows, Linux and MacOS!                          ## **
+** ## CLI support from Windows XP in 2006 but is still used to manage the ## **
+** ## engine on all of Windows, Linux and MacOS because it's the only     ## **
+** ## clean way to support all platforms.                                 ## **
+** ######################################################################### **
+** ## scripts/build-linux.sh  ## Build me on Linux (Debian based).        ## **
+** ## scripts/build-mach.sh   ## Build me on MacOS (10.15 or later).      ## **
+** ## scripts/build-win32.bat ## Build me on Windows (XP or later.        ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #define BUILD                          // Indicates command-line tool compile
@@ -134,17 +139,17 @@ using namespace IUtil::P;              using namespace IUuId::P;
 /* ------------------------------------------------------------------------- */
 static struct Environment              // Preconfigured environment settings
 { /* ----------------------------------------------------*/ const StdStringView
-   cpPerl,      cpCMake,     cpCppCheck,  cpCppChkM,  cpCppChk32,  cpCppChk64,
-   cpDBG,       cp7z,        cpAC4,       cpAC8,      cpACM,       cpACA,
-   cpACB,       cpCCX,       cpCCM,       cpCCMX,     cpCCLIB,     cpCCIncDBG,
-   cpCCASM,     cpCCAnal,    cpCCAA,      cpCCAB,     cpCCAR,      cpCCPP,
-   cpCC4,       cpCC8,       cpCCOBJ,     cpCCRES,    cpRCX,       cpRCM,
-   cpRCAA,      cpRCAB,      cpRCAR,      cpRC4,      cpRC8,       cpLDX4,
-   cpLDX8,      cpLDM,       cpLDAA,      cpLDAB,     cpLDAR,      cpLDE4,
-   cpLDE8,      cpLDB4,      cpLDB8,      cpLD4,      cpLD8,       cpLDL,
-   cpLDMAP,     cpLIB,       cpOBJ,       cpASM,      cpPDB,       cpLDEXE,
-   cpMAP,       cpEXE,       cpDBGSUF,    cpAR,       cpAR4,       cpAR8,
-   cpARM,       cpARO,       cpARLIB;
+   cpPerl,  cpCMake,  cpCppCheck, cpCppChkM, cpCppChk32, cpCppChk64,
+   cpDBG,   cp7z,     cpAC4,      cpAC8,     cpACM,      cpACA,
+   cpACB,   cpCCX,    cpCCM,      cpCCMX,    cpCCLIB,    cpCCIncDBG,
+   cpCCASM, cpCCAnal, cpCCAA,     cpCCAB,    cpCCAR,     cpCCPP,
+   cpCC4,   cpCC8,    cpCPPSTD,   cpCCOBJ,   cpCCRES,    cpRCX,
+   cpRCM,   cpRCAA,   cpRCAB,     cpRCAR,    cpRC4,      cpRC8,
+   cpLDX4,  cpLDX8,   cpLDM,      cpLDAA,    cpLDAB,     cpLDAR,
+   cpLDE4,  cpLDE8,   cpLDB4,     cpLDB8,    cpLD4,      cpLD8,
+   cpLDL,   cpLDMAP,  cpLIB,      cpOBJ,     cpASM,      cpPDB,
+   cpLDEXE, cpMAP,    cpEXE,      cpDBGSUF,  cpAR,       cpAR4,
+   cpAR8,   cpARM,    cpARO,      cpARLIB;
 } /* ----------------------------------------------------------------------- */
 envWindowsMSVC =                       // Microsoft Visual C++ environment
 { /* ----------------------------------------------------------------------- */
@@ -163,8 +168,8 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* ACA        */ "-Zi",
   /* ACB        */ "",
   /* CCX        */ "CL.EXE",
-  /* CCM        */ "-nologo -c -Zc:__cplusplus -MP4 -GA -Gy -GF -EHsc -bigobj",
-  /* CCMX       */ "-std:$ -utf-8 -W4 -I$ -I$/ft",
+  /* CCM        */ "-nologo -c -MP4 -GA -Gy -GF -bigobj",
+  /* CCMX       */ "-utf-8 -W4 -I$ -I$/ft",
   /* CCLIB      */ "-DUNICODE -D_UNICODE -Zl",
   /* CCINCDBG   */ "-showIncludes",
   /* CCASM      */ "-Fa -WX",
@@ -175,6 +180,7 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* CCPP       */ "-P",
   /* CC4        */ "",
   /* CC8        */ "",
+  /* CPPSTD     */ "-std:$ -Zc:__cplusplus -EHsc",
   /* CCOBJ      */ "-Fo",
   /* CCRES      */ "-fo",
   /* RCX        */ "RC.EXE",
@@ -232,7 +238,7 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* ACB        */ envWindowsMSVC.cpACB,
   /* CCX        */ "CLANG-CL.EXE",
   /* CCM        */ "-nologo -c -GA -Gy -GF -EHsc -bigobj",
-  /* CCMX       */ "-std:$ -utf-8 -I$ -I$/ft",
+  /* CCMX       */ "-utf-8 -I$ -I$/ft",
   /* CCLIB      */ envWindowsMSVC.cpCCLIB,
   /* CCINCDBG   */ envWindowsMSVC.cpCCIncDBG,
   /* CCASM      */ envWindowsMSVC.cpCCASM,
@@ -250,6 +256,7 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* CCPP       */ envWindowsMSVC.cpCCPP,
   /* CC4        */ "-m32",
   /* CC8        */ "-m64",
+  /* CPPSTD     */ envWindowsMSVC.cpCPPSTD,
   /* CCOBJ      */ envWindowsMSVC.cpCCOBJ,
   /* CCRES      */ envWindowsMSVC.cpCCRES,
   /* RCX        */ envWindowsMSVC.cpRCX,
@@ -305,7 +312,7 @@ envWindowsLLVM =                       // LLVM on Windows
   /* ACB        */ envWindowsMSVC.cpACB,
   /* CCX        */ "CLANG++.EXE",      // -ftime-report
   /* CCM        */ "-c -Wextra -static -Xclang -flto-visibility-public-std",
-  /* CCMX       */ "-std=$ -I$ -I$/ft",
+  /* CCMX       */ "-I$ -I$/ft",
   /* CCLIB      */ "-DUNICODE -D_UNICODE -nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-Fa",
@@ -316,6 +323,7 @@ envWindowsLLVM =                       // LLVM on Windows
   /* CCPP       */ "-dD -E -P -ftabstop=2",
   /* CC4        */ "-m32",
   /* CC8        */ "-m64 -ffp-contract=fast",
+  /* CPPSTD     */ "-std=$ -stdlib=libc++",
   /* CCOBJ      */ "-o",
   /* CCRES      */ envWindowsMSVC.cpCCRES,
   /* RCX        */ envWindowsMSVC.cpRCX,
@@ -363,7 +371,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
                      "MacOSX.platform/Developer/SDKs/MacOSX.sdk"
   /* ----------------------------------------------------------------------- */
   /* PERL       */ "/usr/bin/perl",
-  /* CMAKE      */ "/usr/bin/cmake",
+  /* CMAKE      */ "/opt/homebrew/bin/cmake",
   /* CPPCHECK   */ "cppcheck",
   /* CPPCHKP    */ "-D__APPLE__ -D__clang__ "
                    "-D__clang_major__=" STR(__clang_major__) " "
@@ -382,8 +390,8 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* ACA        */ "-g",
   /* ACB        */ envWindowsMSVC.cpACB,
   /* CCX        */ "gcc",
-  /* CCM        */ "-c -stdlib=libc++ -ffast-math",
-  /* CCMX       */ "-Wextra -Wall -std=$ -I$ -I" SRCDIR " -I$/curses -I$/ft",
+  /* CCM        */ "-c -ffast-math",
+  /* CCMX       */ "-Wextra -Wall -I$ -I" SRCDIR " -I$/curses -I$/ft",
   /* CCLIB      */ "-nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-S -D__ASMFILE__=",
@@ -394,6 +402,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* CCPP       */ envWindowsLLVM.cpCCPP,
   /* CC4        */ "-target x86_64-apple-macos10.15 -mtune=generic",
   /* CC8        */ "-target arm64-apple-macos11 -mtune=apple-m1",
+  /* CPPSTD     */ envWindowsLLVM.cpCPPSTD,
   /* CCOBJ      */ "-o",
   /* CCRES      */ "",
   /* RCX        */ "",
@@ -429,7 +438,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* ASM        */ ".asm",
   /* PDB        */ ".s",
   /* LDEXE      */ "-o $",
-  /* MAP        */ ".map",
+  /* MAP        */ envWindowsMSVC.cpMAP,
   /* EXE        */ ".mac",
   /* DBGSUF     */ "",
   /* AR         */ "ar",
@@ -470,7 +479,7 @@ envLinuxGCC =                          // GCC on Linux
   /* CCX        */ "gcc",
   /* CCM        */ "-c -shared-libgcc -mtune=generic -fmax-errors=1 "
                    "-funwind-tables",
-  /* CCMX       */ "-Wextra -std=$ -I$ -I$/ft",
+  /* CCMX       */ "-Wextra -I$ -I$/ft",
   /* CCLIB      */ "-nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-Fa",
@@ -481,6 +490,7 @@ envLinuxGCC =                          // GCC on Linux
   /* CCPP       */ envWindowsLLVM.cpCCPP,
   /* CC4        */ "-march=i386",
   /* CC8        */ "-march=x86-64",
+  /* CPPSTD     */ envMacOSLLVM.cpCPPSTD,
   /* CCOBJ      */ "-o",
   /* CCRES      */ "",
   /* RCX        */ "",
@@ -530,11 +540,11 @@ envLinuxGCC =                          // GCC on Linux
                    "-lm -lgcc_s -lgcc -lc -lgcc_s -lgcc",
   /* LDMAP      */ "-Wl",
   /* LIB        */ ".la",
-  /* OBJ        */ ".o",
-  /* ASM        */ ".asm",
-  /* PDB        */ ".s",
-  /* LDEXE      */ "-o $",
-  /* MAP        */ ".map",
+  /* OBJ        */ envMacOSLLVM.cpOBJ,
+  /* ASM        */ envMacOSLLVM.cpASM,
+  /* PDB        */ envMacOSLLVM.cpPDB,
+  /* LDEXE      */ envMacOSLLVM.cpLDEXE,
+  /* MAP        */ envMacOSLLVM.cpMAP,
   /* EXE        */ ".elf",
   /* DBGSUF     */ "",
   /* AR         */ envMacOSLLVM.cpAR,
@@ -1883,6 +1893,20 @@ static void DoCleanCompilerTempFiles()
 #endif
 }
 /* ------------------------------------------------------------------------- */
+static void DeleteFile(const StdStringView &ssvFile)
+{ // Write that we're deleting
+  cout << "*** Deleting '" << ssvFile << "'... ";
+  // Delete the file
+  if(!DirFileUnlink(ssvFile)) XCL("Delete failed!", "File", ssvFile);
+  // Success
+  cout << "OK." << StdIOSEndLine;
+}
+/* ------------------------------------------------------------------------- */
+static void DeleteMultipleFiles(const StrViewVector &svvList)
+{ // Enumerate files
+  for(const StdStringView &ssvFile : svvList) DeleteFile(ssvFile);
+}
+/* ------------------------------------------------------------------------- */
 static void DoClean(StrVector &svDeleted, StrVector &svNotDeleted,
   const Dir &dFiles)
 { // Write initial scan
@@ -2834,21 +2858,30 @@ static void MakeIncludeFromBin(const StdString &strIn,
   // Finsihed
   cout << fOut.FStreamTell() << " bytes written!\n";
 }
-/* -- Build a file list ---------------------------------------------------- */
-static StdString BuildFileList(const StdString &strBase,
-  const StdString &strDir, const StdString &strExt)
-{ // String storage
-  StdString strOut;
-  // Build base path
-  const StdString strPath{ StrAppend(strBase, '/', strDir) };
-  // Search for files
-  const Dir dFiles{ strPath, strExt };
-  // Throw error if failed
-  if(dFiles.IsFilesEmpty())
-    XCL("Failed to find required files!", "Path", strPath, "Ext", strExt);
-  // Build file list
-  for(const DirEntMapPair &dempPair : dFiles.GetFiles())
-    strOut += StrAppend(' ', strDir, '/', dempPair.first);
+/* ------------------------------------------------------------------------- */
+static const StdString EnumerateFiles(const StdString &strExt,
+  const StdString &strDir = "")
+{ // Get files and return if empty
+  Dir dEntries{ strDir, strExt };
+  if(dEntries.IsFilesEmpty()) return {};
+  // String for output
+  StdString strOut; strOut.reserve(4096);
+  // Make output directory
+  const StdString strDirNew{
+    strDir.empty() ? strDir : StrAppend(strDir, "/") };
+  const bool bHasSpace = strDirNew.find(' ') != StdNPos;
+  // Get first item
+  DirEntMapConstIt demciIt{ dEntries.GetFilesBegin() };
+  if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
+    strOut = StrAppend(strDirNew, demciIt->first);
+  else strOut = StrAppend("\"", strDirNew, demciIt->first, "\"");
+  // Build output
+  for(++demciIt; demciIt != dEntries.GetFilesEnd(); ++demciIt)
+    if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
+      strOut += StrAppend(' ', strDirNew, demciIt->first);
+    else strOut = StrAppend(" \"", strDirNew, demciIt->first, "\"");
+  // Reduce memory
+  strOut.shrink_to_fit();
   // Return string
   return strOut;
 }
@@ -2859,9 +2892,9 @@ static void GenericExtLibBuild(const StdString &strCmdLine,
 { // Execution compilation
   System(strCmdLine);
   // Build the library
-  SystemF("$ $ *$", strLib,
+  SystemF("$ $ $", strLib,
     StrFormat(envActive.cpARO, strTempDir, strPrefix, envActive.cpARLIB),
-    envActive.cpOBJ);
+    EnumerateFiles(StdString{ envActive.cpOBJ }));
   // Clean up the object files
   DoClean({ StdString{ envActive.cpOBJ } });
 }
@@ -2895,31 +2928,24 @@ static void FinishLibs(const StdString &strTmp, const StdString &strLib)
   DirFileUnlink(str64);
 }
 /* ------------------------------------------------------------------------- */
-static const StdString GetFiles(const StdString &strExt,
-  const StdString &strDir="")
-{ // Get files and return if empty
-  Dir dEntries{ strDir, strExt };
-  if(dEntries.IsFilesEmpty()) return {};
-  // String for output
-  StdString strOut; strOut.reserve(4096);
-  // Make output directory
-  const StdString strDirNew{
-    strDir.empty() ? strDir : StrAppend(strDir, "/") };
-  const bool bHasSpace = strDirNew.find(' ') != StdNPos;
-  // Get first item
-  DirEntMapConstIt demciIt{ dEntries.GetFilesBegin() };
-  if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
-    strOut = StrAppend(strDirNew, demciIt->first);
-  else strOut = StrAppend("\"", strDirNew, demciIt->first, "\"");
-  // Build output
-  for(++demciIt; demciIt != dEntries.GetFilesEnd(); ++demciIt)
-    if(!bHasSpace && demciIt->first.find(' ') == StdNPos)
-      strOut += StrAppend(' ', strDirNew, demciIt->first);
-    else strOut = StrAppend(" \"", strDirNew, demciIt->first, "\"");
-  // Reduce memory
-  strOut.shrink_to_fit();
-  // Return string
-  return strOut;
+static void GenericExtLibBuildDuo(const StdString &strCL32Rel,
+  const StdString &strCL64Rel, const StdString &strLib32,
+  const StdString &strLib64, const StdString &strTmp,
+  const StdString &strPrefix, const unsigned uBits32, const unsigned uBits64)
+{ // Compile release version
+  GenericExtLibBuild(strCL64Rel,
+    strLib64, strTmp, StrAppend(strPrefix, uBits64));
+  // Compile alternate version
+#if defined(MACOS)
+  GenericExtLibBuild(strCL32Rel,
+   strLib32, strTmp, StrAppend(strPrefix, uBits32));
+#else
+  static_cast<void>(uBits32);
+  static_cast<void>(strLib32);
+  static_cast<void>(strCL32Rel);
+#endif
+  // Do finish libraries
+  FinishLibs(strTmp, strPrefix);
 }
 /* ------------------------------------------------------------------------- */
 static void SetupZipRepo(const StdString &strLibPath, const StdString &strTmp,
@@ -2992,8 +3018,10 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     strLM{ StrFormat("$ $", envActive.cpAR, envActive.cpARM) },
     strL{ StrFormat("$ $", strLM, envActive.cpAR4) },
     strL64{ StrFormat("$ $", strLM, envActive.cpAR8) },
-    strRelFlags{
-      StrFormat("$ -DNDEBUG -D_NDEBUG $", strC, envActive.cpCCAB) },
+    strRelFlags{ StrFormat("$-DNDEBUG -D_NDEBUG $", strC,
+      (ullFlags & PF_FINAL ? envActive.cpCCAR :
+      (ullFlags & PF_BETA ? envActive.cpCCAB :
+        envActive.cpCCAA))) },
     strCMakeBase{
       StrAppend(envActive.cpCMake, " "
         "-DCMAKE_BUILD_TYPE=Release "
@@ -3011,6 +3039,12 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     strRel64Extra{ envActive.cpCC8 };
   StdString strRelFlags32{ StrFormat("$ $ ", strRelFlags, strRel32Extra) },
             strRelFlags64{ StrFormat("$ $ ", strRelFlags, strRel64Extra) };
+  // Architectures to build on MacOS
+#if defined(MACOS)
+  struct Item{ const StdString strArch, strTune, strMinOS; int iBits; }
+    itItems[]{{ "x86_64", "generic",  "10.15", 32 },  // Intel X86-64
+              { "arm64",  "apple-m1", "11.00", 64 }}; // Apple Silicon
+#endif
   // = OPENSSL SCRIPT (TOO BIG TO DO MANUALLY!) ===============================
   if(strLib.size() >= 8 && strLib.substr(0, 8) == "openssl-")
   { // Mandatory directory replacements
@@ -3044,7 +3078,7 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
 #define STRREPRELEASE64 { STRMANDATORY, STRBASE64, STRRELEASE,\
       { "/MD /O2", StrFormat("/MT /O2 $", strRel64Extra) } }
 #define STRREPCLANG { "CC=\"cl\"",   "CC=CLANG-CL" }, \
-                        { "LD=\"link\"", "LD=LLD-LINK" }
+                    { "LD=\"link\"", "LD=LLD-LINK" }
 #define STRREPCLANG64 { STRREPCLANG, { "/MT", "-m64 /MT" } }
     const StdString strInstallDataPm{
       "package OpenSSL::safe::installdata;\n"
@@ -3291,7 +3325,8 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Add png specific flags
     const StdString strPNGSpecific(StrFormat(
       "-I\"$/$\" -D_CRT_SECURE_NO_DEPRECATE "
-      "-D_CRT_SECURE_NO_WARNINGS *.c", strTmp, PSLibXR.strFile));
+      "-D_CRT_SECURE_NO_WARNINGS $",
+      strTmp, PSLibXR.strFile, EnumerateFiles(".c")));
     strRelFlags64 += strPNGSpecific;
     // Compile sources
     GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "png", 64);
@@ -3425,13 +3460,22 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Set destination directory
     SetDirectory(strDir);
     // Remove unneeded sources
-    System("rm -f lib/encapiwrapper.c lib/encode.c");
+    DeleteMultipleFiles({ "lib/encapiwrapper.c", "lib/encode.c" });
     // Add theora specific flags
-    const StdString strTheoraSpecific(
-      "-DWIN32 -D_MBCS -D_LIB -Iinclude -Iwin32 lib/*.c win32/*.c");
+    const StdString strTheoraSpecific{ StrFormat(
+#if defined(WINDOWS)
+      "-DWIN32 -D_MBCS -D_LIB -Iinclude $ $",
+      EnumerateFiles(".c", "win32"),
+#else
+      "-D_MBCS -D_LIB -Iinclude $",
+#endif
+      EnumerateFiles(".c", "lib")
+    )};
+    strRelFlags32 += strTheoraSpecific;
     strRelFlags64 += strTheoraSpecific;
-    // Compile sources
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "theora", 64);
+    // Compile everything
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "theora", 32, 64);
   } // = FREETYPE SCRIPT ======================================================
   else if(strLib.size() >= 9 && strLib.substr(0, 9) == "freetype-")
   { // Setup repository
@@ -3494,28 +3538,25 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
   else if(strLib.size() >= 5 && strLib.substr(0, 5) == "glfw-")
   { // Extract zip to the temporary directory
     SetupZipRepo(strLibPath, strTmp, PSLib.strFile);
+    // We can compile quicker and manually on windows
+#if defined(WINDOWS)
     // We need to activate cmake once to build glfw_config.h and other things
-    SystemF("$", strCMake);
+    SystemF("$ "
+            "-D\"GLFW_BUILD_DOCS=OFF\" "
+            "-D\"GLFW_BUILD_EXAMPLES=OFF\" "
+            "-D\"GLFW_BUILD_TESTS=OFF\"", strCMake);
     // Remove unneeded sources
     System("rm -rf src/cocoa* src/glx* src/linux* src/mir* "
                   "src/posix* src/x* src/wl*");
-    // Build list of files to compile
-    const Dir dFiles{ "src", ".c" };
-    StdString strFiles;
-    for(const auto &dFile : dFiles.GetFiles())
-      strFiles += StrAppend(" src/", dFile.first);
     // Add glfw specific flags
     const StdString strGlfwSpecific{ StrAppend("-Iinclude "
-      "-D_CRT_SECURE_NO_WARNINGS -D_GLFW_WIN32 -DWIN32 -D_WINDOWS$",
-      strFiles) };
+      "-D_CRT_SECURE_NO_WARNINGS -D_GLFW_WIN32 -DWIN32 -D_WINDOWS ",
+      EnumerateFiles(".c", "src")) };
+    strRelFlags32 += StrAppend("-DWINVER=0x0501 -D_WIN32_WINNT=0x0501 ",
+      strGlfwSpecific);
     strRelFlags64 += StrAppend("-DWINVER=0x0502 -D_WIN32_WINNT=0x0502 ",
       strGlfwSpecific);
-    // Using non-XP functions in 3.4.0 for some reason when XP still supported
-    ReplaceTextMulti("src/win32_thread.c", {
-      { "GLFWbool _glfwPlatformCreateCondVar(_GLFWcondvar* condvar)", "/*" },
-      { "#endif // GLFW_BUILD_WIN32_THREAD", "*/\n#endif" },
-    });
-    // They are forcing use of ansi when asked not in 3.4.0
+    // Remove forced use of ANSI when we can use UNICODE.
     ReplaceText("src/internal.h",
       "glfwPlatformLoadModule(const char* path)",
       "glfwPlatformLoadModule(const wchar_t* path)");
@@ -3540,7 +3581,7 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       { "const char* es2sonames[] =", "const wchar_t* es2sonames[] =" },
       { "const char* glsonames[] =", "const wchar_t* glsonames[] =" },
     });
-    ReplaceTextMulti("src/osmesa_context.c",{
+    ReplaceTextMulti("src/osmesa_context.c", {
       { "_glfwPlatformLoadModule(\"", "_glfwPlatformLoadModule(L\"" },
       { "const char* sonames[] =", "const wchar_t* sonames[] =" },
       { "\"libOSMesa.dll", "L\"libOSMesa.dll" },
@@ -3551,12 +3592,45 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     ReplaceText("src/wgl_context.c",
       "_glfwPlatformLoadModule(\"", "_glfwPlatformLoadModule(L\"");
     ReplaceTextMulti("src/win32_init.c", {
-      { "const char* names[]",  "const wchar_t* names[]" },
-      { "            \"xinput", "            L\"xinput"  },
+      { "const char* names[]",        "const wchar_t* names[]"      },
+      { "            \"xinput",       "            L\"xinput"       },
       { "_glfwPlatformLoadModule(\"", "_glfwPlatformLoadModule(L\"" },
     });
     // Compile sources
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "glfw", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "glfw", 32, 64);
+#else
+    // Compile X86-64 version
+    MakeAndSetDirectory("build32");
+    System(StrFormat("$ D\"CMAKE_BUILD_TYPE=Release\" "
+           "-D\"CMAKE_C_FLAGS=-mtune=generic\" "
+           "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=10.15\" "
+           "-D\"CMAKE_OSX_ARCHITECTURES=x86_64\" "
+           "-D\"GLFW_BUILD_DOCS=OFF\" "
+           "-D\"GLFW_BUILD_EXAMPLES=OFF\" "
+           "-D\"GLFW_BUILD_TESTS=OFF\" "
+           "..", envActive.cpCMake));
+    System("make");
+    RenameFileSafe("src/libglfw3.a", "../../glfw32.a");
+    System("make clean");
+    SetDirectory("..");
+    // Compile Apple Silicon version
+    MakeAndSetDirectory("build64");
+    System(StrFormat("$ -D\"CMAKE_BUILD_TYPE=Release\" "
+           "-D\"CMAKE_C_FLAGS=-mtune=apple-m1\" "
+           "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=11.00\" "
+           "-D\"CMAKE_OSX_ARCHITECTURES=arm64\" "
+           "-D\"GLFW_BUILD_DOCS=OFF\" "
+           "-D\"GLFW_BUILD_EXAMPLES=OFF\" "
+           "-D\"GLFW_BUILD_TESTS=OFF\" "
+           "..", envActive.cpCMake));
+    System("make");
+    RenameFileSafe("src/libglfw3.a", "../../glfw64.a");
+    System("make clean");
+    SetDirectory("..");
+    // Do finish libraries
+    FinishLibs(strTmp, "glfw");
+#endif
   } // = LIBOGG/VORBIS SCRIPT =================================================
   else if(strLib.size() >= 7 && strLib.substr(0, 7) == "libogg-")
   { // Ignore if no vorbis supplemental argument
@@ -3571,19 +3645,27 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Place ogg sources in lib vorbis
     SystemF("mv -f \"$/$/include/ogg\" \"$/$/include\"",
       strTmp, PSLibR.strFile, strTmp, PSLibXR.strFile);
-    SystemF("mv -f \"$/$/src/*.c\" \"$/$/lib\"",
+    SystemF("mv -f \"$/$/src/\"*.c \"$/$/lib\"",
       strTmp, PSLibR.strFile, strTmp, PSLibXR.strFile);
-    SystemF("mv -f \"$/$/src/*.h\" \"$/$/lib\"",
+    SystemF("mv -f \"$/$/src/\"*.h \"$/$/lib\"",
       strTmp, PSLibR.strFile, strTmp, PSLibXR.strFile);
     // Remove ogg package
     SystemF("rm -rf \"$/$\"", strTmp, PSLibR.strFile);
     // Remove unneeded sources
-    System("rm -f lib/barkmel.c lib/tone.c lib/psytune.c");
+    DeleteMultipleFiles({ "lib/barkmel.c", "lib/tone.c", "lib/psytune.c" });
     // Add ogg/vorbis specific flags
-    const StdString strVorbisSpecific("-Iinclude lib/*.c");
+    const StdString strVorbisSpecific{ StrFormat(
+#if defined(WINDOWS)
+      "-D_CRT_SECURE_NO_DEPRECATE "
+      "-D_CRT_SECURE_NO_WARNINGS "
+      "-D_CRT_NONSTDC_NO_WARNINGS "
+#endif
+      "-Iinclude -Ilib $", EnumerateFiles(".c", "lib")) };
+    strRelFlags32 += strVorbisSpecific;
     strRelFlags64 += strVorbisSpecific;
     // Compile everything
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "ogg", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "ogg", 32, 64);
   } // = LIBNSGIF SCRIPT ======================================================
   else if(strLib.size() >= 9 && strLib.substr(0, 9) == "libnsgif-")
   { // Make sure it doesnt suffix in -src
@@ -3592,18 +3674,18 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Setup second archive first then the first archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Add nsgif specific flags
-    const StdString strNSGSpecific("-Iinclude src/*.c");
+    const StdString strNSGSpecific{
+      StrFormat("-Iinclude $", EnumerateFiles(".c", "src")) };
+    strRelFlags32 += strNSGSpecific;
     strRelFlags64 += strNSGSpecific;
     // Compile everything
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "nsgif", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "nsgif", 32, 64);
   } // = SQLITE SCRIPT ========================================================
   else if(strLib.size() >= 20 &&
           strLib.substr(0, 20) == "sqlite-amalgamation-")
   { // Set destination temp directory
     SetupZipRepo(strLibPath, strTmp, PSLib.strFile);
-    // Remove shell file as this is a CLI which we don't need
-    if(DirLocalFileExists("shell.c") && !DirFileUnlink("shell.c"))
-      XCL("Could not delete file!", "File", "shell.c");
     // Add sqlite specific flags
     const StdString strSQLiteSpecific{ "-DSQLITE_DEFAULT_AUTOVACUUM=2 "
       "-DSQLITE_TEMP_STORE=2 -DSQLITE_ENABLE_NULL_TRIM "
@@ -3620,15 +3702,9 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     };
     strRelFlags32 += StrAppend(strOS, ' ', strSQLiteSpecific);
     strRelFlags64 += StrAppend(strOS, ' ', strSQLiteSpecific);
-    // Compile 64-bit release version -----------------------------------------
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "sqlite", 64);
-    // Using MacOS?
-#if defined(MACOS)
-    // Compile 32-bit release version -----------------------------------------
-    GenericExtLibBuildBits(strRelFlags32, strL, strTmp, "sqlite", 32);
-#endif
-    // Do finish libraries
-    FinishLibs(strTmp, "sqlite");
+    // Compile
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "sqlite", 32, 64);
   } // = XMP SCRIPT ===========================================================
   else if(strLib.size() >= 12 && strLib.substr(0, 12) == "libxmp-lite-")
   { // Setup the archive
@@ -3648,8 +3724,8 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       "-DLIBXMP_NO_PROWIZARD "
       "-DLIBXMP_NO_DEPACKERS "
       "-DBUILDING_STATIC ",
-      GetFiles(".c", "src"), ' ',
-      GetFiles(".c", "src/loaders")) };
+      EnumerateFiles(".c", "src"), ' ',
+      EnumerateFiles(".c", "src/loaders")) };
     strRelFlags64 += strXmpSpecific;
     // Compile everything
     GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "xmp", 64);
@@ -3657,14 +3733,43 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
   else if(strLib.size() >= 5 && strLib.substr(0, 5) == "zlib-")
   { // Setup the archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
+    // Prefix library name
+    const StdString strPrefix{ "zlib" };
+    // Unfortunately, Zlib on posix systems needs configuring so we can't do
+    // a very quick compile.
+#if defined(WINDOWS)
     // Compiler flags
     const StdString strZLibSpecific{ StrAppend(
       "-DWIN32 -D_CRT_SECURE_NO_DEPRECATE "
       "-D_CRT_NONSTDC_NO_DEPRECATE "
-      "-I. ", GetFiles(".c")) };
+      "-I. ", EnumerateFiles(".c")) };
+    strRelFlags32 += strZLibSpecific;
     strRelFlags64 += strZLibSpecific;
     // Compile everything
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "zlib", 64);
+    GenericExtLibBuildDuo(strRelFlags32,
+      strRelFlags64, strL, strL64, strTmp, strPrefix, 32, 64);
+    // Using MacOS? MacOS needs proper config headers generation
+#elif defined(MACOS)
+    // Enumerate architectures
+    for(const Item &itProc : itItems)
+    { // Configure the zlib library for compilation
+      SystemF("./configure --static --archs=\"-arch $\"", itProc.strArch);
+      // Replace text with our optimised arguments
+      ReplaceText("Makefile", "-O3",
+        StrFormat("-O3 -mtune=$ -mmacosx-version-min=$",
+          itProc.strTune, itProc.strMinOS));
+      // Do the actual build
+      System("make static");
+      // Move the generated library into position
+      RenameFileSafe("libz.a", StrFormat("../$$.a", strPrefix, itProc.iBits));
+      // Clean-up objects and other things
+      System("make clean");
+    } // Do finish libraries
+    FinishLibs(strTmp, strPrefix);
+    // Use built-in versions on Linux. Nothing wrong with them.
+#else
+    throw StdRunTimeError{ "You can use the distro version of Z-Lib!" };
+#endif
   } // = LZMA SCRIPT ==========================================================
   else if(strLib.size() >= 4 && strLib.substr(0, 4) == "lzma")
   { // Set destination temp directory
@@ -3672,16 +3777,18 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Remove read only flags on directory (sigh!)
     System("chmod -R a+w *");
     // Setup initial compiler flags and source files
-    const StdString strLZMASpecificMandatory{
-      "-D_7ZIP_ST "                    "-D_REENTRANT "
-      "-D_FILE_OFFSET_BITS=64 "        "-D_LARGEFILE_SOURCE "
-      "C/*.c" };
-    // Rest flags
+    const StdString strLZMASpecificMandatory{ StrFormat(
+      "-D_7ZIP_ST -D_REENTRANT -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE $",
+      EnumerateFiles(".c", "C")) };
+    // Setup compilation flags
+    strRelFlags32 += strLZMASpecificMandatory;
     strRelFlags64 += strLZMASpecificMandatory;
     // This disables use of AVX which isn't supported on wine
-    ReplaceText("C/LzFind.c", "#define USE_SATUR_SUB_128", "");
+    ReplaceText("C/LzFind.c", "#define USE_SATUR_SUB_128",
+                              "#undef USE_SATUR_SUB_128");
     // Compile everything
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "lzma", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "lzma", 32, 64);
   } // = BZIP2 SCRIPT =========================================================
   else if(strLib.size() >= 6 && strLib.substr(0, 6) == "bzip2-")
   { // Setup second archive first then the first archive
@@ -3689,38 +3796,77 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Delete some files we don't need to compile
     System("rm -rf dlltest.* bzip2.* spewg.* mk251.* unzcrash.*");
     // Add BZ2 specific flags to compiler command line
-    const StdString strBZ2Sources("*.c");
+    const StdString strBZ2Sources{ EnumerateFiles(".c") };
+    strRelFlags32 += strBZ2Sources;
     strRelFlags64 += strBZ2Sources;
     // Compile everything
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "bzip", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "bzip", 32, 64);
+  } // = NCURSES SCRIPT =======================================================
+  else if(strLib.size() >= 8 && strLib.substr(0, 8) == "ncurses-")
+  { // Running on MacOS?
+#if defined(MACOS)
+    // Setup the archive
+    SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
+    // Prefix library name
+    const StdString strPrefix{ "nc" };
+    // Directories containing 'Makefile' to replace compiler flags in
+    const StrVector svDirs{
+      "form", "ncurses", "test", "include", "menu", "panel" };
+    // Enumerate the architechtures
+    for(const Item &itProc : itItems)
+    { // Configure the project
+      SystemF("./configure --prefix=/usr --without-cxx --without-cxx-binding "
+        "--without-ada --without-progs --without-curses-h --with-static "
+        "--without-debug --enable-widec --enable-const --enable-ext-colors "
+        "--enable-sigwinch --enable-wgetch-events --target=$-apple-darwin",
+        itProc.strArch);
+      // Replace compiler flags in makefiles
+      for(const StdString &strFile : svDirs)
+        ReplaceText(StrAppend(strFile, "/Makefile"), "-O2",
+          StrFormat("-O3 -arch $ -mtune=$ -mmacosx-version-min=$ "
+                    "-target $-apple-darwin -Wno-deprecated-declarations "
+                    "-Wno-c++11-extensions",
+            itProc.strArch, itProc.strTune, itProc.strMinOS, itProc.strArch));
+      // Make project
+      System("make");
+      // Move the generated library file into position
+      RenameFileSafe("lib/libncursesw.a",
+        StrFormat("../$$.a", strPrefix, itProc.iBits));
+      // Clean-up object files and other things
+      System("make clean");
+    } // Do finish libraries
+    FinishLibs(strTmp, strPrefix);
+   // Linux can use built-in ncurses
+#elif defined(LINUX)
+   throw StdRunTimeError{ "You can use the distro version of NCurses!" };
+   // Windows can use built-in ncurses
+#elif defined(WINDOWS)
+   throw StdRunTimeError{ "Windows doesn't need to use NCurses lib." };
+#endif
   } // = LUA SCRIPT ===========================================================
   else if(strLib.size() >= 4 && strLib.substr(0, 4) == "lua-")
-  { // Extract the repository and switch to it --------------------------------
+  { // Extract the repository and switch to it
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
-    // Delete some files we don't need to compile -----------------------------
-    System("rm -rf src/lua.c "    "src/luac.c "     "src/lbitlib.* "
-                  "src/liolib.* " "src/lloadlib.* " "src/loslib.* "
-                  "src/loadlib.*");
-    // Patch makefile for linux/mac -------------------------------------------
-    ReplaceTextMulti("src/makefile", {
-      { "CC= gcc -std=gnu99", "CC=g++ -std=" STANDARD },
-      { "-DLUA_COMPAT_5_3 ",  caBlank   },
-      { "LUA_T=	lua",         "LUA_T="  },
-      { "LUA_O=	lua.o",       "LUA_O="  },
-      { "LUAC_T=	luac",      "LUAC_T=" },
-      { "LUAC_O=	luac.o",    "LUAC_O=" },
-      { " liolib.o",          caBlank   },
-      { " loslib.o",          caBlank   },
-      { " loadlib.o",         caBlank   },
-    });
-    // Performing removal of libs from LUA core lib ---------------------------
-    ReplaceTextMulti("src/linit.c", {
+    // Delete some files we don't need to compile
+    DeleteMultipleFiles({"src/lua.c", "src/luac.c", "src/liolib.c",
+      "src/loadlib.c", "src/loslib.c" });
+    // Rename all C files to C++ since it needs to be compiled as C++ in order
+    // for it to be able to process C++ exceptions.
+    const Dir dCFiles{ "src", ".c" };
+    for(DirEntMapConstIt demciIt{ dCFiles.GetFilesBegin() };
+                         demciIt != dCFiles.GetFilesEnd();
+                       ++demciIt)
+      RenameFileSafe(StrAppend("src/", demciIt->first),
+                     StrAppend("src/", demciIt->first, "pp"));
+    // Performing removal of libs from LUA core lib
+    ReplaceTextMulti("src/linit.cpp", {
       { "{LUA_IOLIBNAME, luaopen_io},",        caBlank },
       { "{LUA_OSLIBNAME, luaopen_os},",        caBlank },
       { "{LUA_LOADLIBNAME, luaopen_package},", caBlank },
     });
-    // Performing removal of unneeded core function ---------------------------
-    ReplaceTextMulti("src/lbaselib.c", {
+    // Performing removal of unneeded core function
+    ReplaceTextMulti("src/lbaselib.cpp", {
       { "{\"dofile\", luaB_dofile},",     caBlank },
       { "{\"loadfile\", luaB_loadfile},", caBlank },
       { "{\"load\", luaB_load},",         caBlank },
@@ -3728,20 +3874,21 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       { "{\"_VERSION\", nullptr},",       caBlank },
       { "{\"_G\", nullptr},",             caBlank },
     });
-    // Perform increase of limits ---------------------------------------------
-    ReplaceText("src/lparser.c", "MAXVARS\t\t200", "MAXVARS\t\t253");
-    // Add lua specific flags to compiler command line ------------------------
-    const StdString strLuaSpecific{ "-TP -EHsc -std:" STANDARD }, // NO C!
-                 strLuaDebug{ "-DLUA_USE_APICHECK" },
-                 strLuaSources{ "src/*.c" };
-    strRelFlags64 += StrAppend(strLuaSpecific, ' ', strLuaSources);
+    // Perform increase of limits
+    ReplaceText("src/lparser.cpp", "MAXVARS\t\t200", "MAXVARS\t\t253");
+    // Add lua specific flags and sources to compiler command line
+    const StdString strParams{ StrFormat("$ $",
+      StrFormat(envActive.cpCPPSTD, STANDARD),
+      EnumerateFiles(".cpp", "src")) };
+    strRelFlags32 += strParams;
+    strRelFlags64 += strParams;
     // Compile everything
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "lua", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "lua", 32, 64);
   } // Unrecognised archive filename
   else throw StdRunTimeError{ "The archive is valid but unrecognised!" };
   // Done
   cout << "\nFinished without error!\n";
-  // Done
   return 0;
 }
 /* ------------------------------------------------------------------------- */
@@ -3755,9 +3902,9 @@ static int CppCheck()
     "--library=lua "                   "--library=opengl "
     "--language=c++ "                  "--std=$ "
     "--enable=all $ $ "                "-D__cplusplus=202002 "
-    "--disable=unusedFunction "
-    "--report-progress "               "-DCPPCHECK "
-    "-D$ "                             "\"$/$.cpp\"",
+    "--disable=unusedFunction "        "--report-progress "
+    "-DCPPCHECK "                      "-D$ "
+    "\"$/$.cpp\"",
     envActive.cpCppCheck,
     STANDARD,
     envActive.cpCppChkM,
@@ -3936,8 +4083,9 @@ static int Compile(const bool bSelf)
     strCmdCC += StrAppend(envActive.cpCCX, ' ');
     // Add mandatory compiler command line parameters if set
     if(!envActive.cpCCM.empty())
-      strCmdCC += StrFormat("$ $ ", envActive.cpCCM,
-        StrFormat(envActive.cpCCMX, STANDARD, INCDIR, INCDIR, INCDIR));
+      strCmdCC += StrFormat("$ $ $ ", envActive.cpCCM,
+        StrFormat(envActive.cpCCMX, INCDIR, INCDIR, INCDIR),
+        StrFormat(envActive.cpCPPSTD, STANDARD));
   }// Have linker?
   if(!envActive.cpRCX.empty())
   { // Set resource compiler command line
@@ -4054,8 +4202,7 @@ static int Compile(const bool bSelf)
     WriteVersion();
     // Write new version header
     const StdString
-      strVersion{ StrFormat("$,$,$,$",
-        uVer[0], uVer[1], uVer[2], uVer[3]) },
+      strVersion{ StrFormat("$,$,$,$", uVer[0], uVer[1], uVer[2], uVer[3]) },
       strVersionStr{ StrFormat("\"$.$.$.$\"",
        uVer[0], uVer[1], uVer[2], uVer[3]) },
       strDate{ StrFormat("\"$\"", cmSys.FormatTime()) },
@@ -4267,7 +4414,7 @@ static bool CheckCommandLine(StdString &strX1, StdString &strX2)
     "Build LUA API documentation."} },
   { "d", { 0, PF_ALPHA,           PF_OTHERS|PF_BETA|PF_FINAL,
     "Compile alpha (debug) version."} },
-  { "e", { 2, PF_EXTLIB,          PF_RVER|PF_RPROJ|PF_ALL,
+  { "e", { 2, PF_EXTLIB,          PF_RVER|PF_RPROJ|PF_OTHERS,
     "Compile archive library 'x'."} },
   { "f", { 0, PF_DISTRO,          PF_ALL,
     "Build distributable package."} },
@@ -4497,7 +4644,6 @@ catch(const StdException &eReason)
 }
 /* ------------------------------------------------------------------------- */
 };                                     // End of core interface namespace
-/* ========================================================================= */
-int CONENTRYFUNC(int iArgC, ArgType**saArgV, ArgType**saEnv)
-  { return E::Build(iArgC, saArgV, saEnv); }
+/* -- main() emtry point defined in 'setup.hpp' ---------------------------- */
+ENTRYFUNC{ return E::Build(iArgC, saArgV, saEnv); }
 /* == End-of-File ========================================================== */

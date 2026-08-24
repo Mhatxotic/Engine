@@ -36,8 +36,8 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 # else                                         // Windows or Linux
 #  pragma GCC diagnostic ignored "-Wall"       // Disable ALL warnings
 # endif                                        // OS check
-# define DISABLED_ALL_WARNINGS                 // a lot of third-party software
-#endif                                         // doesn't write strict code.
+# define DISABLED_ALL_WARNINGS                 // A lot of third-party software
+#endif                                         // ...doesn't write strict code.
 /* == Compiled type setup ================================================== */
 #if !defined(__cplusplus)              // Must be compiling in C++ mode
 # error Please use a C++ compiler such as GCC, CLANG or MSVC!
@@ -597,13 +597,19 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #if defined(WINDOWS)                   // Targeting Windows?
 using ssize_t = ptrdiff_t;             // Because Windows doesn't have this.
 using ArgType = Lib::OS::TCHAR;        // Set main argument type
-# define ENTRYFUNC WINAPI _tWinMain(Lib::OS::HINSTANCE, Lib::OS::HINSTANCE, \
-    Lib::OS::LPTSTR, int)
-# define CONENTRYFUNC _tmain           // For project management utility
-extern int ENTRYFUNC;                  // Prevents -Wmissing-prototypes
+# if defined(BUILD)                    // Called by PMU module?
+#  define ENTRYFUNC int _tmain(int iArgC, ArgType**saArgV, ArgType**saEnv)
+# else                                 // Called by main engine?
+#  define ENTRYFUNC int WINAPI _tWinMain(Lib::OS::HINSTANCE, \
+     Lib::OS::HINSTANCE, Lib::OS::LPTSTR, int)
+extern ENTRYFUNC;                      // Prevents 'missing-prototypes' warn
+# endif                                // PMU/Engine check
 #else                                  // Targeting POSIX?
 using ArgType = char;                  // Set main argument type
-# define ENTRYFUNC main(int __argc, ArgType**__wargv, ArgType**_wenviron)
-# define CONENTRYFUNC main             // For project management utility
+# if defined(BUILD)                    // Called by PMU module?
+#  define ENTRYFUNC int main(int iArgC, ArgType**saArgV, ArgType**saEnv)
+# else                                 // Called by main engine?
+#  define ENTRYFUNC int main(int __argc, ArgType**__wargv, ArgType**_wenviron)
+# endif                                // PMU/Engine check
 #endif                                 // Target check
 /* == EoF =========================================================== EoF == */

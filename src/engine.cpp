@@ -164,7 +164,7 @@ namespace E {                          // Start of engine namespace
 /* ------------------------------------------------------------------------- */
 };                                     // End of engine namespace
 /* == The main entry point ================================================= */
-int ENTRYFUNC                          // Macro defined in 'setup.hpp'
+ENTRYFUNC                              // Macro defined in 'setup.hpp'
 { // Override environment variable with an ASAN friendly version on MacOS
 #if defined(MACOS)
   _wenviron = *Lib::OS::_NSGetEnviron();
