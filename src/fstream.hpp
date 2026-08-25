@@ -191,8 +191,8 @@ class FStreamBase :                    // File stream base class
   }
   /* -- Write data to file ------------------------------------------------- */
   size_t FStreamWrite(const void*const vpPtr, const size_t stBytes)
-    { return FStreamErrNoWrapper(fwrite(vpPtr,
-        1, stBytes, FStreamGetCtx())); }
+    { return
+        FStreamErrNoWrapper(fwrite(vpPtr, 1, stBytes, FStreamGetCtx())); }
   size_t FStreamWriteSafe(const void*const vpPtr, const size_t stBytes)
     { return FStreamIsReadyWrite() ? FStreamWrite(vpPtr, stBytes) : 0; }
   /* -- Write memory block to file ----------------------------------------- */
@@ -258,7 +258,7 @@ class FStreamBase :                    // File stream base class
   template<typename IntType>
     requires StdIsArithmatic<IntType>
   size_t FSWriteIntSafe(const IntType itVar)
-    { return FStreamOpened() ? FStreamWrite<IntType>(itVar) : 0; }
+    { return FStreamOpened() ? FStreamWriteInt<IntType>(itVar) : 0; }
   /* -- Return file position to the beginning ------------------------------ */
   bool FStreamRewind() { return FStreamSeekSet(0); }
   bool FStreamRewindSafe()

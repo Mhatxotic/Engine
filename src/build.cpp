@@ -11,9 +11,9 @@
 ** ## engine on all of Windows, Linux and MacOS because it's the only     ## **
 ** ## clean way to support all platforms.                                 ## **
 ** ######################################################################### **
-** ## scripts/build-linux.sh  ## Build me on Linux (Debian based).        ## **
-** ## scripts/build-mach.sh   ## Build me on MacOS (10.15 or later).      ## **
-** ## scripts/build-win32.bat ## Build me on Windows (XP or later.        ## **
+** ## scripts/build-linux.sh  ## Build me on Linux (Debian based).        ## **
+** ## scripts/build-mach.sh   ## Build me on MacOS (10.15 or later).      ## **
+** ## scripts/build-win32.bat ## Build me on Windows (XP or later.        ## **
 ** ######################################################################### **
 ** ------------------------------------------------------------------------- */
 #define BUILD                          // Indicates command-line tool compile
@@ -237,7 +237,7 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* ACA        */ envWindowsMSVC.cpACA,
   /* ACB        */ envWindowsMSVC.cpACB,
   /* CCX        */ "CLANG-CL.EXE",
-  /* CCM        */ "-nologo -c -GA -Gy -GF -EHsc -bigobj",
+  /* CCM        */ "-nologo -c -GA -Gy -GF -bigobj",
   /* CCMX       */ "-utf-8 -I$ -I$/ft",
   /* CCLIB      */ envWindowsMSVC.cpCCLIB,
   /* CCINCDBG   */ envWindowsMSVC.cpCCIncDBG,
@@ -630,6 +630,8 @@ static const StdString strVerFile{ "build." JSON_EXTENSION };
 /* -- These directory names are reserved ----------------------------------- */
 static const StrVUSet svusIgnore{ ARCDIR, BINDIR, CRTDIR, DBGDIR, DOCDIR,
   DRDDIR, DISDIR, INCDIR, LIBDIR, LICDIR, SRCDIR, UTLDIR, WINDIR };
+/* -- Base directory ------------------------------------------------------- */
+StdString strBaseDir;
 /* ------------------------------------------------------------------------- */
 static int CheckSources()
 { // Number of warnings
@@ -1903,9 +1905,7 @@ static void DeleteFile(const StdStringView &ssvFile)
 }
 /* ------------------------------------------------------------------------- */
 static void DeleteMultipleFiles(const StrViewVector &svvList)
-{ // Enumerate files
-  for(const StdStringView &ssvFile : svvList) DeleteFile(ssvFile);
-}
+  { for(const StdStringView &ssvFile : svvList) DeleteFile(ssvFile); }
 /* ------------------------------------------------------------------------- */
 static void DoClean(StrVector &svDeleted, StrVector &svNotDeleted,
   const Dir &dFiles)
@@ -1945,19 +1945,17 @@ static void MakeDirectory(const StdString &strDir)
   { if(!DirMkDirEx(strDir))
       XCL("Failed to make directory!", "Directory", strDir); }
 /* ------------------------------------------------------------------------- */
-static void SetDirectory(const StdString &strDir)
+static void SetDirectoryNR(const StdString &strDir = strBaseDir)
   { if(!DirSetCWD(strDir))
       XCL("Failed to set new directory!", "Directory", strDir); }
 /* ------------------------------------------------------------------------- */
-static void SetBaseDirectory()
-{ // Force current working directory to the base directory
-  SetDirectory(
-#if defined(WINDOWS)
-    cSystem->ENGLoc()                  // Exe dir will be where link is
-#else
-    StrAppend(cSystem->ENGLoc(), "..") // Links always run in bin dir
-#endif
-  );
+static void SetDirectory(const StdString &strDir = strBaseDir)
+{ // Write progress
+  cout << "*** Change current directory to '" << strDir << "'...";
+  // Set the directory and throw exception on error
+  SetDirectoryNR(strDir);
+   // Done
+  cout << " OK!" << StdIOSEndLine;
 }
 /* ------------------------------------------------------------------------- */
 static void MakeAndSetDirectory(const StdString &strDir)
@@ -2908,7 +2906,7 @@ static void GenericExtLibBuildBits(const StdString &strCLRel,
 /* ------------------------------------------------------------------------- */
 static void FinishLibs(const StdString &strTmp, const StdString &strLib)
 { // Reset directory back to where the root is
-  SetBaseDirectory();
+  SetDirectory();
   // Generate lib filenames
   const StdString
     str32{ StrFormat("$/$32$", strTmp, strLib, envActive.cpARLIB) },
@@ -3323,44 +3321,66 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Copy config file over
     System("cp -f scripts/pnglibconf.h.prebuilt pnglibconf.h");
     // Add png specific flags
-    const StdString strPNGSpecific(StrFormat(
-      "-I\"$/$\" -D_CRT_SECURE_NO_DEPRECATE "
-      "-D_CRT_SECURE_NO_WARNINGS $",
-      strTmp, PSLibXR.strFile, EnumerateFiles(".c")));
+    const StdString strPNGSpecific{ StrFormat(
+      "-I\"$/$\" "
+#if defined(WINDOWS)
+      "-D_CRT_SECURE_NO_DEPRECATE "
+      "-D_CRT_SECURE_NO_WARNINGS "
+#endif
+#if defined(MACOS)
+      "$ "
+#endif
+      "$",
+      strTmp, PSLibXR.strFile,
+#if defined(MACOS)
+      EnumerateFiles(".c", "arm"),
+#endif
+      EnumerateFiles(".c")) };
+    strRelFlags32 += strPNGSpecific;
     strRelFlags64 += strPNGSpecific;
     // Compile sources
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "png", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "png", 32, 64);
   } // = OPENALSOFT SCRIPT ====================================================
   else if(strLib.size() >= 12 && strLib.substr(0, 12) == "openal-soft-")
-  { // Setup the repository
+  { // Using distro version of freetype on linux
+#if defined(LINUX)
+    throw StdRunTimeError{ "You can use the distro version of OpenALSoft!" };
+#else
+    // Setup the repository
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
+    // We need to activate cmake once to build openal config and other things
+    System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
+    // Compulsory CMake flags
+    const StdString strCMakeExtra{
+      "-DALSOFT_BACKEND_WASAPI=FALSE "
+      "-DALSOFT_BACKEND_PORTAUDIO=FALSE"
+      "-DALSOFT_BACKEND_WAVE=FALSE "
+      "-DALSOFT_DLOPEN=FALSE "
+      "-DALSOFT_EMBED_HRTF_DATA=FALSE "
+      "-DALSOFT_EXAMPLES=FALSE "
+      "-DALSOFT_INSTALL_AMBDEC_PRESETS=FALSE "
+      "-DALSOFT_INSTALL_CONFIG=FALSE "
+      "-DALSOFT_INSTALL_EXAMPLES=FALSE "
+      "-DALSOFT_INSTALL_HRTF_DATA=FALSE "
+      "-DALSOFT_INSTALL_UTILS=FALSE "
+      "-DALSOFT_INSTALL=FALSE "
+      "-DALSOFT_NO_CONFIG_UTIL=TRUE "
+      "-DALSOFT_REQUIRE_SDL2=FALSE "
+      "-DALSOFT_REQUIRE_WASAPI=FALSE "
+      "-DALSOFT_TESTS=OFF "
+      "-DALSOFT_UPDATE_BUILD_VERSION=FALSE "
+      "-DALSOFT_UTILS=FALSE" };
+    // On Windows? It's too slow to compile with Wine and riddled with issues
+# if defined(WINDOWS)
     // Get fmt directory version
     StdString strFmtDir;
     { const Dir dFiles;
       for(const DirEntMapPair &dempPair : dFiles.GetDirs())
         if(dempPair.first.substr(0, 4) == "fmt-")
           strFmtDir = StdMove(dempPair.first); }
-    // We need to activate cmake once to build openal config and other things
-    System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
     // One time only build
-    SystemF("$ -Wno-dev "
-              "-DALSOFT_TESTS=OFF "
-              "-DALSOFT_BACKEND_WAVE=FALSE "
-              "-DALSOFT_BACKEND_WASAPI=FALSE "
-              "-DALSOFT_DLOPEN=FALSE "
-              "-DALSOFT_EMBED_HRTF_DATA=FALSE "
-              "-DALSOFT_EXAMPLES=FALSE "
-              "-DALSOFT_INSTALL_AMBDEC_PRESETS=FALSE "
-              "-DALSOFT_INSTALL_CONFIG=FALSE "
-              "-DALSOFT_INSTALL_EXAMPLES=FALSE "
-              "-DALSOFT_INSTALL_HRTF_DATA=FALSE "
-              "-DALSOFT_INSTALL_UTILS=FALSE "
-              "-DALSOFT_INSTALL=FALSE "
-              "-DALSOFT_NO_CONFIG_UTIL=TRUE "
-              "-DALSOFT_REQUIRE_SDL2=FALSE "
-              "-DALSOFT_REQUIRE_WASAPI=FALSE "
-              "-DALSOFT_UPDATE_BUILD_VERSION=FALSE "
-              "-DALSOFT_UTILS=FALSE .", strCMakeBase);
+    SystemF("$ $ .",  strCMakeBase, strCMakeExtra);
     // Apply header patches to conquer forcing of DLL exports
     ReplaceText(strFmtDir + "/include/fmt/base.h",
       "#    define FMT_API __declspec(dllimport)",
@@ -3406,37 +3426,62 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Build hrtf table
     // MakeIncludeFromBin("hrtf/Default HRTF.mhr",
     //  "const uint8_t hrtf_default", "hrtf_default.h");
-    // Add openal specific flags
-    const StdString strALSpecific{
-      "-std:c++20 -D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS "
-      "-D_CRT_NONSTDC_NO_DEPRECATE -D_CRT_SECURE_NO_WARNINGS "
-      "-D_LARGE_FILES -D_LARGEFILE_SOURCE -D_WIN32 -D_WINDOWS "
-      "-DAL_ALEXT_PROTOTYPES -DAL_BUILD_LIBRARY -DAL_LIBTYPE_STATIC "
-      "-DHAVE_STRUCT_TIMESPEC -DNOMINMAX -DRESTRICT=__restrict "
-      "-Dstrcasecmp=_stricmp -Dstrncasecmp=_strnicmp -DWIN32 -EHsc -I. -Ialc "
-      "-Icommon -Ihrtf -Iinclude -Iopenal32/include -Igsl/include -I" +
-      strFmtDir + "/include "
+    // Add openal specific flags. Note that alsoft1.25+ requires C++23!!!
+    const StdString strALSpecific{ StrAppend(
+      StrFormat(envActive.cpCPPSTD, STANDARD), ' ',
+      "-D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS "
+      "-D_CRT_NONSTDC_NO_DEPRECATE "
+      "-D_CRT_SECURE_NO_WARNINGS "
+      "-D_LARGE_FILES "
+      "-D_LARGEFILE_SOURCE "
+      "-D_WIN32 "
+      "-DWIN32 "
+      "-D_WINDOWS "
+      "-DAL_ALEXT_PROTOTYPES "
+      "-DAL_BUILD_LIBRARY "
+      "-DAL_LIBTYPE_STATIC "
+      "-DHAVE_STRUCT_TIMESPEC "
+      "-DNOMINMAX "
+      "-DRESTRICT=__restrict "
+      "-Dstrcasecmp=_stricmp "
+      "-Dstrncasecmp=_strnicmp "
+      "-I. "
+      "-Ialc "
+      "-Icommon "
+      "-Ihrtf "
+      "-Iinclude "
+      "-Iopenal32/include "
+      "-Igsl/include "
+      "-I", strFmtDir, "/include ",
       // Files to compile
-      "al/*.cpp "
-      "al/eax/*.cpp "
-      "al/effects/*.cpp "
-      "alc/*.cpp "
+      EnumerateFiles(".cpp", "al"), ' ',
+      EnumerateFiles(".cpp", "al/eax"), ' ',
+      EnumerateFiles(".cpp", "al/effects"), ' ',
+      EnumerateFiles(".cpp", "alc"), ' ',
       "alc/backends/base.cpp "
       "alc/backends/dsound.cpp "
       "alc/backends/loopback.cpp "
       "alc/backends/null.cpp "
       // "alc/backends/wasapi.cpp "
       "alc/backends/wave.cpp "
-      "alc/backends/winmm.cpp "
-      "alc/effects/*.cpp "
-      "common/*.cpp "
-      "core/*.cpp "
-      "core/filters/*.cpp "
-      "core/mixer/*.cpp " +
-      strFmtDir + "/src/*.cc" };
+      "alc/backends/winmm.cpp ",
+      EnumerateFiles(".cpp", "alc/effects"), ' ',
+      EnumerateFiles(".cpp", "common"), ' ',
+      EnumerateFiles(".cpp", "core"), ' ',
+      EnumerateFiles(".cpp", "core/filters"), ' ',
+      EnumerateFiles(".cpp", "core/mixer"), ' ',
+      EnumerateFiles(".cc", StrAppend(strFmtDir, "/src"))) };
+    strRelFlags32 += "-D_WIN32_WINNT=0x0501 " + strALSpecific;
     strRelFlags64 += "-D_WIN32_WINNT=0x0502 " + strALSpecific;
-    // Compile 64-bit version
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "al", 64);
+    // Compile everything
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "al", 32, 64);
+# else
+//        -D"CMAKE_OSX_ARCHITECTURES=${1}"
+//        -D"CMAKE_CXX_FLAGS=-mtune=${2} -stdlib=libc++"
+//        -D"CMAKE_OSX_DEPLOYMENT_TARGET=${3}"
+# endif
+#endif
   } // = THEORA SCRIPT ========================================================
   else if(strLib.size() >= 10 && strLib.substr(0, 10) == "libtheora-")
   { // Ignore if no vorbis supplemental argument
@@ -3478,8 +3523,16 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       "theora", 32, 64);
   } // = FREETYPE SCRIPT ======================================================
   else if(strLib.size() >= 9 && strLib.substr(0, 9) == "freetype-")
-  { // Setup repository
+  { // Using distro version of freetype on linux
+#if defined(LINUX)
+    throw StdRunTimeError{ "You can use the distro version of Freetype!" };
+#else
+    // Prefix
+    const StdString strPrefix{ "ft" };
+    // Setup repository
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
+    // Using Windows?
+# if defined(WINDOWS)
     // Make a build directory because FT cmake needs it
     System("if exist build rm -rf build");
     MakeAndSetDirectory("build");
@@ -3515,25 +3568,65 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       "src/smooth/smooth.c "           "src/truetype/truetype.c "
       "src/type1/type1.c "             "src/type42/type42.c "
       "src/winfonts/winfnt.c "         "src/base/ftdebug.c" };
+    strRelFlags32 += strFTSpecific;
     strRelFlags64 += strFTSpecific;
     // Hack to force use our zlib since cmake doesn't listen anymore ----------
     ReplaceText("include/freetype/config/ftoption.h",
       "/* #define FT_CONFIG_OPTION_SYSTEM_ZLIB */",
       "#define FT_CONFIG_OPTION_SYSTEM_ZLIB");
     // Compile sources
-    GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "ft", 64);
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      strPrefix, 32, 64);
+    // Using MacOS?
+# elif defined(MACOS)
+    // Remove build directory if it exists
+    System("rm -rf build");
+    MakeAndSetDirectory("build");
+    // Enumerate architectures
+    for(const Item &itProc : itItems)
+    { // Configure the freetype library for compilation
+      SystemF("cmake -D\"CMAKE_BUILD_TYPE=Release\" "
+        "-D\"CMAKE_POLICY_VERSION_MINIMUM=3.5\" "
+        "-D\"CMAKE_OSX_ARCHITECTURES=$\" "
+        "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=$\" "
+        "-D\"CMAKE_C_FLAGS=-mtune=$\" "
+        "-D\"FT_DISABLE_HARFBUZZ=TRUE\" "
+        "-D\"FT_DISABLE_BZIP2=TRUE\" "
+        "-D\"FT_DISABLE_BROTLI=TRUE\" "
+        "-D\"FT_REQUIRE_ZLIB=FALSE\" "
+        "-D\"FT_REQUIRE_PNG=FALSE\" "
+//      -D"FT_REQUIRE_ZLIB=TRUE"
+//      -D"ZLIB_INCLUDE_DIR=${ZLIBDIR}"
+//      -D"ZLIB_LIBRARY_RELEASE=${ZLIBDIR}/zlib64-${1}-${2}.a"
+//      -D"FT_REQUIRE_PNG=TRUE"
+//      -D"PNG_INCLUDE_DIR=${PNGDIR}"
+//      -D"PNG_LIBRARY_RELEASE=${PNGDIR}/png64-${1}-${2}.a"
+        "..", itProc.strArch, itProc.strMinOS, itProc.strTune);
+      // Do the actual build
+      System("make");
+      // Move the generated library into position
+      RenameFileSafe("libfreetype.a",
+        StrFormat("../../$$.a", strPrefix, itProc.iBits));
+      // Clean-up objects and other things
+      System("make clean");
+    } // Do finish libraries
+    FinishLibs(strTmp, strPrefix);
+# endif
+    // Move back to destination directory because we need to modify some files
+    SetDirectory({ StrAppend(strTmp, '/', PSLibR.strFile) });
     // Perform modification of headers
     System("mv -f build/include/freetype/config/*.h include/freetype/config");
     System("mv -f include/*.h include/freetype");
     // We don't want to use freetypes default directory. We handle it.
-    const char*const cpDirs[2] = { "include/freetype",
+    const StdString straDirs[] = { "include/freetype",
                                    "include/freetype/config" };
-    for(const char*const cpDir : cpDirs)
+    for(const StdString &strDir : straDirs)
     { // Get all header files and replace all occurences
-      const Dir dFiles(cpDir, ".h");
+      const Dir dFiles{ strDir, ".h" };
       for(const DirEntMapPair &dempPair : dFiles.GetFiles())
-        ReplaceText(StrAppend(cpDir, '/', dempPair.first), "<freetype/", "<");
+        ReplaceText(StrAppend(strDir, '/', dempPair.first), "<freetype/", "<");
     }
+#endif
   } // = GLFW SCRIPT ==========================================================
   else if(strLib.size() >= 5 && strLib.substr(0, 5) == "glfw-")
   { // Extract zip to the temporary directory
@@ -3711,18 +3804,12 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Compiler flags
     const StdString strXmpSpecific{ StrAppend(
-      "-Iinclude/libxmp-lite "
-      "-Isrc "
-      "-DWIN32 "
-      "-D_CRT_SECURE_NO_DEPRECATE "
-      "-D_CRT_NONSTDC_NO_DEPRECATE "
-      "-DHAVE_ALLOCA_H "
-      "-DHAVE_FNMATCH "
-      "-DHAVE_MKSTEMP "
-      "-DHAVE_UMASK "
-      "-DLIBXMP_CORE_PLAYER "
-      "-DLIBXMP_NO_PROWIZARD "
-      "-DLIBXMP_NO_DEPACKERS "
+      "-Iinclude/libxmp-lite "         "-Isrc "
+      "-DWIN32 "                       "-D_CRT_SECURE_NO_DEPRECATE "
+      "-D_CRT_NONSTDC_NO_DEPRECATE "   "-DHAVE_ALLOCA_H "
+      "-DHAVE_FNMATCH "                "-DHAVE_MKSTEMP "
+      "-DHAVE_UMASK "                  "-DLIBXMP_CORE_PLAYER "
+      "-DLIBXMP_NO_PROWIZARD "         "-DLIBXMP_NO_DEPACKERS "
       "-DBUILDING_STATIC ",
       EnumerateFiles(".c", "src"), ' ',
       EnumerateFiles(".c", "src/loaders")) };
@@ -3731,13 +3818,17 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     GenericExtLibBuildBits(strRelFlags64, strL64, strTmp, "xmp", 64);
   } // = ZLIB SCRIPT ==========================================================
   else if(strLib.size() >= 5 && strLib.substr(0, 5) == "zlib-")
-  { // Setup the archive
+  { // Using distro version of freetype on linux
+#if defined(LINUX)
+    throw StdRunTimeError{ "You can use the distro version of Freetype!" };
+#else
+    // Setup the archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Prefix library name
     const StdString strPrefix{ "zlib" };
     // Unfortunately, Zlib on posix systems needs configuring so we can't do
     // a very quick compile.
-#if defined(WINDOWS)
+# if defined(WINDOWS)
     // Compiler flags
     const StdString strZLibSpecific{ StrAppend(
       "-DWIN32 -D_CRT_SECURE_NO_DEPRECATE "
@@ -3749,7 +3840,7 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     GenericExtLibBuildDuo(strRelFlags32,
       strRelFlags64, strL, strL64, strTmp, strPrefix, 32, 64);
     // Using MacOS? MacOS needs proper config headers generation
-#elif defined(MACOS)
+# elif defined(MACOS)
     // Enumerate architectures
     for(const Item &itProc : itItems)
     { // Configure the zlib library for compilation
@@ -3767,8 +3858,7 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     } // Do finish libraries
     FinishLibs(strTmp, strPrefix);
     // Use built-in versions on Linux. Nothing wrong with them.
-#else
-    throw StdRunTimeError{ "You can use the distro version of Z-Lib!" };
+# endif
 #endif
   } // = LZMA SCRIPT ==========================================================
   else if(strLib.size() >= 4 && strLib.substr(0, 4) == "lzma")
@@ -3804,8 +3894,16 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       "bzip", 32, 64);
   } // = NCURSES SCRIPT =======================================================
   else if(strLib.size() >= 8 && strLib.substr(0, 8) == "ncurses-")
-  { // Running on MacOS?
-#if defined(MACOS)
+  { // This is only needed on MacOS because their NCurses can bug out at times
+    // when Apple decide to change something with Terminal app and not care
+    // about their built-in NCurses library which has happened.
+#if !defined(MACOS)
+# if defined(LINUX)
+    throw StdRunTimeError{ "You can use the distro version of Freetype!" };
+# else
+    throw StdRunTimeError{ "This library is not needed on Windows!" };
+# endif
+#else
     // Setup the archive
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // Prefix library name
@@ -3837,12 +3935,6 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       System("make clean");
     } // Do finish libraries
     FinishLibs(strTmp, strPrefix);
-   // Linux can use built-in ncurses
-#elif defined(LINUX)
-   throw StdRunTimeError{ "You can use the distro version of NCurses!" };
-   // Windows can use built-in ncurses
-#elif defined(WINDOWS)
-   throw StdRunTimeError{ "Windows doesn't need to use NCurses lib." };
 #endif
   } // = LUA SCRIPT ===========================================================
   else if(strLib.size() >= 4 && strLib.substr(0, 4) == "lua-")
@@ -4596,7 +4688,13 @@ static int Build(const int iArgC, ArgType**const saArgV,
       CmdLine{ iArgC, saArgV, saEnv } {}
   } engEngine{ iArgC, saArgV, saEnv };
   // Set base directory
-  SetBaseDirectory();
+#if defined(WINDOWS) // Exe dir will be where link is
+  strBaseDir = cSystem->ENGLoc();
+#else                // Links always run in bin dir
+  strBaseDir = StrAppend(cSystem->ENGLoc(), "..");
+#endif
+  // Set base directory
+  SetDirectoryNR();
   // Check for unfinished install of new build executable
   CheckForNewBuildExecutable();
   // Show header

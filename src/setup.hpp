@@ -229,10 +229,12 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #include <algorithm>                   // Searching, sorting, counting, etc.
 #include <array>                       // Static arrays
 #include <atomic>                      // Multithreaded integers
+#include <bit>                         // Bit casting functions
 #include <cctype>                      // Character type functions
 #include <clocale>                     // Regional specific functions
 #include <cmath>                       // Perform mathematical functions
 #include <condition_variable>          // Synchronisation conditions
+#include <chrono>                      // High-resolution time functions
 #include <csetjmp>                     // Classic C jumps functions
 #include <csignal>                     // Operating system signal functions
 #include <cstdarg>                     // Classic variadic arguments functions
