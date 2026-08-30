@@ -160,7 +160,7 @@ class Credits                          // Members initially private
 #endif
       LD(CL_OGG, "OggVorbis", Lib::Ogg::vorbis_version_string()+19, "Xiph.Org",
         false, OGGVORBISTHEORA),
-      LD(CL_AL, "OpenALSoft", "1.24.3", "Chris Robinson", false, OPENALSOFT),
+      LD(CL_AL, "OpenALSoft", "1.25.2", "Chris Robinson", false, OPENALSOFT),
       LD(CL_SSL, "OpenSSL", STR(OPENSSL_VERSION_MAJOR) "."
         STR(OPENSSL_VERSION_MINOR) "." STR(OPENSSL_VERSION_PATCH),
         "OpenSSL Software Foundation", true, OPENSSL),

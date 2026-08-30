@@ -117,6 +117,12 @@ using namespace ISysUtil::P;           using namespace ITime::P;
 using namespace IToken::P;             using namespace IUtf::P;
 using namespace IUtil::P;              using namespace IUuId::P;
 /* ========================================================================= */
+#define WINVER32   0x0501              // Windows version minimum (X86)
+#define WINVER32S  STR(WINVER32)       // ...as a string
+#define WINVER64   0x0502              // Windows version minimum (X86-64)
+#define WINVER64S  STR(WINVER64)       // ...as a string
+#define MACOS32    "10.15"             // MacOS version minimum (X86-64)
+#define MACOS64    "11.0"              // MacOS version minimum (ARM64)
 #define STANDARD   "c++20"             // Current compilation standard used
 #define ENGINENAME "engine"            // Name of engine 'engine'
 #define SRCEXT     ".hpp"              // Extension of source files
@@ -146,10 +152,10 @@ static struct Environment              // Preconfigured environment settings
    cpCC4,   cpCC8,    cpCPPSTD,   cpCCOBJ,   cpCCRES,    cpRCX,
    cpRCM,   cpRCAA,   cpRCAB,     cpRCAR,    cpRC4,      cpRC8,
    cpLDX4,  cpLDX8,   cpLDM,      cpLDAA,    cpLDAB,     cpLDAR,
-   cpLDE4,  cpLDE8,   cpLDB4,     cpLDB8,    cpLD4,      cpLD8,
-   cpLDL,   cpLDMAP,  cpLIB,      cpOBJ,     cpASM,      cpPDB,
-   cpLDEXE, cpMAP,    cpEXE,      cpDBGSUF,  cpAR,       cpAR4,
-   cpAR8,   cpARM,    cpARO,      cpARLIB;
+   cpLDE,   cpLDB,    cpLD4,      cpLD8,     cpLDL,      cpLDMAP,
+   cpLIB,   cpOBJ,    cpASM,      cpPDB,     cpLDEXE,    cpMAP,
+   cpEXE,   cpDBGSUF, cpAR,       cpAR4,     cpAR8,      cpARM,
+   cpARO,   cpARLIB;
 } /* ----------------------------------------------------------------------- */
 envWindowsMSVC =                       // Microsoft Visual C++ environment
 { /* ----------------------------------------------------------------------- */
@@ -196,15 +202,14 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* LDAA       */ "-debug -fixed -dynamicbase:no -incremental:no",
   /* LDAB       */ "-debug -fixed -opt:ref,icf",
   /* LDAR       */ "-release -opt:ref,icf -ltcg:status",
-  /* LDE4       */ "-subsystem:windows,5.01",
-  /* LDE8       */ "-subsystem:windows,5.02",
-  /* LDB4       */ "-subsystem:console,5.01",
-  /* LDB8       */ "-subsystem:console,5.02",
+  /* LDE        */ "-subsystem:windows,$.$$$",
+  /* LDB        */ "-subsystem:console,$.$$$",
   /* LD4        */ "-machine:x86 -largeaddressaware",
   /* LD8        */ "-machine:x64",
   /* LDL        */ "advapi32.lib comctl32.lib crypt32.lib dbghelp.lib "
                    "gdi32.lib imagehlp.lib kernel32.lib ole32.lib psapi.lib "
-                   "shell32.lib user32.lib version.lib winmm.lib ws2_32.lib ",
+                   "shell32.lib user32.lib version.lib winmm.lib ws2_32.lib "
+                   "avrt.lib",
   /* LDMAP      */ "-map:$",
   /* LIB        */ ".lib",
   /* OBJ        */ ".obj",
@@ -237,7 +242,7 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* ACA        */ envWindowsMSVC.cpACA,
   /* ACB        */ envWindowsMSVC.cpACB,
   /* CCX        */ "CLANG-CL.EXE",
-  /* CCM        */ "-nologo -c -GA -Gy -GF -bigobj",
+  /* CCM        */ "-nologo -c -GA -Gy -GF -bigobj -mno-avx",
   /* CCMX       */ "-utf-8 -I$ -I$/ft",
   /* CCLIB      */ envWindowsMSVC.cpCCLIB,
   /* CCINCDBG   */ envWindowsMSVC.cpCCIncDBG,
@@ -248,8 +253,8 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
                    "-Wno-gnu-zero-variadic-macro-arguments -Wno-weak-vtables "
                    "-Wno-covered-switch-default -Wno-switch-enum "
                    "-Wno-poison-system-directories -Wno-global-constructors "
-                   "-Wno-padded "
-                   "-Wno-reserved-identifier -Wno-allocator-wrappers",
+                   "-Wno-padded -Wno-reserved-identifier "
+                   "-Wno-allocator-wrappers",
   /* CCAA       */ envWindowsMSVC.cpCCAA,
   /* CCAB       */ "-DBETA -MT -Z7 -O2 -GS- -Gw",
   /* CCAR       */ "-DRELEASE -MT -Ox -GS- -Gw",
@@ -272,10 +277,8 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* LDAA       */ "-debug -fixed -dynamicbase:no -incremental:no",
   /* LDAB       */ "-debug -fixed -opt:ref,icf",
   /* LDAR       */ "-opt:ref,icf", // -release -ltcg:status unused on LLD-LINK
-  /* LDE4       */ envWindowsMSVC.cpLDE4,
-  /* LDE8       */ envWindowsMSVC.cpLDE8,
-  /* LDB4       */ envWindowsMSVC.cpLDB4,
-  /* LDB8       */ envWindowsMSVC.cpLDB8,
+  /* LDE        */ envWindowsMSVC.cpLDE,
+  /* LDB        */ envWindowsMSVC.cpLDB,
   /* LD4        */ envWindowsMSVC.cpLD4,
   /* LD8        */ envWindowsMSVC.cpLD8,
   /* LDL        */ envWindowsMSVC.cpLDL,
@@ -342,10 +345,8 @@ envWindowsLLVM =                       // LLVM on Windows
                    "oldnames.lib",
   /* LDAR       */ "-release -opt:ref,icf -ltcg:status libcmt.lib "
                    "oldnames.lib",
-  /* LDE4       */ envWindowsMSVC.cpLDE4,
-  /* LDE8       */ envWindowsMSVC.cpLDE8,
-  /* LDB4       */ envWindowsMSVC.cpLDB4,
-  /* LDB8       */ envWindowsMSVC.cpLDB8,
+  /* LDE        */ envWindowsMSVC.cpLDE,
+  /* LDB        */ envWindowsMSVC.cpLDB,
   /* LD4        */ envWindowsMSVC.cpLD4,
   /* LD8        */ envWindowsMSVC.cpLD8,
   /* LDL        */ envWindowsMSVC.cpLDL,
@@ -400,7 +401,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* CCAB       */ "-DBETA -O2",
   /* CCAR       */ "-DRELEASE -O3",
   /* CCPP       */ envWindowsLLVM.cpCCPP,
-  /* CC4        */ "-target x86_64-apple-macos10.15 -mtune=generic",
+  /* CC4        */ "-target x86_64-apple-macos" MACOS32 " -mtune=generic",
   /* CC8        */ "-target arm64-apple-macos11 -mtune=apple-m1",
   /* CPPSTD     */ envWindowsLLVM.cpCPPSTD,
   /* CCOBJ      */ "-o",
@@ -421,13 +422,13 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* LDAA       */ "",
   /* LDAB       */ "",
   /* LDAR       */ "",
-  /* LDE4       */ "",
-  /* LDE8       */ "",
-  /* LDB4       */ "",
-  /* LDB8       */ "",
-  /* LD4        */ "-arch x86_64 -platform_version macos 10.15 10.15 "
+  /* LDE        */ "",
+  /* LDB        */ "",
+  /* LD4        */ "-arch x86_64 -platform_version "
+                   "macos " MACOS32 " " MACOS32 " "
                    "-lcrt1.10.6.o",
-  /* LD8        */ "-arch arm64 -platform_version macos 11.0 11.0",
+  /* LD8        */ "-arch arm64 -platform_version "
+                   "macos " MACOS64 " " MACOS64 " ",
   /* LDL        */ "-lc -lc++ -lSystem -framework AudioUnit "
                    "-framework AudioToolbox -framework Cocoa "
                    "-framework CoreAudio -framework CoreVideo "
@@ -514,10 +515,8 @@ envLinuxGCC =                          // GCC on Linux
   /* LDAA       */ "--export-dynamic",
   /* LDAB       */ "--export-dynamic",
   /* LDAR       */ "",
-  /* LDE4       */ "",
-  /* LDE8       */ "",
-  /* LDB4       */ "",
-  /* LDB8       */ "",
+  /* LDE        */ "",
+  /* LDB        */ "",
   /* LD4        */ LINUX_GCCDIR32 "../../../" LINUX_ARCH32 "/Scrt1.o "
                    LINUX_GCCDIR32 "../../../" LINUX_ARCH32 "/crti.o "
                    LINUX_GCCDIR32 "crtbeginS.o "
@@ -2366,7 +2365,7 @@ static int BuildDistro()
       "\t\t<key>CFBundleVersion</key>\n"
       "\t\t<string>$</string>\n"
       "\t\t<key>LSMinimumSystemVersion</key>\n"
-      "\t\t<string>10.15</string>\n"
+      "\t\t<string>" MACOS32 "</string>\n"
       "\t\t<key>LSApplicationCategoryType</key>\n"
       "\t\t<string>public.app-category.games</string>\n"
       "\t\t<key>NSHighResolutionCapable</key>\n"
@@ -3011,15 +3010,15 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
   const StdString
     strA64{ StrAppend(envActive.cpAC8, ' ', envActive.cpACM) },
     strRelA64{ StrAppend(strA64, ' ', envActive.cpACB) },
-    strC{ StrFormat("$ $ $ ",
-      envActive.cpCCX, envActive.cpCCM, envActive.cpCCLIB) },
+    strC{ StrFormat("$ $ ", envActive.cpCCX, envActive.cpCCM) },
     strLM{ StrFormat("$ $", envActive.cpAR, envActive.cpARM) },
     strL{ StrFormat("$ $", strLM, envActive.cpAR4) },
     strL64{ StrFormat("$ $", strLM, envActive.cpAR8) },
-    strRelFlags{ StrFormat("$-DNDEBUG -D_NDEBUG $", strC,
-      (ullFlags & PF_FINAL ? envActive.cpCCAR :
-      (ullFlags & PF_BETA ? envActive.cpCCAB :
-        envActive.cpCCAA))) },
+    strFlags{ StrFormat("$ $", envActive.cpCCLIB,
+                (ullFlags & PF_FINAL ? envActive.cpCCAR :
+                (ullFlags & PF_BETA ? envActive.cpCCAB :
+                 envActive.cpCCAA))) },
+    strRelFlags{ StrFormat("$-DNDEBUG -D_NDEBUG $", strC, strFlags) },
     strCMakeBase{
       StrAppend(envActive.cpCMake, " "
         "-DCMAKE_BUILD_TYPE=Release "
@@ -3029,8 +3028,9 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
         "-DENABLE_SHARED=FALSE "
         "-DENABLE_STATIC=TRUE "
         "-DFORCE_STATIC_VCRT=ON "
+        "-DMAKE_MSVC_RUNTIME_LIBRARY=ON "
         "-DLIBTYPE=STATIC "
-        "-Wno-dev") },
+        "-Wno-author") },
     strCMake{ StrAppend(strCMakeBase, " .") },
     strNMake{ "NMAKE.EXE /nologo" },
     strRel32Extra{ envActive.cpCC4 },
@@ -3040,8 +3040,8 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
   // Architectures to build on MacOS
 #if defined(MACOS)
   struct Item{ const StdString strArch, strTune, strMinOS; int iBits; }
-    itItems[]{{ "x86_64", "generic",  "10.15", 32 },  // Intel X86-64
-              { "arm64",  "apple-m1", "11.00", 64 }}; // Apple Silicon
+    itItems[]{{ "x86_64", "generic",  MACOS32, 32 },  // Intel X86-64
+              { "arm64",  "apple-m1", MACOS64, 64 }}; // Apple Silicon
 #endif
   // = OPENSSL SCRIPT (TOO BIG TO DO MANUALLY!) ===============================
   if(strLib.size() >= 8 && strLib.substr(0, 8) == "openssl-")
@@ -3347,15 +3347,15 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
 #if defined(LINUX)
     throw StdRunTimeError{ "You can use the distro version of OpenALSoft!" };
 #else
+    // Library prefix
+    const StdString strPrefix{ "al" };
     // Setup the repository
     SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
     // We need to activate cmake once to build openal config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
     // Compulsory CMake flags
     const StdString strCMakeExtra{
-      "-DALSOFT_BACKEND_WASAPI=FALSE "
-      "-DALSOFT_BACKEND_PORTAUDIO=FALSE"
-      "-DALSOFT_BACKEND_WAVE=FALSE "
+      "-DALSOFT_BACKEND_PORTAUDIO=OFF "
       "-DALSOFT_DLOPEN=FALSE "
       "-DALSOFT_EMBED_HRTF_DATA=FALSE "
       "-DALSOFT_EXAMPLES=FALSE "
@@ -3367,7 +3367,6 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       "-DALSOFT_INSTALL=FALSE "
       "-DALSOFT_NO_CONFIG_UTIL=TRUE "
       "-DALSOFT_REQUIRE_SDL2=FALSE "
-      "-DALSOFT_REQUIRE_WASAPI=FALSE "
       "-DALSOFT_TESTS=OFF "
       "-DALSOFT_UPDATE_BUILD_VERSION=FALSE "
       "-DALSOFT_UTILS=FALSE" };
@@ -3380,7 +3379,13 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
         if(dempPair.first.substr(0, 4) == "fmt-")
           strFmtDir = StdMove(dempPair.first); }
     // One time only build
-    SystemF("$ $ .",  strCMakeBase, strCMakeExtra);
+    SystemF("$ $ -G \"Ninja\" .",  strCMakeBase, strCMakeExtra);
+    // Build flags
+    const StdString strRel64Extra{
+      StrFormat("$ $", envActive.cpCC8, strFlags) };
+    ReplaceTextMulti("build.ninja", {
+      { "/O2", "/Ox" }, { "-MD", "-MT -Zl" }, { "/Ob2", "" },
+    });
     // Apply header patches to conquer forcing of DLL exports
     ReplaceText(strFmtDir + "/include/fmt/base.h",
       "#    define FMT_API __declspec(dllimport)",
@@ -3389,97 +3394,45 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
                                    "#define AL_API extern");
     ReplaceText("include/al/alc.h", "#define ALC_API __declspec(dllimport)",
                                     "#define ALC_API extern");
-    // Remove some sources we don't need
-    System("rm -rf core/mixer/mixer_neon.cpp core/rtkit.* core/dbus_wrap.*");
-    // Don't put messages in debugger
-    ReplaceText("core/logging.cpp", "OutputDebugStringW(wstr.data());",
-      "\n#ifdef _DEBUG\n"
-      "  OutputDebugStringW(wstr.data());\n"
-      "#endif");
-    // Rename mixer_inc.cpp to h
-    ReplaceText("core/mixer/mixer_c.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
-    ReplaceText("core/mixer/mixer_sse.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
-    ReplaceText("core/mixer/mixer_sse2.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
-    ReplaceText("alc/alconfig.cpp",
-      "#if !defined(_GAMING_XBOX)", "#if 0");
-    ReplaceText("core/helpers.cpp",
-      "#if !ALSOFT_UWP && !defined(_GAMING_XBOX)", "#if 0");
-    // ReplaceText("core/mixer/mixer_sse3.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
-    ReplaceText("core/mixer/mixer_sse41.cpp", "hrtf_inc.cpp", "hrtf_inc.h");
-    // Remove existing files
-    System("if exist alc/alc_* rm -rfv alc/alc_*");
-    System("if exist al/effects/al_effect_* rm -rfv al/effects/al_effect_*");
-    System("if exist alc/effects/alc_effect_* "
-           "rm -rfv alc/effects/alc_effect_*");
-    // We need to rename files to prevent .obj's overwriting each other
-    { const Dir dALEffects("al/effects", ".cpp");
-      for(const DirEntMapPair &dempPair : dALEffects.GetFiles())
-        RenameFileSafe(StrAppend("al/effects/", dempPair.first),
-                       StrAppend("al/effects/al_effect_", dempPair.first)); }
-    { const Dir dALCEffects("alc/effects", ".cpp");
-      for(const DirEntMapPair &dempPair : dALCEffects.GetFiles())
-        RenameFileSafe(StrAppend("alc/effects/", dempPair.first),
-                       StrAppend("alc/effects/alc_effect_", dempPair.first)); }
-    // Rename some more filenames to prevent collision
-    RenameFileSafe("alc/context.cpp", "alc/alc_context.cpp");
-    RenameFileSafe("alc/device.cpp", "alc/alc_device.cpp");
-    // Build hrtf table
-    // MakeIncludeFromBin("hrtf/Default HRTF.mhr",
-    //  "const uint8_t hrtf_default", "hrtf_default.h");
-    // Add openal specific flags. Note that alsoft1.25+ requires C++23!!!
-    const StdString strALSpecific{ StrAppend(
-      StrFormat(envActive.cpCPPSTD, STANDARD), ' ',
-      "-D_SILENCE_ALL_CXX20_DEPRECATION_WARNINGS "
-      "-D_CRT_NONSTDC_NO_DEPRECATE "
-      "-D_CRT_SECURE_NO_WARNINGS "
-      "-D_LARGE_FILES "
-      "-D_LARGEFILE_SOURCE "
-      "-D_WIN32 "
-      "-DWIN32 "
-      "-D_WINDOWS "
-      "-DAL_ALEXT_PROTOTYPES "
-      "-DAL_BUILD_LIBRARY "
-      "-DAL_LIBTYPE_STATIC "
-      "-DHAVE_STRUCT_TIMESPEC "
-      "-DNOMINMAX "
-      "-DRESTRICT=__restrict "
-      "-Dstrcasecmp=_stricmp "
-      "-Dstrncasecmp=_strnicmp "
-      "-I. "
-      "-Ialc "
-      "-Icommon "
-      "-Ihrtf "
-      "-Iinclude "
-      "-Iopenal32/include "
-      "-Igsl/include "
-      "-I", strFmtDir, "/include ",
-      // Files to compile
-      EnumerateFiles(".cpp", "al"), ' ',
-      EnumerateFiles(".cpp", "al/eax"), ' ',
-      EnumerateFiles(".cpp", "al/effects"), ' ',
-      EnumerateFiles(".cpp", "alc"), ' ',
-      "alc/backends/base.cpp "
-      "alc/backends/dsound.cpp "
-      "alc/backends/loopback.cpp "
-      "alc/backends/null.cpp "
-      // "alc/backends/wasapi.cpp "
-      "alc/backends/wave.cpp "
-      "alc/backends/winmm.cpp ",
-      EnumerateFiles(".cpp", "alc/effects"), ' ',
-      EnumerateFiles(".cpp", "common"), ' ',
-      EnumerateFiles(".cpp", "core"), ' ',
-      EnumerateFiles(".cpp", "core/filters"), ' ',
-      EnumerateFiles(".cpp", "core/mixer"), ' ',
-      EnumerateFiles(".cc", StrAppend(strFmtDir, "/src"))) };
-    strRelFlags32 += "-D_WIN32_WINNT=0x0501 " + strALSpecific;
-    strRelFlags64 += "-D_WIN32_WINNT=0x0502 " + strALSpecific;
-    // Compile everything
-    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
-      "al", 32, 64);
+    // Do the make
+    System("ninja");
+    // Move the generated library into position
+    RenameFileSafe("OpenAL32.lib", StrFormat("../$64.lib", strPrefix));
+    // Clean-up objects and other things
+    System("ninja clean");
+    System("rm -rfv CMakeFiles CMakeCache.txt");
 # else
-//        -D"CMAKE_OSX_ARCHITECTURES=${1}"
-//        -D"CMAKE_CXX_FLAGS=-mtune=${2} -stdlib=libc++"
-//        -D"CMAKE_OSX_DEPLOYMENT_TARGET=${3}"
+    // Patch cmake script to remove error (remove me eventually bug is known)
+    ReplaceText("CMakeLists.txt",
+      "        if(HAVE_WFUNCTION_EFFECTS)\n"
+      "            list(APPEND C_FLAGS $<$<COMPILE_LANGUAGE:CXX>:"
+                     "-Werror=function-effects>)\n"
+      "        endif()\n", "");
+    // Enumerate architectures
+    for(const Item &itProc : itItems)
+    { // Make the makefile
+      SystemF("$ $ "
+        "-D\"CMAKE_OSX_ARCHITECTURES=$\" "
+        "-D\"CMAKE_CXX_FLAGS=-mtune=$\" "
+        "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=$\" "
+        ".",
+        strCMakeBase, strCMakeExtra, itProc.strArch, itProc.strTune,
+        itProc.strMinOS);
+      // Do the make
+      System("make");
+      // Move the generated library into position
+      RenameFileSafe("libopenal.a",
+        StrFormat("../$$.a", strPrefix, itProc.iBits));
+      // Clean-up objects and other things
+      System("make clean");
+      System("rm -rfv CMakeFiles CMakeCache.txt");
+    } // Do finish libraries
+    FinishLibs(strTmp, strPrefix);
+    // Header hack for Windows fix incase we update the engine's 'al.h'.
+    ReplaceText("include/al/al.h", "#define AL_API __declspec(dllimport)",
+                                   "#define AL_API extern");
+    ReplaceText("include/al/alc.h", "#define ALC_API __declspec(dllimport)",
+                                    "#define ALC_API extern");
 # endif
 #endif
   } // = THEORA SCRIPT ========================================================
@@ -3645,10 +3598,10 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     const StdString strGlfwSpecific{ StrAppend("-Iinclude "
       "-D_CRT_SECURE_NO_WARNINGS -D_GLFW_WIN32 -DWIN32 -D_WINDOWS ",
       EnumerateFiles(".c", "src")) };
-    strRelFlags32 += StrAppend("-DWINVER=0x0501 -D_WIN32_WINNT=0x0501 ",
-      strGlfwSpecific);
-    strRelFlags64 += StrAppend("-DWINVER=0x0502 -D_WIN32_WINNT=0x0502 ",
-      strGlfwSpecific);
+    strRelFlags32 += StrAppend("-DWINVER=" WINVER32S
+      " -D_WIN32_WINNT=" WINVER32S " " + strGlfwSpecific);
+    strRelFlags64 += StrAppend("-DWINVER=" WINVER64S
+      " -D_WIN32_WINNT=" WINVER64S " " + strGlfwSpecific);
     // Remove forced use of ANSI when we can use UNICODE.
     ReplaceText("src/internal.h",
       "glfwPlatformLoadModule(const char* path)",
@@ -3697,7 +3650,7 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     MakeAndSetDirectory("build32");
     System(StrFormat("$ D\"CMAKE_BUILD_TYPE=Release\" "
            "-D\"CMAKE_C_FLAGS=-mtune=generic\" "
-           "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=10.15\" "
+           "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=" MACOS32 "\" "
            "-D\"CMAKE_OSX_ARCHITECTURES=x86_64\" "
            "-D\"GLFW_BUILD_DOCS=OFF\" "
            "-D\"GLFW_BUILD_EXAMPLES=OFF\" "
@@ -3711,7 +3664,7 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     MakeAndSetDirectory("build64");
     System(StrFormat("$ -D\"CMAKE_BUILD_TYPE=Release\" "
            "-D\"CMAKE_C_FLAGS=-mtune=apple-m1\" "
-           "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=11.00\" "
+           "-D\"CMAKE_OSX_DEPLOYMENT_TARGET=" MACOS64 "\" "
            "-D\"CMAKE_OSX_ARCHITECTURES=arm64\" "
            "-D\"GLFW_BUILD_DOCS=OFF\" "
            "-D\"GLFW_BUILD_EXAMPLES=OFF\" "
@@ -3874,8 +3827,8 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     strRelFlags32 += strLZMASpecificMandatory;
     strRelFlags64 += strLZMASpecificMandatory;
     // This disables use of AVX which isn't supported on wine
-    ReplaceText("C/LzFind.c", "#define USE_SATUR_SUB_128",
-                              "#undef USE_SATUR_SUB_128");
+//    ReplaceText("C/LzFind.c", "#define USE_SATUR_SUB_128",
+//                              "#undef USE_SATUR_SUB_128");
     // Compile everything
     GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
       "lzma", 32, 64);
@@ -4169,6 +4122,13 @@ static int Compile(const bool bSelf)
   StdString strCpp, strRc, strRes, strExe, strPdb, strObj, strAsm, strMap,
     strCmdCC, strCmdRC, strCmdLD,
     strDbgDir{ StrAppend(DBGDIR, envActive.cpDBGSUF) };
+  // Calculate linker version
+#if defined(WINDOWS)
+  const int iMajor32 = (WINVER32 >> 8) & 0xFF, iMinor32 = (WINVER32 & 0xFF),
+            iMajor64 = (WINVER64 >> 8) & 0xFF, iMinor64 = (WINVER64 & 0xFF);
+#else
+  const int iMajor32 = 0, iMinor32 = 0, iMajor64 = 0, iMinor64 = 0;
+#endif
   // Have compiler?
   if(!envActive.cpCCX.empty())
   { // Set compiler command line
@@ -4219,16 +4179,18 @@ static int Compile(const bool bSelf)
       if(!envActive.cpCC8.empty()) strCmdCC += StrAppend(envActive.cpCC8, ' ');
       if(!envActive.cpRC8.empty()) strCmdRC += StrAppend(envActive.cpRC8, ' ');
       if(!envActive.cpLD8.empty()) strCmdLD += StrAppend(envActive.cpLD8, ' ');
-      if(!envActive.cpLDB8.empty())
-        strCmdLD += StrAppend(envActive.cpLDB8, ' ');
+      if(!envActive.cpLDB.empty())
+        strCmdLD += StrFormat(envActive.cpLDB, iMajor64, StdIOSSetWidth(2),
+          StdIOSSetFill('0'), iMinor64) + " ";
     } // 32 bit compilation?
     else if(ullFlags & PF_X86)
     { // Append to command strings
       if(!envActive.cpCC4.empty()) strCmdCC += StrAppend(envActive.cpCC4, ' ');
       if(!envActive.cpRC4.empty()) strCmdRC += StrAppend(envActive.cpRC4, ' ');
       if(!envActive.cpLD4.empty()) strCmdLD += StrAppend(envActive.cpLD4, ' ');
-      if(!envActive.cpLDB4.empty())
-        strCmdLD += StrAppend(envActive.cpLDB4, ' ');
+      if(!envActive.cpLDB.empty())
+        strCmdLD += StrFormat(envActive.cpLDB, iMajor32, StdIOSSetWidth(2),
+          StdIOSSetFill('0'), iMinor32) + " ";
     } // No architecture specified
     else XC("No architecture specified!", "Flags", ullFlags);
   } // Compiling engine?
@@ -4248,8 +4210,9 @@ static int Compile(const bool bSelf)
       if(!envActive.cpCC8.empty()) strCmdCC += StrAppend(envActive.cpCC8, ' ');
       if(!envActive.cpRC8.empty()) strCmdRC += StrAppend(envActive.cpRC8, ' ');
       if(!envActive.cpLD8.empty()) strCmdLD += StrAppend(envActive.cpLD8, ' ');
-      if(!envActive.cpLDE8.empty())
-        strCmdLD += StrAppend(envActive.cpLDE8, ' ');
+      if(!envActive.cpLDE.empty())
+        strCmdLD += StrFormat(envActive.cpLDE, iMajor64, StdIOSSetWidth(2),
+          StdIOSSetFill('0'), iMinor64) + " ";
       // All these don't need checking because they still need 32/64 suffix
       strExe += StrAppend("64", envActive.cpEXE);
       strPdb += StrAppend("64", envActive.cpPDB);
@@ -4263,8 +4226,9 @@ static int Compile(const bool bSelf)
       if(!envActive.cpCC4.empty()) strCmdCC += StrAppend(envActive.cpCC4, ' ');
       if(!envActive.cpRC4.empty()) strCmdRC += StrAppend(envActive.cpRC4, ' ');
       if(!envActive.cpLD4.empty()) strCmdLD += StrAppend(envActive.cpLD4, ' ');
-      if(!envActive.cpLDE4.empty())
-        strCmdLD += StrAppend(envActive.cpLDE4, ' ');
+      if(!envActive.cpLDE.empty())
+        strCmdLD += StrFormat(envActive.cpLDE, iMajor32, StdIOSSetWidth(2),
+          StdIOSSetFill('0'), iMinor32) + " ";
       // All these don't need checking because they still need 32/64 suffix
       strExe += StrAppend("32", envActive.cpEXE);
       strPdb += StrAppend("32", envActive.cpPDB);

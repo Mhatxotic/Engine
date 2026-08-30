@@ -260,6 +260,7 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #include <stdexcept>                   // Runtime errors
 #include <string>                      // String containers
 #include <thread>                      // Operating system threads
+#include <type_traits>                 // For aligned storage
 #include <unordered_set>               // Unordered set
 #include <vector>                      // Dynamic arrays
 /* -- More checks ---------------------------------------------------------- */
@@ -511,28 +512,6 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 # pragma warning(pop)                  // Restore original warning settings
 #endif                                 // MSVC_VANILLA
   } /* --------------------------------------------------------------------- */
-  namespace RapidJson                  // RAPIDJSON API FUNCTIONS
-  { /* --------------------------------------------------------------------- */
-#define RAPIDJSON_NAMESPACE            Lib::RapidJson
-#define RAPIDJSON_HAS_STDSTRING      1 // Have Std::String
-#define RAPIDJSON_NOEXCEPT             // We have
-#define RAPIDJSON_NAMESPACE_BEGIN      // Keep blank or errors
-#define RAPIDJSON_NAMESPACE_END        // Keep blank or errors
-#define RAPIDJSON_ASSERT(x)          if(!(x)) throw ::std::runtime_error{(#x)};
-#define RAPIDJSON_HAS_CXX11_RVALUE_REFS 1 // So sorting works
-#define RAPIDJSON_HAS_CXX11_NOEXCEPT 1 // Force to use
-#include <rapidjson/document.h>        // Main header
-#include <rapidjson/prettywriter.h>    // Pretty formatting
-#include <rapidjson/error/en.h>        // Error handling
-#include <rapidjson/cursorstreamwrapper.h> // To get better error information
-#undef RAPIDJSON_HAS_CXX11_NOEXCEPT    // Done with this define
-#undef RAPIDJSON_HAS_CXX11_RVALUE_REFS // Done with this define
-#undef RAPIDJSON_ASSERT                // Done with this define
-#undef RAPIDJSON_NAMESPACE_END         // Done with this define
-#undef RAPIDJSON_NAMESPACE_BEGIN       // Done with this define
-#undef RAPIDJSON_NOEXCEPT              // Done with this define
-#undef RAPIDJSON_HAS_STDSTRING         // Done with this define
-  } /* --------------------------------------------------------------------- */
   namespace OpenAL                     // OPENAL API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #define AL_ALEXT_PROTOTYPES            // So can get alcResetDevice
@@ -590,7 +569,27 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <ft/ftglyph.h>                // Glyph header
 #include <ft/ftmodapi.h>               // Modification header
   } /* --------------------------------------------------------------------- */
-} /* -- End of system inclusions ------------------------------------------- */
+} /* -- Rapidjson has to be defined here because of C++23 changes ---------- */
+#define RAPIDJSON_NAMESPACE            Lib::RapidJson
+#define RAPIDJSON_HAS_STDSTRING      1 // Have std::String
+#define RAPIDJSON_NOEXCEPT             // Have 'noexcept'
+#define RAPIDJSON_NAMESPACE_BEGIN      namespace Lib { namespace RapidJson {
+#define RAPIDJSON_NAMESPACE_END        } }
+#define RAPIDJSON_ASSERT(x)          if(!(x)) throw ::std::runtime_error{(#x)};
+#define RAPIDJSON_HAS_CXX11_RVALUE_REFS 1 // So sorting works
+#define RAPIDJSON_HAS_CXX11_NOEXCEPT 1 // Force to use
+#include <rapidjson/document.h>        // Main header
+#include <rapidjson/prettywriter.h>    // Pretty formatting
+#include <rapidjson/error/en.h>        // Error handling
+#include <rapidjson/cursorstreamwrapper.h> // To get better error information
+#undef RAPIDJSON_HAS_CXX11_NOEXCEPT    // Done with this define
+#undef RAPIDJSON_HAS_CXX11_RVALUE_REFS // Done with this define
+#undef RAPIDJSON_ASSERT                // Done with this define
+#undef RAPIDJSON_NAMESPACE_END         // Done with this define
+#undef RAPIDJSON_NAMESPACE_BEGIN       // Done with this define
+#undef RAPIDJSON_NOEXCEPT              // Done with this define
+#undef RAPIDJSON_HAS_STDSTRING         // Done with this define
+/* -- End of system inclusions --------------------------------------------- */
 #if defined(DISABLED_ALL_WARNINGS)     // We disabled all warnings?
 # pragma GCC diagnostic pop            // Restore original compiler warnings
 # undef DISABLED_ALL_WARNINGS          // Done with this define

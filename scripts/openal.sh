@@ -37,9 +37,13 @@ if [ ! $? -eq 0 ]; then
   exit 4
 fi
 
+sed -i '' '410,412d' CMakeLists.txt
+
 build()
 {
   rm -rfv CMakeFiles CMakeCache* 2>/dev/null
+
+
 
   cmake -D"LIBTYPE=STATIC" \
         -D"CMAKE_BUILD_TYPE=Release" \
