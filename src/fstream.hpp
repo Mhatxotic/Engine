@@ -215,7 +215,7 @@ class FStreamBase :                    // File stream base class
   /* -- Read entire file without knowing the size of the file -------------- */
   StdString FStreamReadStringChunked(const size_t stBytes = 4096)
   { // Stream to write strings to
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // Loop point
     ContinueReadingStrings:
     // Read the chunk and break if at end of file or error

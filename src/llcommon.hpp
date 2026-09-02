@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace Common {                     // Common namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;               using namespace Lib::OS::GlFW::Types;
+using namespace IStd::P;               using namespace Lib::GlFW::Types;
 using namespace Lib::OpenAL::Types;
 /* -- Read a LString ------------------------------------------------------- */
 struct AgLCString { size_t stB; const char *cpD;

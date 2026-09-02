@@ -176,7 +176,7 @@ struct UrlBase :
           // Encode parameters?
           case 1:
           { // Start rebuilding resource with first parameter
-            StdOStringStream osS;
+            StdOStringStream &osS = cCommon->o.StreamReset();
             // Get iterator for first item
             ParserStringConstIt psciIt{ this->cbegin() };
             // Start off
@@ -194,7 +194,7 @@ struct UrlBase :
           } // Decode parameters?
           case 2:
           { // Start rebuilding resource with first parameter
-            StdOStringStream osS;
+            StdOStringStream &osS = cCommon->o.StreamReset();
             // Get iterator for first item
             ParserStringConstIt psciIt{ this->cbegin() };
             // Start off

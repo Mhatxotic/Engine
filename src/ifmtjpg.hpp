@@ -13,7 +13,7 @@ using namespace IError::P;             using namespace IFileMap::P;
 using namespace IFStream::P;           using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
 using namespace IMemory::P;            using namespace ITexDef::P;
-using namespace Lib::OS::JpegTurbo;
+using namespace Lib::JpegTurbo;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

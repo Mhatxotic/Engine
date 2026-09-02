@@ -14,7 +14,7 @@ using namespace IArgs::P;              using namespace ICmdLine::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace ILog::P;               using namespace IMemory::P;
 using namespace IStd::P;               using namespace IStdLib::P;
-using namespace ISysUtil::P;           using namespace Lib::OS;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

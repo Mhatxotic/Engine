@@ -17,7 +17,7 @@ using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IName::P;              using namespace ISerial::P;
 using namespace IShaders::P;           using namespace IStd::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
-using Lib::OS::GlFW::GLfloat;
+using Lib::GlFW::GLfloat;
 /* ------------------------------------------------------------------------- */
 using PalData = StdArray<Colour, 256>; // Palette data
 /* ------------------------------------------------------------------------- */

@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IFboCmd {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using Lib::OS::GlFW::GLfloat;          using Lib::OS::GlFW::GLsizei;
-using Lib::OS::GlFW::GLuint;           using Lib::OS::GlFW::GLvoid;
+using Lib::GlFW::GLfloat;              using Lib::GlFW::GLsizei;
+using Lib::GlFW::GLuint;               using Lib::GlFW::GLvoid;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Defines -------------------------------------------------------------- */

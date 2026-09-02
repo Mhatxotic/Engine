@@ -19,7 +19,7 @@ using namespace IMemory::P;            using namespace IName::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IThread::P;            using namespace Lib::OS::GlFW::Types;
+using namespace IThread::P;            using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Begin collector class ------------------------------------------------ */

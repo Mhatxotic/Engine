@@ -20,7 +20,7 @@ using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IStat::P;              using namespace IString::P;
 using namespace ISysMod::P;            using namespace ISysRedirect::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IToken::P;             using namespace Lib::OS;
+using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

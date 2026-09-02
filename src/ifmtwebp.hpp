@@ -45,7 +45,7 @@ class CodecWEBP :                      // WEBP codec object
     { // Get and set dimensions
       size_t stWidth = 0, stHeight = 0;
       simplewebp_get_dimensions(swpData, &stWidth, &stHeight);
-      using Lib::OS::GlFW::GLuint;
+      using Lib::GlFW::GLuint;
       idData.DimSet(static_cast<GLuint>(stWidth),
         static_cast<GLuint>(stHeight));
       // Decode the stream and clear it after

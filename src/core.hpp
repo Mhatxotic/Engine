@@ -58,7 +58,7 @@ using namespace ITexture::P;           using namespace IThread::P;
 using namespace ITime::P;              using namespace IToken::P;
 using namespace IUrl::P;               using namespace IUtf::P;
 using namespace IUtil::P;              using namespace IVideo::P;
-using namespace Lib::OS::GlFW::Types;  using namespace Lib::OpenAL::Types;
+using namespace Lib::GlFW::Types;      using namespace Lib::OpenAL::Types;
 using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace

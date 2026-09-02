@@ -27,7 +27,7 @@ using namespace ILuaFunc::P;           using namespace IMutex::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace IUtil::P;              using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

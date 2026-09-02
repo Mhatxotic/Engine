@@ -15,7 +15,6 @@ namespace ISysMutex {                  // Start of private module namespace
 using namespace IError::P;             using namespace ILog::P;
 using namespace IName::P;              using namespace IStd::P;
 using namespace IStdLib::P;            using namespace ISysUtil::P;
-using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

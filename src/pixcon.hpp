@@ -644,10 +644,10 @@ class SysCon :                         // All members initially private
   void ForceRedrawTerminal()
   { // Running some NCurses calls
     using namespace ICurses;
-    // Clear the screen
-    clear();
-    // Refresh it
-    refresh();
+    // Clear the screen and refresh it
+    clearok(stdscr, TRUE);
+    touchwin(stdscr);
+    wrefresh(stdscr);
   }
   /* -- DeInitialise ------------------------------------------------------- */
   void SysConDeInit()

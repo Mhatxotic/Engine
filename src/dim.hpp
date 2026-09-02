@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IDim {                       // Start of module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IIntPair::P;           using namespace Lib::OS::GlFW::Types;
+using namespace IIntPair::P;           using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

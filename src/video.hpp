@@ -28,7 +28,7 @@ using namespace IStream::P;            using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 using namespace IUtil::P;              using namespace Lib::Ogg;
 using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL::Types;
-using namespace Lib::OS::GlFW::Types;
+using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */

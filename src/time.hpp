@@ -93,7 +93,7 @@ class Duration
     // in terms of leap years, proper days in a month etc.
     StdGMTime(&tD, &strDuration);
     // Output string
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // If failed? Manually do str
     if(tD.tm_year == -1)
     { // Clear years and months since we can't realiably calculate that.
@@ -169,9 +169,9 @@ static StdString TimeTMToStr(const StdTMStruct &tmsData,
 /* -- Convert specified timestamp to string -------------------------------- */
 static StdString TimeLocalTTtoStr(const StdTimeT ttTimestamp,
   const char*const cpFormat = caTimeFormat)
-{ // Convert it to local time in a structure
-  StdTMStruct tmsData; StdLocalTime(&tmsData, &ttTimestamp);
-  // Do the parse and return the string
+{ // Convert it to local time in a structure, do the parse and return string
+  StdTMStruct tmsData;
+  StdLocalTime(&tmsData, &ttTimestamp);
   return TimeTMToStr(tmsData, cpFormat);
 }
 /* -- Convert specified timestamp to string (UTC) -------------------------- */
@@ -186,7 +186,7 @@ static StdString TimeUTCTTtoStr(const StdTimeT ttTimestamp,
 static StdString TimeToShortDuration(const double dDuration,
   const int iPrecision = 6)
 { // Output string
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // Get duration ceiled and if negative?
   double dInt, dFrac = modf(dDuration, &dInt);
   if(dInt < 0)

@@ -254,8 +254,7 @@ template<typename StrType>
   static FILE *StdPOpen[[maybe_unused]](StrType &&strStr,
     const char*const cpType = "r")
 { return StrDenormaliseString(StdForward<StrType>(strStr),
-    [cpType](const char*const cpStr)->FILE*
-      { return popen(cpStr, cpType); }); }
+    [cpType](const char*const cpStr)->FILE*{ return popen(cpStr, cpType); }); }
 /* -- Wrapper for pclose() function ---------------------------------------- */
 static int StdPClose[[maybe_unused]](FILE*const fStream)
   { return pclose(fStream); }
@@ -264,11 +263,11 @@ static void StdSRand(const unsigned uSeed) { srandom(uSeed); }
 /* -- Wrapper for mmap function -------------------------------------------- */
 template<typename CharType>
   requires (!StdIsPointer<CharType>)
-static CharType *StdMMap(void*vpAddr, const size_t stLen,
+static CharType *StdMMap(void*const vpAddr, const size_t stLen,
   const int iProtection, const int iFlags, const int iDescriptor,
   const off_t otOffset)
-{ return reinterpret_cast<CharType*>(Lib::OS::mmap(vpAddr, stLen,
-    iProtection, iFlags, iDescriptor, otOffset)); }
+{ return reinterpret_cast<CharType*>(mmap(vpAddr, stLen, iProtection, iFlags,
+    iDescriptor, otOffset)); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Operating system check
 /* ------------------------------------------------------------------------- */

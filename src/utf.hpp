@@ -256,7 +256,7 @@ class UtfDecoder final :               // UTF8 string decoder helper
     // Return failure if nothing added
     if(strMatched.empty()) return 0;
     // Put value into input string stream
-    StdIStringStream isS{ strMatched };
+    StdIStringStream &isS = cCommon->i.StreamReset(strMatched);
     // Push value into integer
     isS >> StdIOSHex >> itOut;
     // Return bytes read

@@ -20,7 +20,6 @@ using namespace ISysInfo::P;           using namespace ISysMod::P;
 using namespace ISysMutex::P;          using namespace ISysPosix::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
 using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -505,7 +504,8 @@ class SysCore :
       uMinor = tsVersion.size() < 2 ? 0 : StrToNum<unsigned>(tsVersion[1]),
       uBuild = tsVersion.size() < 3 ? 0 : StrToNum<unsigned>(tsVersion[2]);
     // Set operating system version string
-    StdOStringStream osS; osS << "MacOS ";
+    StdOStringStream &osS = cCommon->o.StreamReset();
+    osS << "MacOS ";
     // Version information table
     struct OSListItem
     { // Label to append if verified

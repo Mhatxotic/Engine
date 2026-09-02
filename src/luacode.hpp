@@ -15,7 +15,7 @@ using namespace IError::P;             using namespace IFileMap::P;
 using namespace ILog::P;               using namespace ILuaBase::P;
 using namespace ILuaUtil::P;           using namespace IMemory::P;
 using namespace ISql::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace Lib::OS::SevenZip;
+using namespace IString::P;            using namespace Lib::SevenZip;
 using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace

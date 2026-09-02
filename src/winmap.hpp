@@ -13,7 +13,7 @@ namespace ISysMap {                    // Start of private module namespace
 using namespace ICommon::P;            using namespace IError::P;
 using namespace ILog::P;               using namespace IName::P;
 using namespace IStd::P;               using namespace IStdLib::P;
-using namespace ISysUtil::P;           using namespace Lib::OS;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

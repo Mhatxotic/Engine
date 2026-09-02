@@ -13,7 +13,7 @@ namespace ISysUtil {                   // Start of private module namespace
 using namespace ICommon::P;            using namespace IDir::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

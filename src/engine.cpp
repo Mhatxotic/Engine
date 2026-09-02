@@ -167,7 +167,7 @@ namespace E {                          // Start of engine namespace
 ENTRYFUNC                              // Macro defined in 'setup.hpp'
 { // Override environment variable with an ASAN friendly version on MacOS
 #if defined(MACOS)
-  _wenviron = *Lib::OS::_NSGetEnviron();
+  _wenviron = *_NSGetEnviron();
 #endif
   // Includes required to build the engine
   using namespace E;                   using namespace ISysUtil::P;

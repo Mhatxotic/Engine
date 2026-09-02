@@ -14,7 +14,7 @@ using namespace IEvtWin::P;            using namespace IFillCon::P;
 using namespace IFlags::P;             using namespace IGlFWBase::P;
 using namespace IJoyInfo::P;           using namespace ILog::P;
 using namespace ILuaFunc::P;           using namespace IStd::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW::Types;
+using namespace IUtil::P;              using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

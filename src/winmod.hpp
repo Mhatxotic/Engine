@@ -12,7 +12,7 @@ namespace ISysMod {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

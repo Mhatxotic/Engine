@@ -21,7 +21,7 @@ using namespace IStdLib::P;            using namespace IString::P;
 using namespace ISysCon::P;            using namespace ISysInfo::P;
 using namespace ISysMod::P;            using namespace ISysReg::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 class SysProcess :                     // Need this before of System init order
   /* -- Base classes ------------------------------------------------------- */
@@ -816,7 +816,8 @@ class SysCore :
     if(!fcbGVEW || !fcbGVEW(reinterpret_cast<LPOSVERSIONINFOW>(&osviData)))
       XCS("Failed to query operating system version!");
     // Set operating system version string
-    StdOStringStream osS; osS << "Windows ";
+    StdOStringStream &osS = cCommon->o.StreamReset();
+    osS << "Windows ";
     // Version information table
     struct OSListItem
     { // Label to append if verified
@@ -1067,12 +1068,12 @@ class SysCore :
     return mData;
   }
   /* ---------------------------------------------------------------------- */
-  void WindowInitialised(GlFW::GLFWwindow*const gwWindow)
+  void WindowInitialised(Lib::GlFW::GLFWwindow*const gwWindow)
   { // If we don't have a GlFW window?
     if(!gwWindow) return;
     // Set handles to the GLFW window that was created, or the console. The
     // handle should be valid 100% of the time but check just incase
-    SetWindowHandle(GlFW::glfwGetWin32Window(gwWindow));
+    SetWindowHandle(Lib::GlFW::glfwGetWin32Window(gwWindow));
     if(IsNotWindowHandleSet()) XC("Failed to get window handle from GlFW!");
     // Because GLFW has a horrible white background, let's make it a better
     // colour from the windows theme to not blind people.

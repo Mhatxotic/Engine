@@ -23,7 +23,7 @@ using namespace IName::P;              using namespace ISerial::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace Lib::OS::SevenZip;
+using namespace Lib::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -73,7 +73,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     { return static_cast<int>(InFile_OpenW(csfStream,
         UTFtoS16(NameGet()).data())); }
   /* -- Get operating system specific handle ------------------------------- */
-  static Lib::OS::HANDLE ArchiveCFISToOSHandle(const CFileInStream &cfisStream)
+  static HANDLE ArchiveCFISToOSHandle(const CFileInStream &cfisStream)
     { return cfisStream.file.handle; }
   /* ----------------------------------------------------------------------- */
 #else                                  // Linux or MacOS?
@@ -648,7 +648,7 @@ static StdString ArchiveGetNames()
   // Get first archive
   ArchivesItConst aicIt{ cArchives->cbegin() };
   // Lets build a list of archives
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // Add first archive name to list
   osS << (*aicIt)->NameGet();
   // Until end of archives add their names prefixed with a space

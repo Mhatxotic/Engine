@@ -19,7 +19,7 @@ using namespace IString::P;            using namespace ISysCon::P;
 using namespace ISysInfo::P;           using namespace ISysMod::P;
 using namespace ISysMutex::P;          using namespace ISysPosix::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -115,7 +115,7 @@ class SysCore :
   { // Return nothing if no module
     if(!vpModule) return {};
     // Get information about the shared object
-    struct Lib::OS::link_map *lmData;
+    struct link_map *lmData;
     if(dlinfo(vpModule, RTLD_DI_LINKMAP, &lmData) || !lmData)
       XCL("Failed to read info about shared object!", "File", cpAltName);
     // Get full pathname of file

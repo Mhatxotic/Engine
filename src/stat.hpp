@@ -149,7 +149,7 @@ class Statistic
   /* -- Finish with new string stream -------------------------------------- */
   StdString Finish(const bool bAddLF = true, const size_t stGap = 1)
   { // Output stream
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // Do the format
     Finish(osS, bAddLF, stGap);
     // Return the string

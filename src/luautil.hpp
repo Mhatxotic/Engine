@@ -140,7 +140,7 @@ static StdString LuaUtilGetVarStack(lua_State*const lS)
 { // If there are variables in the stack?
   if(const int iCount = LuaBaseGetTop(lS))
   { // String to return
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();;
      // For each element (1 is the first item)
     for(int iIndex = 1; iIndex <= iCount; ++iIndex)
       osS << iIndex
@@ -303,7 +303,7 @@ static StdString LuaUtilStack(lua_State*const lST)
   } // Until theres no more upstates
   while(lS);
   // String to return
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();;
   // Stack id that will get decremented to 0 (the root call)
   size_t stId = lsStack.size();
   // For each stack trace

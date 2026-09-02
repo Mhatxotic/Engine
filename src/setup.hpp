@@ -90,7 +90,7 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #  error This compiler is not recognised. Please use clang or msvc!
 # endif                                // Check actual compiler
 # if defined(_M_AMD64)||defined(__MINGW64__) // 64-bit compilation?
-#  define WINVER                0x0502 // Target Windows XP 64-bit or higher
+#  define WINVER                0x0601 // Target Windows 7 64-bit or higher
 #  define CISC                         // Using INTEL or AMD instruction set
 #  define X64                          // Using X64 architechture
 #  if defined(__AVX2__)                // Target has AVX2 instructions?
@@ -101,7 +101,7 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #   define BUILD_TARGET                "Win-X64-SSE2"
 #  endif                               // Floating point checks
 # elif defined(_M_IX86)||defined(__MINGW32__) // 32-bit compilation?
-#  define WINVER                0x0501 // Target Windows XP 32-bit or higher
+#  define WINVER                0x0601 // Target Windows 7 32-bit or higher
 #  define CISC                         // Using INTEL or AMD instruction set
 #  define X86                          // Using X86 architechture
 #  if _M_IX86_FP == 1                  // Target FP is SSE?
@@ -272,6 +272,19 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #define STR(...)         STR_HELPER(__VA_ARGS__) // to string
 /* -- Target specific headers ---------------------------------------------- */
 #if defined(WINDOWS)                   // Windows 32-bit or 64-bit
+# include <Windows.H>                  // Need windows headers file
+# include <TChar.H>                    // Unicode support
+# include <ImageHlp.H>                 // Executable image headers file
+# include <TlHelp32.H>                 // Toolhelp header file
+# include <ShlObj.H>                   // Shell header file
+# include <RTCapi.H>                   // RTC headers file
+# include <WinSock.H>                  // Windows sockets headers file
+# include <AccCtrl.H>                  // Access control headers file
+# include <AclApi.H>                   // Access control list headers file
+# define PSAPI_VERSION               1 // Want this to work on XP so use V1
+# include <PsApi.H>                    // Process API header file
+# undef PSAPI_VERSION                  // Don't need this anymore
+# undef GetObject                      // RapidJSon compatibility
 # if defined(_CRTDBG_MAP_ALLOC)        // Debug stuff required by MSDN
 #  include <stdlib.h>                  // >> Required by MSDN
 #  include <crtdbg.h>                  // >> Basic Leak detection SDK
@@ -294,8 +307,9 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 # include <io.h>                       // Io header
 # include <process.h>                  // Process header
 # include <sys/timeb.h>                // Time block functions
-/* -- Endianness ----------------------------------------------------------- */
+/* -- Defines -------------------------------------------------------------- */
 # define LITTLEENDIAN                  // There are no BE versions of Windows
+# define GLFW_EXPOSE_NATIVE_WIN32      // Expose Win32 specific funcs in GlfW
 /* -- Using anything but Windows? ------------------------------------------ */
 #else                                  // Could be MacOS or Linux
 /* ------------------------------------------------------------------------- */
@@ -318,42 +332,6 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 # endif                                // Endianness setup
 /* ------------------------------------------------------------------------- */
 # if defined(LINUX)                    // Uisng Linux?
-#  include <execution>                 // For std::execution::* classes
-# endif                                // Apple check
-/* ------------------------------------------------------------------------- */
-#endif                                 // Operating system
-/* -- Lua includes --------------------------------------------------------- **
-** Because Lua was compiled as C++ in the root namespace, Lua's includes     **
-** also need to be defined in the root namespace.                            **
-** ------------------------------------------------------------------------- */
-#include <lua/lstate.h>                // Definition of Lua_State
-#include <lua/lauxlib.h>               // Lua auxiliary library
-#include <lua/lualib.h>                // Lua library
-#include <lua/ldo.h>                   // Lua macros
-#include <lua/lfunc.h>                 // Lua functions
-#undef getstr                          // Ambiguity with ncurses
-/* == Libaries namespace to keep all the API's neat and tidy =============== */
-namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
-{ /* ----------------------------------------------------------------------- */
-  namespace OS                         // OPERATING SYSTEM API FUNCTIONS
-  { /* --------------------------------------------------------------------- */
-#if defined(WINDOWS)                   // Targeting Windows?
-# include <Windows.H>                  // Need windows headers file
-# include <TChar.H>                    // Unicode support
-# include <ImageHlp.H>                 // Executable image headers file
-# include <TlHelp32.H>                 // Toolhelp header file
-# include <ShlObj.H>                   // Shell header file
-# include <RTCapi.H>                   // RTC headers file
-# include <WinSock.H>                  // Windows sockets headers file
-# include <AccCtrl.H>                  // Access control headers file
-# include <AclApi.H>                   // Access control list headers file
-# define PSAPI_VERSION               1 // Want this to work on XP so use V1
-# include <PsApi.H>                    // Process API header file
-# undef PSAPI_VERSION                  // Don't need this anymore
-# undef GetObject                      // RapidJSon compatibility
-# define GLFW_EXPOSE_NATIVE_WIN32      // Expose Win32 specific funcs in GlfW
-#else                                  // Anything but Windows?
-# if defined(LINUX)                    // Targeting Linux?
 #  include <X11/Xlib.h>                // Load X11 API
 #  include <X11/extensions/Xrandr.h>   // Load X11 Xrandr API
 #  include <wayland-client.h>          // Load WayLand API
@@ -370,6 +348,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #  undef Bool                          // Causes problem with FreeType
 #  define GLFW_EXPOSE_NATIVE_X11       // Expose X11 specific funcs in GLFW
 #  define GLFW_EXPOSE_NATIVE_WAYLAND   // Expose Wayland specific funcs in GLFW
+#  include <execution>                 // For std::execution::* classes
 # elif defined(MACOS)                  // Targeting MacOS?
 #  include <crt_externs.h>             // For _NSGetEnviron();
 #  include <ApplicationServices/ApplicationServices.h> // Load app services API
@@ -394,14 +373,28 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #  define _XOPEN_SOURCE_EXTENDED       // Unlock extended ncurses functionality
      using __sighandler_t = void (*)(int); // For signal() on MacOS
 #  define GLFW_EXPOSE_NATIVE_COCOA     // Expose Cocoa specific funcs in GLFW
-# endif                                // POSIX system check
+# endif                                // Apple check
+/* ------------------------------------------------------------------------- */
 # include <semaphore.h>                // Semaphores
 # include <sys/socket.h>               // Socket header
 # include <sys/mman.h>                 // Memory manager functions
-#endif                                 // Operating system check
-    /* --------------------------------------------------------------------- */
-    namespace OpenSSL                  // OPENSSL API FUNCTIONS
-    { /* ------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+#endif                                 // Operating system
+/* -- Lua includes --------------------------------------------------------- **
+** Because Lua was compiled as C++ in the root namespace, Lua's includes     **
+** also need to be defined in the root namespace.                            **
+** ------------------------------------------------------------------------- */
+#include <lua/lstate.h>                // Definition of Lua_State
+#include <lua/lauxlib.h>               // Lua auxiliary library
+#include <lua/lualib.h>                // Lua library
+#include <lua/ldo.h>                   // Lua macros
+#include <lua/lfunc.h>                 // Lua functions
+#undef getstr                          // Ambiguity with ncurses
+/* == Libaries namespace to keep all the API's neat and tidy =============== */
+namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
+{ /* ----------------------------------------------------------------------- */
+  namespace OpenSSL                    // OPENSSL API FUNCTIONS
+  { /* ------------------------------------------------------------------- */
 #define OPENSSL_SUPPRESS_DEPRECATED    // Want deprecated functions
 #include <openssl/conf.h>              // Conf header
 #include <openssl/evp.h>               // EVP header
@@ -417,63 +410,62 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <openssl/x509v3.h>            // Certs header
 #include <openssl/httperr.h>           // HTTP client errors (ToDo)
 #include <openssl/http.h>              // HTTP client (ToDo)
-    } /* ------------------------------------------------------------------- */
-    namespace SevenZip                 // 7-ZIP API FUNCTIONS
-    { /* ------------------------------------------------------------------- */
+  } /* ------------------------------------------------------------------- */
+  namespace SevenZip                   // 7-ZIP API FUNCTIONS
+  { /* ------------------------------------------------------------------- */
 #include <7z/CpuArch.h>                // CPU configuration
 #include <7z/7z.h>                     // Library core (old p7zip)
 #include <7z/7zCrc.h>                  // CRC header
 #include <7z/7zFile.h>                 // 7-zip file format
 #include <7z/7zVersion.h>              // 7-zip version information
 #include <7z/LzmaLib.h>                // For compression stuff
-    } /* ------------------------------------------------------------------- */
-    namespace JpegTurbo                // LIBJPEGTURBO API FUNCTIONS
-    { /* ------------------------------------------------------------------- */
+  } /* ------------------------------------------------------------------- */
+  namespace JpegTurbo                  // LIBJPEGTURBO API FUNCTIONS
+  { /* ------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
 # define HAVE_BOOLEAN                  // Don't let headers override
-      using boolean = unsigned char;   // Defined by system but not in our NS
+    using boolean = unsigned char;     // Defined by system but not in our NS
 #endif                                 // Windows check
 #include <jpeg/jpeglib.h>              // Our main header
 #include <jpeg/jerror.h>               // Our error handling
 #include <jpeg/jversion.h>             // Our version information
-    } /* ------------------------------------------------------------------- */
-    namespace ZLib                     // ZLIB API FUNCTIONS
-    { /* ------------------------------------------------------------------- */
+  } /* ------------------------------------------------------------------- */
+  namespace ZLib                       // ZLIB API FUNCTIONS
+  { /* ------------------------------------------------------------------- */
 #include <zlib/zlib.h>                 // Main header
-    } /* ------------------------------------------------------------------- */
-    namespace GlFW                     // GLFW API FUNCTIONS
-    { /* ------------------------------------------------------------------- */
+  } /* ------------------------------------------------------------------- */
+  namespace GlFW                       // GLFW API FUNCTIONS
+  { /* ------------------------------------------------------------------- */
 #define GLFW_INCLUDE_GLCOREARB         // Include arbitrary OpenGL API
 #include <glfw/glfw3.h>                // Main header
 #include <glfw/glfw3native.h>          // Operating system includes
-      /* ------------------------------------------------------------------- */
-      namespace Types                  // Common types
-      { /* ----------------------------------------------------------------- */
-        using GlFW::GLFWimage;         // GLFW specific image type
-        using GlFW::GLFWmonitor;       // GLFW specific monitor type
-        using GlFW::GLFWwindow;        // GLFW specific window type
-        using GlFW::GLchar;            // GL specific char type
-        using GlFW::GLenum;            // GL specific enum type
-        using GlFW::GLfloat;           // GL specific float type
-        using GlFW::GLint;             // GL specific int type
-        using GlFW::GLsizei;           // GL specific sizei type
-        using GlFW::GLubyte;           // GL specific unsigned char type
-        using GlFW::GLuint;            // GL specific unsigned type
-        using GlFW::GLvoid;            // GL specific void type
-      } /* ----------------------------------------------------------------- */
-#if defined(MACOS)                     // MacOS defined?
-      /* ------------------------------------------------------------------- */
-      // This namespace is required to workaround a major crash bug in MacOS
-      // See https://github.com/glfw/glfw/issues/1997 for more information
-      /* ------------------------------------------------------------------- */
-      namespace NSGL                   // Begin MacOS NSGL namespace
-      { /* ----------------------------------------------------------------- */
-#  include <OpenGL/OpenGL.h>           // Include MacOS NSOpenGL functions
-      } /* ----------------------------------------------------------------- */
-#endif                                 // End MacOS NSGL namespace
-      /* ------------------------------------------------------------------- */
-#undef GLFW_INCLUDE_GLCOREARB          // Done with this macro
+    /* ------------------------------------------------------------------- */
+    namespace Types                    // Common types
+    { /* ----------------------------------------------------------------- */
+      using GlFW::GLFWimage;           // GLFW specific image type
+      using GlFW::GLFWmonitor;         // GLFW specific monitor type
+      using GlFW::GLFWwindow;          // GLFW specific window type
+      using GlFW::GLchar;              // GL specific char type
+      using GlFW::GLenum;              // GL specific enum type
+      using GlFW::GLfloat;             // GL specific float type
+      using GlFW::GLint;               // GL specific int type
+      using GlFW::GLsizei;             // GL specific sizei type
+      using GlFW::GLubyte;             // GL specific unsigned char type
+      using GlFW::GLuint;              // GL specific unsigned type
+      using GlFW::GLvoid;              // GL specific void type
     } /* ------------------------------------------------------------------- */
+#if defined(MACOS)                     // MacOS defined?
+    /* --------------------------------------------------------------------- */
+    // This namespace is required to workaround a major crash bug in MacOS. See
+    // https://github.com/glfw/glfw/issues/1997 for more information
+    /* --------------------------------------------------------------------- */
+    namespace NSGL                     // Begin MacOS NSGL namespace
+    { /* ------------------------------------------------------------------- */
+#  include <OpenGL/OpenGL.h>           // Include MacOS NSOpenGL functions
+    } /* ------------------------------------------------------------------- */
+#endif                                 // End MacOS NSGL namespace
+    /* --------------------------------------------------------------------- */
+#undef GLFW_INCLUDE_GLCOREARB          // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_WIN32        // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_X11          // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_WAYLAND      // Done with this macro
@@ -597,12 +589,11 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 /* == Main() configuration. So engine.cpp's main() declaration is tidy ===== */
 #if defined(WINDOWS)                   // Targeting Windows?
 using ssize_t = ptrdiff_t;             // Because Windows doesn't have this.
-using ArgType = Lib::OS::TCHAR;        // Set main argument type
+using ArgType = TCHAR;                 // Set main argument type
 # if defined(BUILD)                    // Called by PMU module?
 #  define ENTRYFUNC int _tmain(int iArgC, ArgType**saArgV, ArgType**saEnv)
 # else                                 // Called by main engine?
-#  define ENTRYFUNC int WINAPI _tWinMain(Lib::OS::HINSTANCE, \
-     Lib::OS::HINSTANCE, Lib::OS::LPTSTR, int)
+#  define ENTRYFUNC int WINAPI _tWinMain(HINSTANCE, HINSTANCE, LPTSTR, int)
 extern ENTRYFUNC;                      // Prevents 'missing-prototypes' warn
 # endif                                // PMU/Engine check
 #else                                  // Targeting POSIX?

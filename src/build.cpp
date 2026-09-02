@@ -1721,9 +1721,7 @@ static void ConWrite(const StdString &strText)
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
 static void PatchIcon(const StdString &strIco, const StdString &strOut)
-{ // Using Windows API
-  using namespace Lib::OS;
-  // Return if file does not exist
+{ // Return if file does not exist
   if(!DirLocalFileExists(strIco))
     XC("Icon file not found!", "File", strIco, "Exe", strOut);
   // Only valid on WIN32
@@ -2211,9 +2209,7 @@ static int CertFunc(const StdString strOut)
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)
 static void PatchChecksum(const StdString &strOut)
-{ // Need Windows API
-  using namespace Lib::OS;
-  // Read executable file
+{ // Read executable file
   const Memory mB{ FStream{ strOut, FM_R_B }.FStreamReadBlockSafe() };
   if(mB.MemIsEmpty())
     XCL("Could not read whole executable file!", "File", strOut);
@@ -2423,7 +2419,7 @@ static int BuildDistro()
 /* ------------------------------------------------------------------------- */
 static int CertGen()
 { // Need openssl library
-  using namespace Lib::OS::OpenSSL;
+  using namespace Lib::OpenSSL;
   // Switch to resources directory. Create it if not exists
   MakeAndSetDirectory(CRTDIR);
   // Ready to download
@@ -3162,149 +3158,6 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
 #undef STRRELEASE
 #undef STRBASE64
 #undef STRMANDATORY
-  } // = LIBJPEGTURBO SCRIPT ==================================================
-  else if(strLib.size() >= 14 && strLib.substr(0, 14) == "libjpeg-turbo-")
-  { // Setup repo
-    SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
-    // Directories
-    const StdString
-      strBase64{ "simd" },
-      strBaseArch64{ StrAppend(strBase64, "/x86_64") },
-    // NASM Assembler flags
-    strNASMRel64{
-      "nasm -fwin64 -Isimd/nasm/ -I$/ -Iwin/ -DWIN64 -D__x86_64__" },
-    // Compilations
-    strCompRel64{
-      StrAppend(StrFormat(strNASMRel64, strBaseArch64), ' ', strBaseArch64) },
-    // Add jpegturbo specific flags
-    strJPTSpecific{ "-I. "
-                    "-DWIN32 "
-                    "-D_WINDOWS "
-                    "-D_CRT_SECURE_NO_DEPRECATE "
-                    "-D_CRT_SECURE_NO_WARNINGS "
-                    "-D_CRT_NONSTDC_NO_WARNINGS" },
-    // 12-bit standard modules
-    strJP12{ "-DBITS_IN_JSAMPLE=12 "
-              "src/jcapistd.c " "src/jccoefct.c " "src/jccolor.c "
-              "src/jcdctmgr.c " "src/jcdiffct.c " "src/jclossls.c "
-              "src/jcmainct.c " "src/jcprepct.c " "src/jcsample.c "
-              "src/jdapistd.c " "src/jdcoefct.c " "src/jdcolor.c "
-              "src/jddctmgr.c " "src/jddiffct.c " "src/jdlossls.c "
-              "src/jdmainct.c " "src/jdmerge.c "  "src/jdpostct.c "
-              "src/jdsample.c " "src/jfdctfst.c " "src/jfdctint.c "
-              "src/jidctflt.c " "src/jidctfst.c " "src/jidctint.c "
-              "src/jidctred.c " "src/jquant1.c "  "src/jquant2.c "
-              "src/jutils.c" },
-    // Lossless standard modules
-    strJP16{ "-DBITS_IN_JSAMPLE=16 "
-              "src/jcapistd.c " "src/jccolor.c "  "src/jcdiffct.c "
-              "src/jclossls.c " "src/jcmainct.c " "src/jcprepct.c "
-              "src/jcsample.c " "src/jdapistd.c " "src/jdcolor.c "
-              "src/jddiffct.c " "src/jdlossls.c " "src/jdmainct.c "
-              "src/jdpostct.c " "src/jdsample.c " "src/jutils.c " },
-    // 12-bit turbo modules
-    strJPT12{ "-DBITS_IN_JSAMPLE=12 -DPPM_SUPPORTED "
-              "src/rdppm.c " "src/wrppm.c" },
-    // Lossless turbo modules
-    strJPT16{ "-DBITS_IN_JSAMPLE=16 -DPPM_SUPPORTED "
-              "src/rdppm.c " "src/wrppm.c" },
-    // Main modules
-    strJPT{ "-DBMP_SUPPORTED -DPPM_SUPPORTED "
-            "src/jcapistd.c "    "src/jccolor.c "  "src/jcdiffct.c "
-            "src/jclossls.c "    "src/jcmainct.c " "src/jcprepct.c "
-            "src/jcsample.c "    "src/jdapistd.c " "src/jdcolor.c "
-            "src/jddiffct.c "    "src/jdlossls.c " "src/jdmainct.c "
-            "src/jdpostct.c "    "src/jdsample.c " "src/jutils.c "
-            "src/jccoefct.c "    "src/jcdctmgr.c " "src/jdcoefct.c "
-            "src/jddctmgr.c "    "src/jdmerge.c "  "src/jfdctfst.c "
-            "src/jfdctint.c "    "src/jidctflt.c " "src/jidctfst.c "
-            "src/jidctint.c "    "src/jidctred.c " "src/jquant1.c "
-            "src/jquant2.c "     "src/jcapimin.c " "src/jchuff.c "
-            "src/jcicc.c "       "src/jcinit.c "   "src/jclhuff.c "
-            "src/jcmarker.c "    "src/jcmaster.c " "src/jcomapi.c "
-            "src/jcparam.c "     "src/jcphuff.c "  "src/jctrans.c "
-            "src/jdapimin.c "    "src/jdatadst.c " "src/jdatasrc.c "
-            "src/jdhuff.c "      "src/jdicc.c "    "src/jdinput.c "
-            "src/jdlhuff.c "     "src/jdmarker.c " "src/jdmaster.c "
-            "src/jdphuff.c "     "src/jdtrans.c "  "src/jerror.c "
-            "src/jfdctflt.c "    "src/jmemmgr.c "  "src/jmemnobs.c "
-            "src/jaricom.c "     "src/jcarith.c "  "src/jdarith.c "
-            "src/turbojpeg.c "   "src/transupp.c " "src/jdatadst-tj.c "
-            "src/jdatasrc-tj.c " "src/rdbmp.c "    "src/rdppm.c "
-             "src/wrbmp.c "      "src/wrppm.c" },
-    strJP12Name{ "12jp" },
-    strJP16Name{ "16jp" },
-    strJPT12Name{ "16jpt" },
-    strJPT16Name{ "16jpt" },
-    // 64-bit SIMD assembler modules. Note that some .asm files (not in this
-    // list) are used for '%include'ing only.
-    straSIMD64[]{
-      { "jccolor-avx2"  }, { "jccolor-sse2"  }, { "jcgray-avx2"   },
-      { "jcgray-sse2"   }, { "jchuff-sse2"   }, { "jcphuff-sse2"  },
-      { "jcsample-avx2" }, { "jcsample-sse2" }, { "jdcolor-avx2"  },
-      { "jdcolor-sse2"  }, { "jdmerge-avx2"  }, { "jdmerge-sse2"  },
-      { "jdsample-avx2" }, { "jdsample-sse2" }, { "jfdctflt-sse"  },
-      { "jfdctfst-sse2" }, { "jfdctint-avx2" }, { "jfdctint-sse2" },
-      { "jidctflt-sse2" }, { "jidctfst-sse2" }, { "jidctint-avx2" },
-      { "jidctint-sse2" }, { "jidctred-sse2" }, { "jquantf-sse2"  },
-      { "jquanti-avx2"  }, { "jquanti-sse2"  }, { "jsimdcpu"      }
-    };
-    // We need to activate cmake once to init jpegturbo config and other things
-    SystemF("$ "
-            "-DINLINE_WORKS=1 "
-            "-DHAVE_THREAD_LOCAL=1 "
-            "-DCMAKE_SIZEOF_VOID_P=8 " // CMake can't detect bits on Wine LOL
-            "-DSIZE_T=8", strCMake);   // CMake can't detect bits on Wine LOL
-    // Directories to keep objs safe from being renamed
-    MakeDirectory(strJP12Name);
-    MakeDirectory(strJP16Name);
-    MakeDirectory(strJPT12Name);
-    // Clean up existing object files
-    DoClean({ StdString{ envActive.cpOBJ },
-      StrAppend(strJP12Name, '/', envActive.cpOBJ),
-      StrAppend(strJP16Name, '/', envActive.cpOBJ),
-      StrAppend(strJPT12Name, '/', envActive.cpOBJ)
-    });
-    // Compile 64-bit release version
-    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP12);
-    const Dir dJP12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-    for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-      RenameFileSafe(dempPair.first,
-        StrFormat("$/$-$", strJP12Name, strJP12Name, dempPair.first));
-    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJP16);
-    const Dir dJP16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-    for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-      RenameFileSafe(dempPair.first,
-        StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first));
-    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT12);
-    const Dir dJPT12{ cCommon->CommonPeriod(), envActive.cpOBJ };
-    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-      RenameFileSafe(dempPair.first,
-        StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first));
-    SystemF("$ $ $", strRelFlags64, strJPTSpecific, strJPT16);
-    const Dir dJPT16{ cCommon->CommonPeriod(), envActive.cpOBJ };
-    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-      RenameFileSafe(dempPair.first,
-        StrFormat("$-$", strJPT16Name, dempPair.first));
-    for(const DirEntMapPair &dempPair : dJP12.GetFiles())
-      RenameFileSafe(StrFormat("$/$-$",
-          strJP12Name, strJP12Name, dempPair.first),
-        StrFormat("$-$", strJP12Name, dempPair.first));
-    for(const DirEntMapPair &dempPair : dJP16.GetFiles())
-      RenameFileSafe(
-        StrFormat("$/$-$", strJP16Name, strJP16Name, dempPair.first),
-        StrFormat("$-$", strJP16Name, dempPair.first));
-    for(const DirEntMapPair &dempPair : dJPT12.GetFiles())
-      RenameFileSafe(
-        StrFormat("$/$-$", strJPT12Name, strJPT12Name, dempPair.first),
-        StrFormat("$-$", strJPT12Name, dempPair.first));
-    for(const StdString &strFile : straSIMD64)
-      SystemF("$/$.asm -o $$",
-        strCompRel64, strFile, strFile, envActive.cpOBJ);
-    GenericExtLibBuild(StrFormat("$ $ $ $/jsimd.c", strRelFlags64,
-      strJPTSpecific, strJPT, strBase64), strL64, strTmp, "jpeg64");
-    // We need to activate cmake once to init jpegturbo config and other things
-    System("rm -rf CMakeFiles *.cmake CMakeCache.txt jconfig.h");
   } // = LIBPNG SCRIPT ========================================================
   else if(strLib.size() >= 7 && strLib.substr(0, 7) == "libpng-")
   { // Ignore if no vorbis supplemental argument
@@ -3341,6 +3194,36 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Compile sources
     GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
       "png", 32, 64);
+  } // = LIBJPEGTURBO SCRIPT ==================================================
+  else if(strLib.size() >= 14 && strLib.substr(0, 14) == "libjpeg-turbo-")
+  { // Using distro version of freetype on linux
+#if defined(LINUX)
+    throw StdRunTimeError{ "You can use the distro version of OpenALSoft!" };
+#else
+    // Library prefix
+    const StdString strPrefix{ "jpeg" };
+    // Setup the repository
+    SetupTarRepo(strLibPath, strTmp, PSLib.strFile, PSLibR.strFile);
+    // We need to activate cmake once to build openal config and other things
+    System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
+    // One time only build
+    SystemF("$ -G \"Ninja\" .",  strCMakeBase);
+    // Build flags
+    strRelFlags32 += StrAppend(" ", strFlags);
+    strRelFlags64 += StrAppend(" ", strFlags);
+    ReplaceTextMulti("build.ninja", {
+      { "/O2", "/Ox" }, { "-MD", "-MT -Zl" }, { "/Ob2", "" },
+    });
+    // Do the make
+    System("ninja");
+    // Move the generated library into position
+    RenameFileSafe("libjpegturbo.lib", StrFormat("../jpeg64.lib", strPrefix));
+    // Clean-up objects and other things
+    System("ninja clean");
+    System("rm -rfv CMakeFiles CMakeCache.txt");
+#endif
+    // Do finish libraries
+    FinishLibs(strTmp, strPrefix);
   } // = OPENALSOFT SCRIPT ====================================================
   else if(strLib.size() >= 12 && strLib.substr(0, 12) == "openal-soft-")
   { // Using distro version of freetype on linux
@@ -3426,14 +3309,14 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
       // Clean-up objects and other things
       System("make clean");
       System("rm -rfv CMakeFiles CMakeCache.txt");
-    } // Do finish libraries
-    FinishLibs(strTmp, strPrefix);
-    // Header hack for Windows fix incase we update the engine's 'al.h'.
+    } // Header hack for Windows fix incase we update the engine's 'al.h'.
     ReplaceText("include/al/al.h", "#define AL_API __declspec(dllimport)",
                                    "#define AL_API extern");
     ReplaceText("include/al/alc.h", "#define ALC_API __declspec(dllimport)",
                                     "#define ALC_API extern");
 # endif
+    // Do finish libraries
+    FinishLibs(strTmp, strPrefix);
 #endif
   } // = THEORA SCRIPT ========================================================
   else if(strLib.size() >= 10 && strLib.substr(0, 10) == "libtheora-")

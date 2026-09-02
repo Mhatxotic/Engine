@@ -43,7 +43,7 @@ class Error final :
   public StdException,                 // So we can capture as exception
   public StdString                     // String to store generated string
 { /* -- Private variables -------------------------------------------------- */
-  StdOStringStream osS;                // Error message builder
+  StdOStringStream &osS;               // Error message builder
   /* -- Write left part of var --------------------------------------------- */
   void Init(const StdStringView &ssvName, const StdStringView &ssvType)
     { osS << "\n+ " << ssvName << '<' << ssvType << "> = "; }
@@ -238,7 +238,8 @@ class Error final :
   virtual const char *what() const noexcept override { return data(); }
   /* -- Prepare error message constructor with C-string--------------------- */
   template<typename AnyType, typename ...VarArgs>
-    Error(AnyType &&aErrMsg, VarArgs &&...vaArgs)
+    Error(AnyType &&aErrMsg, VarArgs &&...vaArgs) :
+      osS(cCommon->o.StreamReset())
   { // If is an exception object? Push the string of it
     if constexpr(StdIsSame<StdDecay<AnyType>, StdException>)
       osS << aErrMsg.what();

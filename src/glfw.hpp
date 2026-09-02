@@ -16,7 +16,7 @@ using namespace IGlFWCursor::P;        using namespace IGlFWWindow::P;
 using namespace IHelper::P;            using namespace ILog::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace IToken::P;             using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OS::GlFW;
+using namespace IUtil::P;              using namespace Lib::GlFW;
 /* ------------------------------------------------------------------------- */
 using CursorStandard = StdArray<GlFWCursor, CUR_MAX>;
 /* ------------------------------------------------------------------------- */

@@ -17,7 +17,7 @@ using namespace IFormat::P;            using namespace ILog::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ISysBase::P;
 using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 // -- Palette entry to WIN32 colour lookup --------------------------------- */
@@ -869,7 +869,7 @@ class SysCon :                         // Members initially private
   }
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSCON_CALLBACKS() \
-  Lib::OS::BOOL WINAPI ISysCon::P::SysCon::CtrlHandlerStatic(DWORD dwCtrlType)\
+  BOOL WINAPI ISysCon::P::SysCon::CtrlHandlerStatic(DWORD dwCtrlType)\
     { return ISystem::P::cSystem->CtrlHandler(dwCtrlType); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

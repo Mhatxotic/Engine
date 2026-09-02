@@ -22,7 +22,7 @@ using namespace IOgl::P;               using namespace ISerial::P;
 using namespace IShader::P;            using namespace IShaders::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Define texture collector class --------------------------------------- */

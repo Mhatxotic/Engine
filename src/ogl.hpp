@@ -21,7 +21,7 @@ using namespace IShaderDef::P;         using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace IUtf::P;               using namespace IUtil::P;
-using namespace Lib::OS::GlFW;
+using namespace Lib::GlFW;
 /* ------------------------------------------------------------------------- */
 constexpr static const GLuint gluMax = StdLimits<GLuint>::max();
 /* ------------------------------------------------------------------------- */
@@ -877,7 +877,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // This locking code is required to fix a major crash bug in Ventura
     // 13.3+. See https://github.com/glfw/glfw/issues/1997 for more
     // information.
-    using namespace Lib::OS::GlFW::NSGL;
+    using namespace Lib::GlFW::NSGL;
     // Get the current NSGL context and lock it. Note there is nothing to
     // throw in this routine so it is safe to use this as-is.
     CGLContextObj cglcoLock = CGLGetCurrentContext();

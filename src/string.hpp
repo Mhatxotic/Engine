@@ -25,8 +25,7 @@ struct GroupedValueBase {
 template<typename AnyType>
   static void StrFormatValue(StdOStringStream &osS, AnyType &&atVal)
 { // If is an exception object? Push the string of it
-  if constexpr(StdIsSame<StdDecay<AnyType>, StdException>)
-    osS << atVal.what();
+  if constexpr(StdIsSame<StdDecay<AnyType>, StdException>) osS << atVal.what();
   // Let ostringstream handle the value
   else osS << atVal;
 }
@@ -88,8 +87,8 @@ namespace P {                          // Start of public module namespace
 template<typename ...VarArgs>
   requires (sizeof...(VarArgs) > 0)
 static StdString StrAppend(VarArgs &&...vaArgs)
-{ // Create stream to write to, build it and return it
-  StdOStringStream osS;
+{ // Get stream to write to, build it and return it
+  StdOStringStream &osS = cCommon->o.StreamReset();
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
   return osS.str();
 }
@@ -97,13 +96,9 @@ static StdString StrAppend(VarArgs &&...vaArgs)
 template<typename ...VarArgs>
   requires (sizeof...(VarArgs) > 0)
 static StdString StrAppendImbue(VarArgs &&...vaArgs)
-{ // Stream to write to
-  StdOStringStream osS;
-  // Imbue current locale
-  osS.imbue(cCommon->CommonLocale());
-  // Build string
+{ // Get imbued stream to write to, build it and return it
+  StdOStringStream &osS = cCommon->o.StreamImbuedReset();
   StrAppendParam(osS, StdForward<VarArgs>(vaArgs)...);
-  // Return appended string
   return osS.str();
 }
 /* -- Prepare message from a c-string pointer ------------------------------ */
@@ -130,7 +125,7 @@ static StdString StrFormat(StrType &&strFormat, VarArgs &&...vaArgs)
   else if constexpr(StdIsString<StrTypeDecayed>)
   { // Create stringstream to write to, format the text and return it
     if(strFormat.empty()) return {};
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     StrFormatParam(osS, StdForward<StrType>(strFormat), 0,
       StdForward<VarArgs>(vaArgs)...);
     return osS.str();
@@ -549,7 +544,7 @@ static StdString StrCapitalise(StrType &&strStr)
 /* -- Evaluate a list of booleans and return a character value ------------- */
 static StdString StrFromEvalTokens(const BoolCharPairVector &bcpvList)
 { // Stream to build the token string from
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // Walk through the table that was sent and if it's evaluation is true then
   // add the supplied token to the string
   for(const BoolCharPair &bcpPair : bcpvList)
@@ -591,7 +586,7 @@ static StdString StrImplode(const AnyArray &aaArray,
   // Done if empty or begin position is invalid
   if(aaArray.empty() || sstBegin >= sstSize) return {};
   // Create output only string stream which stays cached (safe in c++11)
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // Get first iterator (penultimate from the end in the array)
   using AnyArrayConstIt = typename AnyArray::const_iterator;
   AnyArrayConstIt aaciStart{ StdNext(aaArray.cbegin(), sstBegin) };
@@ -967,7 +962,7 @@ template<class ListType, class StrSepType, class StrLastType>
 static StdString StrExplodeEx(const ListType &lType, StrSepType &&sstSep,
   StrLastType &&sltLast)
 { // String to return
-  StdOStringStream osS;
+  StdOStringStream &osS = cCommon->o.StreamReset();
   // What is the size of this string
   switch(lType.size())
   { // Empty list? Just break to return empty string

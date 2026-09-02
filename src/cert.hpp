@@ -14,7 +14,7 @@ using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace ILog::P;               using namespace IMutex::P;
 using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace Lib::OS::OpenSSL;
+using namespace IString::P;            using namespace Lib::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

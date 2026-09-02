@@ -10,13 +10,13 @@
 namespace ILuaCommand {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace ICollector::P;
-using namespace IConsole::P;           using namespace IError::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaBase::P;           using namespace ILuaFunc::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace ICommon::P;            using namespace IConsole::P;
+using namespace IError::P;             using namespace ILockable::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaFunc::P;           using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -109,7 +109,7 @@ template<class ListType>
   auto ltIt{ ltList.lower_bound(strFilter) };
   if(ltIt != ltList.cend())
   { // Output string
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // Build output string
     do
     { // If no match found? return original string

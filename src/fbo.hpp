@@ -21,7 +21,7 @@ using namespace ISerial::P;            using namespace IShader::P;
 using namespace IShaderDef::P;         using namespace IShaders::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OS::GlFW::Types;
+using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo collector class for collector data and custom variables ========== */

@@ -25,7 +25,7 @@ using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace IThread::P;            using namespace IToken::P;
 using namespace IUtil::P;              using namespace IUtf::P;
-using namespace Lib::OS::OpenSSL;
+using namespace Lib::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */

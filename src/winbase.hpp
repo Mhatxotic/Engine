@@ -15,7 +15,7 @@ using namespace ILookupMap::P;         using namespace IMemory::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IStat::P;              using namespace IString::P;
 using namespace ISysMod::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OS;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -678,7 +678,7 @@ class SysBase                          // Members initially private
     // Prepare summary
     const StdString strDialog{ SEHGetSummary(epData) };
     // Make a shared string stream
-    StdOStringStream osS;
+    StdOStringStream &osS = cCommon->o.StreamReset();
     // Write the log file
     SEHDumpLog(osS, epData.ContextRecord, strDialog);
     // No need to show anything if we're in a debugger
@@ -787,8 +787,8 @@ class SysBase                          // Members initially private
   )
 };/* ----------------------------------------------------------------------- */
 #define ENGINE_SYSBASE_CALLBACKS() \
-  Lib::OS::LONG WINAPI ISysBase::P::SysBase::HandleExceptionStatic( \
-    Lib::OS::LPEXCEPTION_POINTERS epData) \
+  LONG WINAPI ISysBase::P::SysBase::HandleExceptionStatic( \
+    LPEXCEPTION_POINTERS epData) \
   { return ISystem::P::cSystem->HandleException(*epData); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
