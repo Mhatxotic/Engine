@@ -19,12 +19,12 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags::P;             using namespace IFormat::P;
 using namespace IFrame::P;             using namespace IGlFW::P;
 using namespace IHelper::P;            using namespace IInterval::P;
-using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISocket::P;
-using namespace ISysCon::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITime::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace ILog::P;               using namespace IMetadata::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISocket::P;            using namespace ISysCon::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITime::P;              using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -486,7 +486,7 @@ struct Console :                       // Members initially private
         IsVisible() ? GetDefaultRedrawFlags() : RD_NONE); }
   /* -- Returns if we should be hiding the graphical console --------------- */
   bool IsHidingGraphicalConsole()
-    { return cSystem->SysIsTextMode() &&
+    { return cMetadata->MetadataIsTextMode() &&
              !cCVars->CVarsGetInternal<bool>(CON_GCWTERM); }
   /* -- Force hide the console --------------------------------------------- */
   void HideConsole() { FlagClear(CF_ENABLED); }
@@ -972,16 +972,18 @@ struct Console :                       // Members initially private
       "software.");
     // Write guest info in a different colour
     ConsoleAddLineF(COLOUR_GREEN, "Guest is $ ($) version $ by $.",
-      cSystem->SysGetGuestTitle(), cSystem->SysGetGuestShortTitle(),
-      cSystem->SysGetGuestVersion(), cSystem->SysGetGuestAuthor());
+      cMetadata->MetadataGetTitle(), cMetadata->MetadataGetShortTitle(),
+      cMetadata->MetadataGetVersion(), cMetadata->MetadataGetAuthor());
     // Get optional variables
-    if(!cSystem->SysGetGuestCopyright().empty())
-      ConsoleAddLineAC(COLOUR_GREEN, cSystem->SysGetGuestCopyright(), '.');
-    if(!cSystem->SysGetGuestDescription().empty())
-      ConsoleAddLineAC(COLOUR_GREEN, cSystem->SysGetGuestDescription(), '.');
-    if(!cSystem->SysGetGuestWebsite().empty())
+    if(!cMetadata->MetadataGetCopyright().empty())
+      ConsoleAddLineAC(COLOUR_GREEN,
+        cMetadata->MetadataGetCopyright(), '.');
+    if(!cMetadata->MetadataGetDescription().empty())
+      ConsoleAddLineAC(COLOUR_GREEN,
+        cMetadata->MetadataGetDescription(), '.');
+    if(!cMetadata->MetadataGetWebsite().empty())
       ConsoleAddLineF(COLOUR_GREEN, "Visit $ for more info, help and updates.",
-        cSystem->SysGetGuestWebsite());
+        cMetadata->MetadataGetWebsite());
   }
   /* -- Print a string using textures -------------------------------------- */
   void ConsoleInit()
@@ -993,7 +995,7 @@ struct Console :                       // Members initially private
     // Reset cursor position
     clriPosition = rbegin();
     // Using text mode? Reset text flag
-    if(cSystem->SysIsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
+    if(cMetadata->MetadataIsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
     // Redraw the console
     SetRedraw();
     // Initially shown and not closable
@@ -1002,7 +1004,7 @@ struct Console :                       // Members initially private
     PrintVersion();
     // Iterate each item and register command if required core flags match
     for(const ConLibStatic &clCmd : ccslInt)
-      if(cSystem->SysIsCoreFlagsHave(clCmd.cfcRequired))
+      if(cMetadata->MetadataIsCoreFlagsHave(clCmd.cfcRequired))
         RegisterCommand(clCmd.strName, clCmd.uMinimum,
           clCmd.uMaximum, clCmd.ccfFunc);
       // Write in log to say we skipped registration of this command

@@ -45,7 +45,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
   int              iConKey1, iConKey2; // Primary and secondary console keys
-  /* -- Events ----------------------------------------------------- */ public:
+  /* -- Events ------------------------------------------------------------- */
   LuaFunc          lfOnMouseClick,     // Mouse button clicked
                    lfOnMouseMove,      // Mouse cursor moved
                    lfOnMouseScroll,    // Mouse scroll wheel moved
@@ -103,24 +103,21 @@ class Input :                          // Handles keyboard, mouse & controllers
       case GLFW_TRUE:
         // Return if mouse is already focused
         if(FlagIsSet(IF_MOUSEFOCUS)) return;
-        // Set mouse in window
+        // Set mouse in window and break to send event
         FlagSet(IF_MOUSEFOCUS);
-        // Done, send lua event
         break;
       // Mouse is not in the window? Clear mouse in window flag
       case GLFW_FALSE:
         // Return if mouse is not focused already?
         if(FlagIsClear(IF_MOUSEFOCUS)) return;
-        // Set mouse is out of window
+        // Set mouse is out of window and break to send event
         FlagClear(IF_MOUSEFOCUS);
-        // Done
         break;
       // Unknown state?
       default:
         // Log the bad mouse focus state and return
         cLog->LogWarningExSafe("Input ignored bad mouse focus state $<$$>!",
           iState, StdIOSHex, iState);
-        // Don't dispatch an event
         return;
     } // Dispatch event to lua scripts
     lfOnMouseFocus.LuaFuncDispatch(iState);
@@ -144,16 +141,14 @@ class Input :                          // Handles keyboard, mouse & controllers
     lfOnMouseClick.LuaFuncDispatch(emaArgs[1].Int(), emaArgs[2].Int(),
       emaArgs[3].Int());
   }
-  /* -- Request from alternative thread to fullscreen toggle without save -- */
-  void InputRequestFSToggle(const bool bState)
-    { cEvtWin->AddUnblock(EWC_WIN_TOGGLEFS, bState); }
   /* -- Unfiltered key pressed --------------------------------------------- */
   void InputOnKeyPress(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
     // Get key code, state and modifier state
-    const int iKey = emaArgs[1].Int(), iState = emaArgs[3].Int(),
-      iMod = emaArgs[4].Int();
+    const int iKey = emaArgs[1].Int(),
+              iState = emaArgs[3].Int(),
+              iMod = emaArgs[4].Int();
     // If...
     if(iMod == GLFW_MOD_ALT &&         // ALT key pressed/released/repeated?
        iKey == GLFW_KEY_ENTER &&       // ENTER key pressed/released/repeated?
@@ -205,13 +200,13 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Files dragged and dropped on window--------------------------------- */
   void InputOnDragDrop(const EvtMainEvent&)
   { // Get files and return if empty
-    StrVector &vFiles = cGlFW->WinGetFiles();
-    if(vFiles.empty()) return;
+    StrVector &svFiles = cGlFW->WinGetFiles();
+    if(svFiles.empty()) return;
     // Send off the event to lua callbacks
-    lfOnDragDrop.LuaFuncDispatch(vFiles);
+    lfOnDragDrop.LuaFuncDispatch(svFiles);
     // Clear the list
-    vFiles.clear();
-    vFiles.shrink_to_fit();
+    svFiles.clear();
+    svFiles.shrink_to_fit();
   }
   /* -- Window past event--------------------------------------------------- */
   void InputOnWindowPaste(const EvtMainEvent&)
@@ -221,6 +216,17 @@ class Input :                          // Handles keyboard, mouse & controllers
     while(const Codepoint cChar = udStr.UtfNext())
       if(cChar >= 32) cConsole->OnCharPress(cChar);
   }
+  /* -- Get guest function callbacks ------------------------------- */ public:
+  LuaFunc &InputGetMouseClickFunc() { return lfOnMouseClick; }
+  LuaFunc &InputGetMouseMoveFunc() { return lfOnMouseMove; }
+  LuaFunc &InputGetMouseScrollFunc() { return lfOnMouseScroll; }
+  LuaFunc &InputGetMouseFocusFunc() { return lfOnMouseFocus; }
+  LuaFunc &InputGetDragDropFunc() { return lfOnDragDrop; }
+  LuaFunc &InputGetKeyFunc() { return lfOnKey; }
+  LuaFunc &InputGetCharFunc() { return lfOnChar; }
+  /* -- Request from alternative thread to fullscreen toggle without save -- */
+  void InputRequestFSToggle(const bool bState)
+    { cEvtWin->AddUnblock(EWC_WIN_TOGGLEFS, bState); }
   /* -- Commit cursor visibility ------------------------------------------- */
   void InputCommitCursor()
     { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
@@ -239,8 +245,6 @@ class Input :                          // Handles keyboard, mouse & controllers
     // Reset joystick environment
     JoyReset();
   }
-  /* -- Update window size from actual glfw window ------------------------- */
-  void InputUpdateWindowSize() { DimSet(cGlFW->WinGetSize()); }
   /* -- Request input state ------------------------------------------------ */
   void InputRequestMousePosition() const
     { cEvtWin->AddUnblock(EWC_WIN_CURPOSGET); }
@@ -266,6 +270,17 @@ class Input :                          // Handles keyboard, mouse & controllers
   void InputSetCursorCentre()
     { InputSetCursorPos(cFboCore->FboCoreGetMatrixWidth() / 2.0f,
                         cFboCore->FboCoreGetMatrixHeight() / 2.0f); }
+  /* -- DeInit ------------------------------------------------------------- */
+  void InputDeInit()
+  { // Ignore if class not initialised
+    if(IHNotDeInitialise()) return;
+    // Log progress
+    cLog->LogDebugSafe("Input interface deinitialising...");
+    // De-init joystick system
+    JoyDeInit();
+    // Log progress
+    cLog->LogDebugSafe("Input interface deinitialised.");
+  }
   /* -- Init --------------------------------------------------------------- */
   void InputInit()
   { // if window not available? This should never happen but we will put
@@ -293,17 +308,6 @@ class Input :                          // Handles keyboard, mouse & controllers
     cLog->LogDebugExSafe(
       "Input interface initialised with support for $ game control devices.",
       JoyGetCount());
-  }
-  /* -- DeInit ------------------------------------------------------------- */
-  void InputDeInit()
-  { // Ignore if class not initialised
-    if(IHNotDeInitialise()) return;
-    // Log progress
-    cLog->LogDebugSafe("Input interface deinitialising...");
-    // De-init joystick system
-    JoyDeInit();
-    // Log progress
-    cLog->LogDebugSafe("Input interface deinitialised.");
   }
   /* -- Constructor --------------------------------------------- */ protected:
   Input() :

@@ -23,16 +23,16 @@ enum EvtMainCmd : size_t               // Engine thread event commands
   EMC_SUSPEND,                         // 01: Suspend and wait for signal
   /* -- Quit events -------------------------------------------------------- */
   EMC_QUIT,                            // 02: Main loop should quit
-  EMC_QUIT_RESTART,                    // 03: Cleanly quit and restart app
-  EMC_QUIT_RESTARTNP,                  // 04: Same as above but without args
-  EMC_QUIT_THREAD,                     // 05: Thread loop should quit
-  EMC_QUIT_VREINIT,                    // 06: As above but reinit window
+  EMC_QUIT_HWREINIT,                   // 03: Quit thread becuase of hw change
+  EMC_QUIT_RESTART,                    // 04: Cleanly quit and restart app
+  EMC_QUIT_RESTARTNP,                  // 05: Same as above but without args
+  EMC_QUIT_THREAD,                     // 06: Thread loop should quit
+  EMC_QUIT_VREINIT,                    // 07: Quit thread because GL reinit
   /* -- Lua events --------------------------------------------------------- */
-  EMC_LUA_ASKEXIT,                     // 07: To LUA asking to clean up & exit
-  EMC_LUA_CONFIRMEXIT,                 // 08: From LUA to confirm the exit
-  EMC_LUA_END,                         // 09: End LUA execution
-  EMC_LUA_PAUSE,                       // 10: Pause LUA execution
-  EMC_LUA_REDRAW,                      // 11: Ask LUA guest to redraw FBO's
+  EMC_LUA_ASKEXIT,                     // 08: To LUA asking to clean up & exit
+  EMC_LUA_CONFIRMEXIT,                 // 09: From LUA to confirm the exit
+  EMC_LUA_END,                         // 10: End LUA execution
+  EMC_LUA_PAUSE,                       // 11: Pause LUA execution
   EMC_LUA_REINIT,                      // 12: Reinit LUA execution
   EMC_LUA_RESUME,                      // 13: Resume LUA execution
   /* -- Window events ------------------------------------------------------ */
@@ -210,6 +210,8 @@ class EvtMain :                        // Event list for render thread
       case EMC_QUIT_THREAD: DoSetExitReason(EMC_QUIT_THREAD); break;
       // Thread should quit to reinit opengl? Tell main loop to loop again
       case EMC_QUIT_VREINIT: DoSetExitReason(EMC_QUIT_VREINIT); break;
+      // Thread should quit to reinit opengl due to HW change? Tell main loop
+      case EMC_QUIT_HWREINIT: DoSetExitReason(EMC_QUIT_HWREINIT); break;
       // Thread should quit and main thread should restart completely
       case EMC_QUIT_RESTART: ConfirmExit(EMC_QUIT_RESTART); goto t;
       // Same as above but without command line parameters
@@ -247,39 +249,42 @@ class EvtMain :                        // Event list for render thread
   /* -- Add event to quit thread and restart opengl ------------------------ */
   void RequestGLReInit() { Add(EMC_QUIT_VREINIT); }
   /* -- Add event to quit thread and restart opengl and wait --------------- */
-  void RequestGLReInitWait() { RequestGLReInit(); tEngThread.ThreadJoin(); }
+  void RequestGLReInitWait()
+    { Add(EMC_QUIT_HWREINIT); tEngThread.ThreadJoin(); }
   /* -- Constructor --------------------------------------------- */ protected:
   EvtMain() :
     /* -- Initialisers ----------------------------------------------------- */
     LookupArray{{                      // Build event list
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
-      EMC(NONE),          EMC(SUSPEND),          EMC(QUIT),
-      EMC(QUIT_RESTART),  EMC(QUIT_RESTARTNP),   EMC(QUIT_THREAD),
-      EMC(QUIT_VREINIT),  EMC(LUA_ASKEXIT),      EMC(LUA_CONFIRMEXIT),
-      EMC(LUA_END),       EMC(LUA_PAUSE),        EMC(LUA_REDRAW),
-      EMC(LUA_REINIT),    EMC(LUA_RESUME),       EMC(WIN_CLOSE),
-      EMC(WIN_FOCUS),     EMC(WIN_ICONIFY),      EMC(WIN_MOVED),
-      EMC(WIN_REFRESH),   EMC(WIN_RESIZED),      EMC(WIN_SCALE),
-      EMC(VID_FBREINIT),  EMC(VID_MATRIXREINIT), EMC(VID_REINIT),
-      EMC(AUD_CDUPDATED), EMC(AUD_PDUPDATED),    EMC(AUD_REINIT),
-      EMC(INP_DRAGDROP),  EMC(INP_JOYSTATE),     EMC(INP_MOUSEFOCUS),
-      EMC(INP_PASTE),     EMC(CB_EVENT),         EMC(CUR_EVENT),
-      EMC(STR_EVENT),     EMC(VID_EVENT),        EMC(CON_UPDATE),
-      EMC(INP_CHAR),      EMC(INP_KEYPRESS),     EMC(INP_MOUSECLICK),
-      EMC(INP_MOUSEMOVE), EMC(INP_MOUSESCROLL),  EMC(MP_ARCHIVE),
-      EMC(MP_ASSET),      EMC(MP_FONT),          EMC(MP_IMAGE),
-      EMC(MP_JSON),       EMC(MP_PCM),           EMC(MP_PROCESS),
-      EMC(MP_SOCKET),     EMC(MP_STREAM),        EMC(MP_VIDEO)
+      EMC(NONE),             EMC(SUSPEND),        EMC(QUIT),
+      EMC(QUIT_HWREINIT),
+      EMC(QUIT_RESTART),     EMC(QUIT_RESTARTNP), EMC(QUIT_THREAD),
+      EMC(QUIT_VREINIT),     EMC(LUA_ASKEXIT),    EMC(LUA_CONFIRMEXIT),
+      EMC(LUA_END),          EMC(LUA_PAUSE),      EMC(LUA_REINIT),
+      EMC(LUA_RESUME),       EMC(WIN_CLOSE),      EMC(WIN_FOCUS),
+      EMC(WIN_ICONIFY),      EMC(WIN_MOVED),      EMC(WIN_REFRESH),
+      EMC(WIN_RESIZED),      EMC(WIN_SCALE),      EMC(VID_FBREINIT),
+      EMC(VID_MATRIXREINIT), EMC(VID_REINIT),     EMC(AUD_CDUPDATED),
+      EMC(AUD_PDUPDATED),    EMC(AUD_REINIT),     EMC(INP_DRAGDROP),
+      EMC(INP_JOYSTATE),     EMC(INP_MOUSEFOCUS), EMC(INP_PASTE),
+      EMC(CB_EVENT),         EMC(CUR_EVENT),      EMC(STR_EVENT),
+      EMC(VID_EVENT),        EMC(CON_UPDATE),     EMC(INP_CHAR),
+      EMC(INP_KEYPRESS),     EMC(INP_MOUSECLICK), EMC(INP_MOUSEMOVE),
+      EMC(INP_MOUSESCROLL),  EMC(MP_ARCHIVE),     EMC(MP_ASSET),
+      EMC(MP_FONT),          EMC(MP_IMAGE),       EMC(MP_JSON),
+      EMC(MP_PCM),           EMC(MP_PROCESS),     EMC(MP_SOCKET),
+      EMC(MP_STREAM),        EMC(MP_VIDEO)
 #undef EMC                             // Done with this macro
     }, "EMC_OTHER" },
     EvtCore{ "EvtMain", *this },       // Construct core
     tEngThread{ "engine", STP_ENGINE },// Set up high perf engine thread
     raEvents{ this, {                  // Initialise custom handled events
-      { EMC_SUSPEND,        bind(&EvtMain::OnSuspend, this, _1) },
-      { EMC_QUIT,           nullptr }, { EMC_QUIT_RESTART,    nullptr },
-      { EMC_QUIT_RESTARTNP, nullptr }, { EMC_QUIT_THREAD,     nullptr },
-      { EMC_QUIT_VREINIT,   nullptr }, { EMC_LUA_END,         nullptr },
-      { EMC_LUA_REINIT,     nullptr }, { EMC_LUA_CONFIRMEXIT, nullptr }
+      { EMC_SUSPEND, bind(&EvtMain::OnSuspend, this, _1) },
+      { EMC_QUIT,            nullptr }, { EMC_QUIT_HWREINIT,  nullptr },
+      { EMC_QUIT_RESTART,    nullptr }, { EMC_QUIT_RESTARTNP, nullptr },
+      { EMC_QUIT_THREAD,     nullptr }, { EMC_QUIT_VREINIT,   nullptr },
+      { EMC_LUA_END,         nullptr }, { EMC_LUA_REINIT,     nullptr },
+      { EMC_LUA_CONFIRMEXIT, nullptr }
     } },
     emcPending(EMC_NONE),              // Not exiting yet
     emcExit(EMC_NONE),                 // Not exited yet

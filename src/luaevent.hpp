@@ -182,28 +182,34 @@ class LuaEvtSlave :
     constexpr const size_t stMandatory = 2;
     if(emaArgs.size() < stMandatory)
       XC("Not enough parameters to generic Lua event callback!",
-        "Name",  mtPtr->NameGet(), "Event",   emeEvent.cCmd,
-        "Count", emaArgs.size(),   "Maximum", stMandatory);
+        "Name",    mtPtr->NameGet(),
+        "Event",   cEvtMain->IdToString(emeEvent.cCmd),
+        "EventId", emeEvent.cCmd,      "Count",   emaArgs.size(),
+        "Maximum", stMandatory);
     // Remove iterator from our events dispatched list
     LuaEvtsRemoveIterator(static_cast<size_t>(emaArgs[1].UInt()));
     // Lua is paused?
     if(uLuaPaused)
     { // Show error in log and return
       cLog->LogWarningExSafe(
-        "LuaEvt for generic event $ for '$' ignored because lua is paused!",
-        emeEvent.cCmd, mtPtr->NameGet(), this->LuaRefStateIsSet(),
-        this->LuaRefGetId(), emaArgs.size());
+        "LuaEvt for generic event $<$> for '$' ignored because lua is paused!",
+        cEvtMain->IdToString(emeEvent.cCmd), emeEvent.cCmd, mtPtr->NameGet(),
+        this->LuaRefStateIsSet(), this->LuaRefGetId(), emaArgs.size());
       return;
     } // Check to see if we can write the function and it's parameters, if not?
     if(!LuaBaseCheckStack(this->LuaRefGetState(), emaArgs.size() - 1))
       XC("Not enough stack space or memory, or param count overflowed!",
-        "Name",      mtPtr->NameGet(),         "Event", emeEvent.cCmd,
+        "Name",      mtPtr->NameGet(),
+        "Event",     cEvtMain->IdToString(emeEvent.cCmd),
+        "EventId",   emeEvent.cCmd,
         "HaveState", this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
         "Params",    emaArgs.size());
     // Not have function?
     if(!this->LuaRefGetFunc())
       XC("Could not get callback function!",
-        "Name",      mtPtr->NameGet(),         "Event", emeEvent.cCmd,
+        "Name",      mtPtr->NameGet(),
+        "Event",     cEvtMain->IdToString(emeEvent.cCmd),
+        "EventId",   emeEvent.cCmd,
         "HaveState", this->LuaRefStateIsSet(), "Ref", this->LuaRefGetId(),
         "Params",    emaArgs.size());
     // Enumerate add the rest of the parameters
@@ -268,7 +274,7 @@ class LuaEvtSlave :
         XC("Failed to reference variables!",
           "Name", mtPtr->NameGet(), "Count", stRefs); }
   /* -- Initialise new variables ------------------------------------------- */
-  void LuaEvtInitEx(lua_State*const lS, const size_t stId)
+  void LuaEvtInitEx(const lua_State*const lS, const size_t stId)
   { // Check that the sent state is the same one we have stored
     if(this->LuaRefGetState() != lS)
       XC("Cannot use callback from a different state to the one currently "

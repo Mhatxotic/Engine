@@ -40,11 +40,11 @@ using namespace IClock::P;             using namespace ICmdLine::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IInterval::P;          using namespace ILog::P;
-using namespace ILookupArray::P;       using namespace IMemory::P;
-using namespace IPSplit::P;            using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ISysCore::P;           using namespace ISysUtil::P;
-using namespace ITime::P;              using namespace IUtil::P;
+using namespace IMemory::P;            using namespace IPSplit::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISysCore::P;
+using namespace ISysUtil::P;           using namespace ITime::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 using ::std::terminate_handler;        using ::std::set_terminate;
 /* ------------------------------------------------------------------------- */
@@ -61,20 +61,9 @@ class System :                         // The main system class
   /* -- Base classes ------------------------------------------------------- */
   public SysCore                       // Defined in 'sys*.hpp' headers
 { /* -- Private typedefs --------------------------------------------------- */
-  using ModeList = LookupArray<16>;    // List of possible combinations
-  /* ----------------------------------------------------------------------- */
-  const ModeList   mList;              // Modes list
-  CoreFlags        cfMode;             // Requested core subsystem flags
   Interval         ivCpu;              // For getting cpu usage
   const size_t     stProcessId,        // Readable process id
                    stThreadId;         // Readable thread id
-  StdStringView    ssvTitle,           // Guest title
-                   ssvShortTitle,      // Guest short title
-                   ssvVersion,         // Guest version
-                   ssvAuthor,          // Guest author
-                   ssvCopyright,       // Guest copyright
-                   ssvDescription,     // Guest description
-                   ssvWebsite;         // Guest website
   /* ----------------------------------------------------------------------- */
   terminate_handler thHandler;         // Old C++ termination handler
   /* ----------------------------------------------------------------------- */
@@ -96,42 +85,8 @@ class System :                         // The main system class
     unsigned uFlags = MB_ICONSTOP) const
   { return SysMessage(GetWindowHandle(), StrAppend(ENGName(), ": ", strReason),
       strMessage, uFlags); }
-  /* -- Get descriptor strings --------------------------------------------- */
-  const StdStringView &SysGetGuestTitle() const { return ssvTitle; }
-  const StdStringView &SysGetGuestShortTitle() const { return ssvShortTitle; }
-  const StdStringView &SysGetGuestVersion() const { return ssvVersion; }
-  const StdStringView &SysGetGuestAuthor() const { return ssvAuthor; }
-  const StdStringView &SysGetGuestCopyright() const { return ssvCopyright; }
-  const StdStringView &SysGetGuestDescription() const
-    { return ssvDescription; }
-  const StdStringView &SysGetGuestWebsite() const { return ssvWebsite; }
-  /* ----------------------------------------------------------------------- */
-  const CoreFlagsConst SysGetCoreFlags() const { return cfMode; }
-  bool SysIsCoreFlagsHave(const CoreFlagsConst cfFlags) const
-    { return !cfFlags || SysGetCoreFlags().FlagIsSet(cfFlags); }
-  bool SysIsCoreFlagsNotHave(const CoreFlagsConst cfFlags) const
-    { return !SysIsCoreFlagsHave(cfFlags); }
-  bool SysIsGraphicalMode() const
-    { return SysGetCoreFlags().FlagIsSet(CFL_VIDEO); }
-  bool SysIsNotGraphicalMode() const { return !SysIsGraphicalMode(); }
-  bool SysIsTextMode() const
-    { return SysGetCoreFlags().FlagIsSet(CFL_TEXT); }
-  bool SysIsNotTextMode() const { return !SysIsTextMode(); }
-  bool SysIsAudioMode() const
-    { return SysGetCoreFlags().FlagIsSet(CFL_AUDIO); }
-  bool SysIsNotAudioMode() const { return !SysIsAudioMode(); }
-  bool SysIsTimerMode() const
-    { return SysGetCoreFlags().FlagIsSet(CFL_TIMER); }
-  bool SysIsNotTimerMode() const { return !SysIsTimerMode(); }
   /* -- Return users roaming directory ------------------------------------- */
   const StdString &SysGetRoamingDir() const { return strRoamingDir; }
-  /* ----------------------------------------------------------------------- */
-  const StdStringView
-    &SysGetCoreFlagsString(const CoreFlagsConst cfFlags) const
-  { return mList.Get(cfFlags); }
-  /* ----------------------------------------------------------------------- */
-  const StdStringView &SysGetCoreFlagsString() const
-    { return SysGetCoreFlagsString(SysGetCoreFlags()); }
   /* -- Default error handler ---------------------------------------------- */
   static void SysCriticalHandler[[noreturn]](const char*const cpMessage)
   { // Show message box with error and call abort (severe exit)
@@ -143,25 +98,6 @@ class System :                         // The main system class
   /* -- Default constructor ------------------------------------------------ */
   System() :
     /* -- Initialisers ----------------------------------------------------- */
-    mList{{                            // Initialise mode strings list
-      "stdout",                        // [00<      0>] (nothing)
-      "text",                          // [01<      1>] (text)
-      "audio",                         // [02<      2>] (audio)
-      "text+audio",                    // [03<    1|2>] (text+audio)
-      "video",                         // [04<      4>] (video)
-      "text+video",                    // [05<    1|4>] (video+text)
-      "audio+video",                   // [06<    2|4>] (video+audio)
-      "text+audio+video",              // [07<  1|2|4>] (text+audio+video)
-      "timer",                         // [08<      8>] (timer)
-      "text+timer",                    // [09<    1|8>] (text+timer)
-      "audio+timer",                   // [10<    2|8>] (audio+timer)
-      "text+audio+timer",              // [11<  1|2|8>] (text+audio+timer)
-      "video+timer",                   // [12<    4|8>] (video+timer)
-      "text+video+timer",              // [13<  1|4|8>] (video+text+timer)
-      "audio+video+timer",             // [14<  2|4|8>] (video+audio+timer)
-      "text+audio+video+timer",        // [15<1|2|4|8>] (text+audio+video+timr)
-    }},                                // Mode strings list initialised
-    cfMode{ CFL_MASK },                // Guimode initially set by cvars
     ivCpu{ cd1S },                     // Cpu refresh time is one seconds
     stProcessId(GetPid<size_t>()),     // Init readable proceess id
     stThreadId(GetTid<size_t>()),      // Init readable thread id
@@ -223,22 +159,7 @@ class System :                         // The main system class
       cmSys.FormatTime(), cmSys.FormatTimeUTC(),
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
   }
-  /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
-  CVarReturn SysSetGuestTitle(const StdString&, const StdString &strV)
-    { ssvTitle = strV; return ACCEPT; }
-  CVarReturn SysSetGuestShortTitle(const StdString&, const StdString &strV)
-    { ssvShortTitle = strV; return ACCEPT; }
-  CVarReturn SysSetGuestVersion(const StdString&, const StdString &strV)
-    { ssvVersion = strV; return ACCEPT; }
-  CVarReturn SysSetGuestAuthor(const StdString&, const StdString &strV)
-    { ssvAuthor = strV; return ACCEPT; }
-  CVarReturn SysSetGuestCopyright(const StdString&, const StdString &strV)
-    { ssvCopyright = strV; return ACCEPT; }
-  CVarReturn SysSetGuestDescription(const StdString&, const StdString &strV)
-    { ssvDescription = strV; return ACCEPT; }
-  CVarReturn SysSetGuestWebsite(const StdString&, const StdString &strV)
-    { ssvWebsite = strV; return ACCEPT; }
-  /* -- Update minimum RAM ------------------------------------------------- */
+  /* -- Update minimum RAM ----------------------------------------- */ public:
   CVarReturn SysSetMinRAM(const uint64_t ullMinValue)
   { // If we're to check for minimum memory free
     if(const size_t stMemory = UtilIntOrMax<size_t>(ullMinValue))
@@ -262,15 +183,6 @@ class System :                         // The main system class
           "Needed",  stMemory - RAMFree());
       }
     } // Success
-    return ACCEPT;
-  }
-  /* -- Set/Get GUI mode status -------------------------------------------- */
-  CVarReturn SysSetCoreFlags(const CoreFlagsType cftFlags)
-  { // Failed if bad value
-    if(cftFlags != CFL_BASIC && (cftFlags & ~CFL_MASK)) return DENY;
-    // Set new value
-    cfMode.FlagReset(cftFlags);
-    // Accepted
     return ACCEPT;
   }
   /* -- Set throw error on executable checksum mismatch -------------------- */

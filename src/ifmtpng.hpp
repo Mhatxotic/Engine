@@ -14,9 +14,10 @@ using namespace IError::P;             using namespace IFileMap::P;
 using namespace IFStream::P;           using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
 using namespace ILog::P;               using namespace IMemory::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ITexDef::P;            using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::Png;
+using namespace IMetadata::P;          using namespace IStd::P;
+using namespace IString::P;            using namespace ITexDef::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace Lib::Png;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -115,17 +116,17 @@ class CodecPNG :                       // PNG codec object
     pwC{ fmData };
     // Set system data in metadata
     { using namespace ISystem::P;
-      pwC.Meta("Title", cSystem->SysGetGuestTitle());
-      pwC.Meta("Version", cSystem->SysGetGuestVersion());
-      pwC.Meta("Author", cSystem->SysGetGuestAuthor());
-      pwC.Meta("Copyright", cSystem->SysGetGuestCopyright());
+      pwC.Meta("Title", cMetadata->MetadataGetTitle());
+      pwC.Meta("Version", cMetadata->MetadataGetVersion());
+      pwC.Meta("Author", cMetadata->MetadataGetAuthor());
+      pwC.Meta("Copyright", cMetadata->MetadataGetCopyright());
       pwC.Meta("Creation Time", cmSys.FormatTime());
       pwC.Meta("Description", cSystem->ENGName() + " Exported Image");
       pwC.Meta("Software", StrFormat("$ ($) v$.$.$.$ ($-bit $) by $",
         cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
         cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
         cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor()));
-      pwC.Meta("Comment", cSystem->SysGetGuestWebsite());
+      pwC.Meta("Comment", cMetadata->MetadataGetWebsite());
     } // Set renderer in metadata
     { using namespace IOgl::P;
       pwC.Meta("Source", StrFormat("$ ($ by $)",

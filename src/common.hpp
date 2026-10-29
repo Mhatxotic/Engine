@@ -21,9 +21,9 @@ class Common                           // Common variables class
   /* -- Common string views ------------------------------------------------ */
   const StdStringView ssv2Period, ssvAsterisk, ssvBlank, ssvColon, ssvCr,
     ssvCrLf, ssvCrLf2, ssvDblSpace, ssvDir, ssvEllipsis, ssvEmpty, ssvEnt,
-    ssvEquals, ssvFalse, ssvFs, ssvFSlash, ssvHttp, ssvHttps, ssvInvalid,
-    ssvLf, ssvLfCr, ssvLuaName, ssvN, ssvNil, ssvNull, ssvOne, ssvPeriod,
-    ssvPipe, ssvQuote, ssvSpace, ssvTimeout, ssvTrue, ssvUnknown,
+    ssvEquals, ssvFalse, ssvFileTs, ssvFs, ssvFSlash, ssvHttp, ssvHttps,
+    ssvInvalid, ssvLf, ssvLfCr, ssvLuaName, ssvN, ssvNil, ssvNull, ssvOne,
+    ssvPeriod, ssvPipe, ssvQuote, ssvSpace, ssvTimeout, ssvTrue, ssvUnknown,
     ssvUnresolved, ssvUnspec, ssvY, ssvZero;
   /* -- StringStream manager class ----------------------------------------- */
   template<class StringStreamType>     // It sets up a permanent StringStream
@@ -85,6 +85,7 @@ class Common                           // Common variables class
   const StdStringView &CommonEnt() const { return ssvEnt; }
   const StdStringView &CommonEquals() const { return ssvEquals; }
   const StdStringView &CommonFalse() const { return ssvFalse; }
+  const StdStringView &CommonFileTs() const { return ssvFileTs; }
   const StdStringView &CommonFSlash() const { return ssvFSlash; }
   const StdStringView &CommonFs() const { return ssvFs; }
   const StdStringView &CommonHttps() const { return ssvHttps; }
@@ -129,18 +130,18 @@ class Common                           // Common variables class
     ssvDir{ "<DIR>" },                 ssvEllipsis{ "..." },
     ssvEmpty{ "<Empty>" },             ssvEnt{ "&#x" },
     ssvEquals{ "=" },                  ssvFalse{ "false" },
-    ssvFs{ "<FS>" },                   ssvFSlash{ "/" },
-    ssvHttp{ "http" },                 ssvHttps{ "https" },
-    ssvInvalid{ "<Invalid>" },         ssvLf{ "\n" },
-    ssvLfCr{ "\n\r" },                 ssvLuaName{ "__name" },
-    ssvN{ "N" },                       ssvNil{ "nil" },
-    ssvNull{ "<Null>" },               ssvOne{ "1" },
-    ssvPeriod{ "." },                  ssvPipe{ "|" },
-    ssvQuote{ "\"" },                  ssvSpace{ " " },
-    ssvTimeout{ "Frame timeout!" },    ssvTrue{ "true" },
-    ssvUnknown{ "Unknown" },           ssvUnresolved{ "<Unresolved>" },
-    ssvUnspec{ "<Unspecified>" },      ssvY{ "Y" },
-    ssvZero{ "0" },
+    ssvFileTs{ "-%Y%m%d-%H%M%S" },     ssvFs{ "<FS>" },
+    ssvFSlash{ "/" },                  ssvHttp{ "http" },
+    ssvHttps{ "https" },               ssvInvalid{ "<Invalid>" },
+    ssvLf{ "\n" },                     ssvLfCr{ "\n\r" },
+    ssvLuaName{ "__name" },            ssvN{ "N" },
+    ssvNil{ "nil" },                   ssvNull{ "<Null>" },
+    ssvOne{ "1" },                     ssvPeriod{ "." },
+    ssvPipe{ "|" },                    ssvQuote{ "\"" },
+    ssvSpace{ " " },                   ssvTimeout{ "Frame timeout!" },
+    ssvTrue{ "true" },                 ssvUnknown{ "Unknown" },
+    ssvUnresolved{ "<Unresolved>" },   ssvUnspec{ "<Unspecified>" },
+    ssvY{ "Y" },                       ssvZero{ "0" },
     /* -- Locale and string stream initialisers ---------------------------- */
     lLocaleCurrent{ strBlank },        // Initialise locale
     i{ lLocaleCurrent },               // Initialise input string stream

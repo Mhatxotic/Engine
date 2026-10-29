@@ -170,19 +170,19 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     LuaUtilGetRefFunc(LuaFuncGetState(), cParent->LuaRefGetFunc());
   }
   /* -- Dispatch the requested variables ----------------------------------- */
-  template<typename ...VarArgs>void LuaFuncDispatch(VarArgs &&...vArgs)
+  template<typename ...VarArgs>void LuaFuncDispatch(VarArgs &&...vaArgs)
   { // Push the call back function
     LuaFuncPushFunc();
     // Number of parameters written. This cannot be optimised with sizeof...()
     // because we might want to add multiple entries from a list.
     int iParams = 0;
     // Push all the parameters and do the call
-    LuaFuncParams(iParams, vArgs...);
+    LuaFuncParams(iParams, vaArgs...);
     LuaBaseCall(LuaFuncGetState(), iParams);
   }
   /* -- Dispatch the requested variables safely ---------------------------- */
   template<typename ...VarArgs>
-    void LuaFuncProtectedDispatch(const int iReturns, VarArgs &&...vArgs)
+    void LuaFuncProtectedDispatch(const int iReturns, VarArgs &&...vaArgs)
       const
   { // Save stack position so we can restore it on error
     const int iStack = LuaBaseGetTop(LuaFuncGetState()),
@@ -195,7 +195,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
       LuaFuncPushFunc();
       // Push all the parameters sent by the caller and do the secure call
       int iParams = 0;
-      LuaFuncParams(iParams, vArgs...);
+      LuaFuncParams(iParams, vaArgs...);
       LuaUtilPCallSafe(LuaFuncGetState(), iParams, iReturns, iErrorCallback);
     } // Exception occured?
     catch(const StdException &)

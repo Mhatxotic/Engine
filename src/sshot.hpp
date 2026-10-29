@@ -15,9 +15,9 @@ using namespace IFbo::P;               using namespace IFboCore::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace IImageLib::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace IOgl::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
+using namespace IMemory::P;            using namespace IMetadata::P;
+using namespace IName::P;              using namespace IOgl::P;
+using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace IThread::P;            using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
@@ -85,8 +85,9 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       "Failed to read Fbo pixel data!",
       "Name", fboRef.NameGet(), "Mode", ImageGetPixelFormat(ttMode));
     // Get new filename or original filename
-    NameSet(ssvFile.empty() ? StrAppend(cSystem->SysGetGuestShortTitle(),
-      cmSys.FormatTime("-%Y%m%d-%H%M%S")) : ssvFile);
+    NameSet(ssvFile.empty() ?
+      StrAppend(cMetadata->MetadataGetShortTitle(),
+        cmSys.FormatTime(cCommon->CommonFileTs().data())) : ssvFile);
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
       fboRef.NameGet(), NameGet(), fboRef.DimGetWidth(),

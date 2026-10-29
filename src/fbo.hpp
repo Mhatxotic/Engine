@@ -480,7 +480,7 @@ static void FboDeInit()
 /* -- Set Fbo render order reserve ----------------------------------------- */
 static CVarReturn FboSetOrderReserve(const size_t) { return ACCEPT; }
 /* -- Return active fbo ---------------------------------------------------- */
-static Fbo *FboActive(void) { return cFbos->fboActive; }
+static Fbo *FboActive() { return cFbos->fboActive; }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

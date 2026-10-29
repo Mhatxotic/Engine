@@ -781,9 +781,9 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void BindVaoandVbo(const GLuint gluNVao, const GLuint gluNVbo)
     { BindVertexArray(gluNVao); BindStaticVertexBuffer(gluNVbo); }
   /* -- Set main Vbo/Vao data for main Fbo --------------------------------- */
-  void BindMainVaoandVbo(void) { BindVaoandVbo(gluVaoMain, gluVboMain); }
+  void BindMainVaoandVbo() { BindVaoandVbo(gluVaoMain, gluVboMain); }
   /* -- Set default Vbo/Vao data for main Fbo ------------------------------ */
-  void BindGlobalVaoandVbo(void) { BindVaoandVbo(gluVaoGlobal, gluVboGlobal); }
+  void BindGlobalVaoandVbo() { BindVaoandVbo(gluVaoGlobal, gluVboGlobal); }
   /* -- Initialise main Vbo/Vao data for main Fbo -------------------------- */
   void MainFboInitDrawData(const GLsizei glsiSize,
     const GLvoid*const glvpBuffer, const GLvoid*const glvpCoordBuffer,
@@ -867,7 +867,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     GetError();
   }
   /* -- Render arrays ------------------------------------------------------ */
-  void OglDrawArrays(void)
+  void OglDrawArrays()
   { // Set normal fill poly mode
     SetPolygonMode(GL_FILL);
     // Bind main Vao and Vbo containing our pre-defined data (MainFboInit())
@@ -1222,7 +1222,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Return potential fps limit ----------------------------------------- */
   double GetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Flush pipeline and wait for GPU to finish -------------------------- */
-  void Finish(void) const { sAPI.glFinish(); }
+  void Finish() const { sAPI.glFinish(); }
   /* -- Update window size limits ------------------------------------------ */
   void UpdateWindowSizeLimits()
   { // Get app specified minimums and maximums

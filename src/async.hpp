@@ -313,15 +313,15 @@ template<class MemberType, class ColType>class AsyncLoader :
     }
   }
   /* ----------------------------------------------------------------------- */
-  void AsyncInit(lua_State*const lsS, const StdStringView &ssvIdent,
+  void AsyncInit(lua_State*const lS, const StdStringView &ssvIdent,
     const StdStringView &ssvLabel)
   { // Set the filename
     NameSet(ssvIdent);
     // Parse the class, error and success functions.
-    lecAsync.LuaEvtInitEx(lsS);
+    lecAsync.LuaEvtInitEx(lS);
     // Save the current stack because if an error occurs asynchronously, the
     // event subsystem executes the callback and will be empty.
-    strAsyncError = StdMove(LuaUtilStack(lsS));
+    strAsyncError = StdMove(LuaUtilStack(lS));
     // Begin async thread
     tAsyncThread.ThreadInit(
       StrAppend(ssvLabel, ':', mtAsyncOwner.Serial()),
@@ -402,40 +402,40 @@ template<class MemberType, class ColType>class AsyncLoader :
     lecAsync.LuaEvtDeInit();
   }
   /* -- The thread only calls LoadData() and thats it ---------------------- */
-  void AsyncInitNone(lua_State*const lsS, const StdStringView &ssvIdent,
+  void AsyncInitNone(lua_State*const lS, const StdStringView &ssvIdent,
     const StdStringView &ssvLabel)
   { // Loading from memory
     asctAsyncType = BA_NONE;
     // Init rest of members
-    AsyncInit(lsS, ssvIdent, ssvLabel);
+    AsyncInit(lS, ssvIdent, ssvLabel);
   }
   /* -- The thread loads from a filemap and calls LoadData() --------------- */
-  void AsyncInitFile(lua_State*const lsS, const StdStringView &ssvFilename,
+  void AsyncInitFile(lua_State*const lS, const StdStringView &ssvFilename,
     const StdStringView &ssvLabel)
   { // Loading from file
     asctAsyncType = BA_FILE;
     // Init rest of members
-    AsyncInit(lsS, ssvFilename, ssvLabel);
+    AsyncInit(lS, ssvFilename, ssvLabel);
   }
   /* -- The thread loads from the command-line ----------------------------- */
-  void AsyncInitCmdLine(lua_State*const lsS, const StdStringView &ssvCmdLine,
+  void AsyncInitCmdLine(lua_State*const lS, const StdStringView &ssvCmdLine,
     const StdStringView &ssvLabel, Memory &mbInput)
   { // Loading from command-line
     asctAsyncType = BA_EXECUTE;
     // Set memory sent to stdin
     MemSwap(mbInput);
     // Init rest of members
-    AsyncInit(lsS, ssvCmdLine, ssvLabel);
+    AsyncInit(lS, ssvCmdLine, ssvLabel);
   }
   /* -- The thread loads from existing memory and calls LoadData() --------- */
-  void AsyncInitArray(lua_State*const lsS, const StdStringView &ssvIdent,
+  void AsyncInitArray(lua_State*const lS, const StdStringView &ssvIdent,
     const StdStringView &ssvLabel, Memory &mData)
   { // Set data to load from
     MemSwap(mData);
     // Loading from memory
     asctAsyncType = BA_MEMORY;
     // Init rest of members
-    AsyncInit(lsS, ssvIdent, ssvLabel);
+    AsyncInit(lS, ssvIdent, ssvLabel);
   }
   /* -- Send load data update and register in collector -------------------- */
   void SyncLoadDataAndRegister(FileMap &fmData) const

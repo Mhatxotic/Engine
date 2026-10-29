@@ -193,14 +193,14 @@ LLFUNC(GetJoyAxisUB, 1,
 // ? this function will be called with a integer whether the mouse entered the
 // ? window or not.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnMouseFocus, 0, cLua->LuaSetRef(lS, cInput->lfOnMouseFocus))
+LLFUNC(OnMouseFocus, 0, cLua->LuaSetRef(lS, cInput->InputGetMouseFocusFunc()))
 /* ========================================================================= */
 // $ Input.OnMouseClick
 // > Func:function=The callback function to use
 // ? When the mouse is clicked, this function will be called with the
 // ? mouse button clicked, the state and the key modifiers
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnMouseClick, 0, cLua->LuaSetRef(lS, cInput->lfOnMouseClick))
+LLFUNC(OnMouseClick, 0, cLua->LuaSetRef(lS, cInput->InputGetMouseClickFunc()))
 /* ========================================================================= */
 // $ Input.OnMouseMove
 // > Func:function=The callback function to use
@@ -211,7 +211,7 @@ LLFUNC(OnMouseClick, 0, cLua->LuaSetRef(lS, cInput->lfOnMouseClick))
 // ? referenced function.
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnMouseMove, 0,
-  if(cLua->LuaSetRef(lS, cInput->lfOnMouseMove))
+  if(cLua->LuaSetRef(lS, cInput->InputGetMouseMoveFunc()))
     cInput->InputRequestMousePosition())
 /* ========================================================================= */
 // $ Input.OnDragDrop
@@ -219,21 +219,22 @@ LLFUNC(OnMouseMove, 0,
 // ? When files are dragged into the window, this function will be called with
 // ? an array of files that were dragged into it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnDragDrop, 0, cLua->LuaSetRef(lS, cInput->lfOnDragDrop))
+LLFUNC(OnDragDrop, 0, cLua->LuaSetRef(lS, cInput->InputGetDragDropFunc()))
 /* ========================================================================= */
 // $ Input.OnMouseScroll
 // > Func:function=The callback function to use
 // ? When a filtered key is pressed, this function will be called with the
 // ? 2 axis coordinates on which direction the mouse was scrolled
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnMouseScroll, 0, cLua->LuaSetRef(lS, cInput->lfOnMouseScroll))
+LLFUNC(OnMouseScroll, 0, cLua->LuaSetRef(lS,
+  cInput->InputGetMouseScrollFunc()))
 /* ========================================================================= */
 // $ Input.OnChar
 // > Func:function=The callback function to use
 // ? When a filtered key is pressed, this function will be called with the
 // ? key that was pressed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnChar, 0, cLua->LuaSetRef(lS, cInput->lfOnChar))
+LLFUNC(OnChar, 0, cLua->LuaSetRef(lS, cInput->InputGetCharFunc()))
 /* ========================================================================= */
 // $ Input.OnJoyState
 // > Func:function=The callback function to use
@@ -252,7 +253,7 @@ LLFUNC(OnJoyState, 0,
 // ? When an filtered key is pressed, this function will be called with the
 // ? key that was pressed
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnKey, 0, cLua->LuaSetRef(lS, cInput->lfOnKey))
+LLFUNC(OnKey, 0, cLua->LuaSetRef(lS, cInput->InputGetKeyFunc()))
 /* ========================================================================= */
 // $ Input.GetKeyName
 // > Value:integer=The key id of the key

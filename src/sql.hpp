@@ -1503,7 +1503,7 @@ static CVarReturn SqlUdbFileModified(const StdString &strFile,
   return cSql->SqlInitCore(strVar) ? ACCEPT_HANDLED : DENY;
 }
 /* ------------------------------------------------------------------------- */
-static void SqlInit(void)
+static void SqlInit()
 { // Initialise SQLite and throw error if failed
   const int iCode = sqlite3_initialize();
   if(iCode != SQLITE_OK)
@@ -1514,7 +1514,7 @@ static void SqlInit(void)
 static size_t SqlHeapUsed()
   { return static_cast<size_t>(sqlite3_memory_used()); }
 /* ------------------------------------------------------------------------- */
-static void SqlDeInit(void)
+static void SqlDeInit()
 { // Shutdown sqlite
   sqlite3_shutdown();
   // Clear private key

@@ -56,7 +56,7 @@ class Mixer                            // The class
     { aalfSample = alfValue;
       aalfAdjSample = alfValue * MixerGetGlobalVolume(); }
   /* ----------------------------------------------------------------------- */
-  Mixer(void) :
+  Mixer() :
     /* -- Initialisers ----------------------------------------------------- */
     aalfAdjSample(0.0f),               // Set by 'MixerSetSampleVolume' func
     aalfAdjStream(0.0f),               // Set by 'MixerSetStreamVolume' func

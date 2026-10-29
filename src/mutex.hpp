@@ -31,7 +31,7 @@ struct mutexnoop
   static void unlock() {}
   static bool try_lock() { return true; }
   /* -- No-op ctor --------------------------------------------------------- */
-  mutexnoop(void) = default;
+  mutexnoop() = default;
 };/* ----------------------------------------------------------------------- */
 /* -- Unique lock unlock/relock class -------------------------------------- */
 class UniqueRelock

@@ -23,8 +23,8 @@ using namespace IFrame::P;             using namespace ILog::P;
 using namespace ILuaBase::P;           using namespace ILuaCode::P;
 using namespace ILuaDef::P;            using namespace ILuaFunc::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace ILuaVariable::P;       using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
+using namespace ILuaVariable::P;       using namespace IMetadata::P;
+using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace ITime::P;
 using namespace IUtil::P;              using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
@@ -57,10 +57,9 @@ class Lua :                            // Actual class body
                    iGCStepMul,         // Default GC step multiplier
                    iGCStepSize;        // Default GC step size
   lua_Integer      liSeed;             // Default seed
-  /* -- References --------------------------------------------------------- */
-  LuaFunc          lrMainTick,         // Main tick function callback
-                   lrMainEnd,          // End function callback
-                   lrMainRedraw;       // Redraw function callback
+  /* -- Event function references ------------------------------------------ */
+  LuaFunc          lrMainEnd,          // End function callback
+                   lrMainTick;         // Main tick function callback
   /* -- LUA state is set or not? ------------------------------------------- */
   bool LuaStateIsSet() const { return LuaGetState() != nullptr; }
   bool LuaStateIsNotSet() const { return !LuaStateIsSet(); }
@@ -87,17 +86,6 @@ class Lua :                            // Actual class body
     FlagSet(LUF_EXITING);
     // Say that we've finished calling the function
     cLog->LogDebugSafe("Lua swapped main tick function with end tick.");
-  }
-  /* -- Ask LUA to tell guest to redraw ------------------------------------ */
-  void LuaOnSendRedraw(const EvtMainEvent&)
-  { // Lua not initialised? This may be executed before Init() via an
-    // exception. For example... The CONSOLE.Init() may have raised an
-    // exception. Also do not fire if paused
-    if(LuaStateIsNotSet() || uLuaPaused) return;
-    // Get ending function and ignore if not a function
-    lrMainRedraw.LuaFuncDispatch();
-    // Say that we've finished calling the function
-    cLog->LogDebugSafe("Lua finished calling redraw execution callback.");
   }
   /* -- Generic end tick to quit the engine  ------------------------------- */
   static int LuaOnGenericEndTick(lua_State*const)
@@ -164,11 +152,10 @@ class Lua :                            // Actual class body
   void LuaExecuteMain() const { lrMainTick.LuaFuncPushAndCall(); }
   /* -- Return operations count -------------------------------------------- */
   int LuaGetOpsInterval() const { return iOperations; }
-  /* -- Set core event callbacks ------------------------------------------- */
-  void LuaSetRedrawFunc(lua_State*const lS) { LuaSetRef(lS, lrMainRedraw); }
-  void LuaSetEndFunc(lua_State*const lS) { LuaSetRef(lS, lrMainEnd); }
-  void LuaSetTickFunc(lua_State*const lS) { LuaSetRef(lS, lrMainTick); }
-  /* -- Request pause ----------------------------------------------------- */
+  /* -- Get core guest callbacks ------------------------------------------- */
+  LuaFunc &LuaGetEndFunc() { return lrMainEnd; }
+  LuaFunc &LuaGetTickFunc() { return lrMainTick; }
+  /* -- Request pause ------------------------------------------------------ */
   void LuaRequestPause(const bool bFromException)
     { cEvtMain->Add(EMC_LUA_PAUSE, bFromException); }
   /* -- Get GC running ----------------------------------------------------- */
@@ -240,7 +227,7 @@ class Lua :                            // Actual class body
   /* -- Full garbage collection while logging memory usage ----------------- */
   size_t LuaGarbageCollect() const { return LuaUtilGCCollect(LuaGetState()); }
   /* -- Checks that the state matches with main state ---------------------- */
-  void LuaStateAssert(lua_State*const lS) const
+  void LuaStateAssert(const lua_State*const lS) const
   { // This function call is needed when some LUA API functions need to make
     // a reference to a variable (i.e. a callback function) on the internal
     // stack, and this cannot be done on a different (temporary) context. So
@@ -332,7 +319,7 @@ class Lua :                            // Actual class body
       stTotalTables += ltsList.size();
       ++stTotalGlobals;
       // If this namespace is not allowed in the current operation mode?
-      if(cSystem->SysIsCoreFlagsNotHave(llsRef.cfcRequired))
+      if(cMetadata->MetadataIsCoreFlagsNotHave(llsRef.cfcRequired))
       { // If we have consts list?
         if(!ltsList.empty())
         { // Add to total static variables registered for this table
@@ -584,10 +571,9 @@ class Lua :                            // Actual class body
     /* -- Initialisers ----------------------------------------------------- */
     EvtMainRegAuto{ cEvtMain, {        // Regster LUA event callbacks
       /* ------------------------------------------------------------------- */
-      { EMC_LUA_ASKEXIT, bind(&Lua::LuaOnAskExit,    this, _1) },
-      { EMC_LUA_PAUSE,   bind(&Lua::LuaOnPause,      this, _1) },
-      { EMC_LUA_REDRAW,  bind(&Lua::LuaOnSendRedraw, this, _1) },
-      { EMC_LUA_RESUME,  bind(&Lua::LuaOnResume,     this, _1) }
+      { EMC_LUA_ASKEXIT, bind(&Lua::LuaOnAskExit,     this, _1) },
+      { EMC_LUA_PAUSE,   bind(&Lua::LuaOnPause,       this, _1) },
+      { EMC_LUA_RESUME,  bind(&Lua::LuaOnResume,      this, _1) }
       /* ------------------------------------------------------------------- */
     } },                               // End of LUA event callbacks
     /* -- Properly initialised later --------------------------------------- */
@@ -595,9 +581,8 @@ class Lua :                            // Actual class body
     iGCMinorMul(0),           iGCMinorMajor(0),        iGCPause(0),
     iGCStepMul(0),            iGCStepSize(0),          liSeed(0),
     /* -- LUA event callbacks ---------------------------------------------- */
-    lrMainTick{ "OnTick" },            // Setup main tick LUA event
     lrMainEnd{ "OnEnd" },              // Setup ending tick LUA event
-    lrMainRedraw{ "OnRedraw" }         // Setup graphical redraw LUA event
+    lrMainTick{ "OnTick" }             // Setup main tick LUA event
     /* -- Set global pointer to static class ------------------------------- */
     { cLua = this; }
   /* -- Destructor --------------------------------------------------------- */

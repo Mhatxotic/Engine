@@ -117,9 +117,9 @@ class Oal :                            // Actual class body
       "Code", aleError, "Reason", ftsFunc(aleError));
   }
   /* -- Destroy the set context and device --------------------------------- */
-  void DestroyContext(void) { alcMakeContextCurrent(nullptr);
-                              alcDestroyContext(alcContext); }
-  void DestroyDevice(void) { alcCloseDevice(alcDevice); }
+  void DestroyContext() { alcMakeContextCurrent(nullptr);
+                          alcDestroyContext(alcContext); }
+  void DestroyDevice() { alcCloseDevice(alcDevice); }
   /* -- Return error status ---------------------------------------- */ public:
   ALenum GetContextError() const { return alcGetError(alcDevice); }
   bool HaveContextError() const { return GetContextError() != ALC_NO_ERROR; }

@@ -619,10 +619,11 @@ class SysCore :
     // Processor speeds common speeds (lowest vs highest speed).
     using UIntPair = StdArray<const unsigned, 2>;
     const UIntPair uipM1{ { 2064, 3228 } }, // Apple M1
-                   uipM2{ { 2420, 3480 } }, // Apple M2
+                   uipM2{ { 2424, 3696 } }, // Apple M2
                    uipM3{ { 2748, 4056 } }, // Apple M3
-                   uipM4{ { 2896, 4464 } }, // Apple M4
-                   uipM5{ { 2896, 4600 } }; // Apple M5 (Est.)
+                   uipM4{ { 2892, 4512 } }, // Apple M4
+                   uipM5{ { 3048, 4610 } }, // Apple M5
+                   uipM6{ { 2900, 4800 } }; // Apple M6
     // Processor table with speeds. This is because there is no API to get
     // the speed of Apple branded processors.
     using MacCpuListMapPair = StdPair<const StdString, const UIntPair&>;
@@ -633,7 +634,7 @@ class SysCore :
 #define CPUPACKEX(n,x) { "Apple M" STR(n) x, uipM ## n }
 #define CPUPACK(n) CPUPACKEX(n,), CPUPACKEX(n, " Pro"), \
                    CPUPACKEX(n, " Max"), CPUPACKEX(n, " Ultra")
-      CPUPACK(1), CPUPACK(2), CPUPACK(3), CPUPACK(4), CPUPACK(5) };
+      CPUPACK(1), CPUPACK(2), CPUPACK(3), CPUPACK(4), CPUPACK(5), CPUPACK(6) };
 #undef CPUPACK
 #undef CPUPACKEX
     // Find processor name to speed table and if we found it? Then copy the

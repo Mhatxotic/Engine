@@ -459,7 +459,7 @@ LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->FboCoreCanDraw()))
 // ? texture and FBO data is already preserved so there is no need to
 // ? reinitialise any of that, you just need to redraw them.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnRedraw, 0, cLua->LuaSetRedrawFunc(lS))
+LLFUNC(OnRedraw, 0, cLua->LuaSetRef(lS, cFboCore->FboCoreGetRedrawFunc()))
 /* ========================================================================= */
 // $ Fbo.ConSet
 // > State:boolean=The console state.

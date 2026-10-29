@@ -136,7 +136,7 @@ class SysCon :                         // All members initially private
     wint_t wChar = 0;
     switch(const int iResult = get_wch(&wChar))
     { // If no key is waiting then return no key
-      case ERR: return KT_NONE;
+      case ERR: iKey = iMods = 0; return KT_NONE;
       // If it's a normal key?
       case OK:
         // Check key
@@ -144,7 +144,8 @@ class SysCon :                         // All members initially private
         { // Home key pressed? (Not mapped by default)
           case 1: iMods = 0; iKey = GLFW_KEY_HOME; break;
           // Break key pressed? Send exit signal to engine
-          case 3: if(bBreakEnabled) cEvtMain->RequestQuit(); break;
+          case 3: iKey = iMods = 0;
+                  if(bBreakEnabled) cEvtMain->RequestQuit(); break;
           // End key pressed? (Not mapped by default)
           case 5: iMods = 0; iKey = GLFW_KEY_END; break;
           // Escape key pressed?
@@ -158,7 +159,7 @@ class SysCon :                         // All members initially private
           // Other key?
           default:
             // Ignore other control keys
-            if(wChar < ' ') return KT_NONE;
+            if(wChar < ' ') { iKey = iMods = 0; return KT_NONE; }
             // Set key
             iKey = static_cast<int>(wChar);
             // No mods on plain keys
@@ -186,21 +187,23 @@ class SysCon :                         // All members initially private
           // Control+Delete (MacOS KB) or Insert (PC KB) pressed?
           case 515: case KEY_IC: iMods = 0; iKey = GLFW_KEY_INSERT; break;
           // Trivial keys pressed?
-          case KEY_BACKSPACE : iMods = 0; iKey = GLFW_KEY_BACKSPACE; break;
-          case KEY_ENTER     : iMods = 0; iKey = GLFW_KEY_ENTER; break;
-          case KEY_HOME      : iMods = 0; iKey = GLFW_KEY_HOME; break;
-          case KEY_END       : iMods = 0; iKey = GLFW_KEY_END; break;
-          case KEY_PPAGE     : iMods = 0; iKey = GLFW_KEY_PAGE_UP; break;
-          case KEY_NPAGE     : iMods = 0; iKey = GLFW_KEY_PAGE_DOWN; break;
-          case KEY_UP        : iMods = 0; iKey = GLFW_KEY_UP; break;
-          case KEY_DOWN      : iMods = 0; iKey = GLFW_KEY_DOWN; break;
-          case KEY_LEFT      : iMods = 0; iKey = GLFW_KEY_LEFT; break;
-          case KEY_RIGHT     : iMods = 0; iKey = GLFW_KEY_RIGHT; break;
-          case KEY_DC        : iMods = 0; iKey = GLFW_KEY_DELETE; break;
+          case KEY_BACKSPACE: iMods = 0; iKey = GLFW_KEY_BACKSPACE; break;
+          case KEY_ENTER: iMods = 0; iKey = GLFW_KEY_ENTER; break;
+          case KEY_HOME: iMods = 0; iKey = GLFW_KEY_HOME; break;
+          case KEY_END: iMods = 0; iKey = GLFW_KEY_END; break;
+          case KEY_PPAGE: iMods = 0; iKey = GLFW_KEY_PAGE_UP; break;
+          case KEY_NPAGE: iMods = 0; iKey = GLFW_KEY_PAGE_DOWN; break;
+          case KEY_UP: iMods = 0; iKey = GLFW_KEY_UP; break;
+          case KEY_DOWN: iMods = 0; iKey = GLFW_KEY_DOWN; break;
+          case KEY_LEFT: iMods = 0; iKey = GLFW_KEY_LEFT; break;
+          case KEY_RIGHT: iMods = 0; iKey = GLFW_KEY_RIGHT; break;
+          case KEY_DC: iMods = 0; iKey = GLFW_KEY_DELETE; break;
           // Resized terminal? Reinitialise the screen and no key was pressed
-          case KEY_RESIZE    : SysConReInit(); return KT_RESET;
+          case KEY_RESIZE: iKey = iMods = 0; SysConReInit(); return KT_RESET;
           // Unknown key
           default:
+            // Initialise keys
+            iKey = iMods = 0;
             // Report it
             cLog->LogDebugExSafe(
               "SysCon ignoring $ scan code $ (H:0x$$;O:$$).",

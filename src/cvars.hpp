@@ -16,10 +16,10 @@ using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IFillCon::P;
 using namespace IHelper::P;            using namespace IJson::P;
-using namespace ILog::P;               using namespace IMutex::P;
-using namespace IPSplit::P;            using namespace ISql::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace IMetadata::P;
+using namespace IMutex::P;             using namespace IPSplit::P;
+using namespace ISql::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 using namespace IUtil::P;              using namespace Lib::Sqlite;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
@@ -48,6 +48,8 @@ struct CVars :                         // Start of vars class
   using ArrayVars = StdArray<CVarMapIt, CVAR_MAX>;
   /* -- Private variables -------------------------------------------------- */
   size_t           stMaxInactiveCount; // Maximum Initial CVars allowed
+  ssize_t          sstReqActiveSet,    // Requested active config set override
+                   sstActiveSet;       // Actual activated set override
   CVarMap          cvmPending,         // CVars inactive list
                    cvmActive;          // CVars active list
   ArrayVars        avInternal;         // Quick lookup to internal vars
@@ -671,20 +673,23 @@ struct CVars :                         // Start of vars class
     { // Get ref to cvar info and register the variable if the guimode is valid
       const CVarItemStatic &cvisRef = cvislList[stIndex];
       avInternal[stIndex] =
-        cSystem->SysIsCoreFlagsHave(cvisRef.cfcRequired) ?
+        cMetadata->MetadataIsCoreFlagsHave(cvisRef.cfcRequired) ?
           RegisterVar(cvisRef.ssvVar, cvisRef.ssvValue, cvisRef.cbTrigger,
             cvisRef.cFlags, CCF_NOTHING) : cvmActive.end();
     } // Finished
     cLog->LogInfoExSafe(
       "CVars registered $ of $ built-in variables for $<0x$$>.",
-      cvmActive.size(), cvislList.size(), cSystem->SysGetCoreFlagsString(),
-      StdIOSHex, cSystem->SysGetCoreFlags());
+      cvmActive.size(), cvislList.size(),
+      cMetadata->MetadataGetCoreFlagsString(),
+      StdIOSHex, cMetadata->MetadataGetCoreFlags());
   }
   /* -- Default constructor ------------------------------------- */ protected:
   explicit CVars(const CVarItemStaticList &cvislDef) :
     /* -- Initialisers ----------------------------------------------------- */
     InitHelper{ __FUNCTION__ },        // Set function name for init helper
     stMaxInactiveCount(CVAR_MAX),      // Initially set to max cvar count
+    sstReqActiveSet(-2),               // Initalised by cvar later
+    sstActiveSet(-2),                  // Initalised by cvar later
     avInternal{ FillConGeneric<ArrayVars>(cvmActive.end()) },
     cvmnsaList{{                       // Set combined lists
       { cvmPending, "unregistered" },  // Inactive cvars list
@@ -728,6 +733,10 @@ struct CVars :                         // Start of vars class
   /* -- Set maximum offline cvar count ------------------------------------- */
   CVarReturn MaxICountModified(const size_t stCount)
     { return CVarSimpleSetInt(stMaxInactiveCount, stCount); }
+  /* -- Set active configuration set --------------------------------------- */
+  CVarReturn SetConfigActiveSet(const ssize_t sstId)
+    { return CVarSimpleSetIntNLG(sstReqActiveSet, sstId,
+        static_cast<ssize_t>(-2), StdLimits<ssize_t>::max()); }
   /* -- Set and execute default app configuration file --------------------- */
   CVarReturn ExecuteAppConfig(const StdString &strFile, StdString &strVal)
   { // Convert whole file data to a string
@@ -789,37 +798,54 @@ struct CVars :                         // Start of vars class
             rjvValue.GetType(), rjvKey.GetString());
           break;
       }
-    });
-    // Optionally look for a active set value and if it exists. This useful so
-    // developers can switch between different configurations easier.
-    const Value::ConstMemberIterator
-      vcmiIt{ jsManifest.FindMember("ActiveSet") };
-    if(vcmiIt != jsManifest.MemberEnd())
-    { // Get value and if it is not an unsigned integer throw an exception
-      const Value &rjvActiveSet = vcmiIt->value;
-      if(!rjvActiveSet.IsUint())
-        XC("Active set id invalid in app manifest!",
-          "Name", jsManifest.NameGet());
+    }); // Compare requested active set
+    if(sstReqActiveSet == -2)
+    { // Optionally look for a active set value and if it exists. This useful so
+      // developers can switch between different configurations easier.
+      const Value::ConstMemberIterator
+        vcmiIt{ jsManifest.FindMember("ActiveSet") };
+      if(vcmiIt != jsManifest.MemberEnd())
+      { // Get value and if it is not an unsigned integer throw an exception
+        const Value &rjvActiveSet = vcmiIt->value;
+        if(!rjvActiveSet.IsUint())
+          XC("Active set id invalid in app manifest!",
+            "Name", jsManifest.NameGet());
+        // Set active set id
+        sstActiveSet = static_cast<ssize_t>(rjvActiveSet.GetUint());
+      } // Active set will not be chosen
+      else sstActiveSet = -2;
+    } // Set user specified override set (-1 will skip the below condition)
+    else sstActiveSet = static_cast<ssize_t>(sstReqActiveSet);
+    // Select an active configuration set?
+    if(sstActiveSet >= 0)
+    { // Convert the integer value to unsigned
+      const size_t stIndex = static_cast<size_t>(sstActiveSet);
+      // Make sure the sets member exists
+      const Value::ConstMemberIterator vcmiIt{ jsManifest.FindMember("Sets") };
+      if(vcmiIt == jsManifest.MemberEnd())
+        XC("Active set array member 'Sets' not found in app manifest!",
+          "Name", jsManifest.NameGet(), "Set", stIndex);
       // Get the sets value and it must be an array
-      const Value &rjvActiveSetArray = jsManifest.GetValue("Sets");
+      const Value &rjvActiveSetArray = vcmiIt->value;
       if(!rjvActiveSetArray.IsArray())
-        XC("Active set array invalid in app manifest!",
-          "Name", jsManifest.NameGet(), "Set", rjvActiveSet.GetUint());
+        XC("Active set array member 'Sets' has invalid type in app manifest!",
+          "Name", jsManifest.NameGet(), "Set", stIndex);
       // Throw an exception if the specified value is out of range
-      if(rjvActiveSet.GetUint() >= rjvActiveSetArray.Size())
+      if(stIndex >= rjvActiveSetArray.Size())
         XC("Active set id out of range in app manifest!",
-          "Name",    jsManifest.NameGet(),
-          "Set",     rjvActiveSet.GetUint(),
+          "Name",    jsManifest.NameGet(), "Set", stIndex,
           "Maximum", rjvActiveSetArray.Size());
       // Throw an exception if the specified value is not an object
-      const Value &rjvObject = rjvActiveSetArray[rjvActiveSet.GetUint()];
+      using Lib::RapidJson::SizeType;
+      const Value &rjvObject =
+        rjvActiveSetArray[static_cast<SizeType>(stIndex)];
       if(!rjvObject.IsObject())
         XC("Active set id not a valid object!",
-          "Name", jsManifest.NameGet(), "Set", rjvActiveSet.GetUint());
+          "Name", jsManifest.NameGet(), "Set", stIndex);
       // Add the characters the manifest file cares about
       StdForEach(par_unseq, rjvObject.MemberBegin(),
                             rjvObject.MemberEnd(),
-        [this, &rjvActiveSet, &stGood, &stBad, cvfcFlags, cvcfcFlags]
+        [this, stIndex, &stGood, &stBad, cvfcFlags, cvcfcFlags]
           (const Value::Member &rjvItem)
       { // Get alias to keyname and value and compare type
         const Value &rjvKey = rjvItem.name, &rjvValue = rjvItem.value;
@@ -853,13 +879,13 @@ struct CVars :                         // Start of vars class
           default:
             cLog->LogWarningExSafe(
               "CVars value for '$' in set '$' is invalid!",
-              rjvKey.GetType(), rjvActiveSet.GetUint(), rjvKey.GetString());
+              rjvKey.GetType(), stIndex, rjvKey.GetString());
             break;
         }
       }); // Log total cvars processed and log the result
       cLog->LogInfoExSafe(
         "CVars parsed $ of $ ($ bad) constant and set $ variables.",
-        stGood, stGood + stBad, stBad, rjvActiveSet.GetUint());
+        stGood, stGood + stBad, stBad, stIndex);
     } // Log total cvars processed and log the result
     else cLog->LogInfoExSafe("CVars parsed $ of $ ($ bad) constant variables.",
       stGood, stGood + stBad, stBad);

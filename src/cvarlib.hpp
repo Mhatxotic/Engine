@@ -83,8 +83,7 @@ CVarItemStaticList{{
 // ? Specifies the base directory of where the executable was started from. It
 // ? is only readable by the end-user and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_basedir", "",
-  CBSTR(cSystem->SysSetWorkDir),
+{ CFL_BASIC, "ast_basedir", "", CBSTR(cSystem->SysSetWorkDir),
   CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! AST_BUNDLES
@@ -93,6 +92,20 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "ast_bundles", "." ARCHIVE_EXTENSION,
   CBSTR(ArchiveInit), TSTRING|MTRIM|PCMDLINE },
+/* ------------------------------------------------------------------------- */
+// ! APP_ACTIVESET
+// ? Selects the active configuration set from the application manifest file
+// ? pointed at by the value of the 'app_config' variable. This value also
+// ? overrides the 'ActiveSet' integral value inside the manifest root. The
+// ? application manifest must also have a 'Sets' array in the root and have
+// ? the specified index or an exception will be thrown. It is here so you can
+// ? override the configuration set from the command-line with different
+// ? configuration options. A value of -2 is the default and will always select
+// ? the set value from the application manifest if it exists and a value of -1
+// ? will not select any set at all regardless of manifest set value.
+/* ------------------------------------------------------------------------- */
+{ CFL_BASIC, "app_activeset", "-2",
+  CB(cCVars->SetConfigActiveSet, ssize_t), TINTEGER|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! APP_CONFIG
 // ? Loads the configuration file with the specified extension (usually 'app').
@@ -108,8 +121,8 @@ CVarItemStaticList{{
 // ? purposes only and can be requested by the guest and only set in the
 // ? app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_author", "Anonymous", CBSTR(cSystem->SysSetGuestAuthor),
-  TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+{ CFL_BASIC, "app_author", "Anonymous",
+  CBSTR(cMetadata->MetadataSetAuthor), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_SHORTNAME
 // ? Specifies a short title name for the guest application. It is purely for
@@ -117,8 +130,7 @@ CVarItemStaticList{{
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_shortname", "Untitled",
-  CBSTR(cSystem->SysSetGuestShortTitle),
-  TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cMetadata->MetadataSetShortTitle), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! AST_HOMEDIR
 // ? Species the users home directory where files are written to if they cannot
@@ -257,7 +269,7 @@ CVarItemStaticList{{
 // ? [0x4] CFL_VIDEO = Inits an OpenGL context+window and API.
 // ? [0x8] CFL_TIMER = Limit engine framerate to cvar value 'app_tickrate'.
 { CFL_BASIC, "app_cflags", "0",
-  CB(cSystem->SysSetCoreFlags, CoreFlagsType), TUINTEGER|PNOUI },
+  CB(cMetadata->MetadataSetCoreFlags, CoreFlagsType), TUINTEGER|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! LOG_LINES
 // ? Specifies the maximum number of lines to keep in the backlog. The log
@@ -287,8 +299,8 @@ CVarItemStaticList{{
 // ? window title and for display purposes only to the end-user. It can be
 // ? requested by the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_longname", "Untitled", CBSTR(cSystem->SysSetGuestTitle),
-  TSTRING|CNOTEMPTY|MTRIM|PNOUI },
+{ CFL_BASIC, "app_longname", "Untitled",
+  CBSTR(cMetadata->MetadataSetTitle), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! ERR_INSTANCE
 // ? Tries to activate an existing window of the same name if another instance
@@ -539,7 +551,7 @@ CVarItemStaticList{{
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_description", "Undescribed",
-  CBSTR(cSystem->SysSetGuestDescription), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
+  CBSTR(cMetadata->MetadataSetDescription), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! APP_VERSION
 // ? Specifies a version for the guest application. It is purely for display
@@ -547,7 +559,7 @@ CVarItemStaticList{{
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_version", "0.0",
-  CBSTR(cSystem->SysSetGuestVersion), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
+  CBSTR(cMetadata->MetadataSetVersion), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! APP_ICON
 // ? Specifies a large icon for use with the application and window. It can be
@@ -563,7 +575,7 @@ CVarItemStaticList{{
 // ? the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_copyright", "Public Domain",
-  CBSTR(cSystem->SysSetGuestCopyright), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cMetadata->MetadataSetCopyright), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_WEBSITE
 // ? Specifies a website for the guest application. It is purely for display
@@ -571,7 +583,7 @@ CVarItemStaticList{{
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_website", "about:blank",
-  CBSTR(cSystem->SysSetGuestWebsite), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cMetadata->MetadataSetWebsite), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
 /* ------------------------------------------------------------------------- */
 // ! APP_TICKRATE
 // ? Specifies the base tick rate of the guest application in nanoseconds.

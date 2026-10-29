@@ -60,6 +60,7 @@ namespace E {                          // Put everything in engine namespace
 #include "bit.hpp"                     // Bit functions
 #include "memory.hpp"                  // Memory management utilities header
 #include "fstream.hpp"                 // File IO utility header
+#include "metadata.hpp"                // Metadata class header
 #include "mutex.hpp"                   // Mutex helper class header
 #include "log.hpp"                     // Logging helper class header
 #include "ifillcon.hpp"                // Init filled contianers header

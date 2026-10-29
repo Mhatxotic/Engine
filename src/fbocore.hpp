@@ -18,7 +18,8 @@ using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IDim::P;               using namespace IEvtMain::P;
 using namespace IFboBlend::P;          using namespace IFbo::P;
 using namespace IFrame::P;             using namespace IGlFW::P;
-using namespace ILog::P;               using namespace IOgl::P;
+using namespace ILog::P;               using namespace ILuaFunc::P;
+using namespace ILuaUtil::P;           using namespace IOgl::P;
 using namespace IShader::P;            using namespace IShaders::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
@@ -56,6 +57,8 @@ class FboCore :                        // The main Fbo operations manager
   /* -- FPS ---------------------------------------------------------------- */
   ClkTimePoint     ctpStart;           // Fps checkpoint
   double           dFps, dFpsSmoothed; // Caluclated FPS value + smoothed
+  /* -- Event function references ------------------------------------------ */
+  LuaFunc          lrRedraw;           // Redraw function callback
   /* -- Set main Fbo as active Fbo to draw too ------------------ */ protected:
   void FboCoreActivateMain() { fboMain.FboSetActive(); }
   /* -- Render the main Fbo from the engine thread ------------------------- */
@@ -224,6 +227,10 @@ class FboCore :                        // The main Fbo operations manager
     // Only bounds were changed
     return false;
   }
+  /* -- Get core guest callbacks ------------------------------------------- */
+  LuaFunc &FboCoreGetRedrawFunc() { return lrRedraw; }
+  /* -- Send redraw event to redraw function ------------------------------- */
+  void FboCoreSendRedrawEvent() { lrRedraw.LuaFuncDispatch(); }
   /* -- Sent when the window is resized ------------------------------------ */
   bool FboCoreAutoViewport(const GLsizei glsiWidth, const GLsizei glsiHeight,
     const bool bForce = false)
@@ -231,13 +238,9 @@ class FboCore :                        // The main Fbo operations manager
     FboCoreUpdateViewport(UtilMaximum(glsiWidth, 1),
       UtilMaximum(glsiHeight, 1));
     // Update matrix because the window's aspect ratio may have changed and
-    // if the Fbo changed then inform lua scripts that they should redraw any
-    // Fbo's they are managing and return the result.
-    if(!FboCoreAutoMatrix(FboCoreGetMatrixWidth(),
-      FboCoreGetMatrixHeight(), bForce))
-        return false;
-    cEvtMain->Add(EMC_LUA_REDRAW);
-    return true;
+    // return the result.
+    return FboCoreAutoMatrix(FboCoreGetMatrixWidth(),
+      FboCoreGetMatrixHeight(), bForce);
   }
   /* -- Update viewport and log it ----------------------------------------- */
   void FboCoreUpdateViewport(const int iWidth, const int iHeight)
@@ -273,7 +276,8 @@ class FboCore :                        // The main Fbo operations manager
     fboMain(front()),                  // Init reference to main Fbo
     fboConsole(back()),                // Init reference to console Fbo
     ctpStart{ cd0 },                   // Initialise FPS timepoint
-    dFps{ 0.0 }, dFpsSmoothed{ 0.0 }   // Initialise calculated FPS
+    dFps{ 0.0 }, dFpsSmoothed{ 0.0 },  // Initialise calculated FPS
+    lrRedraw{ "OnRedraw" }             // Setup graphical redraw LUA event
     /* -- Set pointer to global class and main Fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }
   /* -- Set main Fbo float reserve --------------------------------- */ public:

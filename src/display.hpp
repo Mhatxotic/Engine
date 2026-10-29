@@ -23,7 +23,8 @@ using namespace IGlFWMonitor::P;       using namespace IHelper::P;
 using namespace IImage::P;             using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IInput::P;
 using namespace ILog::P;               using namespace ILookupArray::P;
-using namespace ILuaFunc::P;           using namespace IMutex::P;
+using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
+using namespace IMetadata::P;          using namespace IMutex::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace IToken::P;             using namespace IUtf::P;
@@ -57,8 +58,7 @@ BUILD_FLAGS(Display,                   // Display flags
   DF_TRANSPARENT           {Flag(62)}, // Window transparency enabled?
   DF_NOERRORS              {Flag(63)}, // No opengl errors?
   DF_MAXIMISED             {Flag(64)}  // Window maximised at start?
-);/* ----------------------------------------------------------------------- */
-/* -- Display class -------------------------------------------------------- */
+);/* -- Display class ------------------------------------------------------ */
 class Display;                         // Class prototype
 static Display *cDisplay = nullptr;    // Pointer to global class
 class Display :                        // Actual class body
@@ -97,9 +97,11 @@ class Display :                        // Actual class body
   /* -- Icons -------------------------------------------------------------- */
   GlFWIconVector   gfwivIcons;         // Contiguous memory for glfw image data
   ImageVector      ivIcons;            // Image icon data
-  /* -- Events ----------------------------------------------------- */ public:
-  LuaFunc          lrFocused;          // Window focused lua event
-  /* -- Public typedefs ---------------------------------------------------- */
+  /* -- Event function references ------------------------------------------ */
+  LuaFunc          lrFocused,          // Focused function callback
+                   lrMoved,            // Moved function callback
+                   lrResized;          // Resize function callback
+  /* -- Public typedefs -------------------------------------------- */ public:
   enum FSType {                        // Available window types
     /* --------------------------------------------------------------------- */
     FST_STANDBY,                       // [0] Full-screen type is not set
@@ -119,6 +121,8 @@ class Display :                        // Actual class body
     cLog->LogDebugExSafe("Display changed window position from $x$ to $x$.",
       DisplayGetWinPosX(), DisplayGetWinPosY(), iNewX, iNewY);
     ciPosition.CoordSet(iNewX, iNewY);
+    // Send resize event to Lua now
+    lrMoved.LuaFuncDispatch(iNewX, iNewY);
   }
   /* -- Window moved request ----------------------------------------------- */
   void DisplayOnMoved(const EvtMainEvent &emeEvent)
@@ -251,17 +255,21 @@ class Display :                        // Actual class body
     if(cFboCore->FboCoreCannotDraw())
     { // Set to copy main FBO to the back buffer
       cFboCore->FboCoreClearDrawPartial();
+      // Ask guest to update
+      cFboCore->FboCoreSendRedrawEvent();
       // Log that we got this event
       cLog->LogDebugSafe("Display refresh request redrawing window contents.");
     } // Now redrawing because it's already set.
     else cLog->LogDebugSafe("Display refresh request already requested.");
   }
   /* == Check if window resized ============================================ */
-  void DisplayOnResizedParse(const int iWidth, const int iHeight) const
+  void DisplayOnResizedParse(const int iWidth, const int iHeight)
   { // Report change and update the stored position
     cLog->LogDebugExSafe("Display changed window size from $x$ to $x$.",
       cInput->DimGetWidth(), cInput->DimGetHeight(), iWidth, iHeight);
     cInput->DimSet(iWidth, iHeight);
+    // Send resize event to Lua now
+    lrResized.LuaFuncDispatch(iWidth, iHeight);
   }
   /* -- On window resized callback ----------------------------------------- */
   void DisplayOnResized(const EvtMainEvent &emeEvent)
@@ -430,7 +438,7 @@ class Display :                        // Actual class body
   { // Force-reinitialise matrix
     DisplayCommitMatrix();
     // Inform lua scripts that they should redraw the framebuffer
-    cEvtMain->Add(EMC_LUA_REDRAW);
+    cFboCore->FboCoreSendRedrawEvent();
   }
   /* -- Frame buffer was reset --------------------------------------------- */
   void DisplayOnFBReset(const EvtMainEvent &emeEvent)
@@ -478,7 +486,7 @@ class Display :                        // Actual class body
       // Log non-standard full-screen switch
       cLog->LogDebugSafe("Display received external desktop switch!");
       // Update viewport jump from above if/condition scope
-      UpdateViewport: DisplayRequestMatrixReInit();
+      UpdateViewport:
       // Check if window moved/resized as glfw wont send these
       DisplayOnMovedParse(iWinX, iWinY);
       DisplayOnResizedParse(iWinWidth, iWinHeight);
@@ -486,12 +494,11 @@ class Display :                        // Actual class body
     } // Clear native flag otherwise
     else if(FlagIsSet(DF_NATIVEFS)) FlagClear(DF_NATIVEFS);
 #endif
-    // Resize main viewport and if it changed, reinitialise the console FBO
-    // and redraw the console
+    // Reinit the console fbo if a new main framebuffer was reinitialised?
     if(cFboCore->FboCoreAutoViewport(iWidth, iHeight))
-      cConGfx->ConGfxInitFBO();
-    // Redraw the console if enabled
-    else cConsole->SetRedrawIfEnabled();
+      return cConGfx->ConGfxInitFBO();
+    // A new main framebuffer wasn't reinitialised?
+    cConsole->SetRedrawIfEnabled();
   }
   /* -- Window size requested ---------------------------------------------- */
   void DisplayOnRqResize(const EvtWinEvent &eweEvent)
@@ -552,8 +559,6 @@ class Display :                        // Actual class body
         cLog->LogDebugSafe("Display acknowledged engine suspension.");
         // Update new fullscreen setting and reinitialise if successful
         DisplayReInitWindow(bState);
-        // Update viewport
-        DisplayRequestMatrixReInit();
         // Engine thread can continue
         cEvtMain->Unsuspend();
         // Log that we're processing a monitor change event
@@ -715,8 +720,10 @@ class Display :                        // Actual class body
     cGlFW->WinShow();
     // Loop...
     do
-    { // Processing events and then grab window properties
-      GlFWWaitEventsTimeout(0.01);
+    { // Process lingering window events and then grab window properties. This
+      // is 'probably' only needed on slower systems or Wayland so we can make
+      // sure we have all the data needed to setup the framebuffer properly.
+      GlFWWaitEventsTimeout(0.01); // 10ms delay between attempts
       cInput->DimSet(cGlFW->WinGetSize());
       diFBSize.DimSet(cGlFW->WinGetFBSize());
       dfWinScale.DimSet(cGlFW->WinGetScale());
@@ -734,7 +741,11 @@ class Display :                        // Actual class body
       dX < cInput->DimGetWidth<double>() &&
       dY < cInput->DimGetHeight<double>());
   }
-  /* -- Return selected monitor ------------------------------------ */ public:
+  /* -- Get core guest callbacks ----------------------------------- */ public:
+  LuaFunc &DisplayGetFocusedFunc() { return lrFocused; }
+  LuaFunc &DisplayGetResizedFunc() { return lrResized; }
+  LuaFunc &DisplayGetMovedFunc() { return lrMoved; }
+  /* -- Return selected monitor -------------------------------------------- */
   const GlFWMonitor *DisplayGetSelectedMonitor() const { return gfwmActive; }
   /* -- Return selected resolution ----------------------------------------- */
   const GlFWRes *DisplayGetSelectedRes() const { return gfwrActive; }
@@ -814,7 +825,7 @@ class Display :                        // Actual class body
   { // This functionality throws a GLFW api error on MacOS so just NullOp it
 #if !defined(MACOS)
     // If using interactive mode?
-    if(cSystem->SysIsGraphicalMode())
+    if(cMetadata->MetadataIsGraphicalMode())
     { // Ignore if no icons
       if(gfwivIcons.empty()) return;
       // Using Linux?
@@ -859,7 +870,7 @@ class Display :                        // Actual class body
     // those functions just parse the whole .data() part.
     if(const TokenStrView tsvIcons{ ssvNames, cCommon->CommonColon(), 3 })
     { // If using interactive mode?
-      if(cSystem->SysIsGraphicalMode())
+      if(cMetadata->MetadataIsGraphicalMode())
       { // Clear images and icons
         gfwivIcons.clear();
         ivIcons.clear();
@@ -1092,7 +1103,9 @@ class Display :                        // Actual class body
     iFBDepthB(GLFW_DONT_CARE),         // Bit depth not selected yet
     iFBDepthA(GLFW_DONT_CARE),         // Bit depth not selected yet
     iSamples(GLFW_DONT_CARE),          // No anti-aliasing samples specified
-    lrFocused{ "OnFocused" },          // Set name for OnFocused lua event
+    lrFocused{ "OnFocused" },          // Setup window focus LUA event
+    lrMoved{ "OnMoved" },              // Setup window move LUA event
+    lrResized{ "OnResize" },           // Setup window resize LUA event
     fsType(FST_STANDBY),               // Full-screen type
     fstStrings{{                       // DisplayInit full-screen type strings
       STR(FST_STANDBY),    STR(FST_WINDOW), STR(FST_EXCLUSIVE),

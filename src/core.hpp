@@ -42,24 +42,24 @@ using namespace ILua::P;               using namespace ILuaBase::P;
 using namespace ILuaCode::P;           using namespace ILuaCommand::P;
 using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
 using namespace ILuaVariable::P;       using namespace IMask::P;
-using namespace IMemory::P;            using namespace IMixer::P;
-using namespace IMutex::P;             using namespace IOal::P;
-using namespace IOgl::P;               using namespace IPSplit::P;
-using namespace IPalette::P;           using namespace IPcm::P;
-using namespace IPcmLib::P;            using namespace ISShot::P;
-using namespace ISample::P;            using namespace IShader::P;
-using namespace IShaders::P;           using namespace ISocket::P;
-using namespace ISource::P;            using namespace ISql::P;
-using namespace IStat::P;              using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IStream::P;
-using namespace IString::P;            using namespace ISysMod::P;
-using namespace ISysUtil::P;           using namespace ISystem::P;
-using namespace ITexture::P;           using namespace IThread::P;
-using namespace ITime::P;              using namespace IToken::P;
-using namespace IUrl::P;               using namespace IUtf::P;
-using namespace IUtil::P;              using namespace IVideo::P;
-using namespace Lib::GlFW::Types;      using namespace Lib::OpenAL::Types;
-using namespace Lib::Sqlite::Types;
+using namespace IMemory::P;            using namespace IMetadata::P;
+using namespace IMixer::P;             using namespace IMutex::P;
+using namespace IOal::P;               using namespace IOgl::P;
+using namespace IPSplit::P;            using namespace IPalette::P;
+using namespace IPcm::P;               using namespace IPcmLib::P;
+using namespace ISShot::P;             using namespace ISample::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace ISocket::P;            using namespace ISource::P;
+using namespace ISql::P;               using namespace IStat::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISysMod::P;            using namespace ISysUtil::P;
+using namespace ISystem::P;            using namespace ITexture::P;
+using namespace IThread::P;            using namespace ITime::P;
+using namespace IToken::P;             using namespace IUrl::P;
+using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IVideo::P;             using namespace Lib::GlFW::Types;
+using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -67,27 +67,27 @@ class Core;                            // Core class prototype
 static Core *cCore = nullptr;          // Pointer to static class
 class Core final :                     // Members initially private
   /* -- Base classes (order is critical!) ---------------------------------- */
-  private Stats,      private Threads,            private EvtMain,
-  private System,     private LuaFuncs,           private Archives,
-  private Assets,     private Crypt,              private Urls,
-  private Frame,      private Sqls,               private Sql,
-  private Jsons,      private CVarItemStaticList, private CVars,
-  private Sockets,    private ConCmdStaticList,   private Console,
-  private GlFW,       private Credits,            private FreeType,
-  private Ftfs,       private Files,              private Masks,
-  private Bins,       private Oal,                private PcmLibs,
-  private CodecWAV,   private CodecCAF,           private CodecOGG,
-  private Pcms,       private Mixer,              private Audio,
-  private Sources,    private Samples,            private Streams,
-  private EvtWin,     private Ogl,                private ImageLibs,
-  private CodecPNG,   private CodecJPG,           private CodecGIF,
-  private CodecDDS,   private CodecWEBP,          private Images,
-  private Shaders,    private Clips,              private Display,
-  private Input,      private ShaderCore,         private Fbos,
-  private FboCore,    private SShots,             private Textures,
-  private Palettes,   private Atlases,            private Fonts,
-  private Videos,     private ConGfx,             private Variables,
-  private Commands,   private Lua
+  private Stats,     private Threads,  private EvtMain,
+  private System,    private LuaFuncs, private Archives,
+  private Assets,    private Crypt,    private Urls,
+  private Frame,     private Sqls,     private Sql,
+  private Jsons,     private Metadata, private CVarItemStaticList,
+  private CVars,     private Sockets,  private ConCmdStaticList,
+  private Console,   private GlFW,     private Credits,
+  private FreeType,  private Ftfs,     private Files,
+  private Masks,     private Bins,     private Oal,
+  private PcmLibs,   private CodecWAV, private CodecCAF,
+  private CodecOGG,  private Pcms,     private Mixer,
+  private Audio,     private Sources,  private Samples,
+  private Streams,   private EvtWin,   private Ogl,
+  private ImageLibs, private CodecPNG, private CodecJPG,
+  private CodecGIF,  private CodecDDS, private CodecWEBP,
+  private Images,    private Shaders,  private Clips,
+  private Display,   private Input,    private ShaderCore,
+  private Fbos,      private FboCore,  private SShots,
+  private Textures,  private Palettes, private Atlases,
+  private Fonts,     private Videos,   private ConGfx,
+  private Variables, private Commands, private Lua
 { /* -- Private typedefs to run a function when scope exits ---------------- */
   template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
     explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}
@@ -122,7 +122,7 @@ class Core final :                     // Members initially private
     // mode so clear it regardless of what the gui mode is.
     ConsoleClearStatus();
     // If using graphical inteactive mode?
-    if(SysIsGraphicalMode())
+    if(MetadataIsGraphicalMode())
     { // Reset input, FBO's, OpenGL state and palette to default
       InputResetEnvironment();
       FboCoreResetEnvironment();
@@ -287,11 +287,18 @@ class Core final :                     // Members initially private
           SetExitReason(EMC_LUA_ERROR);
           // Done
           break;
-        // The thread and window was reinitialised? (e.g. vreset command)
-        case EMC_QUIT_VREINIT: [[fallthrough]];
-        case EMC_QUIT_THREAD:
+        // The graphics subsystem was reinitialised due to 'greset' command?
+        case EMC_QUIT_VREINIT:
           // Tell guest scripts to redraw their FBO's
-          EvtMain::Add(EMC_LUA_REDRAW);
+          cFboCore->FboCoreSendRedrawEvent();
+          // Fall through to reset exit reason
+          [[fallthrough]];
+        // The graphics subsystem was reinitialised due to HW change?
+        case EMC_QUIT_HWREINIT:
+          // Fall through to fallthrough
+          [[fallthrough]];
+        // The thread and window was reinitialised? (e.g. vreset command)
+        case EMC_QUIT_THREAD:
           // Exceptions from here on are recoverable
           SetExitReason(EMC_LUA_ERROR);
           // Done
@@ -319,11 +326,11 @@ class Core final :                     // Members initially private
           // Done
           break;
       } // Terminal mode requested?
-      if(SysIsTextMode())
+      if(MetadataIsTextMode())
       { // Graphical mode requested too?
-        if(SysIsGraphicalMode())
+        if(MetadataIsGraphicalMode())
         { // Frame limiter enabled?
-          if(SysIsTimerMode())
+          if(MetadataIsTimerMode())
           { // Loop until event manager emits break
             while(EvtMain::HandleSafe())
             { // Execute unthreaded tick
@@ -348,9 +355,9 @@ class Core final :                     // Members initially private
           ConsoleFlushToLog();
         }
       } // Graphical mode requested?
-      else if(SysIsGraphicalMode())
+      else if(MetadataIsGraphicalMode())
       { // Frame limiter enabled?
-        if(SysIsTimerMode())
+        if(MetadataIsTimerMode())
           // Loop until event manager says we should break
           while(EvtMain::HandleSafe()) CoreTickFrameLimiter();
           // Frame limiter disabled so loop without frame limiting
@@ -398,10 +405,11 @@ class Core final :                     // Members initially private
     // Whats the exit reason code?
     switch(GetExitReason())
     { // Quitting thread?
+      case EMC_QUIT_HWREINIT: [[fallthrough]];
       case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD:
         // Not interactive mode? Nothing to de-initialise
-        if(SysIsNotGraphicalMode()) return;
+        if(MetadataIsNotGraphicalMode()) return;
         // Unload console background and font textures
         ConGfxDeInitTextureAndFont();
         // Unload font, texture, videos and curor textures
@@ -415,12 +423,12 @@ class Core final :                     // Members initially private
         // De-initialise Lua
         CoreLuaDeInitHelper();
         // If in graphical mode? De-init console graphics and input
-        if(SysIsGraphicalMode()) { ConGfxDeInit(); InputDeInit(); }
+        if(MetadataIsGraphicalMode()) { ConGfxDeInit(); InputDeInit(); }
         // DeInitialise console class and freetype
         ConsoleDeInit();
         FreeTypeDeInit();
         // De-init audio
-        if(SysIsAudioMode()) AudioDeInit();
+        if(MetadataIsAudioMode()) AudioDeInit();
         // Done
         break;
     } // Unload all FBO's (NOT destroy);
@@ -439,7 +447,7 @@ class Core final :                     // Members initially private
   { // De-initialise components
     CoreDeInitComponents();
     // If not in graphical mode, we're done
-    if(SysIsNotGraphicalMode()) return;
+    if(MetadataIsNotGraphicalMode()) return;
     // Window should close as well
     WinSetClose(GLFW_TRUE);
     // Unblock the window thread
@@ -475,22 +483,23 @@ class Core final :                     // Members initially private
   ThreadStatus CoreThreadMain(Thread&) try
   { // Log reason for init
     cLog->LogDebugExSafe("Core engine thread started (C:$;M:$<$>).",
-      GetExitReason(), SysGetCoreFlagsString(), SysGetCoreFlags());
+      GetExitReason(), MetadataGetCoreFlagsString(), MetadataGetCoreFlags());
     // Non-interactive mode?
-    if(SysIsTextMode())
+    if(MetadataIsTextMode())
     { // Have interactive mode too? Init graphical systems
-      if(SysIsGraphicalMode()) CoreInitGraphicalSubsystems();
+      if(MetadataIsGraphicalMode()) CoreInitGraphicalSubsystems();
       // Not interactive mode so init FT and console if not a first time init
       else if(IsExitReason(EMC_NONE)) { FreeTypeInit(); ConsoleInit(); }
       // Not initialising for first time so load icons
       else DisplayUpdateIcons();
     } // Init interactive console?
-    else if(SysIsGraphicalMode()) CoreInitGraphicalSubsystems();
+    else if(MetadataIsGraphicalMode()) CoreInitGraphicalSubsystems();
     // With audio mode enabled? Initialise audio class.
-    if(SysIsAudioMode() && IsExitReason(EMC_NONE)) AudioInit();
+    if(MetadataIsAudioMode() && IsExitReason(EMC_NONE)) AudioInit();
     // Lua loop with initialisation. Compare event code
     SandBoxInit: switch(GetExitReason())
     { // Ignore LUA initialisation if we're reinitialising other components
+      case EMC_QUIT_HWREINIT: [[fallthrough]];
       case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
       // Any other code will initialise LUA
@@ -634,6 +643,7 @@ class Core final :                     // Members initially private
       // Quitting the engine completely? De-initialise lua and fall through.
       case EMC_QUIT: [[fallthrough]];
       // Restarting engine subsystems. i.e. 'vreset'? Fall through.
+      case EMC_QUIT_HWREINIT: [[fallthrough]];
       case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
     } // De-initilise everything
@@ -691,7 +701,11 @@ class Core final :                     // Members initially private
         GlFWWaitEvents();
       } // Compare exit reason
       switch(GetExitReason())
-      { // If the window is being re-initialised?
+      { // If the window is being re-initialised due to HW change?
+        case EMC_QUIT_HWREINIT:
+          // Fall through to quit
+          [[fallthrough]];
+        // The graphics subsystem was reinitialised due to 'greset' command?
         case EMC_QUIT_VREINIT:
           // De-initialise the engine thread and wait for it to complete
           GetEngThread().ThreadDeInit();
@@ -739,7 +753,7 @@ class Core final :                     // Members initially private
   { // Register built-in cvars table
     CVarsInit();
     // Text mode requested?
-    if(SysIsTextMode())
+    if(MetadataIsTextMode())
     { // Bail out if logging to standard output because this will prevent
       // the text mode from working properly
       if(cLog->LogIsRedirectedToDevice())
@@ -751,7 +765,7 @@ class Core final :                     // Members initially private
         SysConDeInit();
       }) };
       // Initialise terminal
-      SysConInit(SysGetGuestTitle().data(),
+      SysConInit(MetadataGetTitle().data(),
         CVarsGetInternal<unsigned>(CON_TMCCOLS),
         CVarsGetInternal<unsigned>(CON_TMCROWS),
         CVarsGetInternal<bool>(CON_TMCNOCLOSE));
@@ -760,7 +774,7 @@ class Core final :                     // Members initially private
       // Perform the initial draw of the console.
       ConsoleFlushToLog();
       // Graphical mode requested too?
-      if(SysIsGraphicalMode()) CoreEnterGraphicalMode();
+      if(MetadataIsGraphicalMode()) CoreEnterGraphicalMode();
       // Only text mode requested?
       else
       { // Reset window icon
@@ -782,7 +796,7 @@ class Core final :                     // Members initially private
         SysConCanCloseNow();
       }
     } // Else were in graphical interactive mode
-    else if(SysIsGraphicalMode()) CoreEnterGraphicalMode();
+    else if(MetadataIsGraphicalMode()) CoreEnterGraphicalMode();
     // No front-end requested so we just use stdout
     else
     { // De-init window when leaving scope
@@ -816,7 +830,7 @@ class Core final :                     // Members initially private
         cLog->LogWarningExSafe("Core signalled to restart with $ parameters!",
           cCmdLine->CmdLineGetTotalCArgs());
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(SysIsTextMode() ?
+        cCmdLine->CmdLineSetRestart(MetadataIsTextMode() ?
           EO_TERM_REBOOT : EO_UI_REBOOT);
         // Have debugging enabled?
         if(cLog->LogHasLevel(LH_DEBUG))
@@ -831,7 +845,7 @@ class Core final :                     // Members initially private
         // Put event in log
         cLog->LogWarningSafe("Core signalled to restart without parameters!");
         // Set exit procedure
-        cCmdLine->CmdLineSetRestart(SysIsTextMode() ?
+        cCmdLine->CmdLineSetRestart(MetadataIsTextMode() ?
           EO_TERM_REBOOT_NOARG : EO_UI_REBOOT_NOARG);
         // Clean-up and restart
         return 4;
@@ -870,14 +884,15 @@ class Core final :                     // Members initially private
   { // Do not allow user to set this variable, only empty is allowed
     if(!strValue.empty()) return DENY;
     // Set the title
-    strRValue = StrFormat("$ ($)", SysGetGuestTitle(), ENGTarget());
+    strRValue = StrFormat("$ $ ($)",
+      MetadataGetTitle(), MetadataGetVersion(), ENGTarget());
     // We changed the value
     return ACCEPT_HANDLED;
   }
   /* -- Set once instance cvar changed ------------- Core::SetOneInstance -- */
   CVarReturn CoreSetOneInstance(const bool bEnabled)
   { // Ignore check if not needed or global mutex creation succeeded.
-    if(!bEnabled || InitGlobalMutex(SysGetGuestTitle())) return ACCEPT;
+    if(!bEnabled || InitGlobalMutex(MetadataGetTitle())) return ACCEPT;
     // De-initialise the log as we are about to exit.
     cLog->LogDeInitSafe();
     // Global mutex creation failed so exit program now.
@@ -888,10 +903,10 @@ class Core final :                     // Members initially private
   { // Build user volatile directory name if user didn't specify one
     if(strP.empty())
       strV = StrFormat("$/$/$/", SysGetRoamingDir(),
-        SysGetGuestAuthor().empty() ?
-          cCommon->CommonUnspec() : SysGetGuestAuthor(),
-        SysGetGuestShortTitle().empty() ?
-          cCommon->CommonUnspec() : SysGetGuestShortTitle());
+        MetadataGetAuthor().empty() ?
+          cCommon->CommonUnspec() : MetadataGetAuthor(),
+        MetadataGetShortTitle().empty() ?
+          cCommon->CommonUnspec() : MetadataGetShortTitle());
     // Specified so use what the user specified
     else strV = StdMove(strP);
     // Try to make the users home directory as an alternative save place.

@@ -331,7 +331,7 @@ class DirFile                          // Files container class
   static StrSet Export(const DirEntMap &dSrc)
   { // Write entries into a single set list and return it
     StrSet ssFiles;
-    StdTransform(seq, dSrc.cbegin(), dSrc.cend(),
+    StdTransformNXP(dSrc.cbegin(), dSrc.cend(),
       std::inserter(ssFiles, ssFiles.cend()),
       [](const DirEntMapPair &dempFile) { return dempFile.first; });
     return ssFiles;

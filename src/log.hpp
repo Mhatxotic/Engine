@@ -13,9 +13,10 @@ namespace ILog {                       // Start of private module namespace
 using namespace IClock::P;             using namespace IChrono::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IFStream::P;           using namespace ILookupArray::P;
-using namespace IMutex::P;             using namespace IName::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IMetadata::P;          using namespace IMutex::P;
+using namespace IName::P;              using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Log levels ----------------------------------------------------------- */
@@ -70,6 +71,7 @@ class Log :                            // The actual class body
   SafeLHLevel      slhlLevel;          // Log helper level for this instance
   size_t           stMaximum;          // Maximum log lines
   FStreamMode      fsmMode;            // Logging mode (append or truncate)
+  const StdStringView ssvLogExt;       // Log extension
   /* -- Reserve a certain amount of log lines ------------------------------ */
   void LogReserveLines(const size_t stlLines)
   { // Calculate total liens
@@ -313,7 +315,8 @@ class Log :                            // The actual class body
     ssvStdErr{ "/dev/stderr" },        // Initialise display label for stderr
     slhlLevel{ LH_DEBUG },             // Initialise default level
     stMaximum(1000),                   // Initialise maximum output lines
-    fsmMode(FM_MAX)                    // File mode initialised by cvar
+    fsmMode(FM_MAX),                   // File mode initialised by cvar
+    ssvLogExt{ "." LOG_EXTENSION }     // Log extension
     /* -- Set global pointer to static class ------------------------------- */
     { cLog = this; }
   /* -- Destructor --------------------------------------------------------- */
@@ -347,26 +350,37 @@ class Log :                            // The actual class body
       switch(strFN.size())
       { // Empty? Ignore
         case 0: return ACCEPT;
-        // If not on Windows?
-#if !defined(WINDOWS)
         // One character was specified?
         case 1:
           // Compare the character
           switch(strFN.front())
-          { // Check for requested use of stderr or stdout
-            case '!': LogInit(stderr, ssvStdErr); return ACCEPT;
-            case '-': LogInit(stdout, ssvStdOut); return ACCEPT;
-            // Anything else ignore and open the file normally
-            default: break;
+          { // Stderr and stdout don't apply to Windows GUI apps
+#if !defined(WINDOWS)
+            // Requested standard error?
+            case '!': LogInit(stderr, ssvStdErr); break;
+            // Requested standard output?
+            case '-': LogInit(stdout, ssvStdOut); break;
+#endif
+            // Requested automatically generated filename?
+            case '+':
+              // Create automatically generated filename and return if failed
+              if(!LogInit(StrAppend(cMetadata->MetadataGetShortTitle(),
+                   cmSys.FormatTime(cCommon->CommonFileTs().data()),
+                   ssvLogExt)))
+                return DENY;
+              break;
+            // Anything else use the specified letter as filename
+            default: goto UseName;
           } // Done
           break;
-#endif
-        // Anything else just break.
-        default: break;
-      } // Create new filename and set filename on success and return success
-      if(!LogInit(StrAppend(strFN, "." LOG_EXTENSION))) return DENY;
+        // Anything else?
+        default: UseName:
+          // Use already supplied filename with extension and return if failed
+          if(!LogInit(StrAppend(strFN, ssvLogExt))) return DENY;
+          break;
+      } // Filename is accepted
       strCV = NameGet();
-      return ACCEPT_HANDLED;
+      return ACCEPT;
     });
   }
   /* -- Conlib callback function for APP_LOGLINES variable ----------------- */

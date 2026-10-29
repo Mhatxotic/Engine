@@ -288,7 +288,7 @@ static int CryptSSLCtxSetTlsExtStatusCb(SSL_CTX*const sslCtx,
   int(*const ftCb)(SSL*,void*))
 { return static_cast<int>(SSL_CTX_callback_ctrl(sslCtx,
     SSL_CTRL_SET_TLSEXT_STATUS_REQ_CB,
-    reinterpret_cast<void(*)(void)>(reinterpret_cast<void*>(ftCb)))); }
+    reinterpret_cast<void(*)()>(reinterpret_cast<void*>(ftCb)))); }
 /* -- Replacement for SSL_set_tlsext_host_name which causes warnings ------- */
 static int CryptSSLSetTlsExtHostName(SSL*const sSSL, const char*const cpName)
   { return static_cast<int>(SSL_ctrl(sSSL, SSL_CTRL_SET_TLSEXT_HOSTNAME,

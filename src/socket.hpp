@@ -18,14 +18,14 @@ using namespace IFlags::P;             using namespace ILockable::P;
 using namespace ILog::P;               using namespace ILuaBase::P;
 using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IMutex::P;
-using namespace IName::P;              using namespace IParser::P;
-using namespace IRefCtr::P;            using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace IToken::P;
-using namespace IUtil::P;              using namespace IUtf::P;
-using namespace Lib::OpenSSL;
+using namespace IMemory::P;            using namespace IMetadata::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace IParser::P;            using namespace IRefCtr::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IToken::P;             using namespace IUtil::P;
+using namespace IUtf::P;               using namespace Lib::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -1208,7 +1208,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         AddStatus(SS_DOWNLOADING);
         // If we already got enough bytes from the header packet?
         if(stInitial == stContentLength)
-          SocketLogSafe(LH_DEBUG, "downloaded esource in one packet.");
+          SocketLogSafe(LH_DEBUG, "downloaded resource in one packet.");
         // If we got too many bytes? treat it as completed anyway
         else if(stInitial > stContentLength)
           SocketLogSafe(LH_WARNING, "downloaded resource ($ bytes excess)!",
@@ -1596,7 +1596,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   ClkTimePoint GetTDisconnected() const
     { return ClkTimePoint{ acdDisconnected }; }
   /* -- Set a new callback ------------------------------------------------- */
-  void SetNewCallback(lua_State*const lS) { LuaEvtInitEx(lS, 1); }
+  void SetNewCallback(const lua_State*const lS) { LuaEvtInitEx(lS, 1); }
   /* -- Async thread event callback (called by LuaEvtMaster) ------------- */
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
@@ -1947,7 +1947,7 @@ static CVarReturn SocketAgentModified(const StdString &strN, StdString &strV)
     strV = StrFormat("Mozilla/5.0 ($; $-bit; v$.$.$.$) $/$",
       cSystem->ENGName(), cSystem->ENGBits(), cSystem->ENGMajor(),
       cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
-      cSystem->SysGetGuestShortTitle(), cSystem->SysGetGuestVersion());
+      cMetadata->MetadataGetShortTitle(), cMetadata->MetadataGetVersion());
   // Not empty to use user value instead
   else strV = strN;
   // Set string view

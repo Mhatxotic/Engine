@@ -359,7 +359,7 @@ cConsole->ConsoleAddLineF(
       cSystem->CPUUsage(), cSystem->CPUUsageSystem(),
     cFrame->FrameGetStart(), cFrame->FrameGetLimit(),
       cFrame->FrameGetAccumulator(), cFrame->FrameGetDelay(),
-    cSystem->SysGetCoreFlags(), cSystem->SysGetCoreFlagsString(),
+    cMetadata->MetadataGetCoreFlags(), cMetadata->MetadataGetCoreFlagsString(),
       cFrame->FrameGetTimeOut(), cFrame->FrameGetTriggers(),
       cLua->LuaGetOpsInterval(), cFrame->FrameGetTicks(),
     StrFromEvalTokens({
@@ -1865,22 +1865,22 @@ if(aArgs.size() == 2)
     cmHiRes.TimePointToClampedDouble(sRef.GetTConnected()),
   // Set connected to connection time
   dInitial = ClockTimePointRangeToClampedDouble(sRef.GetTConnected(),
-    sRef.GetTConnect());
+    sRef.GetTConnect()),
+  // Get last read and write time
+  dRead = cmHiRes.TimePointToClampedDouble(sRef.GetTRead()),
+  dWrite = cmHiRes.TimePointToClampedDouble(sRef.GetTWrite());
   // Write connected information
   return cConsole->ConsoleAddLineF("$\n"
     "- RX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
     "- TX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
-    "- Total Time: $; Connected: $; Initial: $.",
+    "- Connected: $; Initial: $; Latency: $.",
     strOutput,
     sRef.GetRXQCount(), sRef.GetRXpkt(), sRef.GetRX(),
-      StrToBytes(sRef.GetRX()),
-      TimeToShortDuration(cmHiRes.TimePointToClampedDouble(sRef.GetTRead())),
+      StrToBytes(sRef.GetRX()), TimeToShortDuration(dRead),
     sRef.GetTXQCount(), sRef.GetTXpkt(), sRef.GetTX(),
-      StrToBytes(sRef.GetTX()),
-      TimeToShortDuration(
-        cmHiRes.TimePointToClampedDouble(sRef.GetTWrite())),
-    TimeToShortDuration(dConnect + dInitial),
-      TimeToShortDuration(dConnect), TimeToShortDuration(dInitial));
+      StrToBytes(sRef.GetTX()), TimeToShortDuration(dWrite),
+      TimeToShortDuration(dConnect), TimeToShortDuration(dInitial),
+      TimeToShortDuration(UtilMaximum(dRead - dWrite, dWrite - dRead)));
 } // Make neatly formatted table
 Statistic sTable;
 sTable.Header("#").Header("FLAG").Header("IP")

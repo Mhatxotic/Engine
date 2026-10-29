@@ -41,7 +41,7 @@ class Audio :                          // Audio manager class
   /* -- Devices ------------------------------------------------------------ */
   StdReserved<StrVector> svPBDevices,  // List of playback devices
                          svCTDevices;  // List of capture devices
-  /* -- References ------------------------------------------------- */ public:
+  /* -- References --------------------------------------------------------- */
   LuaFunc          lfOnUpdate;         // Fire this when device updates
   /* -- Playback device list was updated ----------------------------------- */
   void AudioOnPbkDeviceUpdated(const EvtMainEvent&) { return AudioDoReInit(); }
@@ -251,6 +251,8 @@ class Audio :                          // Audio manager class
       default: break;
     }
   }
+  /* -- Get guest function callbacks ------------------------------- */ public:
+  LuaFunc &AudioGetUpdateFunc() { return lfOnUpdate; }
   /* -- Init context ------------------------------------------------------- */
   void AudioInitContext()
   { // Log that we are initialising
@@ -316,7 +318,7 @@ class Audio :                          // Audio manager class
     // Try to grab list of playback devices three times before failing.
     for(size_t stIndex = 0; stIndex < 3; ++stIndex, StdSuspend())
     { // Get list of devices and break if succeeded
-      if(const char* cpList = cOal->GetNCString<const char*const>(eQueryType))
+      if(const char *cpList = cOal->GetNCString<const char*const>(eQueryType))
       { // Parse the first item and if it is not empty?
         Next: const StdStringView &ssvRef = cpList;
         if(!ssvRef.empty())
@@ -473,12 +475,11 @@ class Audio :                          // Audio manager class
   DTORHELPER(~Audio, AudioDeInit())
   /* --------------------------------------------------------------- */ public:
   CVarReturn SetAudCheckRate(const unsigned uTime)
-    { return CVarSimpleSetIntNLG(acdCheckRate,
-        milliseconds{ uTime }, cd100MS, cd60S); }
+    { return CVarSimpleSetIntNLG(acdCheckRate, milliseconds{ uTime }, cd100MS,
+        cd60S); }
   /* ----------------------------------------------------------------------- */
   CVarReturn SetAudThreadDelay(const unsigned uTime)
-    { return CVarSimpleSetIntNG(acdThreadDelay,
-        milliseconds{ uTime }, cd1S); }
+    { return CVarSimpleSetIntNG(acdThreadDelay, milliseconds{ uTime }, cd1S); }
   /* ----------------------------------------------------------------------- */
   CVarReturn SetInterface(const size_t stNDevice)
     { stDevice = stNDevice; return ACCEPT; }

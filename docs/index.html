@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.10.1.6 -->
-<!-- Automatically built at Thu Oct 01 13:41:50 2026 +0100 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.10.1.6 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.1.5 -->
+<!-- Automatically built at Sun Nov 01 13:07:16 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.1.5 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.10.1.6">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.1.5">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.10.1.6">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.1.5">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.10.1.6">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.1.5">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.10.1.6 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.1.5 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.10.1.6 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.1.5 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.10.1.6 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.1.5 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 927 functions (409 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 223 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 930 functions (412 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -421,7 +421,7 @@
 						<OL>
 							<LI><P>The core class allows manipulation of and retrieve information from the game engine itself.</P></LI>
 							<LI>
-								<B>Members</B> <I>(59 members)</I>
+								<B>Members</B> <I>(60 members)</I>
 								<OL>
 									<LI><A href="#Core.CPU">CPU</A></LI>
 									<LI><A href="#Core.CPUFPS">CPUFPS</A></LI>
@@ -438,6 +438,7 @@
 									<LI><A href="#Core.IsOSLinux">IsOSLinux</A></LI>
 									<LI><A href="#Core.IsOSMac">IsOSMac</A></LI>
 									<LI><A href="#Core.IsOSWindows">IsOSWindows</A></LI>
+									<LI><A href="#Core.IsWayland">IsWayland</A></LI>
 									<LI><A href="#Core.KillPid">KillPid</A></LI>
 									<LI><A href="#Core.LUAMicroTime">LUAMicroTime</A></LI>
 									<LI><A href="#Core.LUAMilliTime">LUAMilliTime</A></LI>
@@ -504,7 +505,7 @@
 						<OL>
 							<LI><P>The window class contains functions for manipulating the Window.</P></LI>
 							<LI>
-								<B>Members</B> <I>(35 members)</I>
+								<B>Members</B> <I>(37 members)</I>
 								<OL>
 									<LI><A href="#Display.Attention">Attention</A></LI>
 									<LI><A href="#Display.Centre">Centre</A></LI>
@@ -526,6 +527,8 @@
 									<LI><A href="#Display.MonitorData">MonitorData</A></LI>
 									<LI><A href="#Display.Monitors">Monitors</A></LI>
 									<LI><A href="#Display.OnFocused">OnFocused</A></LI>
+									<LI><A href="#Display.OnMoved">OnMoved</A></LI>
+									<LI><A href="#Display.OnResized">OnResized</A></LI>
 									<LI><A href="#Display.Reset">Reset</A></LI>
 									<LI><A href="#Display.ResetCursor">ResetCursor</A></LI>
 									<LI><A href="#Display.Resizable">Resizable</A></LI>
@@ -1922,11 +1925,12 @@
 			<LI id="idx.cv">
 				<DIV>
 					<DIV>
-						<A href="#cvars">CVars</A> <I>(223 cvars)</I>
+						<A href="#cvars">CVars</A> <I>(224 cvars)</I>
 						<OL>
 							<LI><P>Variables that change the behaviour of the engine.</P></LI>
 							<LI>
 								<OL>
+									<LI><A href="#cv.app_activeset">app_activeset</A></LI>
 									<LI><A href="#cv.app_author">app_author</A></LI>
 									<LI><A href="#cv.app_cflags">app_cflags</A></LI>
 									<LI><A href="#cv.app_cmdline">app_cmdline</A></LI>
@@ -3469,6 +3473,16 @@
 		<PRE>Returns true if executable was built for Windows, false if not.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Core.IsWayland" style="display:none">
+		<H3>Core.IsWayland</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Boolean</U> = Core.IsWayland()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Boolean</U> <I>(boolean)</I> = True if using Wayland compositor on Linux, false if not.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns 'true' if executable was built for Linux and the engine is running on the Wayland window compositor. 'False' if using something else like the X Windows system, Windows or MacOS.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Core.KillPid" style="display:none">
 		<H3>Core.KillPid</H3>
 		<H4>Syntax:-</H4>
@@ -4123,6 +4137,26 @@
 		<PRE><U>Func</U> <I>(function)</I> = The event callback function<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>When the window loses or gains focus, this event is called.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.OnMoved" style="display:none">
+		<H3>Display.OnMoved</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Display.OnMoved(<I><U>Func</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Func</U> <I>(function)</I> = The event callback function<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>When the window is moved, this event is called with the X and Y position in the callback arguments.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.OnResized" style="display:none">
+		<H3>Display.OnResized</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Display.OnResized(<I><U>Func</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Func</U> <I>(function)</I> = The event callback function<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>When the window is resized, this event is called with the width and height in the callback arguments.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Display.Reset" style="display:none">
@@ -12524,6 +12558,11 @@
 		<PRE>Resets the window position and size to the specified values set by the currently set 'win_width', 'win_height', 'win_posx' and 'win_posy' cvars.<BR></PRE>
 		<H4><A href="#idx.cc">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="cv.app_activeset" style="display:none">
+		<H3>app_activeset</H3>
+		<PRE>Selects the active configuration set from the application manifest file pointed at by the value of the 'app_config' variable. This value also overrides the 'ActiveSet' integral value inside the manifest root. The application manifest must also have a 'Sets' array in the root and have the specified index or an exception will be thrown. It is here so you can override the configuration set from the command-line with different configuration options. A value of -2 is the default and will always select the set value from the application manifest if it exists and a value of -1 will not select any set at all regardless of manifest set value.<BR></PRE>
+		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="cv.app_author" style="display:none">
 		<H3>app_author</H3>
 		<PRE>Specifies the author of the guest application. This is used for display purposes only and can be requested by the guest and only set in the app.cfg file.<BR></PRE>
@@ -13640,6 +13679,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Thu Oct 01 13:41:50 2026 +0100</ADDRESS>
+	This document was generated at Sun Nov 01 13:07:16 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

@@ -58,17 +58,15 @@ class GlFW :                           // Root engine class
         nullptr, GlFWGetMonitorUserPointer<void*>(mAffected));
     // Invalid event
     else
-    { // Log invalid event
+    { // Log invalid event and ask engine thread to quit and re-init window
       cLog->LogWarningExSafe("GlFW got invalid monitor change action of 0x$$!",
         StdIOSHex, iAction);
-      // Ask engine thread to quit and re-init window
       cEvtMain->RequestQuitThread();
     }
   } // Exceptions we have to handle since func could be in a thread GlFW owns.
   catch(const StdException &e)
-  { // Write error
+  { // Write error and ask engine thread to quit and re-init window
     cLog->LogWarningExSafe("GlFW monitor event exception: $", e.what());
-    // Ask engine thread to quit and re-init window
     cEvtMain->RequestQuitThread();
   }
   /* -- Error handler prototype (full body at bottom) ---------------------- */
@@ -97,25 +95,6 @@ class GlFW :                           // Root engine class
   /* --------------------------------------------------------------- */ public:
   const StdStringView &GlFWGetInternalVersion() const
     { return ssvIntVersion; }
-  /* -- DeInitialiser ------------------------------------------------------ */
-  void GlFWDeInit()
-  { // Ignore if class not initialised
-    if(IHNotDeInitialise()) return;
-    // Report de-initialisation attempt
-    cLog->LogDebugSafe("GlFW subsystem de-initialising...");
-    // Destroy window if created
-    this->WinDeInit();
-    // Clear monitor change callback
-    GlFWSetMonitorCallback(nullptr);
-    // De-Initialise standard cursors
-    GlFWDeInitCursors();
-    // Terminate glfw
-    glfwTerminate();
-    // Delete error handler
-    glfwSetErrorCallback(nullptr);
-    // Report de-initialisation successful
-    cLog->LogInfoSafe("GlFW subsystem de-initialised.");
-  }
   /* -- Return if raw mouse motion is supported ---------------------------- */
   bool GlFWIsRawMouseMotionSupported() const { return bRawMouseSupported; }
   bool GlFWIsNotRawMouseMotionSupported() const
@@ -164,24 +143,41 @@ class GlFW :                           // Root engine class
     } // Failed to get identity
     else cLog->LogWarningSafe("GlFW failed to retrieve identity!");
   }
+  /* -- DeInitialiser ------------------------------------------------------ */
+  void GlFWDeInit()
+  { // Ignore if class not initialised
+    if(IHNotDeInitialise()) return;
+    // Report de-initialisation attempt
+    cLog->LogDebugSafe("GlFW subsystem de-initialising...");
+    // Destroy window if created
+    this->WinDeInit();
+    // Clear monitor change callback
+    GlFWSetMonitorCallback(nullptr);
+    // De-Initialise standard cursors
+    GlFWDeInitCursors();
+    // Terminate glfw
+    glfwTerminate();
+    // Delete error handler
+    glfwSetErrorCallback(nullptr);
+    // Report de-initialisation successful
+    cLog->LogInfoSafe("GlFW subsystem de-initialised.");
+  }
   /* -- Initialiser -------------------------------------------------------- */
   void GlFWInit()
   { // Report initialisation attempt
     cLog->LogDebugSafe("GlFW subsystem initialising...");
-    // Setup custom allocator (Ubuntu 23.10 does not have 3.4 yet)
-#if !defined(LINUX)
+    // Setup custom allocator
     const GLFWallocator gaInfo{ GlFWAlloc, GlFWReAlloc, GlFWFree, this };
     glfwInitAllocator(&gaInfo);
-#endif
     // Set error callback which just throws an exception and reset error level
     glfwSetErrorCallback(GlFWOnHandleErrorStatic);
     GlFWResetErrorLevel();
     // Initialise GlFW and throw exception if failed
     if(!GlFWBaseInit()) XC("GlFW initialisation failed!");
-    // Report internal library version
-    GlFWVerifyVersion();
     // Class initialised
     IHInitialise();
+    // Report internal library version
+    GlFWVerifyVersion();
     // Initialise standard built-in operating system cursors
     GlFWInitCursors();
     // Set if raw mouse motion supported
@@ -201,31 +197,20 @@ class GlFW :                           // Root engine class
     InitHelper{ __FUNCTION__ },        // Set class function name
     /* --------------------------------------------------------------------- */
 #define CURSOR(x) GlFWCursor{ GLFW_ ## x ## _CURSOR }
-    /* --------------------------------------------------------------------- */
     CursorStandard{{                   // Define standard cursors
       CURSOR(ARROW),                   // [00] GLFW_ARROW_CURSOR
       CURSOR(CROSSHAIR),               // [01] GLFW_CROSSHAIR_CURSOR
       CURSOR(HAND),                    // [02] GLFW_HAND_CURSOR
       CURSOR(HRESIZE),                 // [03] GLFW_HRESIZE_CURSOR
       CURSOR(IBEAM),                   // [04] GLFW_IBEAM_CURSOR
-#if defined(LINUX)                     // Using Linux (Ubuntu not 3.4 yet)
-      CURSOR(ARROW),                   // [05] GLFW_ARROW (Ubuntu not 3.4 yet)
-      CURSOR(ARROW),                   // [06] GLFW_ARROW (Ubuntu not 3.4 yet)
-      CURSOR(ARROW),                   // [07] GLFW_ARROW (Ubuntu not 3.4 yet)
-      CURSOR(ARROW),                   // [08] GLFW_ARROW (Ubuntu not 3.4 yet)
-      CURSOR(ARROW),                   // [09] GLFW_ARROW (Ubuntu not 3.4 yet)
-      CURSOR(ARROW),                   // [10] GLFW_ARROW (Ubuntu not 3.4 yet)
-#else                                  // Using Windows or MacOS?
       CURSOR(NOT_ALLOWED),             // [05] GLFW_NOT_ALLOWED_CURSOR
       CURSOR(RESIZE_ALL),              // [06] GLFW_RESIZE_ALL_CURSOR
       CURSOR(RESIZE_EW),               // [07] GLFW_RESIZE_EW_CURSOR
       CURSOR(RESIZE_NESW),             // [08] GLFW_RESIZE_NESW_CURSOR
       CURSOR(RESIZE_NS),               // [09] GLFW_RESIZE_NS_CURSOR
       CURSOR(RESIZE_NWSE),             // [10] GLFW_RESIZE_NWSE_CURSOR
-#endif                                 // OS check
       CURSOR(VRESIZE)                  // [11] GLFW_VRESIZE_CURSOR
     }},                                // Should have specified CUR_MAX cursors
-    /* --------------------------------------------------------------------- */
 #undef CURSOR                          // Done with this macro
     /* --------------------------------------------------------------------- */
     uErrorLevel(0),                    // No errors occured

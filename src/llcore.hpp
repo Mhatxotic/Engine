@@ -22,9 +22,10 @@ using namespace ICredit::P;            using namespace ICmdLine::P;
 using namespace IConDef::P;            using namespace IConsole::P;
 using namespace ICore::P;              using namespace IDisplay::P;
 using namespace IEvtMain::P;           using namespace IFrame::P;
-using namespace ILog::P;               using namespace ILua::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace IUtil::P;
+using namespace IGlFWBase::P;          using namespace ILog::P;
+using namespace ILua::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace IUtil::P;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Core common helper classes                                          ## **
@@ -193,6 +194,18 @@ LLFUNC(IsOSWindows, 1, LuaUtilPushVar(lS, true))
 LLFUNC(IsOSWindows, 1, LuaUtilPushVar(lS, false))
 #endif
 /* ========================================================================= */
+// $ Core.IsWayland
+// < Boolean:boolean=True if using Wayland compositor on Linux, false if not.
+// ? Returns 'true' if executable was built for Linux and the engine is running
+// ? on the Wayland window compositor. 'False' if using something else like the
+// ? X Windows system, Windows or MacOS.
+/* ------------------------------------------------------------------------- */
+#if defined(LINUX)
+LLFUNC(IsWayland, 1, LuaUtilPushVar(lS, GlFWIsWayland()))
+#else
+LLFUNC(IsWayland, 1, LuaUtilPushVar(lS, false))
+#endif
+/* ========================================================================= */
 // $ Core.Locale
 // < LocaleID:number=Locale id.
 // ? Returns the system locale id.
@@ -337,7 +350,7 @@ LLFUNC(OSNumTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS<lua_Number>()))
 // ? this function, you need to run this command with the function you want to
 // ? change to.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnTick, 0, cLua->LuaSetTickFunc(lS))
+LLFUNC(OnTick, 0, cLua->LuaSetRef(lS, cLua->LuaGetTickFunc()))
 /* ========================================================================= */
 // $ Core.OnEnd
 // > Func:function=The main end function to change to.
@@ -347,7 +360,7 @@ LLFUNC(OnTick, 0, cLua->LuaSetTickFunc(lS))
 // ? engine is already terminating will do nothing so use Core.SetMain()
 // ? instead if you want to change to a new main tick function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnEnd, 0, cLua->LuaSetEndFunc(lS))
+LLFUNC(OnEnd, 0, cLua->LuaSetRef(lS, cLua->LuaGetEndFunc()))
 /* ========================================================================= */
 // $ Core.OSTime
 // < Timestamp:integer=The UNIX timestamp.
@@ -549,21 +562,21 @@ LLRSBEGIN                              // Core.* namespace functions begin
   LLRSFUNC(Delay),        LLRSFUNC(Done),         LLRSFUNC(End),
   LLRSFUNC(Engine),       LLRSFUNC(Env),          LLRSFUNC(Events),
   LLRSFUNC(IsOSLinux),    LLRSFUNC(IsOSMac),      LLRSFUNC(IsOSWindows),
-  LLRSFUNC(KillPid),      LLRSFUNC(Library),      LLRSFUNC(License),
-  LLRSFUNC(Locale),       LLRSFUNC(Log),          LLRSFUNC(LogEx),
-  LLRSFUNC(LUAMicroTime), LLRSFUNC(LUAMilliTime), LLRSFUNC(LUANanoTime),
-  LLRSFUNC(LUATime),      LLRSFUNC(LUAUsage),     LLRSFUNC(OnEnd),
-  LLRSFUNC(OnTick),       LLRSFUNC(OS),           LLRSFUNC(OSMicroTime),
-  LLRSFUNC(OSMilliTime),  LLRSFUNC(OSNanoTime),   LLRSFUNC(OSNumTime),
-  LLRSFUNC(OSTime),       LLRSFUNC(Pause),        LLRSFUNC(PidRunning),
-  LLRSFUNC(Quit),         LLRSFUNC(RAM),          LLRSFUNC(Reset),
-  LLRSFUNC(Restart),      LLRSFUNC(RestartNP),    LLRSFUNC(RestoreDelay),
-  LLRSFUNC(ScrollDown),   LLRSFUNC(ScrollUp),     LLRSFUNC(SetDelay),
-  LLRSFUNC(SetIcon),      LLRSFUNC(Stack),        LLRSFUNC(StatusLeft),
-  LLRSFUNC(StatusRight),  LLRSFUNC(Suspend),      LLRSFUNC(Ticks),
-  LLRSFUNC(Time),         LLRSFUNC(UpMicroTime),  LLRSFUNC(UpMilliTime),
-  LLRSFUNC(UpNanoTime),   LLRSFUNC(Uptime),       LLRSFUNC(WaitAsync),
-  LLRSFUNC(Write),        LLRSFUNC(WriteEx),
+  LLRSFUNC(IsWayland),    LLRSFUNC(KillPid),      LLRSFUNC(Library),
+  LLRSFUNC(License),      LLRSFUNC(Locale),       LLRSFUNC(Log),
+  LLRSFUNC(LogEx),        LLRSFUNC(LUAMicroTime), LLRSFUNC(LUAMilliTime),
+  LLRSFUNC(LUANanoTime),  LLRSFUNC(LUATime),      LLRSFUNC(LUAUsage),
+  LLRSFUNC(OnEnd),        LLRSFUNC(OnTick),       LLRSFUNC(OS),
+  LLRSFUNC(OSMicroTime),  LLRSFUNC(OSMilliTime),  LLRSFUNC(OSNanoTime),
+  LLRSFUNC(OSNumTime),    LLRSFUNC(OSTime),       LLRSFUNC(Pause),
+  LLRSFUNC(PidRunning),   LLRSFUNC(Quit),         LLRSFUNC(RAM),
+  LLRSFUNC(Reset),        LLRSFUNC(Restart),      LLRSFUNC(RestartNP),
+  LLRSFUNC(RestoreDelay), LLRSFUNC(ScrollDown),   LLRSFUNC(ScrollUp),
+  LLRSFUNC(SetDelay),     LLRSFUNC(SetIcon),      LLRSFUNC(Stack),
+  LLRSFUNC(StatusLeft),   LLRSFUNC(StatusRight),  LLRSFUNC(Suspend),
+  LLRSFUNC(Ticks),        LLRSFUNC(Time),         LLRSFUNC(UpMicroTime),
+  LLRSFUNC(UpMilliTime),  LLRSFUNC(UpNanoTime),   LLRSFUNC(Uptime),
+  LLRSFUNC(WaitAsync),    LLRSFUNC(Write),        LLRSFUNC(WriteEx),
 LLRSEND                                // Core.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **
