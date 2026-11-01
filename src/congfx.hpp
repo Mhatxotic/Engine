@@ -62,14 +62,14 @@ class ConGfx :                         // Members initially private
       cCVars->CVarsGetInternal<GLuint>(CON_FONTPADDING), OF_L_L_MM_L,
       ConGfxGetFontRef());
     // Get minimum precache range and if valid?
-    if(const Codepoint cCharMin =
+    if(const Codepoint coCharMin =
          cCVars->CVarsGetInternal<unsigned>(CON_FONTPCMIN))
       // Get maximum precache range and return if valid?
-      if(const Codepoint cCharMax =
+      if(const Codepoint coCharMax =
            cCVars->CVarsGetInternal<unsigned>(CON_FONTPCMAX))
         // If maximum is above the minimum? Pre-cache the characters range
-        if(cCharMax >= cCharMin)
-          ConGfxGetFontRef().InitFTCharRange(cCharMin, cCharMax);
+        if(coCharMax >= coCharMin)
+          ConGfxGetFontRef().InitFTCharRange(coCharMin, coCharMax);
     // Set default font parameters
     ConGfxRestoreDefaultProperties();
     // LUA not allowed to deallocate this font!

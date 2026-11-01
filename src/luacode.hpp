@@ -76,8 +76,6 @@ static Memory LuaCodeCompileFunction(lua_State*const lS, const bool bDebug)
   struct MemData {
     MemoryList     mlBlocks;           // List of memory blocks
     size_t         stTotal;            // Size of all memory blocks
-    MemData(MemoryList &&mlNBlocks, const size_t stNTotal) :
-      mlBlocks{StdMove(mlNBlocks)}, stTotal(stNTotal) {}
     MemData() : stTotal(0) {}
   }; // LuaBaseDump Callback function
   auto PopulateMemoryListCallback = [](lua_State*const,

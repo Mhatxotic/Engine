@@ -37,10 +37,10 @@ class Common                           // Common variables class
     // faster to use this then having to recreate stringstreams. Just remember
     // not to mix the calls with manual use of OStringStream << usage.
     static StringStreamType &Stream()
-      { thread_local StringStreamType sstS; return sstS; }
+      { static thread_local StringStreamType sstS; return sstS; }
     /* -- Get a thread localised imbued string stream ---------------------- */
     static StringStreamType &StreamImbued()
-      { thread_local StringStreamType sstSi; return sstSi; }
+      { static thread_local StringStreamType sstSi; return sstSi; }
     /* -- Partial init ----------------------------------------------------- */
     static StringStreamType &StreamPartialReInit(StringStreamType &sstDst,
       StringStreamType &sstDef)

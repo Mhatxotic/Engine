@@ -8,28 +8,28 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* -- Handle return on print ----------------------------------------------- */
-void HandleReturn(UtfDecoder &udRef, GLfloat &glfX, GLfloat &glfY,
+void HandleReturn(UtfDecoder &udStr, GLfloat &glfX, GLfloat &glfY,
   const GLfloat glfI)
 { // Go down own line and set indentation
   glfX = glfI;
   glfY += GetLineSpacingHeight();
   // Discard further spaces and return string minus one space
-  udRef.UtfIgnore(' ');
+  udStr.UtfIgnore(' ');
 }
 /* -- Handle print control character --------------------------------------- */
-void HandlePrintControl(GLfloat &glfX, GLfloat &glfY, UtfDecoder &udRef,
+void HandlePrintControl(GLfloat &glfX, GLfloat &glfY, UtfDecoder &udStr,
   const bool bSimulation, const bool bReverse = false,
   const bool bClip = false, const GLfloat glfXO = 0.0f,
   const GLfloat glfL = 0.0f, const GLfloat glfR = 0.0f)
 { // Set logic to handler
-  FormatPrintControl(udRef, bSimulation,
+  FormatPrintControl(udStr, bSimulation,
     [this](const unsigned uCol) { FboItemSetQuadRGBInt(uCol); },
     [this]() { FboItemPushQuadColour(); },
     [this]() { FboItemPopQuadColour(); },
     [this](const unsigned uCol) { fiOutline.FboItemSetQuadRGBInt(uCol); },
     [this]() { fiOutline.FboItemPushQuadColour(); },
     [this]() { fiOutline.FboItemPopQuadColour(); },
-    [this, &glfX, &glfY, &udRef, bSimulation, bReverse, bClip, glfXO, glfL,
+    [this, &glfX, &glfY, &udStr, bSimulation, bReverse, bClip, glfXO, glfL,
       glfR](const unsigned uGlyph)
   { // Return if no glyph handle or glyph number invalid
     if(!tGlyphs || uGlyph >= tGlyphs->GetTileCount()) return;
@@ -43,7 +43,7 @@ void HandlePrintControl(GLfloat &glfX, GLfloat &glfY, UtfDecoder &udRef,
         tGlyphs->BlitLTRB(0, uGlyph, glfX, glfY+glfGPadScaled,
           glfX + glfGlyphSize, glfY+glfGlyphSize+glfGPadScaled);
       // Discard further spaces
-      udRef.UtfIgnore(' ');
+      udStr.UtfIgnore(' ');
       // Go forward (or backword). Ignore the width because we want to
       // make it a perfect square.
       glfX = bReverse ? glfX - glfGlyphSize - GetCharSpacingScale() :
@@ -83,17 +83,17 @@ void HandlePrintControl(GLfloat &glfX, GLfloat &glfY, UtfDecoder &udRef,
   });
 }
 /* -- Locate a supported character while checking if word can be printed --- */
-bool PrintGetWord(UtfDecoder &udRef, size_t &stPos, GLfloat glfX,
+bool PrintGetWord(UtfDecoder &udStr, size_t &stPos, GLfloat glfX,
   GLfloat &glfY, const GLfloat glfW)
 { // Save position because we're not drawing anything
-  const StringViewConstIt svciPtr{ udRef.UtfGetPos() };
+  const StringViewConstIt svciPtr{ udStr.UtfGetPos() };
   // Get and compare character
-  NextCharacter: switch(const Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
   { // End, carriage return or space char? Restore position and return no wrap
     case '\0': case '\n': case ' ':
-      udRef.UtfSetPos(svciPtr); return false;
+      udStr.UtfSetPos(svciPtr); return false;
     // Other control character? Handle print control characters
-    case '\r': HandlePrintControl(glfX, glfY, udRef, true); break;
+    case '\r': HandlePrintControl(glfX, glfY, udStr, true); break;
     // Normal character
     default:
       // Get character
@@ -103,7 +103,7 @@ bool PrintGetWord(UtfDecoder &udRef, size_t &stPos, GLfloat glfX,
       // Printing next character would exceed wrap width?
       if(glfWidth + glfX >= glfW)
       { // Restore position
-        udRef.UtfSetPos(svciPtr);
+        udStr.UtfSetPos(svciPtr);
         // Wrap to next position
         return true;
       } // Move X position forward
@@ -158,7 +158,7 @@ void PushQuadColourAndGlyphs(Texture &tNGlyphs)
 }
 /* -- Handle space character ----------------------------------------------- */
 void HandleSpace(const Codepoint coChar, GLfloat &glfX, GLfloat &glfY,
-  const GLfloat glfW, const GLfloat glfI, UtfDecoder &udRef)
+  const GLfloat glfW, const GLfloat glfI, UtfDecoder &udStr)
 { // Get first character as normal
   size_t stPos = CheckGlyph(coChar);
   // Get character width
@@ -167,33 +167,33 @@ void HandleSpace(const Codepoint coChar, GLfloat &glfX, GLfloat &glfY,
   glfX += glfWidth;
   // Check if the draw length of the next word would go off the limit
   // and if either did?
-  if(glfX + glfWidth >= glfW || PrintGetWord(udRef, stPos, glfX, glfY, glfW))
-    HandleReturn(udRef, glfX, glfY, glfI);
+  if(glfX + glfWidth >= glfW || PrintGetWord(udStr, stPos, glfX, glfY, glfW))
+    HandleReturn(udStr, glfX, glfY, glfI);
 }
 /* -- Print a utfstring of textures, wrap at width, return height ---------- */
 GLfloat DoPrintW(GLfloat glfX, GLfloat glfY, const GLfloat glfW,
-  const GLfloat glfI, UtfDecoder &udRef)
+  const GLfloat glfI, UtfDecoder &udStr)
 { // Record original X and Y position and maximum X position
   const GLfloat glfXO = glfX + glfI, fYO = glfY;
   // Until null character, which character?
-  NextCharacter: switch(const Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
   { // End of string? Return height
     case '\0': return (glfY - fYO) + GetLineSpacingHeight();
     // Carriage return?
-    case '\n': HandleReturn(udRef, glfX, glfY, glfXO); break;
+    case '\n': HandleReturn(udStr, glfX, glfY, glfXO); break;
     // Other control character? Handle print control characters
-    case '\r': HandlePrintControl(glfX, glfY, udRef, false, false, false,
+    case '\r': HandlePrintControl(glfX, glfY, udStr, false, false, false,
                  glfXO, glfW, glfI);
                break;
     // Whitespace character?
-    case ' ': HandleSpace(coChar, glfX, glfY, glfW, glfXO, udRef); break;
+    case ' ': HandleSpace(coChar, glfX, glfY, glfW, glfXO, udStr); break;
     // Normal character?
     default:
     { // Character storage
       const size_t stPos = CheckGlyph(coChar);
       // Printing next character would exceed wrap width? Handle return
       if(glfX + GetCharWidth(stPos) >= glfW)
-        HandleReturn(udRef, glfX, glfY, glfXO);
+        HandleReturn(udStr, glfX, glfY, glfXO);
       // Print the character regardless of wrap
       PrintDraw(glfX, glfY, stPos);
       // Done
@@ -203,29 +203,29 @@ GLfloat DoPrintW(GLfloat glfX, GLfloat glfY, const GLfloat glfW,
   goto NextCharacter;
 }
 /* -- Simluate printing a wrapped utfstring and return height -------------- */
-GLfloat DoPrintWS(const GLfloat glfW, const GLfloat glfI, UtfDecoder &udRef)
+GLfloat DoPrintWS(const GLfloat glfW, const GLfloat glfI, UtfDecoder &udStr)
 { // Record original X and Y position and maximum X position
   GLfloat glfX = 0.0f, glfY = GetLineSpacingHeight();
   // Until null character, which character?
-  NextCharacter: switch(const Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
   { // End of string? Return height
     case '\0': return glfY;
     // Carriage return?
-    case '\n': HandleReturn(udRef, glfX, glfY, glfI); break;
+    case '\n': HandleReturn(udStr, glfX, glfY, glfI); break;
     // Other control character?
     case '\r':
     { // Handle print control characters
-      HandlePrintControl(glfX, glfY, udRef, true, false, false, 0, glfW, glfI);
+      HandlePrintControl(glfX, glfY, udStr, true, false, false, 0, glfW, glfI);
       // Done
       break;
     } // Whitespace character?
-    case ' ': HandleSpace(coChar, glfX, glfY, glfW, glfI, udRef); break;
+    case ' ': HandleSpace(coChar, glfX, glfY, glfW, glfI, udStr); break;
     // Normal character?
     default:
     { // Get width
       const GLfloat glfWidth = GetCharWidth(CheckGlyph(coChar));
       // Printing next character would exceed wrap width? Wrap and indent
-      if(glfWidth + glfX >= glfW) HandleReturn(udRef, glfX, glfY, glfI);
+      if(glfWidth + glfX >= glfW) HandleReturn(udStr, glfX, glfY, glfI);
       // No exceed, move X position forward
       glfX += glfWidth;
       // Done
@@ -236,74 +236,74 @@ GLfloat DoPrintWS(const GLfloat glfW, const GLfloat glfI, UtfDecoder &udRef)
 }
 /* -- Print a utf string --------------------------------------------------- */
 void DoPrint(GLfloat glfX, GLfloat glfY, const GLfloat glfXO,
-  UtfDecoder &udRef)
+  UtfDecoder &udStr)
 { // Until null character. Do printing of characters
-  NextCharacter: switch(const Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
   { // End of string? Done
     case '\0': return;
     // Carriage return?
-    case '\n': HandleReturn(udRef, glfX, glfY, glfXO); break;
+    case '\n': HandleReturn(udStr, glfX, glfY, glfXO); break;
     // Other control character? Handle print control characters
-    case '\r': HandlePrintControl(glfX, glfY, udRef, false); break;
+    case '\r': HandlePrintControl(glfX, glfY, udStr, false); break;
     // Normal character? Print character
     default: PrintDraw(glfX, glfY, CheckGlyph(coChar)); break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
 /* -- Print a utfstring of textures with right align ----------------------- */
-void DoPrintR(GLfloat glfX, GLfloat glfY, UtfDecoder &udRef)
+void DoPrintR(GLfloat glfX, GLfloat glfY, UtfDecoder &udStr)
 { // Record original X position
   const GLfloat glfXO = glfX;
   // Save position
-  StringViewConstIt svciSavedIt{ udRef.UtfGetPos() };
+  StringViewConstIt svciSavedIt{ udStr.UtfGetPos() };
   // The first character is already assumed as valid
-  NextCharacter: switch(Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(Codepoint coChar = udStr.UtfNext())
   { // Carriage return?
     case '\n':
     { // Slice the string we want to draw and draw it
-      UtfDecoder udSliced{ udRef.UtfSlice(svciSavedIt) };
+      UtfDecoder udSliced{ udStr.UtfSlice(svciSavedIt) };
       DoPrint(glfX, glfY, glfXO, udSliced);
       // Set new string and save position on next line
-      HandleReturn(udRef, glfX, glfY, glfXO);
-      svciSavedIt = udRef.UtfGetPos();
+      HandleReturn(udStr, glfX, glfY, glfXO);
+      svciSavedIt = udStr.UtfGetPos();
       // Done
       break;
     } // Other control character?
     case '\r':
     { // Handle print control characters
-      HandlePrintControl(glfX, glfY, udRef, true, true);
+      HandlePrintControl(glfX, glfY, udStr, true, true);
       // Done
       break;
     } // End of string or invalid unicode character
     case '\0':
     { // Slice the string we want to draw and draw it
-      UtfDecoder udSliced{ udRef.UtfSlice(svciSavedIt) };
+      UtfDecoder udSliced{ udStr.UtfSlice(svciSavedIt) };
       DoPrint(glfX, glfY, glfXO, udSliced);
       // Handle the return character
-      return HandleReturn(udRef, glfX, glfY, glfXO);
+      return HandleReturn(udStr, glfX, glfY, glfXO);
     } // Normal character? Get width and go backwards
     default: glfX -= GetCharWidth(CheckGlyph(coChar)); break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
 /* -- Print a utfstring with centre alignment ------------------------------ */
-void DoPrintC(GLfloat glfX, GLfloat glfY, UtfDecoder &udRef)
+void DoPrintC(GLfloat glfX, GLfloat glfY, UtfDecoder &udStr)
 { // Adjust X position with spacing so it doesnt affect the centre position
   if(GetCharSpacing() != 0.0f) glfX += GetCharSpacingScale() / 2.0f;
   // Record original X position.
   const GLfloat glfXO = glfX;
   // Save position
-  StringViewConstIt svciSavedIt = udRef.UtfGetPos();
+  StringViewConstIt svciSavedIt = udStr.UtfGetPos();
   // Until null character move the X axis
-  NextCharacter: switch(Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(Codepoint coChar = udStr.UtfNext())
   { // Carriage return?
     case '\n':
     { // Slice the string we want to draw and draw it
-      UtfDecoder udSliced{ udRef.UtfSlice(svciSavedIt) };
+      UtfDecoder udSliced{ udStr.UtfSlice(svciSavedIt) };
       DoPrint(glfX, glfY, glfXO, udSliced);
       // Set new string and save position on next line
-      HandleReturn(udRef, glfX, glfY, glfXO);
-      svciSavedIt = udRef.UtfGetPos();
+      HandleReturn(udStr, glfX, glfY, glfXO);
+      svciSavedIt = udStr.UtfGetPos();
       // Done
       break;
     } // Other control character?
@@ -311,7 +311,7 @@ void DoPrintC(GLfloat glfX, GLfloat glfY, UtfDecoder &udRef)
     { // To store with of drawing if needed
       GLfloat fXW = 0.0f;
       // Handle print control characters
-      HandlePrintControl(fXW, glfY, udRef, true);
+      HandlePrintControl(fXW, glfY, udStr, true);
       // Go back if needed
       if(fXW != 0.0f) glfX -= fXW / 2.0f;
       // Done
@@ -319,46 +319,46 @@ void DoPrintC(GLfloat glfX, GLfloat glfY, UtfDecoder &udRef)
     } // End of string or invalid unicode character
     case '\0':
     { // Slice the string we want to draw and draw it
-      UtfDecoder udSliced{ udRef.UtfSlice(svciSavedIt) };
+      UtfDecoder udSliced{ udStr.UtfSlice(svciSavedIt) };
       DoPrint(glfX, glfY, glfXO, udSliced);
       // Set new string
-      return HandleReturn(udRef, glfX, glfY, glfXO);
+      return HandleReturn(udStr, glfX, glfY, glfXO);
     } // Normal character? Get width and go backwards
     default: glfX -= GetCharWidth(CheckGlyph(coChar)) / 2.0f; break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
 /* -- Simulate printing a utfstring ---------------------------------------- */
-GLfloat DoPrintS(UtfDecoder &udRef)
+GLfloat DoPrintS(UtfDecoder &udStr)
 { // Width and highest width
   GLfloat glfW = 0.0f, fWH = 0.0f;
   // Increase width until end of string
-  NextCharacter: switch(const Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
   { // End of string? Return width
     case '\0': return glfW > fWH ? glfW : fWH;
     // Carriage return? Set highest width and reset width
     case '\n': if(glfW > fWH) fWH = glfW; glfW = 0.0f; break;
     // Other control character? Handle the character
-    case '\r': HandlePrintControl(glfW, glfW, udRef, true); break;
+    case '\r': HandlePrintControl(glfW, glfW, udStr, true); break;
     // Normal character? Go forth!
     default: glfW += GetCharWidth(CheckGlyph(coChar)); break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
 /* -- Simulate printing a utfstring and returning the height --------------- */
-GLfloat DoPrintSU(UtfDecoder &udRef)
+GLfloat DoPrintSU(UtfDecoder &udStr)
 { // Width and highest width
   GLfloat glfX = 0.0f, glfY;
   // We're going to print something
   glfY = GetLineSpacingHeight();
   // Increase width until end of string
-  NextCharacter: switch(const Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
   { // End of string? Return height
     case '\0': return glfY;
     // Carriage return? Handle it
-    case '\n': HandleReturn(udRef, glfX, glfY, 0.0f); break;
+    case '\n': HandleReturn(udStr, glfX, glfY, 0.0f); break;
     // Other control character? Handle it
-    case '\r': HandlePrintControl(glfX, glfY, udRef, true); break;
+    case '\r': HandlePrintControl(glfX, glfY, udStr, true); break;
     // Normal character? Go forward
     default: glfX += GetCharWidth(CheckGlyph(coChar)); break;
   } // Enumerate to next character again if we can
@@ -400,7 +400,7 @@ bool DrawPartialGlyph(const bool bMove, const size_t stPos,
 }
 /* -- Print a utfstring of textures ---------------------------------------- */
 void DoPrintM(GLfloat glfX, GLfloat glfY, const GLfloat glfL,
-  const GLfloat glfR, UtfDecoder &udRef)
+  const GLfloat glfR, UtfDecoder &udStr)
 { // Parameters:-
   // > glfX = The X position of where to draw the string.
   // > glfY = The Y position of where to draw the string.
@@ -409,15 +409,15 @@ void DoPrintM(GLfloat glfX, GLfloat glfY, const GLfloat glfL,
   // Record original X position
   const GLfloat glfXO = glfX;
   // Until null character. Do printing of characters
-  NextCharacter: switch(const Codepoint coChar = udRef.UtfNext())
+  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
   { // End of string? We're done
     case '\0': break;
     // Carriage return? Set new co-ordinates.
-    case '\n': HandleReturn(udRef, glfX, glfY, glfXO); break;
+    case '\n': HandleReturn(udStr, glfX, glfY, glfXO); break;
     // Other control character?
     case '\r':
     { // Handle print control characters
-      HandlePrintControl(glfX, glfY, udRef, false, false, true, glfXO, glfL,
+      HandlePrintControl(glfX, glfY, udStr, false, false, true, glfXO, glfL,
         glfR);
       // If we went past the end (glyph drawing might have done this)
       if(glfX >= glfXO + glfR) return;
@@ -443,12 +443,12 @@ void DoPrintM(GLfloat glfX, GLfloat glfY, const GLfloat glfL,
   goto NextCharacter;
 }
 /* -- Check to make sure texture was loaded as a font ---------------------- */
-static bool PrintSanityCheck(const UtfDecoder &udRef)
-  { return !udRef.UtfValid(); }
+static bool PrintSanityCheck(const UtfDecoder &udStr)
+  { return !udStr.UtfValid(); }
 /* -- Check to make sure texture was loaded as a font + glyphs are valid --- */
-bool PrintSanityCheck(const UtfDecoder &udRef, const Texture*const tGlyph)
+bool PrintSanityCheck(const UtfDecoder &udStr, const Texture*const tGlyph)
 { // Can't print anything if no characters stored
-  if(PrintSanityCheck(udRef)) return false;
+  if(PrintSanityCheck(udStr)) return false;
   // No glyph texture? Bail out
   if(!tGlyph) XC("Glyph handle to use is null!", "Name", NameGet());
   // Return if there are characters to process
@@ -460,11 +460,11 @@ template<typename StrType>
 GLfloat PrintW(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
   const GLfloat glfI, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
+  if(PrintSanityCheck(udStr)) return GetLineSpacingHeight();
   // Print with word wrapping and save height
-  const GLfloat fHeight = DoPrintW(glfX, glfY, glfW, glfI, udRef);
+  const GLfloat fHeight = DoPrintW(glfX, glfY, glfW, glfI, udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Check if texture needs reloading
@@ -477,11 +477,11 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 GLfloat PrintWS(const GLfloat glfW, const GLfloat glfI, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
+  if(PrintSanityCheck(udStr)) return GetLineSpacingHeight();
   // Print simulated wrapping and return the height
-  const GLfloat fHeight = DoPrintWS(glfW, glfI, udRef);
+  const GLfloat fHeight = DoPrintWS(glfW, glfI, udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Return height of printed text
@@ -493,13 +493,13 @@ template<typename StrType>
 GLfloat PrintWTS(const GLfloat glfW, const GLfloat glfI, const StrType &strStr,
   Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
+  if(PrintSanityCheck(udStr)) return GetLineSpacingHeight();
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
-  const GLfloat fHeight = DoPrintWS(glfW, glfI, udRef);
+  const GLfloat fHeight = DoPrintWS(glfW, glfI, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Return height of printed text
@@ -511,15 +511,15 @@ template<typename StrType>
 GLfloat PrintWU(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
   const GLfloat glfI, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
+  if(PrintSanityCheck(udStr)) return GetLineSpacingHeight();
   // Simulate the height of the print
-  const GLfloat fHeight = DoPrintWS(UtilDistance(glfX, glfW), glfI, udRef);
+  const GLfloat fHeight = DoPrintWS(UtilDistance(glfX, glfW), glfI, udStr);
   // Reset the iterator on the utf string.
-  udRef.UtfReset();
+  udStr.UtfReset();
   // Print the string
-  DoPrintW(glfX, glfY-fHeight, glfW, glfI, udRef);
+  DoPrintW(glfX, glfY-fHeight, glfW, glfI, udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Check if texture needs reloading
@@ -532,15 +532,15 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 void PrintU(const GLfloat glfX, const GLfloat glfY, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Simulate the height of the print
-  const GLfloat fHeight = DoPrintSU(udRef);
+  const GLfloat fHeight = DoPrintSU(udStr);
   // Reset the iterator on the utf string
-  udRef.UtfReset();
+  udStr.UtfReset();
   // Simulate the height of the print
-  DoPrint(glfX, glfY-fHeight, glfX, udRef);
+  DoPrint(glfX, glfY-fHeight, glfX, udStr);
   // Check if texture needs reloading
   AtlasCheckReloadTexture();
   // Cleanup enabled flags
@@ -551,15 +551,15 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 void PrintUC(const GLfloat glfX, const GLfloat glfY, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Simulate the height of the print
-  const GLfloat fHeight = DoPrintSU(udRef);
+  const GLfloat fHeight = DoPrintSU(udStr);
   // Reset the iterator on the utf string
-  udRef.UtfReset();
+  udStr.UtfReset();
   // Simulate the height of the print
-  DoPrintC(glfX, glfY-fHeight, udRef);
+  DoPrintC(glfX, glfY-fHeight, udStr);
   // Check if texture needs reloading
   AtlasCheckReloadTexture();
   // Cleanup enabled flags
@@ -571,17 +571,17 @@ template<typename StrType>
 void PrintUCT(const GLfloat glfX, const GLfloat glfY, const StrType &strStr,
   Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Simulate the height of the print
-  const GLfloat fHeight = DoPrintSU(udRef);
+  const GLfloat fHeight = DoPrintSU(udStr);
   // Reset the iterator on the utf string
-  udRef.UtfReset();
+  udStr.UtfReset();
   // Print the string
-  DoPrintC(glfX, glfY-fHeight, udRef);
+  DoPrintC(glfX, glfY-fHeight, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -592,15 +592,15 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 void PrintUR(const GLfloat glfX, const GLfloat glfY, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Simulate the height of the print
-  const GLfloat fHeight = DoPrintSU(udRef);
+  const GLfloat fHeight = DoPrintSU(udStr);
   // Reset the iterator on the utf string
-  udRef.UtfReset();
+  udStr.UtfReset();
   // Simulate the height of the print
-  DoPrintR(glfX, glfY-fHeight, udRef);
+  DoPrintR(glfX, glfY-fHeight, udStr);
   // Check if texture needs reloading
   AtlasCheckReloadTexture();
   // Cleanup enabled flags
@@ -612,17 +612,17 @@ template<typename StrType>
 void PrintURT(const GLfloat glfX, const GLfloat glfY, const StrType &strStr,
   Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Simulate the height of the print
-  const GLfloat fHeight = DoPrintSU(udRef);
+  const GLfloat fHeight = DoPrintSU(udStr);
   // Reset the iterator on the utf string
-  udRef.UtfReset();
+  udStr.UtfReset();
   // Print the string
-  DoPrintR(glfX, glfY-fHeight, udRef);
+  DoPrintR(glfX, glfY-fHeight, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -634,17 +634,17 @@ template<typename StrType>
 GLfloat PrintWUT(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
   const GLfloat glfI, const StrType &strStr, Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
+  if(PrintSanityCheck(udStr)) return GetLineSpacingHeight();
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Simulate the height of the print
-  const GLfloat fHeight = DoPrintWS(UtilDistance(glfX, glfW), glfI, udRef);
+  const GLfloat fHeight = DoPrintWS(UtilDistance(glfX, glfW), glfI, udStr);
   // Reset the iterator on the utf string
-  udRef.UtfReset();
+  udStr.UtfReset();
   // Now actually print
-  DoPrintW(glfX, glfY - fHeight, glfW, glfI, udRef);
+  DoPrintW(glfX, glfY - fHeight, glfW, glfI, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -658,13 +658,13 @@ template<typename StrType>
 GLfloat PrintWT(const GLfloat glfX, const GLfloat glfY, const GLfloat glfW,
   const GLfloat glfI, const StrType &strStr, Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
+  if(PrintSanityCheck(udStr)) return GetLineSpacingHeight();
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
-  const GLfloat fHeight = DoPrintW(glfX, glfY, glfW, glfI, udRef);
+  const GLfloat fHeight = DoPrintW(glfX, glfY, glfW, glfI, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -678,13 +678,13 @@ template<typename StrType>
 void PrintT(const GLfloat glfX, const GLfloat glfY, const StrType &strStr,
   Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
-  DoPrint(glfX, glfY, glfX, udRef);
+  DoPrint(glfX, glfY, glfX, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -696,13 +696,13 @@ template<typename StrType>
 void PrintRT(const GLfloat glfX, const GLfloat glfY, const StrType &strStr,
   Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
-  DoPrintR(glfX, glfY, udRef);
+  DoPrintR(glfX, glfY, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -713,11 +713,11 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 void Print(const GLfloat glfX, const GLfloat glfY, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Print the utf string
-  DoPrint(glfX, glfY, glfX, udRef);
+  DoPrint(glfX, glfY, glfX, udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Check if texture needs reloading
@@ -728,11 +728,11 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 void PrintR(const GLfloat glfX, const GLfloat glfY, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Print the string
-  DoPrintR(glfX, glfY, udRef);
+  DoPrintR(glfX, glfY, udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Check if texture needs reloading
@@ -743,11 +743,11 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 void PrintC(const GLfloat glfX, const GLfloat glfY, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Print the utfstring
-  DoPrintC(glfX, glfY, udRef);
+  DoPrintC(glfX, glfY, udStr);
   // Restore colour
   CleanupProcessing();
   // Check if texture needs reloading
@@ -759,13 +759,13 @@ template<typename StrType>
 void PrintCT(const GLfloat glfX, const GLfloat glfY, const StrType &strStr,
   Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
-  DoPrintC(glfX, glfY, udRef);
+  DoPrintC(glfX, glfY, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -777,13 +777,13 @@ template<typename StrType>
 void PrintMT(const GLfloat glfX, const GLfloat glfY, const GLfloat glfL,
   const GLfloat glfR, const StrType &strStr, Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
-  DoPrintM(glfX, glfY, glfL, glfR, udRef);
+  DoPrintM(glfX, glfY, glfL, glfR, udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Check if texture needs reloading
@@ -794,11 +794,11 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 GLfloat PrintSU(const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return GetLineSpacingHeight();
+  if(PrintSanityCheck(udStr)) return GetLineSpacingHeight();
   // Simulate the height
-  const GLfloat fHeight = DoPrintSU(udRef);
+  const GLfloat fHeight = DoPrintSU(udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Return highest height
@@ -809,11 +809,11 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 GLfloat PrintS(const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0.0f;
+  if(PrintSanityCheck(udStr)) return 0.0f;
   // Print simulate of the utf string
-  const GLfloat glfWidth = DoPrintS(udRef);
+  const GLfloat glfWidth = DoPrintS(udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Return highest width or width
@@ -824,13 +824,13 @@ template<typename StrType>
   requires StdIsPointer<StrType> || StdIsString<StrType>
 GLfloat PrintTS(const StrType &strStr, Texture &tNGlyphs)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return 0;
+  if(PrintSanityCheck(udStr)) return 0;
   // Save current colour and set glyph texture
   PushQuadColourAndGlyphs(tNGlyphs);
   // Print the string
-  const GLfloat glfWidth = DoPrintS(udRef);
+  const GLfloat glfWidth = DoPrintS(udStr);
   // Restore colour and reset glyph texture
   PopQuadColourAndGlyphs();
   // Return highest width or width
@@ -842,11 +842,11 @@ template<typename StrType>
 void PrintM(const GLfloat glfX, const GLfloat glfY, const GLfloat glfL,
   const GLfloat glfR, const StrType &strStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ strStr };
+  UtfDecoder udStr{ strStr };
   // Check that texture is a font and the string is valid
-  if(PrintSanityCheck(udRef)) return;
+  if(PrintSanityCheck(udStr)) return;
   // Do the print
-  DoPrintM(glfX, glfY, glfL, glfR, udRef);
+  DoPrintM(glfX, glfY, glfL, glfR, udStr);
   // Cleanup enabled flags
   CleanupProcessing();
   // Check if texture needs reloading

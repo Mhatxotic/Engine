@@ -1019,6 +1019,27 @@ LLFUNC(Sanitise, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Sign, 1, LuaUtilPushVar(lS, UtilSign(AgLuaInteger{lS, 1}())))
 /* ========================================================================= */
+// $ Util.Shorten
+// > String:string=The string to shorten.
+// < Limit:integer=The number of characters to limit the string to.
+// ? If the specified 'String' is larger than 'Limit' then it is cut out along
+// ? white trailing whitespaces and an ellipsis (...) character is suffixed .
+/* ------------------------------------------------------------------------- */
+LLFUNC(Shorten, 1,
+  LuaUtilPushVar(lS, UtfShorten(AgString{lS, 1}(), AgSizeT{lS, 2}())))
+/* ========================================================================= */
+// $ Util.ShortenEx
+// > String:string=The string to shorten.
+// < Limit:integer=The number of characters to limit the string to.
+// > Ellipsis:string=The character to use for the ellipsis.
+// ? If the specified 'String' is larger than 'Limit' then it is cut out along
+// ? white trailing whitespaces and the specified ellipsis character is
+// ? suffixed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ShortenEx, 1,
+  LuaUtilPushVar(lS, UtfShorten(AgString{lS, 1}(), AgSizeT{lS, 2}(),
+    AgString{lS, 3}())))
+/* ========================================================================= */
 // $ Util.StretchInner
 // > OuterWidth:number=Outer width of the rectangle to adjust
 // > OuterHeight:number=Outer height of the rectangle to adjust
@@ -1239,6 +1260,7 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(SHA512SAS),                 LLRSFUNC(SHA512SS),
   LLRSFUNC(SHA512SSA),                 LLRSFUNC(SHA512SSS),
   LLRSFUNC(Sanitise),                  LLRSFUNC(Sign),
+  LLRSFUNC(Shorten),                   LLRSFUNC(ShortenEx),
   LLRSFUNC(StretchInner),              LLRSFUNC(StretchOuter),
   LLRSFUNC(TableCopy),                 LLRSFUNC(TableSize),
   LLRSFUNC(Trim),                      LLRSFUNC(UrlDecode),

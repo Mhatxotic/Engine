@@ -142,9 +142,9 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   /* -- Get bin occupancy -------------------------------------------------- */
   double GetTexOccupancy() const { return ipData.Occupancy(); }
   /* -- Get below baseline height of specified character ------------------- */
-  GLfloat GetBaselineBelow(const Codepoint cChar)
+  GLfloat GetBaselineBelow(const Codepoint coChar)
   { // Now get character info and return data
-    const Glyph &gRef = gvData[CheckGlyph(cChar)];
+    const Glyph &gRef = gvData[CheckGlyph(coChar)];
     return (gRef.CoordsGetY2() - gRef.DimGetHeight()) * glfScale;
   }
   /* -- Get/set line spacing ----------------------------------------------- */

@@ -29,20 +29,20 @@ static bool UtfIsCStringNotValid(const CharType*const ctStr)
 struct UtfEncoderEx final { const size_t l;
   const union { const uint8_t u8[5]; const char c[5]; } u; };
 /* -- Encode specified code and return string and size --------------------- */
-static UtfEncoderEx UtfEncodeEx(const Codepoint coCode)
+static UtfEncoderEx UtfEncodeEx(const Codepoint coChar)
 { // Macro to extract bits from a codepoint (shift, and, or)
-#define X(s,a,o) static_cast<uint8_t>(((coCode >> s) & a) | o)
+#define X(s,a,o) static_cast<uint8_t>(((coChar >> s) & a) | o)
   // Normal ASCII character?
-  if(coCode < 0x80)
+  if(coChar < 0x80)
     return { 1, {{ X(0,0x7F,0), 0, 0, 0, 0 }}};
   // ASCII/Unicode character between 128-2047?
-  else if(coCode < 0x800)
+  else if(coChar < 0x800)
     return { 2, {{ X(6,0x1F,0xC0), X(0,0x3F,0x80), 0, 0, 0 }}};
   // Unicode character between 2048-65535?
-  else if(coCode < 0x10000)
+  else if(coChar < 0x10000)
     return { 3, {{ X(12,0x0F,0xE0), X(6,0x3F,0x80), X(0,0x3F,0x80), 0, 0 }}};
   // Unicode character between 65536-1114111?
-  else if(coCode < 0x110000)
+  else if(coChar < 0x110000)
     return { 4, {{ X(18,0x07,0xF0), X(12,0x3F,0x80), X(6,0x3F,0x80),
                    X(0,0x3F,0x80), 0 }}};
   // Done with this macro
@@ -51,9 +51,9 @@ static UtfEncoderEx UtfEncodeEx(const Codepoint coCode)
   return { 0, {{ 0, 0, 0, 0, 0 }} };
 }
 /* -- Encode specified code and append it to the specified string ---------- */
-static void UtfAppend(const Codepoint coCode, StdString &strDest)
+static void UtfAppend(const Codepoint coChar, StdString &strDest)
 { // Encoded UTF8 and append to string
-  const UtfEncoderEx ueeCode{ UtfEncodeEx(coCode) };
+  const UtfEncoderEx ueeCode{ UtfEncodeEx(coChar) };
   strDest.append(ueeCode.u.c, ueeCode.l);
 }
 /* ------------------------------------------------------------------------- */
@@ -70,25 +70,25 @@ static StdString UtfDecodeNum(IntType itVal)
   return { reinterpret_cast<const char*>(&itVal) };
 }
 /* -- Decode UTF character ------------------------------------------------- */
-static void UtfDecode(Codepoint &coState, Codepoint &coCode,
+static void UtfDecode(Codepoint &coState, Codepoint &coChar,
   const unsigned char ucByte)
 { // No state?
   if(coState == 0)
   { // 1-byte sequence?
-    if((ucByte & 0x80) == 0) { coCode = ucByte; coState = 0; }
+    if((ucByte & 0x80) == 0) { coChar = ucByte; coState = 0; }
     // 2-byte sequence?
-    else if((ucByte & 0xE0) == 0xC0) { coCode = ucByte & 0x1F; coState = 1; }
+    else if((ucByte & 0xE0) == 0xC0) { coChar = ucByte & 0x1F; coState = 1; }
     // 3-byte sequence?
-    else if((ucByte & 0xF0) == 0xE0) { coCode = ucByte & 0x0F; coState = 2; }
+    else if((ucByte & 0xF0) == 0xE0) { coChar = ucByte & 0x0F; coState = 2; }
     // 4-byte sequence?
-    else if((ucByte & 0xF8) == 0xF0) { coCode = ucByte & 0x07; coState = 3; }
+    else if((ucByte & 0xF8) == 0xF0) { coChar = ucByte & 0x07; coState = 3; }
     // Invalid byte? Set error state
     else coState = 12;
     // Done
     return;
   } // State set so continuation byte?
   if((ucByte & 0xC0) == 0x80)
-    { coCode = (coCode << 6) | (ucByte & 0x3F); --coState; }
+    { coChar = (coChar << 6) | (ucByte & 0x3F); --coState; }
   // Invalid continuation byte? Set error state
   else coState = 12;
 }
@@ -98,9 +98,9 @@ static bool UtfPopFront(StdString &strStr)
   if(strStr.empty()) [[unlikely]] return false;
   // Starting iterator, state and code
   StringConstIt sciIt{ strStr.cbegin() };
-  Codepoint coState = 0, coCode = 0;
+  Codepoint coState = 0, coChar = 0;
   // Repeat...
-  do { UtfDecode(coState, coCode, static_cast<unsigned char>(*sciIt)); }
+  do { UtfDecode(coState, coChar, static_cast<unsigned char>(*sciIt)); }
   // ...Until not end of string, not normal state or error state
   while(++sciIt != strStr.cend() && coState != 0 && coState != 12);
   // Return if we didn't process anything or UTF-8 code is in a error state
@@ -149,9 +149,9 @@ static bool UtfMoveFrontToBack(StdString &strSrc, StdString &strDst)
   if(strSrc.empty()) [[unlikely]] return false;
   // Starting iterator, state and code
   StringIt siIt{ strSrc.begin() };
-  Codepoint coState = 0, coCode = 0;
+  Codepoint coState = 0, coChar = 0;
   // Decode bytes from the front...
-  do { UtfDecode(coState, coCode, static_cast<unsigned char>(*siIt)); }
+  do { UtfDecode(coState, coChar, static_cast<unsigned char>(*siIt)); }
   // ...Until a full UTF-8 codepoint is processed or we hit the end of string.
   while(++siIt != strSrc.cend() && coState != 0);
   // Append the sequence from the front of strSrc to the back of strDst
@@ -182,24 +182,24 @@ class UtfDecoder final :               // UTF8 string decoder helper
   /* -- Test a custom condition on each character -------------------------- */
   template<class OpFunc>bool UtfIsType()
   { // For each character, test if it is a control character
-    while(const Codepoint coCode = UtfNext())
-      if(OpFunc{}.T(coCode)) return false;
+    while(const Codepoint coChar = UtfNext())
+      if(OpFunc{}.T(coChar)) return false;
     // Is a displayable character
     return true;
   }
   /* -- Iterator --------------------------------------------------- */ public:
   template<typename CharType = Codepoint>CharType UtfNext()
   { // Walk through the string until we get to a null terminator
-    for(Codepoint coState = 0, coCode = 0; UtfGetPos() != cend(); ++svciIt)
+    for(Codepoint coState = 0, coChar = 0; UtfGetPos() != cend(); ++svciIt)
     { // Decode the specified character
-      UtfDecode(coState, coCode, UtfGetByte<unsigned char>());
+      UtfDecode(coState, coChar, UtfGetByte<unsigned char>());
       // Ignore if we haven't got a valid UTF8 character yet.
       if(coState) continue;
       // Move position onwards
       ++svciIt;
       // Return the UTF8 character as requested type (limit to 0-2097151).
       // UTF8 can only address 1,112,064 (0x10F800) total characters
-      return static_cast<CharType>(coCode & 0x1fffff);
+      return static_cast<CharType>(coChar & 0x1fffff);
     } // Invald string. Return null character
     return 0;
   }
@@ -207,21 +207,21 @@ class UtfDecoder final :               // UTF8 string decoder helper
   bool UtfIsDisplayable()
   { // For each character, test if it is a control character
     struct Op{ Op() = default;
-      static bool T(const Codepoint coCode) { return coCode < 0x20; }};
+      static bool T(const Codepoint coChar) { return coChar < 0x20; }};
     return UtfIsType<Op>();
   }
   /* -- Check if is ASCII compatible --------------------------------------- */
   bool UtfIsASCII()
   { // For each character, test if it is valid ASCII
     struct Op{ Op() = default;
-      static bool T(const Codepoint coCode) { return coCode > 0x7F; }};
+      static bool T(const Codepoint coChar) { return coChar > 0x7F; }};
     return UtfIsType<Op>();
   }
   /* -- Check if is extended ASCII compatible ------------------------------ */
   bool UtfIsExtASCII()
   { // For each character, test if it is valid extended ASCII
     struct Op{ Op() = default;
-      static bool T(const Codepoint coCode) { return coCode > 0xFF; }};
+      static bool T(const Codepoint coChar) { return coChar > 0xFF; }};
     return UtfIsType<Op>();
   }
   /* -- Length ------------------------------------------------------------- */
@@ -234,10 +234,10 @@ class UtfDecoder final :               // UTF8 string decoder helper
   /* -- Skip number of utf8 characters ------------------------------------- */
   void UtfSkip(size_t stAmount) { while(stAmount-- && UtfNext()); }
   /* -- Skip characters and return last position (Char::* needs this) ------ */
-  void UtfIgnore(const Codepoint coCode)
+  void UtfIgnore(const Codepoint coChar)
   { // Save position and keep recording the position until error or finish
     StringViewConstIt svciSavedIt{ UtfGetPos() };
-    while(UtfNext() == coCode) svciSavedIt = UtfGetPos();
+    while(UtfNext() == coChar) svciSavedIt = UtfGetPos();
     // Return last position saved
     UtfSetPos(svciSavedIt);
   }
@@ -291,8 +291,8 @@ class UtfDecoder final :               // UTF8 string decoder helper
   StdWideString UtfWide()
   { // Convert all UTF-8 characters to wchar_t (don't use StdReserve<>)
     StdWideString wstrOut; wstrOut.reserve(size());
-    while(const Codepoint coCode = UtfNext())
-      wstrOut += static_cast<wchar_t>(coCode);
+    while(const Codepoint coChar = UtfNext())
+      wstrOut += static_cast<wchar_t>(coChar);
     wstrOut.shrink_to_fit();
     return wstrOut;
   }
@@ -339,11 +339,11 @@ static StrList UtfWordWrap(const StdStringView &ssvText, const size_t stWidth,
   }; // Current column
   size_t stColumn = 0;
   // Until we're out of valid UTF8 characters
-  while(const Codepoint coCode = udStr.UtfNext())
+  while(const Codepoint coChar = udStr.UtfNext())
   { // Character found
     ++stColumn;
     // Is it a space character? Mark the cut count and goto next character
-    if(coCode == ' ') { svciSpace = udStr.UtfGetPos(); continue; }
+    if(coChar == ' ') { svciSpace = udStr.UtfGetPos(); continue; }
     // Is other character and we're not at the limit? Goto next character
     if(stColumn < stWidth) continue;
     // We already found where we can force a line break?
@@ -372,6 +372,44 @@ static StrList UtfWordWrap(const StdStringView &ssvText, const size_t stWidth,
   if(udStr.UtfGetPos() != svciStart) Snip(svciStart, udStr.UtfGetPos());
   // Return list
   return slLines;
+}
+/* -- Shorten a string with an ellipsis if too long ------------------------ */
+template<typename StrType>
+  requires StdIsClass<StrType>
+static StdString UtfShorten(const StrType &strStr, const size_t stLimit,
+  const StdStringView &strvEllipsis = cCommon->CommonEllipsis())
+{ // Return current string if empty
+  if(strStr.empty()) return {};
+  // Create and reserve output string
+  StdString strOut; strOut.reserve(strStr.length());
+  // If no limit specified then return an ellipsis
+  if(!stLimit)
+  { // Suffix the ellipsis character
+    Ellipsis: strOut.append(strvEllipsis);
+    // Finish string memory as it could be more than we created
+    strOut.shrink_to_fit();
+    // Done. Return the string
+    return strOut;
+  } // Number of utf characters processed
+  size_t stChars = 0;
+  // Wrap string in a UTF decoder.
+  UtfDecoder udStr{ strStr };
+  // Enumerate through the entire string
+  while(const Codepoint coChar = udStr.UtfNext())
+  { // Reencode the character and add it to the string
+    const UtfEncoderEx ueeCode{ UtfEncodeEx(coChar) };
+    strOut.append(ueeCode.u.c, ueeCode.l);
+    // Keep adding UTF characters until we're done
+    if(++stChars < stLimit) continue;
+    // Return if we're at the end of the string
+    if(!udStr.UtfNext()) break;
+    // Erase all
+    const size_t stPos = strOut.find_last_not_of(' ');
+    if(stPos != StdNPos) strOut.erase(stPos + 1, StdNPos);
+    // Append the ellipsis
+    goto Ellipsis;
+  } // Return string
+  return strOut;
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

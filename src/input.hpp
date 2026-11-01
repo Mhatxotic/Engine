@@ -56,11 +56,11 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Filtered key pressed ----------------------------------------------- */
   void InputOnFilteredKey(const EvtMainEvent &emeEvent)
   { // Get key pressed (Codepoint defined in 'utf.hpp' is same as size_t)
-    const Codepoint cKey = emeEvent.eaArgs[1].SizeT();
+    const Codepoint coChar = emeEvent.eaArgs[1].SizeT();
     // If console is enabled, send it to console instead
-    if(cConsole->IsVisible()) return cConsole->OnCharPress(cKey);
+    if(cConsole->IsVisible()) return cConsole->OnCharPress(coChar);
     // Else send the key to lua callbacks
-    lfOnChar.LuaFuncDispatch(cKey);
+    lfOnChar.LuaFuncDispatch(coChar);
   }
   /* -- Mouse moved -------------------------------------------------------- */
   void InputOnMouseMove(const EvtMainEvent &emeEvent)
@@ -213,8 +213,8 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Get text in clipboard
     UtfDecoder udStr{ cGlFW->WinGetClipboard() };
     // For each character, ddd the character to queue if valid
-    while(const Codepoint cChar = udStr.UtfNext())
-      if(cChar >= 32) cConsole->OnCharPress(cChar);
+    while(const Codepoint coChar = udStr.UtfNext())
+      if(coChar >= 32) cConsole->OnCharPress(coChar);
   }
   /* -- Get guest function callbacks ------------------------------- */ public:
   LuaFunc &InputGetMouseClickFunc() { return lfOnMouseClick; }

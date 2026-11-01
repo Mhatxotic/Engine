@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.11.1.5 -->
-<!-- Automatically built at Sun Nov 01 13:07:16 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.11.1.5 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.1.51 -->
+<!-- Automatically built at Sun Nov 01 22:19:31 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.1.51 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.1.5">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.1.51">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.1.5">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.1.51">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.1.5">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.1.51">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.11.1.5 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.1.51 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.11.1.5 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.1.51 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.11.1.5 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.1.51 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 930 functions (412 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 932 functions (414 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1581,7 +1581,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(107 members)</I>
+								<B>Members</B> <I>(109 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1677,6 +1677,8 @@
 									<LI><A href="#Util.RoundMul">RoundMul</A></LI>
 									<LI><A href="#Util.RoundPow2">RoundPow2</A></LI>
 									<LI><A href="#Util.Sanitise">Sanitise</A></LI>
+									<LI><A href="#Util.Shorten">Shorten</A></LI>
+									<LI><A href="#Util.ShortenEx">ShortenEx</A></LI>
 									<LI><A href="#Util.Sign">Sign</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
@@ -11271,6 +11273,30 @@
 		<PRE>A powerful function that tries to remove repetitions in the specified string and decodes lookalike homoglyph utf-8 letters into standard ASCII letters.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.Shorten" style="display:none">
+		<H3>Util.Shorten</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Limit</U> = Util.Shorten(<I><U>String</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = The string to shorten.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Limit</U> <I>(integer)</I> = The number of characters to limit the string to.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>If the specified 'String' is larger than 'Limit' then it is cut out along white trailing whitespaces and an ellipsis (...) character is suffixed .<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.ShortenEx" style="display:none">
+		<H3>Util.ShortenEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Limit</U> = Util.ShortenEx(<I><U>String</U>, <U>Ellipsis</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>String</U> <I>(string)</I> = The string to shorten.<BR><U>Ellipsis</U> <I>(string)</I> = The character to use for the ellipsis.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Limit</U> <I>(integer)</I> = The number of characters to limit the string to.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>If the specified 'String' is larger than 'Limit' then it is cut out along white trailing whitespaces and the specified ellipsis character is suffixed.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.Sign" style="display:none">
 		<H3>Util.Sign</H3>
 		<H4>Syntax:-</H4>
@@ -13679,6 +13705,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Nov 01 13:07:16 2026 +0000</ADDRESS>
+	This document was generated at Sun Nov 01 22:19:31 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

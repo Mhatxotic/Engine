@@ -30,24 +30,24 @@ static void FormatHandleFinish(auto &&fcbPopFaceFunc, auto &&fcbPopOutlineFunc)
   if(uBgLevel) { fcbPopOutlineFunc(); uBgLevel = 0; }
 }
 /* -- Handle print control character --------------------------------------- */
-static void FormatPrintControl(UtfDecoder &udRef, const bool bSimulation,
+static void FormatPrintControl(UtfDecoder &udStr, const bool bSimulation,
   auto &&fcbSetFaceFunc, auto &&fcbPushFaceFunc, auto &&fcbPopFaceFunc,
   auto &&fcbSetOutlineFunc, auto &&fcbPushOutlineFunc,
   auto &&fcbResetOutlineFunc, auto &&fcbSetTextureFunc)
 { // Get next character
-  switch(udRef.UtfNext())
+  switch(udStr.UtfNext())
   { // Colour selection
     case 'c':
     { // Scan for the hexadecimal value and if we found it?
       unsigned uCol;
-      if(udRef.UtfScanValue(uCol) == stRequiredChars && !bSimulation &&
+      if(udStr.UtfScanValue(uCol) == stRequiredChars && !bSimulation &&
            !uFgLevel++) { fcbPushFaceFunc(); fcbSetFaceFunc(uCol); }
       break;
     } // Outline colour selection
     case 'o':
     { // Scan for the hexadecimal value and if we found it?
       unsigned uCol;
-      if(udRef.UtfScanValue(uCol) == stRequiredChars && !bSimulation &&
+      if(udStr.UtfScanValue(uCol) == stRequiredChars && !bSimulation &&
            !uBgLevel++) { fcbPushOutlineFunc(); fcbSetOutlineFunc(uCol); }
       break;
     } // Reset colour request
@@ -61,7 +61,7 @@ static void FormatPrintControl(UtfDecoder &udRef, const bool bSimulation,
     { // Scan for the hexadecimal value and if we found it and we have
       // a glyphs texture assigned and is a valid glyph value?
       unsigned uGlyph;
-      if(udRef.UtfScanValue(uGlyph) == stRequiredChars)
+      if(udStr.UtfScanValue(uGlyph) == stRequiredChars)
         fcbSetTextureFunc(uGlyph);
       break;
     } // Invalid control character.

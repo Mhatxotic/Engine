@@ -514,7 +514,7 @@ class SysCore :
       const unsigned uHi, uLo;
       // Constructor
       OSListItem(const char*const cpNLabel, const unsigned uNHi,
-        const unsigned uNLo) : cpLabel(cpNLabel), uHi(uNHi), uLo(uNLo) {};
+        const unsigned uNLo) : cpLabel(cpNLabel), uHi(uNHi), uLo(uNLo) {}
     };
     // List of MacOS versions and when they expire
     static const StdArray<const OSListItem, 23>osList{ {

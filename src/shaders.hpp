@@ -232,7 +232,7 @@ struct ShaderCore                      // Actual body
 #define SHDR(r,rn,c,k,kn) \
     Init3DYCbCrTemplate(sh3DYCbCr ## k ## c ## r ## R, \
       "FRAG-3D YCbCr>" STR(r) STR(c) ">RGB" STR(k), \
-      sv ## rn, sv ## c, sv ## kn);
+      sv ## rn, sv ## c, sv ## kn)
     // Initialise the YCbCr to RGBA conversion shaders
     SHDR(F, Full,    601,  , NoKey);   // BT.601 (Full 0-255) unkeyed
     SHDR(P, Partial, 601,  , NoKey);   // BT.601 (Partial 16-235) unkeyed

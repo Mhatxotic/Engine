@@ -358,9 +358,9 @@ template<class HandleGlyphFuncType,
          class RoundCheckFuncType>
 void DoInitFTCharString(const StdStringView &ssvStr)
 { // Build a new utfstring class with the string
-  UtfDecoder udRef{ ssvStr };
+  UtfDecoder udStr{ ssvStr };
   // Enumerate trough the entire string
-  while(const Codepoint coChar = udRef.UtfNext())
+  while(const Codepoint coChar = udStr.UtfNext())
     DoCheckGlyph<HandleGlyphFuncType,
                  InitCharFuncType,
                  RoundCheckFuncType>(coChar);

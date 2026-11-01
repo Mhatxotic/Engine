@@ -1447,10 +1447,6 @@ static void LuaUtilInitRNGSeed(lua_State*const lS, const lua_Integer liSeed)
   // Removes the table 'math'
   LuaBaseRemove(lS, iTIndex);
 }
-/* -- Return true if lua stack can take specified more items (diff type) --- */
-static bool LuaUtilIsStackAvail(lua_State*const lS, const auto itCount)
-  { return UtilIntWillOverflow<int>(itCount) ? false :
-      LuaBaseCheckStack(lS, static_cast<int>(itCount)); }
 /* -- Push a true or false ------------------------------------------------- */
 static void LuaUtilPushTrue(lua_State*const lS)
   { LuaBasePushBool(lS, true); }

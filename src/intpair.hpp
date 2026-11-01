@@ -64,11 +64,17 @@ class IntPair
   bool IPIsNotSet() const { return !IPIsSet(); }
   /* ----------------------------------------------------------------------- */
   bool IPIsEqual(const IntType itOne, const IntType itTwo) const
-    { return IPGetOne() == itOne && IPGetTwo() == itTwo; }
+  { // If is floating type then we use our function to prevent compiler warning
+    if constexpr(StdIsFloat<IntType>)
+      return StdIsFloatEqual(IPGetOne(), itOne) &&
+             StdIsFloatEqual(IPGetTwo(), itTwo);
+    // Normal integer type
+    else return IPGetOne() == itOne && IPGetTwo() == itTwo;
+  }
   bool IPIsEqual(const IntPair &ipRef) const
     { return IPIsEqual(ipRef.IPGetOne(), ipRef.IPGetTwo()); }
   bool IPIsNotEqual(const IntType itOne, const IntType itTwo) const
-    { return IPGetOne() != itOne || IPGetTwo() != itTwo; }
+    { return !IPIsEqual(itOne, itTwo); }
   bool IPIsNotEqual(const IntPair &ipRef) const
     { return IPIsNotEqual(ipRef.IPGetOne(), ipRef.IPGetTwo()); }
   /* -- Copy assignment ---------------------------------------------------- */
