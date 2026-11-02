@@ -110,6 +110,9 @@ static void LuaBaseRawSet(lua_State*const lS, const int iIndex)
 /* -- Remove item from stack ----------------------------------------------- */
 static void LuaBaseRemove(lua_State*const lS, const int iIndex)
   { lua_remove(lS, iIndex); }
+/* -- Pop items from stack ------------------------------------------------- */
+static void LuaBasePop[[maybe_unused]](lua_State*const lS, const int iCount)
+  { lua_pop(lS, iCount); }
 /* -- Push a part of memory as a string ------------------------------------ */
 template<typename AnyType>
   requires StdIsPointer<AnyType*>

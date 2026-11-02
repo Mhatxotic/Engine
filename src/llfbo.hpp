@@ -107,6 +107,12 @@ LLFUNC(Flush, 0, AgFbo{lS, 1}().FboFlushSafe())
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTrisNow()))
 /* ========================================================================= */
+// $ Fbo:GetHeight
+// < Width:integer=The height of the frame buffer object.
+// ? Returns the height of the framebuffer.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().DimGetHeight()))
+/* ========================================================================= */
 // $ Fbo:GetId
 // < Id:integer=The id number of the Fbo object.
 // ? Returns the unique id of the Fbo object.
@@ -141,6 +147,12 @@ LLFUNC(GetMatrix, 6,
 // ? Returns the identifier of the Fbo object.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Fbo:GetWidth
+// < Width:integer=The width of the frame buffer object.
+// ? Returns the width of the framebuffer.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().DimGetWidth()))
 /* ========================================================================= */
 // $ Fbo:Reserve
 // > Triangles:integer=How many triangles to reserve in GPU float list
@@ -397,13 +409,13 @@ LLRSMFBEGIN                            // Fbo:* member functions begin
   LLRSFUNC(Activate),       LLRSFUNC(Blit),          LLRSFUNC(BlitT),
   LLRSFUNC(Destroy),        LLRSFUNC(Destroyed),     LLRSFUNC(Finish),
   LLRSFUNC(Flush),          LLRSFUNC(GetFloatCount), LLRSFUNC(GetId),
-  LLRSFUNC(GetLFloatCount), LLRSFUNC(GetMatrix),     LLRSFUNC(GetName),
-  LLRSFUNC(Reserve),        LLRSFUNC(SetBlend),      LLRSFUNC(SetClear),
-  LLRSFUNC(SetClearColour), LLRSFUNC(SetCRGBA),      LLRSFUNC(SetCX),
-  LLRSFUNC(SetFilter),      LLRSFUNC(SetMatrix),     LLRSFUNC(SetTCLTRB),
-  LLRSFUNC(SetTCLTWH),      LLRSFUNC(SetTCX),        LLRSFUNC(SetVLTRB),
-  LLRSFUNC(SetVLTWH),       LLRSFUNC(SetVLTWHA),     LLRSFUNC(SetVX),
-  LLRSFUNC(SetWireframe),
+  LLRSFUNC(GetLFloatCount), LLRSFUNC(GetHeight),     LLRSFUNC(GetMatrix),
+  LLRSFUNC(GetName),        LLRSFUNC(GetWidth),      LLRSFUNC(Reserve),
+  LLRSFUNC(SetBlend),       LLRSFUNC(SetClear),      LLRSFUNC(SetClearColour),
+  LLRSFUNC(SetCRGBA),       LLRSFUNC(SetCX),         LLRSFUNC(SetFilter),
+  LLRSFUNC(SetMatrix),      LLRSFUNC(SetTCLTRB),     LLRSFUNC(SetTCLTWH),
+  LLRSFUNC(SetTCX),         LLRSFUNC(SetVLTRB),      LLRSFUNC(SetVLTWH),
+  LLRSFUNC(SetVLTWHA),      LLRSFUNC(SetVX),         LLRSFUNC(SetWireframe),
 LLRSEND                                // Fbo:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

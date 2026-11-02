@@ -16,7 +16,8 @@ using namespace IError::P;             using namespace IFbo::P;
 using namespace IFboCmd::P;            using namespace IFboItem::P;
 using namespace IImage::P;             using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IJson::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IMemory::P;
 using namespace IOgl::P;               using namespace ISerial::P;
 using namespace IShader::P;            using namespace IShaders::P;
@@ -511,11 +512,65 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     const GLfloat glfY1, const GLfloat glfX2, const GLfloat glfY2)
   { if(IsReversed()) AddTileR(stSubTexId, glfX1, glfY1, glfX2, glfY2);
     else AddTile(stSubTexId, glfX1, glfY1, glfX2, glfY2); }
+  /* -- Add multiple tile bounds (Reverse func / Forward func) ------------- */
+  size_t AddTileMulti(const GLUIntVector &gluvTiles, auto &&fCbR, auto &&fCbF)
+  { // Check for excess elements
+    constexpr static size_t stValues = 4;
+    if(const size_t stExcess = gluvTiles.size() % stValues)
+      XC("Invalid count of tiles specified!",
+        "Name", NameGet(), "Count", stExcess,
+        "Size", AddTileMultigluvTiles.size());
+    // Reserve memory for actual count
+    CoordList &clFirst = clTiles.front();
+    clFirst.reserve(gluvTiles.size() / stValues);
+    // Save position to return
+    const size_t stPosition = GetTileCount();
+    // Shortcut to GLUIntVector const iterator
+    using GLUIntVectorItConst = GLUIntVector::const_iterator;
+    // Inline function to enumerate the vector of coords and send to callback
+    auto fFunc = [&gluvTiles](auto &&fCb){
+      for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
+                              gluvicIt < gluvTiles.cend();
+                              gluvicIt += stValues)
+        fCb(static_cast<GLfloat>(*gluvicIt),
+            static_cast<GLfloat>(*(gluvicIt + 1)),
+            static_cast<GLfloat>(*(gluvicIt + 2)),
+            static_cast<GLfloat>(*(gluvicIt + 3)));
+    }; // Are image pixels reversed?
+    if(IsReversed())
+      fFunc([this, &fCbR](const GLfloat glfX1, const GLfloat glfY1,
+                          const GLfloat glfX2, const GLfloat glfY2)
+          { fCbR(glfX1, glfY1, glfX2, glfY2); });
+    // Image pixels not reversed
+    else fFunc([this, &fCbF](const GLfloat glfX1, const GLfloat glfY1,
+                             const GLfloat glfX2, const GLfloat glfY2)
+        { fCbF(glfX1, glfY1, glfX2, glfY2); });
+    // Return number of items processed
+    return stPosition;
+  }
+  /* -- Add multiple tile bounds ------------------------------------------- */
+  size_t AddTileDORA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
+    { return AddTileMulti(gluvTiles,
+        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+          const GLfloat glfX2, const GLfloat glfY2)
+            { AddTileR(stSubTexId, glfX1, glfY1, glfX2, glfY2); },
+        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+          const GLfloat glfX2, const GLfloat glfY2)
+            { AddTile(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
   /* -- Add a tile with width and height based on reversal ----------------- */
   void AddTileDORWH(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfWidth, const GLfloat glfHeight)
   { if(IsReversed()) AddTileRWH(stSubTexId, glfX1, glfY1, glfWidth, glfHeight);
     else AddTileWH(stSubTexId, glfX1, glfY1, glfWidth, glfHeight); }
+  /* -- Add multiple tile co-ordinates and dimensions ---------------------- */
+  size_t AddTileDORWHA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
+    { return AddTileMulti(gluvTiles,
+        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+          const GLfloat glfX2, const GLfloat glfY2)
+            { AddTileRWH(stSubTexId, glfX1, glfY1, glfX2, glfY2); },
+        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+          const GLfloat glfX2, const GLfloat glfY2)
+            { AddTileWH(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
   /* -- Blit a triangle ---------------------------------------------------- */
   void BlitTri(const GLuint gluTexId, const TriTexData &ttdTex,
     const TriPosData &tpdVert, const TriIntData &tidClr)
@@ -832,38 +887,13 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   }
   /* -- Init from a image class -------------------------------------------- */
   void InitTextureImageTiles(Image &imgSrc, const OglFilterEnum ofeFilter,
-    const GLUIntVector gluvTiles)
+    const GLUIntVector &gluvTiles)
   { // Generate the texture as normal but we'll be generating the tileset
     InitTextureImage(imgSrc, 0, 0, 0, 0, ofeFilter, false);
-    // Check that the tile count is divisble by 4 (X,Y,W,H)
-    constexpr static size_t stValues = 4, stValuesM1 = stValues - 1;
-    if(const size_t stExcess = gluvTiles.size() % stValues)
-      XC("Invalid count of tiles specified!",
-        "Name", NameGet(), "Count", stExcess);
-    // Reserve memory for actual count
+    // Add image slot for tiles
     clTiles.resize(1);
-    CoordList &clFirst = clTiles.front();
-    clFirst.reserve(gluvTiles.size() / stValues);
-    // Shortcut to GLUIntVector const iterator
-    using GLUIntVectorItConst = GLUIntVector::const_iterator;
-    // Inline function to enumerate the vector of coords and send to callback
-    auto fFunc = [&gluvTiles](auto &&fCb){
-      for(GLUIntVectorItConst gluvicIt{ gluvTiles.cbegin() };
-                              gluvicIt + stValuesM1 < gluvTiles.cend();
-                              gluvicIt += stValues)
-        fCb(static_cast<GLfloat>(*gluvicIt),
-            static_cast<GLfloat>(*(gluvicIt + 1)),
-            static_cast<GLfloat>(*(gluvicIt + 2)),
-            static_cast<GLfloat>(*(gluvicIt + 3)));
-    }; // Are image pixels reversed?
-    if(IsReversed())
-      fFunc([this](const GLfloat glfX1, const GLfloat glfY1,
-        const GLfloat glfX2, const GLfloat glfY2)
-          { AddTileRWH(0, glfX1, glfY1, glfX2, glfY2); });
-    // Image pixels not reversed
-    else fFunc([this](const GLfloat glfX1, const GLfloat glfY1,
-      const GLfloat glfX2, const GLfloat glfY2)
-        { AddTileWH(0, glfX1, glfY1, glfX2, glfY2); });
+    // Add all the specified tiles to texture
+    AddTileDORWHA(0, gluvTiles);
   }
   /* -- Init from a manifest ----------------------------------------------- */
   void InitTextureImageManifest(Image &imSrc, const Json &jsDoc)

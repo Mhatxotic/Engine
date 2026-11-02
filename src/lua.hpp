@@ -581,8 +581,8 @@ class Lua :                            // Actual class body
     iGCMinorMul(0),           iGCMinorMajor(0),        iGCPause(0),
     iGCStepMul(0),            iGCStepSize(0),          liSeed(0),
     /* -- LUA event callbacks ---------------------------------------------- */
-    lrMainEnd{ "OnEnd" },              // Setup ending tick LUA event
-    lrMainTick{ "OnTick" }             // Setup main tick LUA event
+    lrMainEnd{ "OnLuaEnd" },           // Setup ending tick LUA event
+    lrMainTick{ "OnLuaTick" }          // Setup main tick LUA event
     /* -- Set global pointer to static class ------------------------------- */
     { cLua = this; }
   /* -- Destructor --------------------------------------------------------- */

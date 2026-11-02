@@ -463,7 +463,7 @@ LLFUNC(Dump, 0,
 LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().FlagGet()))
 /* ========================================================================= */
 // $ Texture:GetHeight
-// < Height:integer=The handle of the new mask created.
+// < Height:integer=The height of the texture.
 // ? Returns height of texture.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().DimGetHeight()))
@@ -488,7 +488,7 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().NameGet()))
 LLFUNC(GetSubCount, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().GetSubCount()))
 /* ========================================================================= */
 // $ Texture:GetWidth
-// < Width:integer=The handle of the new mask created.
+// < Width:integer=The width of the texture.
 // ? Returns width of texture.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().DimGetWidth()))
@@ -748,6 +748,21 @@ LLFUNC(TileA, 1,
   aTexture().AddTileDOR(0, aLeft, aTop, aRight, aBottom);
   LuaUtilPushVar(lS, aTexture().GetTileCount() - 1))
 /* ========================================================================= */
+// $ Texture:TileAM
+// > Left:integer=The left pixel position on the texture..
+// > Top:integer=The top pixel position on the texture..
+// > Right:integer=The right pixel position on the texture.
+// > Bottom:integer=The bottom pixel position on the texture.
+// > ...:integer=More tiles to add.
+// < Id:integer=The id number for the first cached texcoord.
+// ? Same as the 'TileA' method but you can overload the call with more tiles
+// ? without having to call the function multiple times.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TileAM, 1,
+  AgTexture aTexture{lS, 1};
+  const AgIntegerVector<GLuint> aTiles{lS, 2};
+  LuaUtilPushVar(lS, aTexture().AddTileDORA(0, aTiles)))
+/* ========================================================================= */
 // $ Texture:TileAD
 // > Left:integer=The left pixel position on the texture.
 // > Top:integer=The top pixel position on the texture.
@@ -765,6 +780,21 @@ LLFUNC(TileAD, 1,
                   aHeight{lS, 5};
   aTexture().AddTileDORWH(0, aLeft, aTop, aWidth, aHeight);
   LuaUtilPushVar(lS, aTexture().GetTileCount() - 1))
+/* ========================================================================= */
+// $ Texture:TileADM
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
+// > Width:integer=The width of the texture.
+// > Height:integer=The height of the texture.
+// > ...:integer=More tiles to add.
+// < Id:integer=The id number for the first cached texcoord.
+// ? Same as the 'TileAD' method but you can overload the call with more tiles
+// ? without having to call the function multiple times.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TileADM, 1,
+  AgTexture aTexture{lS, 1};
+  const AgIntegerVector<GLuint> aTiles{lS, 2};
+  LuaUtilPushVar(lS, aTexture().AddTileDORWHA(0, aTiles)))
 /* ========================================================================= */
 // $ Texture:TileAS
 // > Id:integer=The id of the sub-texture to add to
@@ -974,11 +1004,12 @@ LLRSMFBEGIN                            // Texture:* member functions begin
   LLRSFUNC(SetCRGBA),    LLRSFUNC(SetCRGBAI),   LLRSFUNC(SetCX),
   LLRSFUNC(SetTCLTRB),   LLRSFUNC(SetTCLTWH),   LLRSFUNC(SetTCX),
   LLRSFUNC(SetVLTRB),    LLRSFUNC(SetVLTWH),    LLRSFUNC(SetVLTWHA),
-  LLRSFUNC(SetVX),       LLRSFUNC(TileA),       LLRSFUNC(TileAD),
-  LLRSFUNC(TileAS),      LLRSFUNC(TileASD),     LLRSFUNC(TileGSTC),
-  LLRSFUNC(TileGTC),     LLRSFUNC(TileS),       LLRSFUNC(TileSD),
-  LLRSFUNC(TileSS),      LLRSFUNC(TileSSD),     LLRSFUNC(TileSSTC),
-  LLRSFUNC(TileSTC),     LLRSFUNC(Upload),      LLRSFUNC(UploadEx),
+  LLRSFUNC(SetVX),       LLRSFUNC(TileA),       LLRSFUNC(TileAM),
+  LLRSFUNC(TileAD),      LLRSFUNC(TileADM),     LLRSFUNC(TileAS),
+  LLRSFUNC(TileASD),     LLRSFUNC(TileGSTC),    LLRSFUNC(TileGTC),
+  LLRSFUNC(TileS),       LLRSFUNC(TileSD),      LLRSFUNC(TileSS),
+  LLRSFUNC(TileSSD),     LLRSFUNC(TileSSTC),    LLRSFUNC(TileSTC),
+  LLRSFUNC(Upload),      LLRSFUNC(UploadEx),
 LLRSEND                                // Texture:* member functions end
 /* ========================================================================= **
 ** ######################################################################### **

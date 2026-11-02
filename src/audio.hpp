@@ -468,7 +468,7 @@ class Audio :                          // Audio manager class
     stDevice(StdNPos),                 // Chosen interface ID initialised later
     svPBDevices{ 10 },                 // Reserve 10 playback devices
     svCTDevices{ 10 },                 // Reserve 10 capture devices
-    lfOnUpdate{ "OnUpdate" }           // On update event
+    lfOnUpdate{ "OnAudUpdate" }        // On update event
     /* -- Set global pointer to static class ------------------------------- */
     { cAudio = this; }
   /* -- Destructor --------------------------------------------------------- */

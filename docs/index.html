@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.11.1.51 -->
-<!-- Automatically built at Sun Nov 01 22:19:31 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.11.1.51 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.2.49 -->
+<!-- Automatically built at Mon Nov 02 23:31:59 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.2.49 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.1.51">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.2.49">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.1.51">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.2.49">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.1.51">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.2.49">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.11.1.51 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.2.49 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.11.1.51 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.2.49 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.11.1.51 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.2.49 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 932 functions (414 members, 518 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 937 functions (415 members, 522 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -505,7 +505,7 @@
 						<OL>
 							<LI><P>The window class contains functions for manipulating the Window.</P></LI>
 							<LI>
-								<B>Members</B> <I>(37 members)</I>
+								<B>Members</B> <I>(38 members)</I>
 								<OL>
 									<LI><A href="#Display.Attention">Attention</A></LI>
 									<LI><A href="#Display.Centre">Centre</A></LI>
@@ -529,6 +529,7 @@
 									<LI><A href="#Display.OnFocused">OnFocused</A></LI>
 									<LI><A href="#Display.OnMoved">OnMoved</A></LI>
 									<LI><A href="#Display.OnResized">OnResized</A></LI>
+									<LI><A href="#Display.OnScaled">OnScaled</A></LI>
 									<LI><A href="#Display.Reset">Reset</A></LI>
 									<LI><A href="#Display.ResetCursor">ResetCursor</A></LI>
 									<LI><A href="#Display.Resizable">Resizable</A></LI>
@@ -583,7 +584,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(27 methods)</I>
+								<B>Methods</B> <I>(29 methods)</I>
 								<OL>
 									<LI><A href="#Fbo:Activate">Activate</A></LI>
 									<LI><A href="#Fbo:Blit">Blit</A></LI>
@@ -593,10 +594,12 @@
 									<LI><A href="#Fbo:Finish">Finish</A></LI>
 									<LI><A href="#Fbo:Flush">Flush</A></LI>
 									<LI><A href="#Fbo:GetFloatCount">GetFloatCount</A></LI>
+									<LI><A href="#Fbo:GetHeight">GetHeight</A></LI>
 									<LI><A href="#Fbo:GetId">GetId</A></LI>
 									<LI><A href="#Fbo:GetLFloatCount">GetLFloatCount</A></LI>
 									<LI><A href="#Fbo:GetMatrix">GetMatrix</A></LI>
 									<LI><A href="#Fbo:GetName">GetName</A></LI>
+									<LI><A href="#Fbo:GetWidth">GetWidth</A></LI>
 									<LI><A href="#Fbo:Reserve">Reserve</A></LI>
 									<LI><A href="#Fbo:SetCRGBA">SetCRGBA</A></LI>
 									<LI><A href="#Fbo:SetCX">SetCX</A></LI>
@@ -1454,7 +1457,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(63 methods)</I>
+								<B>Methods</B> <I>(65 methods)</I>
 								<OL>
 									<LI><A href="#Texture:Blit">Blit</A></LI>
 									<LI><A href="#Texture:BlitILT">BlitILT</A></LI>
@@ -1507,6 +1510,8 @@
 									<LI><A href="#Texture:SetVX">SetVX</A></LI>
 									<LI><A href="#Texture:TileA">TileA</A></LI>
 									<LI><A href="#Texture:TileAD">TileAD</A></LI>
+									<LI><A href="#Texture:TileADM">TileADM</A></LI>
+									<LI><A href="#Texture:TileAM">TileAM</A></LI>
 									<LI><A href="#Texture:TileAS">TileAS</A></LI>
 									<LI><A href="#Texture:TileASD">TileASD</A></LI>
 									<LI><A href="#Texture:TileGSTC">TileGSTC</A></LI>
@@ -4161,6 +4166,16 @@
 		<PRE>When the window is resized, this event is called with the width and height in the callback arguments.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Display.OnScaled" style="display:none">
+		<H3>Display.OnScaled</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Display.OnScaled(<I><U>Func</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Func</U> <I>(function)</I> = The event callback function<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>When the window changes DPI scale, this event is called with the new DPI scale factor width and height as callback arguments.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Display.Reset" style="display:none">
 		<H3>Display.Reset</H3>
 		<H4>Syntax:-</H4>
@@ -4529,6 +4544,16 @@
 		<PRE>Returns the number of floating point numbers currently entered into the display list.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Fbo:GetHeight" style="display:none">
+		<H3>Fbo:GetHeight</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U> = Fbo:GetHeight()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(integer)</I> = The height of the frame buffer object.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the height of the framebuffer.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Fbo:GetId" style="display:none">
 		<H3>Fbo:GetId</H3>
 		<H4>Syntax:-</H4>
@@ -4567,6 +4592,16 @@
 		<PRE><U>Id</U> <I>(string)</I> = The video identifier<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the identifier of the Fbo object.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo:GetWidth" style="display:none">
+		<H3>Fbo:GetWidth</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U> = Fbo:GetWidth()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(integer)</I> = The width of the frame buffer object.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the width of the framebuffer.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo:Reserve" style="display:none">
@@ -9584,7 +9619,7 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Height</U> = Texture:GetHeight()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Height</U> <I>(integer)</I> = The handle of the new mask created.<BR></PRE>
+		<PRE><U>Height</U> <I>(integer)</I> = The height of the texture.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns height of texture.<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
@@ -9624,7 +9659,7 @@
 		<H4>Syntax:-</H4>
 		<PRE><U>Width</U> = Texture:GetWidth()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Width</U> <I>(integer)</I> = The handle of the new mask created.<BR></PRE>
+		<PRE><U>Width</U> <I>(integer)</I> = The width of the texture.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns width of texture.<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
@@ -9817,6 +9852,30 @@
 		<PRE><U>Id</U> <I>(integer)</I> = The id number for the cached texcoords.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Caches the specified texture coordinates which you can use as a parameter to 'tileid' on blitting functions.<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture:TileADM" style="display:none">
+		<H3>Texture:TileADM</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Id</U> = Texture:TileADM(<I><U>Left</U>, <U>Top</U>, <U>Width</U>, <U>Height</U>, <U>...</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Left</U> <I>(integer)</I> = The left pixel position on the texture.<BR><U>Top</U> <I>(integer)</I> = The top pixel position on the texture.<BR><U>Width</U> <I>(integer)</I> = The width of the texture.<BR><U>Height</U> <I>(integer)</I> = The height of the texture.<BR><U>...</U> <I>(integer)</I> = More tiles to add.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The id number for the first cached texcoord.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Same as the 'TileAD' method but you can overload the call with more tiles without having to call the function multiple times.<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture:TileAM" style="display:none">
+		<H3>Texture:TileAM</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Id</U> = Texture:TileAM(<I><U>Left</U>, <U>Top</U>, <U>Right</U>, <U>Bottom</U>, <U>...</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Left</U> <I>(integer)</I> = The left pixel position on the texture..<BR><U>Top</U> <I>(integer)</I> = The top pixel position on the texture..<BR><U>Right</U> <I>(integer)</I> = The right pixel position on the texture.<BR><U>Bottom</U> <I>(integer)</I> = The bottom pixel position on the texture.<BR><U>...</U> <I>(integer)</I> = More tiles to add.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The id number for the first cached texcoord.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Same as the 'TileA' method but you can overload the call with more tiles without having to call the function multiple times.<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Texture:TileAS" style="display:none">
@@ -13705,6 +13764,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sun Nov 01 22:19:31 2026 +0000</ADDRESS>
+	This document was generated at Mon Nov 02 23:31:59 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

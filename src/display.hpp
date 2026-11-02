@@ -100,7 +100,8 @@ class Display :                        // Actual class body
   /* -- Event function references ------------------------------------------ */
   LuaFunc          lrFocused,          // Focused function callback
                    lrMoved,            // Moved function callback
-                   lrResized;          // Resize function callback
+                   lrResized,          // Resize function callback
+                   lrScaled;           // Dpi scale function callback
   /* -- Public typedefs -------------------------------------------- */ public:
   enum FSType {                        // Available window types
     /* --------------------------------------------------------------------- */
@@ -121,14 +122,15 @@ class Display :                        // Actual class body
     cLog->LogDebugExSafe("Display changed window position from $x$ to $x$.",
       DisplayGetWinPosX(), DisplayGetWinPosY(), iNewX, iNewY);
     ciPosition.CoordSet(iNewX, iNewY);
-    // Send resize event to Lua now
-    lrMoved.LuaFuncDispatch(iNewX, iNewY);
   }
   /* -- Window moved request ----------------------------------------------- */
   void DisplayOnMoved(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector and parse the values
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
-    DisplayOnMovedParse(emaArgs[1].Int(), emaArgs[2].Int());
+    const int iNewX = emaArgs[1].Int(), iNewY = emaArgs[2].Int();
+    DisplayOnMovedParse(iNewX, iNewY);
+    // Send resize event to Lua now
+    lrMoved.LuaFuncDispatch(iNewX, iNewY);
   }
   /* -- Window set icon request -------------------------------------------- */
   void DisplayOnRqSetIcons(const EvtWinEvent&) { DisplayUpdateIcons(); }
@@ -207,7 +209,10 @@ class Display :                        // Actual class body
   void DisplayOnScale(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector and send new values
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
-    DisplayOnScaleParse(emaArgs[1].Float(), emaArgs[2].Float());
+    const float fWidth = emaArgs[1].Float(), fHeight = emaArgs[2].Float();
+    DisplayOnScaleParse(fWidth, fHeight);
+    // Dispatch event to lua
+    lrScaled.LuaFuncDispatch(fWidth, fHeight);
   }
   /* -- Window limits change request --------------------------------------- */
   void DisplayOnRqSetLimits(const EvtWinEvent &eweEvent)
@@ -268,14 +273,15 @@ class Display :                        // Actual class body
     cLog->LogDebugExSafe("Display changed window size from $x$ to $x$.",
       cInput->DimGetWidth(), cInput->DimGetHeight(), iWidth, iHeight);
     cInput->DimSet(iWidth, iHeight);
-    // Send resize event to Lua now
-    lrResized.LuaFuncDispatch(iWidth, iHeight);
   }
   /* -- On window resized callback ----------------------------------------- */
   void DisplayOnResized(const EvtMainEvent &emeEvent)
   { // Get reference to actual arguments vector and send to parser
     const EvtMainArgs &emaArgs = emeEvent.eaArgs;
-    DisplayOnResizedParse(emaArgs[1].Int(), emaArgs[2].Int());
+    const int iWidth = emaArgs[1].Int(), iHeight = emaArgs[2].Int();
+    DisplayOnResizedParse(iWidth, iHeight);
+    // Send resize event to Lua now
+    lrResized.LuaFuncDispatch(iWidth, iHeight);
   }
   /* -- On window closed callback ------------------------------------------ */
   void DisplayOnClose(const EvtMainEvent&)
@@ -743,8 +749,9 @@ class Display :                        // Actual class body
   }
   /* -- Get core guest callbacks ----------------------------------- */ public:
   LuaFunc &DisplayGetFocusedFunc() { return lrFocused; }
-  LuaFunc &DisplayGetResizedFunc() { return lrResized; }
   LuaFunc &DisplayGetMovedFunc() { return lrMoved; }
+  LuaFunc &DisplayGetResizedFunc() { return lrResized; }
+  LuaFunc &DisplayGetScaledFunc() { return lrScaled; }
   /* -- Return selected monitor -------------------------------------------- */
   const GlFWMonitor *DisplayGetSelectedMonitor() const { return gfwmActive; }
   /* -- Return selected resolution ----------------------------------------- */
@@ -1103,9 +1110,10 @@ class Display :                        // Actual class body
     iFBDepthB(GLFW_DONT_CARE),         // Bit depth not selected yet
     iFBDepthA(GLFW_DONT_CARE),         // Bit depth not selected yet
     iSamples(GLFW_DONT_CARE),          // No anti-aliasing samples specified
-    lrFocused{ "OnFocused" },          // Setup window focus LUA event
-    lrMoved{ "OnMoved" },              // Setup window move LUA event
-    lrResized{ "OnResize" },           // Setup window resize LUA event
+    lrFocused{ "OnWinFocused" },       // Setup window focus LUA event
+    lrMoved{ "OnWinMoved" },           // Setup window move LUA event
+    lrResized{ "OnWinResize" },        // Setup window resize LUA event
+    lrScaled{ "OnWinScale" },          // Setup window scale LUA event
     fsType(FST_STANDBY),               // Full-screen type
     fstStrings{{                       // DisplayInit full-screen type strings
       STR(FST_STANDBY),    STR(FST_WINDOW), STR(FST_EXCLUSIVE),

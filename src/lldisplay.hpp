@@ -189,6 +189,13 @@ LLFUNC(OnMoved, 0, cLua->LuaSetRef(lS, cDisplay->DisplayGetMovedFunc()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnResized, 0, cLua->LuaSetRef(lS, cDisplay->DisplayGetResizedFunc()))
 /* ========================================================================= */
+// $ Display.OnScaled
+// > Func:function=The event callback function
+// ? When the window changes DPI scale, this event is called with the new
+// ? DPI scale factor width and height as callback arguments.
+/* ------------------------------------------------------------------------- */
+LLFUNC(OnScaled, 0, cLua->LuaSetRef(lS, cDisplay->DisplayGetScaledFunc()))
+/* ========================================================================= */
 // $ Display.Reset
 // ? Resets the size and position of the window.
 /* ------------------------------------------------------------------------- */
@@ -314,18 +321,19 @@ LLFUNC(VReset, 0, cEvtMain->RequestQuitThread())
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Display.* namespace func
-  LLRSFUNC(Attention),     LLRSFUNC(Centre),      LLRSFUNC(Decorated),
-  LLRSFUNC(Floating),      LLRSFUNC(Focus),       LLRSFUNC(Focused),
-  LLRSFUNC(FSType),        LLRSFUNC(GetPos),      LLRSFUNC(GetSize),
-  LLRSFUNC(GPU),           LLRSFUNC(GPUFPS),      LLRSFUNC(Hovered),
-  LLRSFUNC(Iconified),     LLRSFUNC(Iconify),     LLRSFUNC(Maximise),
-  LLRSFUNC(Maximised),     LLRSFUNC(Monitor),     LLRSFUNC(MonitorData),
-  LLRSFUNC(Monitors),      LLRSFUNC(OnFocused),   LLRSFUNC(OnMoved),
-  LLRSFUNC(OnResized),     LLRSFUNC(Reset),       LLRSFUNC(ResetCursor),
-  LLRSFUNC(Resizable),     LLRSFUNC(Restore),     LLRSFUNC(SetCursor),
-  LLRSFUNC(SetFullScreen), LLRSFUNC(SetPos),      LLRSFUNC(SetSize),       LLRSFUNC(Transparent),
-  LLRSFUNC(VidMode),       LLRSFUNC(VidModeData), LLRSFUNC(VidModes),
-  LLRSFUNC(Visible),       LLRSFUNC(VRAM),        LLRSFUNC(VReset),
+  LLRSFUNC(Attention),     LLRSFUNC(Centre),        LLRSFUNC(Decorated),
+  LLRSFUNC(Floating),      LLRSFUNC(Focus),         LLRSFUNC(Focused),
+  LLRSFUNC(FSType),        LLRSFUNC(GetPos),        LLRSFUNC(GetSize),
+  LLRSFUNC(GPU),           LLRSFUNC(GPUFPS),        LLRSFUNC(Hovered),
+  LLRSFUNC(Iconified),     LLRSFUNC(Iconify),       LLRSFUNC(Maximise),
+  LLRSFUNC(Maximised),     LLRSFUNC(Monitor),       LLRSFUNC(MonitorData),
+  LLRSFUNC(Monitors),      LLRSFUNC(OnFocused),     LLRSFUNC(OnMoved),
+  LLRSFUNC(OnResized),     LLRSFUNC(OnScaled),      LLRSFUNC(Reset),
+  LLRSFUNC(ResetCursor),   LLRSFUNC(Resizable),     LLRSFUNC(Restore),
+  LLRSFUNC(SetCursor),     LLRSFUNC(SetFullScreen), LLRSFUNC(SetPos),
+  LLRSFUNC(SetSize),       LLRSFUNC(Transparent),   LLRSFUNC(VidMode),
+  LLRSFUNC(VidModeData),   LLRSFUNC(VidModes),      LLRSFUNC(Visible),
+  LLRSFUNC(VRAM),          LLRSFUNC(VReset),
 LLRSEND                                // Display.* namespace functions end
 /* ========================================================================= **
 ** ######################################################################### **

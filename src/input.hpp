@@ -329,13 +329,13 @@ class Input :                          // Handles keyboard, mouse & controllers
     /* -- More initialisers ------------------------------------------------ */
     iConKey1(GLFW_KEY_UNKNOWN),        // Init primary console key
     iConKey2(iConKey1),                // Init secondary console key
-    lfOnMouseClick{ "OnMouseClick" },  // Init mouse click lua event
-    lfOnMouseMove{ "OnMouseMove" },    // Init mouse movement lua event
-    lfOnMouseScroll{ "OnMouseScroll" },// Init mouse wheel lua event
-    lfOnMouseFocus{ "OnMouseFocus" },  // Init mouse focus lua event
-    lfOnKey{ "OnUnfilteredKey" },      // Init unfiltered keypress lua event
-    lfOnChar{ "OnFilteredKey" },       // Init filtered keypress lua event
-    lfOnDragDrop{ "OnDragDrop" }       // Init drag & drop lua event
+    lfOnMouseClick{ "OnInpClick" },    // Init mouse click lua event
+    lfOnMouseMove{ "OnInpMove" },      // Init mouse movement lua event
+    lfOnMouseScroll{ "OnInpScroll" },  // Init mouse wheel lua event
+    lfOnMouseFocus{ "OnInpFocus" },    // Init mouse focus lua event
+    lfOnKey{ "OnInpUnfilteredKey" },   // Init unfiltered keypress lua event
+    lfOnChar{ "OnInpFilteredKey" },    // Init filtered keypress lua event
+    lfOnDragDrop{ "OnInpDragDrop" }    // Init drag & drop lua event
     /* -- Set global pointer to static class ------------------------------- */
     { cInput = this; }
   /* -- Destructor --------------------------------------------------------- */

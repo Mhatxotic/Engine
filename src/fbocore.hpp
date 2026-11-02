@@ -277,7 +277,7 @@ class FboCore :                        // The main Fbo operations manager
     fboConsole(back()),                // Init reference to console Fbo
     ctpStart{ cd0 },                   // Initialise FPS timepoint
     dFps{ 0.0 }, dFpsSmoothed{ 0.0 },  // Initialise calculated FPS
-    lrRedraw{ "OnRedraw" }             // Setup graphical redraw LUA event
+    lrRedraw{ "OnFboRedraw" }          // Setup graphical redraw LUA event
     /* -- Set pointer to global class and main Fbo ------------------------- */
     { cFboCore = this; cFbos->fboMain = &fboMain; }
   /* -- Set main Fbo float reserve --------------------------------- */ public:
