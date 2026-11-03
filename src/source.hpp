@@ -289,7 +289,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     const SourceFlagsConst sfFlags=SF_EXTERNAL) :  // Initial source flags
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSource{ cSources, this },  // Register in Sources list
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     SourceFlags{ sfFlags },            // Set source managed flags
     aluId(cOal->CreateSource())        // Initialise a new source from OpenAL
     /* -- Check for CreateSource error or initialise ----------------------- */

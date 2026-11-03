@@ -29,56 +29,61 @@ using namespace ITexture::P;           using namespace Common;
 struct AgAtlas : public ArClass<Atlas>
   { explicit AgAtlas(lua_State*const lS, const int iArg) :
     ArClass{LuaUtilGetClassRef<Atlas>(lS, iArg, cAtlases)}{} };
+/* ========================================================================= **
+** ######################################################################### **
+** ## Atlas:* methods                                                     ## **
+** ######################################################################### **
+** ========================================================================= */
 /* ========================================================================= */
 // $ Atlas:Destroy
 // ? Destroys the atlas and frees all the memory associated with it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Atlas>(lS, cAtlases))
 /* ========================================================================= */
-// $ Atlas:Destroyed
-// < Destroyed:boolean=If the Atlas class is destroyed
-// ? Returns if the Atlas class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1,
-  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cAtlases)))
-/* ========================================================================= */
-// $ Atlas:Id
+// $ Atlas:GetId
 // < Id:integer=The id number of the Atlas object.
 // ? Returns the unique id of the Atlas object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Atlas:Name
+// $ Atlas:GetName
 // < Name:string=The name of the Atlas object.
 // ? Returns the name of the specified object when it was created.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgAtlas{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Atlas:IsDestroyed
+// < Destroyed:boolean=If the Atlas class is destroyed
+// ? Returns if the Atlas class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cAtlases)))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Atlas:* member functions structure                                  ## **
+** ## Atlas:* methods structure                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Atlas:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
-LLRSEND                                // Atlas:* member functions end
+LLRSMFBEGIN                            // Atlas:* methods begin
+  LLRSFUNC(Destroy), LLRSFUNC(GetId), LLRSFUNC(GetName), LLRSFUNC(IsDestroyed),
+LLRSEND                                // Atlas:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Atlas.* namespace functions                                         ## **
+** ## Atlas.* non-member functions                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Atlas.Count
-// < Count:integer=Total number of atlases created.
+// $ Atlas.GetClasses
+// < GetClasses:integer=Total number of atlases created.
 // ? Returns the total number of atlas classes currently active.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cAtlases->CollectorCount()))
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cAtlases->CollectorCount()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Atlas.* namespace functions structure                               ## **
+** ## Atlas.* non-member functions structure                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Atlas.* namespace consts begin
-  LLRSFUNC(Count),
-LLRSEND                                // Atlas.* namespace consts end
+LLRSBEGIN                              // Atlas.* non-member functions begin
+  LLRSFUNC(GetClasses),
+LLRSEND                                // Atlas.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Atlas namespace
 /* == EoF =========================================================== EoF == */

@@ -111,7 +111,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   Clip() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperClip{ cClips },            // Initially unregistered
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     LuaEvtSlave{ this, EMC_CLP_EVENT } // Register Clip async event
     /* -- No code ---------------------------------------------------------- */
     {}

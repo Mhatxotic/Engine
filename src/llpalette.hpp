@@ -42,7 +42,7 @@ struct AgPosition : public AgSizeTLGE {
 using AgSSizeTLEG = AgIntegerLEG<ssize_t>;
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Palette:* member functions                                          ## **
+** ## Palette:* methods                                                   ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Palette:Commit
@@ -90,13 +90,6 @@ LLFUNC(Copy, 0,
 // ? not affect the active palette as this is stored on the GPU.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Palette>(lS, cPalettes))
-/* ========================================================================= */
-// $ Palette:Destroyed
-// < Destroyed:boolean=If the Palette class is destroyed
-// ? Returns if the Palette class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1,
-  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cPalettes)))
 /* ========================================================================= */
 // $ Palette:GetA
 // > Id:integer=Palette entry to modify (0-255).
@@ -231,6 +224,13 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgPalette{lS, 1}().Serial()))
 // ? Returns the palette identifier
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgPalette{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Palette:IsDestroyed
+// < Destroyed:boolean=If the Palette class is destroyed
+// ? Returns if the Palette class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cPalettes)))
 /* ========================================================================= */
 // $ Palette:SetA
 // > Id:integer=Palette entry to modify (0-255).
@@ -400,24 +400,24 @@ LLFUNC(ShiftF, 0,
   aPalette().ShiftFwd(aBegin, aEnd, aAmount))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Palette:* member functions structure                                ## **
+** ## Palette:* methods structure                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Palette:* member functions begin
-  LLRSFUNC(Commit),    LLRSFUNC(Copy),     LLRSFUNC(Destroy),
-  LLRSFUNC(Destroyed), LLRSFUNC(Fill),     LLRSFUNC(GetA),
-  LLRSFUNC(GetAI),     LLRSFUNC(GetB),     LLRSFUNC(GetBI),
-  LLRSFUNC(GetG),      LLRSFUNC(GetGI),    LLRSFUNC(GetId),
-  LLRSFUNC(GetName),   LLRSFUNC(GetR),     LLRSFUNC(GetRGBA),
-  LLRSFUNC(GetRGBAI),  LLRSFUNC(GetRI),    LLRSFUNC(SetA),
-  LLRSFUNC(SetAI),     LLRSFUNC(SetB),     LLRSFUNC(SetBI),
-  LLRSFUNC(SetG),      LLRSFUNC(SetGI),    LLRSFUNC(SetR),
-  LLRSFUNC(SetRGBA),   LLRSFUNC(SetRGBAI), LLRSFUNC(SetRI),
-  LLRSFUNC(Shift),     LLRSFUNC(ShiftB),   LLRSFUNC(ShiftF),
-LLRSEND                                // Palette:* member functions end
+LLRSMFBEGIN                            // Palette:* methods begin
+  LLRSFUNC(Commit),  LLRSFUNC(Copy),        LLRSFUNC(Destroy),
+  LLRSFUNC(Fill),    LLRSFUNC(GetA),        LLRSFUNC(GetAI),
+  LLRSFUNC(GetB),    LLRSFUNC(GetBI),       LLRSFUNC(GetG),
+  LLRSFUNC(GetGI),   LLRSFUNC(GetId),       LLRSFUNC(GetName),
+  LLRSFUNC(GetR),    LLRSFUNC(GetRGBA),     LLRSFUNC(GetRGBAI),
+  LLRSFUNC(GetRI),   LLRSFUNC(IsDestroyed), LLRSFUNC(SetA),
+  LLRSFUNC(SetAI),   LLRSFUNC(SetB),        LLRSFUNC(SetBI),
+  LLRSFUNC(SetG),    LLRSFUNC(SetGI),       LLRSFUNC(SetR),
+  LLRSFUNC(SetRGBA), LLRSFUNC(SetRGBAI),    LLRSFUNC(SetRI),
+  LLRSFUNC(Shift),   LLRSFUNC(ShiftB),      LLRSFUNC(ShiftF),
+LLRSEND                                // Palette:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Palette.* namespace functions                                       ## **
+** ## Palette.* non-member functions                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Palette.Create
@@ -429,12 +429,6 @@ LLFUNC(Create, 1,
   const AgNeString aName{lS, 1};
   AcPalette{lS}().Init(aName()))
 /* ========================================================================= */
-// $ Palette.Count
-// < Count:integer=Total number of palettes created.
-// ? Returns the total number of palette classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cPalettes->CollectorCount()))
-/* ========================================================================= */
 // $ Palette.Default
 // > Name:string=Reference only user-defined identifier.
 // < Handle:Palette=A handle to the newly created palette object.
@@ -443,6 +437,12 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cPalettes->CollectorCount()))
 LLFUNC(Default, 1,
   const AgNeString aName{lS, 1};
   AcPalette{lS}().Init(aName(), cPalettes->palDefault))
+/* ========================================================================= */
+// $ Palette.GetClasses
+// < Count:integer=Total number of palettes created.
+// ? Returns the total number of palette classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cPalettes->CollectorCount()))
 /* ========================================================================= */
 // $ Palette.Image
 // > Name:string=Reference only user-defined identifier.
@@ -476,13 +476,13 @@ LLFUNC(Texture, 1,
   AcPalette{lS}().Init(aName(), aTexture))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Palette.* namespace functions structure                             ## **
+** ## Palette.* non-member functions structure                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Palette.* namespace functions begin
-  LLRSFUNC(Create),  LLRSFUNC(Count), LLRSFUNC(Default), LLRSFUNC(Image),
+LLRSBEGIN                              // Palette.* non-member functions begin
+  LLRSFUNC(Create),  LLRSFUNC(GetClasses), LLRSFUNC(Default), LLRSFUNC(Image),
   LLRSFUNC(Palette), LLRSFUNC(Texture),
-LLRSEND                                // Palette.* namespace functions end
+LLRSEND                                // Palette.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Palette namespace
 /* == EoF =========================================================== EoF == */

@@ -33,7 +33,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
 { /* -- Private variables -------------------------------------------------- */
   LuaCmdMapIt      lcmiIt;             // Iterator to command Console gives us
   /* -- Returns the lua command list --------------------------------------- */
-  LuaCmdMap &GetLuaCmdsList() { return cParent->lcmMap; }
+  LuaCmdMap &GetLuaCmdsList() { return ctParent.lcmMap; }
   /* -- Returns the end of the lua command list ---------------------------- */
   LuaCmdMapIt GetLuaCmdsListEnd() { return GetLuaCmdsList().end(); }
   /* -- Push and get error callback function id ---------------------------- */
@@ -82,7 +82,7 @@ CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperCommand{                   // Initialise and register the object
       cCommands, this },
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     lcmiIt{ GetLuaCmdsListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
     {}

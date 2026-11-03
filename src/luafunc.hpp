@@ -49,9 +49,9 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public LuaFuncBase                   // Using our LuaFunc base class
 { /* -- Get parent state --------------------------------------------------- */
-  lua_State *LuaFuncGetState() const { return cParent->LuaRefGetState(); }
+  lua_State *LuaFuncGetState() const { return ctParent.LuaRefGetState(); }
   /* -- Get empty function reference --------------------------------------- */
-  int LuaFuncGetEmptyFunc() const { return cParent->LuaRefGetId(); }
+  int LuaFuncGetEmptyFunc() const { return ctParent.LuaRefGetId(); }
   /* -- Returns if specified reference is NOT an empty function ------------ */
   bool LuaFuncIsNotRefEmptyFunc(const int iReference) const
     { return iReference != LuaFuncGetEmptyFunc(); }
@@ -167,7 +167,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   { // Get referenced function and return if succeeded
     if(LuaUtilGetRefFunc(LuaFuncGetState(), iLiveReference)) return;
     // Push empty function instead
-    LuaUtilGetRefFunc(LuaFuncGetState(), cParent->LuaRefGetFunc());
+    LuaUtilGetRefFunc(LuaFuncGetState(), ctParent.LuaRefGetFunc());
   }
   /* -- Dispatch the requested variables ----------------------------------- */
   template<typename ...VarArgs>void LuaFuncDispatch(VarArgs &&...vaArgs)
@@ -259,7 +259,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
   LuaFunc() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperLuaFunc{ cLuaFuncs },      // Init collector class unregistered
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Move constructor --------------------------------------------------- */
@@ -267,7 +267,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     Name{ StdMove(lfOther) },          // Initialise identification
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector class
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     LuaFuncBase{ StdMove(lfOther) }    // Move base over
     /* -- Clear other references and unregister other from collector ------- */
     { lfOther.aReferences.fill(LUA_REFNIL); lfOther.CollectorUnregister(); }
@@ -276,7 +276,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     Name{ strN },                      // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector class
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Name(move) constructor --------------------------------------------- */
@@ -284,7 +284,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     Name{ StdMove(strN) },             // Move name of function over
     ICHelperLuaFunc{ cLuaFuncs, this },// Register in collector
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* -- Set if requested ------------------------------------------------- */
     { if(bSet) LuaFuncSet(); }
   /* -- Destructor --------------------------------------------------------- */

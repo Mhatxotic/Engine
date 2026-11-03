@@ -28,7 +28,7 @@ CTOR_BEGIN_DUO(Files, File, CLHelperUnsafe, ICHelperUnsafe),
   File() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFile{ cFiles, this },      // Register the object in collector
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

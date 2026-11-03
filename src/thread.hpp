@@ -81,7 +81,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // data from an uninitialised 'std::thread' class before 'swap()' finishes.
     while(atsCode != TS_INIT) StdSuspend();
     // Incrememt thread running count
-    ++cParent->astRunning;
+    ++ctParent.astRunning;
     // Thread starting up in log
     cLog->LogDebugExSafe("Thread $<$> started.", Serial(), NameGet());
     // Set the start time and initialise the end time
@@ -98,7 +98,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     } // Set shutdown time
     scdEnd = cmHiRes.GetEpochTime();
     // Reduce thread count
-    --cParent->astRunning;
+    --ctParent.astRunning;
     // Log if thread didn't signal to exit
     cLog->LogDebugExSafe("Thread $<$> finished in $ with $.",
       Serial(), NameGet(),
@@ -109,7 +109,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   } // exception occurred in thread so handle it
   catch(const StdException &eReason)
   { // Reduce thread count
-    --cParent->astRunning;
+    --ctParent.astRunning;
     // Set shutdown time
     scdEnd = cmHiRes.GetEpochTime();
     // Log if thread didn't signal to exit
@@ -157,7 +157,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   ThreadStatus ThreadGetExitCode() const { return atsCode; }
   void ThreadSetExitCode(const ThreadStatus tsNew) { atsCode = tsNew; }
   StdStringView ThreadGetExitCodeString() const
-    { return cParent->imCodes.Get(ThreadGetExitCode()); }
+    { return ctParent.imCodes.Get(ThreadGetExitCode()); }
   /* ----------------------------------------------------------------------- */
   const CbThFunc &ThreadGetCallback() const { return ctfFunc; }
   bool ThreadHaveCallback() const { return ThreadGetCallback() != nullptr; }
@@ -266,7 +266,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     Name{ ssvN },                      // Initialise requested thread name
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     ThreadBase{ sP, vpPtr, cbfC },     // Set perf, parameter and callback
     thread{ ThreadMain, this }         // Start the thread straight away
     /* -- No code ---------------------------------------------------------- */
@@ -278,7 +278,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     Name{ ssvN },                      // Set requested identifier
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     ThreadBase{ sP, nullptr, cbfC }    // Just set callback function
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -288,7 +288,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     Name{ ssvN },                      // Set requested identifer
     ICHelperThread{ cThreads },        // No automatic registration
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     ThreadBase{ sP, nullptr, nullptr } // Initialise nothing else
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -296,7 +296,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   explicit Thread(const SysThread sP) :// Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads },        // No automatic registration
-    SerialSlave{ cParent->Serial() } , // Initialise identification number
+    SerialSlave{ ctParent.Serial() } , // Initialise identification number
     ThreadBase{ sP, nullptr, nullptr } // Initialise only thread priority
     /* -- No code ---------------------------------------------------------- */
     {}

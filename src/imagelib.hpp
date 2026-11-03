@@ -60,8 +60,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ ifNId, ssvNName, ssvNExt, cfdNFunc, cParent->size() }
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
+    DataFormat{ ifNId, ssvNName, ssvNExt, cfdNFunc, ctParent.size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with saver function only ------------------------------- */
@@ -74,8 +74,8 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ ifNId, ssvNName, ssvNExt, cfeNFunc, cParent->size() }
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
+    DataFormat{ ifNId, ssvNName, ssvNExt, cfeNFunc, ctParent.size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with both loader and saver functions ------------------- */
@@ -89,9 +89,9 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImageLib{ cImageLibs,      // Register filter in filter list
       this },                          // Initialise filter parent
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     DataFormat{ ifNId, ssvNName, ssvNExt, cfdNFunc, cfeNFunc,
-      cParent->size() }
+      ctParent.size() }
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- End of objects collector (reserve and set limit for formats) ------- */

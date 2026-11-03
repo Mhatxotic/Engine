@@ -262,7 +262,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
   Asset() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperAsset{ cAssets },          // Initially unregistered
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderAsset{ this,            // Initialise async class with this
       EMC_MP_ASSET },                  // ...and the event id for it.
     AssetFlags{ CD_NONE }              // Np asset load flags initially

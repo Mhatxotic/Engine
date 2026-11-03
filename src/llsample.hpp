@@ -33,7 +33,7 @@ struct AcSample : public ArClass<Sample> {
     ArClass{LuaUtilClassCreateRef<Sample>(lS, cSamples)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Sample:* member functions                                           ## **
+** ## Sample:* methods                                                    ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Sample:Destroy
@@ -43,30 +43,31 @@ struct AcSample : public ArClass<Sample> {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Sample>(lS, cSamples))
 /* ========================================================================= */
-// $ Sample:Destroyed
-// < Destroyed:boolean=If the Sample class is destroyed
-// ? Returns if the Sample class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSamples)))
-/* ========================================================================= */
-// $ Sample:Duration
+// $ Sample:GetDuration
 // < Duration:number=Duration of buffer in seconds
 // ? Returns the duration of the buffer in seconds
 /* ------------------------------------------------------------------------- */
-LLFUNC(Duration, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().GetDuration()))
+LLFUNC(GetDuration, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().GetDuration()))
 /* ========================================================================= */
-// $ Sample:Id
+// $ Sample:GetId
 // < Id:integer=The id number of the Sample object.
 // ? Returns the unique id of the Sample object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Sample:Name
+// $ Sample:GetName
 // < Name:string=Name of the sample.
 // ? If this sample was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Sample:IsDestroyed
+// < Destroyed:boolean=If the Sample class is destroyed
+// ? Returns if the Sample class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSamples)))
 /* ========================================================================= */
 // $ Sample:Play
 // > Gain:number=Volume of sample to play at.
@@ -123,25 +124,19 @@ LLFUNCENDEX(iReturn)
 LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().Stop()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Sample:* member functions structure                                 ## **
+** ## Sample:* methods structure                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Sample:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Duration), LLRSFUNC(Id),
-  LLRSFUNC(Name),    LLRSFUNC(Play),      LLRSFUNC(PlayEx),   LLRSFUNC(Spawn),
-  LLRSFUNC(Stop),
-LLRSEND                                // Sample:* member functions end
+LLRSMFBEGIN                            // Sample:* methods begin
+  LLRSFUNC(Destroy), LLRSFUNC(GetDuration), LLRSFUNC(GetId),
+  LLRSFUNC(GetName), LLRSFUNC(IsDestroyed), LLRSFUNC(Play),
+  LLRSFUNC(PlayEx),  LLRSFUNC(Spawn),       LLRSFUNC(Stop),
+LLRSEND                                // Sample:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Sample.* namespace functions                                        ## **
+** ## Sample.* non-member functions                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Sample.Count
-// < Count:integer=Total number of samples created.
-// ? Returns the total number of sample classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cSamples->CollectorCount()))
-/* ========================================================================= */
 // $ Sample.Create
 // > Handle:Pcm=The pcm sample class to load
 // < Handle:Sample=The handle to the specified sample
@@ -150,14 +145,20 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cSamples->CollectorCount()))
 LLFUNC(Create, 1,
   const AgPcm aPcm{lS,1};
   AcSample{lS}().InitSample(aPcm))
+/* ========================================================================= */
+// $ Sample.GetClasses
+// < Count:integer=Total number of samples created.
+// ? Returns the total number of sample classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cSamples->CollectorCount()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Sample.* namespace functions structure                              ## **
+** ## Sample.* non-member functions structure                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Sample.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Create),
-LLRSEND                                // Sample.* namespace functions end
+LLRSBEGIN                              // Sample.* non-member functions begin
+  LLRSFUNC(Create), LLRSFUNC(GetClasses),
+LLRSEND                                // Sample.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Sample namespace
 /* == EoF =========================================================== EoF == */

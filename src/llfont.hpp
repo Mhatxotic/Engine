@@ -53,7 +53,7 @@ template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
 using AgGLuintLG = AgIntegerLG<GLuint>;
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Font:* member functions                                             ## **
+** ## Font:* methods                                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Font:Destroy
@@ -63,12 +63,6 @@ using AgGLuintLG = AgIntegerLG<GLuint>;
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Font>(lS, cFonts))
-/* ========================================================================= */
-// $ Font:Destroyed
-// < Destroyed:boolean=If the Font class is destroyed
-// ? Returns if the Font class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFonts)))
 /* ========================================================================= */
 // $ Font:Dump
 // > TexId:integer=The texture id to dump.
@@ -114,6 +108,12 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFont{lS, 1}().NameGet()))
 // ? will just be the width of the white-space character only.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgFont{lS, 1}().dgluTile.DimGetWidth()))
+/* ========================================================================= */
+// $ Font:IsDestroyed
+// < Destroyed:boolean=If the Font class is destroyed
+// ? Returns if the Font class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFonts)))
 /* ========================================================================= */
 // $ Font:LoadChars
 // > Characters:string=A utf-8 string of characters you want to pre-cache.
@@ -708,31 +708,31 @@ LLFUNC(SetSpacing, 0,
   aFont().SetCharSpacing(aSpacing))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Font:* member functions structure                                   ## **
+** ## Font:* methods structure                                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Font:* member functions begin
-  LLRSFUNC(Destroy),     LLRSFUNC(Destroyed), LLRSFUNC(Dump),
-  LLRSFUNC(GetHeight),   LLRSFUNC(GetFlags),  LLRSFUNC(GetId),
-  LLRSFUNC(GetName),     LLRSFUNC(GetWidth),  LLRSFUNC(LoadChars),
-  LLRSFUNC(LoadRange),   LLRSFUNC(Print),     LLRSFUNC(PrintC),
-  LLRSFUNC(PrintCT),     LLRSFUNC(PrintM),    LLRSFUNC(PrintMT),
-  LLRSFUNC(PrintR),      LLRSFUNC(PrintRT),   LLRSFUNC(PrintS),
-  LLRSFUNC(PrintT),      LLRSFUNC(PrintTS),   LLRSFUNC(PrintU),
-  LLRSFUNC(PrintUC),     LLRSFUNC(PrintUCT),  LLRSFUNC(PrintUR),
-  LLRSFUNC(PrintURT),    LLRSFUNC(PrintUS),   LLRSFUNC(PrintW),
-  LLRSFUNC(PrintWS),     LLRSFUNC(PrintWT),   LLRSFUNC(PrintWTS),
-  LLRSFUNC(PrintWU),     LLRSFUNC(PrintWUT),  LLRSFUNC(SetCA),
-  LLRSFUNC(SetCB),       LLRSFUNC(SetCG),     LLRSFUNC(SetCOA),
-  LLRSFUNC(SetCOB),      LLRSFUNC(SetCOG),    LLRSFUNC(SetCOR),
-  LLRSFUNC(SetCORGB),    LLRSFUNC(SetCORGBA), LLRSFUNC(SetCORGBAI),
-  LLRSFUNC(SetCR),       LLRSFUNC(SetCRGBAI), LLRSFUNC(SetCRGB),
-  LLRSFUNC(SetCRGBA),    LLRSFUNC(SetGPad),   LLRSFUNC(SetGSize),
-  LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),   LLRSFUNC(SetSpacing),
-LLRSEND                                // Font:* member functions end
+LLRSMFBEGIN                            // Font:* methods begin
+  LLRSFUNC(Destroy),     LLRSFUNC(Dump),        LLRSFUNC(GetHeight),
+  LLRSFUNC(GetFlags),    LLRSFUNC(GetId),       LLRSFUNC(GetName),
+  LLRSFUNC(GetWidth),    LLRSFUNC(IsDestroyed), LLRSFUNC(LoadChars),
+  LLRSFUNC(LoadRange),   LLRSFUNC(Print),       LLRSFUNC(PrintC),
+  LLRSFUNC(PrintCT),     LLRSFUNC(PrintM),      LLRSFUNC(PrintMT),
+  LLRSFUNC(PrintR),      LLRSFUNC(PrintRT),     LLRSFUNC(PrintS),
+  LLRSFUNC(PrintT),      LLRSFUNC(PrintTS),     LLRSFUNC(PrintU),
+  LLRSFUNC(PrintUC),     LLRSFUNC(PrintUCT),    LLRSFUNC(PrintUR),
+  LLRSFUNC(PrintURT),    LLRSFUNC(PrintUS),     LLRSFUNC(PrintW),
+  LLRSFUNC(PrintWS),     LLRSFUNC(PrintWT),     LLRSFUNC(PrintWTS),
+  LLRSFUNC(PrintWU),     LLRSFUNC(PrintWUT),    LLRSFUNC(SetCA),
+  LLRSFUNC(SetCB),       LLRSFUNC(SetCG),       LLRSFUNC(SetCOA),
+  LLRSFUNC(SetCOB),      LLRSFUNC(SetCOG),      LLRSFUNC(SetCOR),
+  LLRSFUNC(SetCORGB),    LLRSFUNC(SetCORGBA),   LLRSFUNC(SetCORGBAI),
+  LLRSFUNC(SetCR),       LLRSFUNC(SetCRGBAI),   LLRSFUNC(SetCRGB),
+  LLRSFUNC(SetCRGBA),    LLRSFUNC(SetGPad),     LLRSFUNC(SetGSize),
+  LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),     LLRSFUNC(SetSpacing),
+LLRSEND                                // Font:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Font.* namespace functions                                          ## **
+** ## Font.* non-member functions                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Font.Console
@@ -742,12 +742,6 @@ LLRSEND                                // Font:* member functions end
 /* ------------------------------------------------------------------------- */
 LLFUNC(Console, 1,
   LuaUtilClassCreateStaticPtr<Font>(lS, cFonts, cConGfx->ConGfxGetFont()))
-/* ========================================================================= */
-// $ Font.Count
-// < Count:integer=Total number of fonts created.
-// ? Returns the total number of font classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cFonts->CollectorCount()))
 /* ========================================================================= */
 // $ Font.Ftf
 // > Font:Ftf=An ftf object of a loaded freetype font.
@@ -767,6 +761,12 @@ LLFUNC(Ftf, 1,
   const AgFilterId aFilterId{lS, 4};
   const AgFontFlags aFlags{lS, 5};
   AcFont{lS}().InitFontFtf(aFtf, aSize, aPadding, aFilterId, aFlags))
+/* ========================================================================= */
+// $ Font.GetClasses
+// < Count:integer=Total number of fonts created.
+// ? Returns the total number of font classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFonts->CollectorCount()))
 /* ========================================================================= */
 // $ Font.Image
 // > Source:Image=The source image for use with the font.
@@ -822,13 +822,13 @@ LLFUNC(Manifest, 1,
   AcFont{lS}().InitFontImageManifest(aImage, aJson))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Font.* namespace functions structure                                ## **
+** ## Font.* non-member functions structure                               ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Font.* namespace functions begin
-  LLRSFUNC(Console), LLRSFUNC(Count), LLRSFUNC(Ftf), LLRSFUNC(Image),
+LLRSBEGIN                              // Font.* non-member functions begin
+  LLRSFUNC(Console), LLRSFUNC(Ftf), LLRSFUNC(GetClasses), LLRSFUNC(Image),
   LLRSFUNC(Manifest),
-LLRSEND                                // Font.* namespace functions end
+LLRSEND                                // Font.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Font.* namespace constants                                          ## **

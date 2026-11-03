@@ -33,7 +33,7 @@ struct AcCommand : public ArClass<Command> {
     ArClass{LuaUtilClassCreateRef<Command>(lS, cCommands)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Command:* member functions                                          ## **
+** ## Command:* methods                                                   ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Command:Destroy
@@ -41,51 +41,62 @@ struct AcCommand : public ArClass<Command> {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Command>(lS, cCommands))
 /* ========================================================================= */
-// $ Command:Destroyed
-// < Destroyed:boolean=If the Command class is destroyed
-// ? Returns if the Command class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1,
-  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cCommands)))
-/* ========================================================================= */
-// $ Command:Id
+// $ Command:GetId
 // < Id:integer=The id of the Command object.
 // ? Returns the unique id of the Command object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgCommand{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgCommand{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Command:Name
+// $ Command:GetName
 // < Name:string=The name of the console command.
 // ? Returns the name of the console command this object was registered with.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, AgCommand{lS, 1}().Name())
+LLFUNC(GetName, 1, AgCommand{lS, 1}().Name())
+/* ========================================================================= */
+// $ Command:IsDestroyed
+// < Destroyed:boolean=If the Command class is destroyed
+// ? Returns if the Command class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cCommands)))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Command:* member functions structure                                ## **
+** ## Command:* methods structure                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Command:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
-LLRSEND                                // Command:* member functions end
+LLRSMFBEGIN                            // Command:* methods begin
+  LLRSFUNC(Destroy), LLRSFUNC(GetId), LLRSFUNC(GetName), LLRSFUNC(IsDestroyed),
+LLRSEND                                // Command:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Command.* namespace functions                                       ## **
+** ## Command.* non-member functions                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Command.Count
+// $ Command.GetClasses
 // < Count:integer=Total number of commands created.
 // ? Returns the total number of command classes currently active.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cCommands->CollectorCount()))
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cCommands->CollectorCount()))
 /* ========================================================================= */
-// $ Command.Exists
+// $ Command.IsExist
 // > Name:string=The console command name to lookup
 // < Registered:boolean=True if the command is registered
 // ? Returns if the specified console command is registered which includes
 // ? the built-in engine console commands too.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Exists, 1,
+LLFUNC(IsExist, 1,
   LuaUtilPushVar(lS, cConsole->CommandIsRegistered(AgNeString{lS, 1})))
+/* ========================================================================= */
+// $ Command.IsValid
+// > Cmd:string=Command name to test.
+// < Valid:boolean=Command name is valid.
+// ? Returns true if the given string has valid characters, false if not.
+// ? Console commands must begin with a letter but subsequent characters can
+// ? be underscores and numbers. The command must also be between 1 and 255
+// ? characters in length.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsValid, 1, LuaUtilPushVar(lS,
+  cConsole->IsValidConsoleCommandName(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Command.Register
 // > Name:string=The console command name.
@@ -104,25 +115,15 @@ LLFUNC(Register, 1,
   LuaUtilCheckFunc(lS, 4);
   cLua->LuaStateAssert(lS);
   AcCommand{lS}().Init(lS, aName(), aMinimum, aMaximum))
-/* ========================================================================= */
-// $ Command.Valid
-// > Cmd:string=Command name to test.
-// < Valid:boolean=Command name is valid.
-// ? Returns true if the given string has valid characters, false if not.
-// ? Console commands must begin with a letter but subsequent characters can
-// ? be underscores and numbers. The command must also be between 1 and 255
-// ? characters in length.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Valid, 1, LuaUtilPushVar(lS,
-  cConsole->IsValidConsoleCommandName(AgString{lS, 1}())))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Command.* namespace functions structure                             ## **
+** ## Command.* non-member functions structure                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Command.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register), LLRSFUNC(Valid),
-LLRSEND                                // Command.* namespace functions end
+LLRSBEGIN                              // Command.* non-member functions begin
+  LLRSFUNC(GetClasses), LLRSFUNC(IsExist), LLRSFUNC(IsValid),
+  LLRSFUNC(Register),
+LLRSEND                                // Command.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Console namespace
 /* == EoF =========================================================== EoF == */

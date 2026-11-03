@@ -26,6 +26,8 @@ class Lockable                         // Lua lock class
   void LockClear() { LockSet(false); }
   /* -- Swap lock status with another class -------------------------------- */
   void LockSwap(Lockable &lOther) { StdSwap(bLocked, lOther.bLocked); }
+  /* -- Copy lock status from another class -------------------------------- */
+  void LockCopy(const Lockable &lOther) { bLocked = lOther.bLocked; }
   /* -- (Default) constructor ----------------------------------- */ protected:
   explicit Lockable(                   // Initialise with lock (def: false)
     /* -- Parameters ------------------------------------------------------- */

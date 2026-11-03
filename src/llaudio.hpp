@@ -23,7 +23,7 @@ using namespace IStream::P;            using namespace IVideo::P;
 using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Audio.* namespace functions                                         ## **
+** ## Audio.* non-member functions                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Audio.GetGlobalVolume
@@ -150,10 +150,10 @@ LLFUNC(GetNumPBDevices, 1, LuaUtilPushVar(lS, cAudio->AudioGetNumPbkDevices()))
 LLFUNC(Reset, 1, LuaUtilPushVar(lS, cAudio->AudioReInit()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Audio.* namespace functions structure                               ## **
+** ## Audio.* non-member functions structure                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Audio.* namespace functions begin
+LLRSBEGIN                              // Audio.* non-member functions begin
   LLRSFUNC(GetGlobalVolume),           LLRSFUNC(GetNumPBDevices),
   LLRSFUNC(GetPBActiveDeviceName),     LLRSFUNC(GetPBDeviceName),
   LLRSFUNC(GetSampleVolume),           LLRSFUNC(GetStreamVolume),
@@ -162,7 +162,7 @@ LLRSBEGIN                              // Audio.* namespace functions begin
   LLRSFUNC(SetOrientation),            LLRSFUNC(SetPosition),
   LLRSFUNC(SetSampleVolume),           LLRSFUNC(SetVelocity),
   LLRSFUNC(SetStreamVolume),           LLRSFUNC(SetVideoVolume),
-LLRSEND                                // Audio.* namespace functions end
+LLRSEND                                // Audio.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Audio namespace
 /* == EoF =========================================================== EoF == */

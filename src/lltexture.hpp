@@ -12,8 +12,8 @@
 ** ========================================================================= */
 // % Texture
 /* ------------------------------------------------------------------------- */
-// ! The texture class allows the programmer to draw textures on the screen
-// ! which also includes font management.
+// ! The Texture class allows the programmer to draw textures onto the screen
+// ! using the renderer.
 /* ========================================================================= */
 namespace LLTexture {                  // Texture namespace
 /* -- Dependencies --------------------------------------------------------- */
@@ -44,7 +44,7 @@ template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
     VectorType{ LuaUtilToIntVector<VectorType>(lS, iArg)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Texture:* member functions                                          ## **
+** ## Texture:* methods                                                   ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Texture:Blit
@@ -107,7 +107,7 @@ LLFUNC(BlitILTRB, 0,
 // > Left:number=The starting column to draw from.
 // > Top:number=The starting row to draw from.
 // > Width:number=The width of the quad to draw.
-// > Height:number=The height of the quad to draw
+// > Height:number=The height of the quad to draw.
 // ? Blits tile 0 of texture 'TexIndex' at the specified screen co-ordinates
 // ? and with the specified dimensions.
 /* ------------------------------------------------------------------------- */
@@ -125,7 +125,7 @@ LLFUNC(BlitILTWH, 0,
 // > Left:number=The starting column to draw from.
 // > Top:number=The starting row to draw from.
 // > Width:number=The width of the quad to draw.
-// > Height:number=The height of the quad to draw
+// > Height:number=The height of the quad to draw.
 // > Angle:number=The angle in which to rotate from the centre point (-1 to 1).
 // ? Blits tile 0 of texture 'TexIndex' at the specified screen co-ordinates
 // ? and with the specified dimensions at the specified angle.
@@ -202,7 +202,7 @@ LLFUNC(BlitISLTRB, 0,
 // > Left:number=The starting column to draw from.
 // > Top:number=The starting row to draw from.
 // > Width:number=The width of the quad to draw.
-// > Height:number=The height of the quad to draw
+// > Height:number=The height of the quad to draw.
 // ? Blits tile 'TileIndex' of texture 'TexIndex' at the specified screen
 // ? co-ordinates and with the specified dimensions.
 /* ------------------------------------------------------------------------- */
@@ -222,7 +222,7 @@ LLFUNC(BlitISLTWH, 0,
 // > Left:number=The starting column to draw from.
 // > Top:number=The starting row to draw from.
 // > Width:number=The width of the quad to draw.
-// > Height:number=The height of the quad to draw
+// > Height:number=The height of the quad to draw.
 // > Angle:number=The angle in which to rotate from the centre point (-1 to 1).
 // ? Blits tile 'TileIndex' of texture 'TexIndex' at the specified screen
 // ? co-ordinates and with the specified dimensions.
@@ -388,7 +388,7 @@ LLFUNC(BlitSLTRB, 0,
 // > Left:number=The starting column to draw from.
 // > Top:number=The starting row to draw from.
 // > Width:number=The width of the quad to draw.
-// > Height:number=The height of the quad to draw
+// > Height:number=The height of the quad to draw.
 // ? Blits tile 'TileIndex' of texture 0 at the specified screen co-ordinates
 // ? and with the specified dimensions.
 /* ------------------------------------------------------------------------- */
@@ -430,22 +430,22 @@ LLFUNC(BlitSLTWHA, 0,
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Texture>(lS, cTextures))
 /* ========================================================================= */
 // $ Texture:Destroyed
-// < Destroyed:boolean=If the Texture class is destroyed
+// < Destroyed:boolean=If the Texture class is destroyed.
 // ? Returns if the Texture class is destroyed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroyed, 1,
   LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cTextures)))
 /* ========================================================================= */
 // $ Texture:Download
-// > TexId:Integer=The sub-id of the texture to download
-// < Handle:Image=The image class
+// > TexId:Integer=The sub-id of the texture to download.
+// < Destination:Image=The image class.
 // ? Dumps the texture from VRAM to the specified array. The format of which
 // ? is how the image was originally uploaded
 /* ------------------------------------------------------------------------- */
 LLFUNC(Download, 1,
   const AgTexture aTexture{lS, 1};
   const AgTextureId aTextureId{lS, 2, aTexture};
-  AcTexture{lS}().SwapImage({ aTexture().Download(aTextureId) }))
+  AcTexture{lS}().ImageSwap({ aTexture().Download(aTextureId) }))
 /* ========================================================================= */
 // $ Texture:Dump
 // ? Dumps the texture to the specified file in the specified format.
@@ -457,7 +457,7 @@ LLFUNC(Dump, 0,
   aTexture().Dump(aTextureId, aFilename))
 /* ========================================================================= */
 // $ Texture:GetFlags
-// < Flags:integer=Texture flags value
+// < Flags:integer=Texture flags value.
 // ? Returns the current texture flags.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().FlagGet()))
@@ -482,7 +482,7 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().Serial()))
 LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().NameGet()))
 /* ========================================================================= */
 // $ Texture:GetSubCount
-// < Count:integer=The number of sub-textures in this texture
+// < Count:integer=The number of sub-textures in this texture.
 // ? Returns number of sub-textures found in the loaded image file.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetSubCount, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().GetSubCount()))
@@ -574,7 +574,7 @@ LLFUNC(SetCRGBA, 0,
   aTexture().FboItemSetQuadRGBA(aRed, aGreen, aBlue, aAlpha))
 /* ========================================================================= */
 // $ Texture:SetCRGBAI
-// > Colour:integer=The entire colour to set as an integer (0xAARRGGBB)
+// > Colour:integer=The entire colour to set as an integer (0xAARRGGBB).
 // ? Sets the colour intensity of the texture for each component using a 32
 // ? bit integer.
 /* ------------------------------------------------------------------------- */
@@ -680,7 +680,7 @@ LLFUNC(SetVLTRB, 0,
 // > Left:number=The starting column to draw from.
 // > Top:number=The starting row to draw from.
 // > Width:number=The width of the quad to draw.
-// > Height:number=The height of the quad to draw
+// > Height:number=The height of the quad to draw.
 // ? Presets the specified screen co-ordinates and dimensions for the next use
 // ? of Texture:BlitP*.
 /* ------------------------------------------------------------------------- */
@@ -696,7 +696,7 @@ LLFUNC(SetVLTWH, 0,
 // > Left:number=The starting column to draw from.
 // > Top:number=The starting row to draw from.
 // > Width:number=The width of the quad to draw.
-// > Height:number=The height of the quad to draw
+// > Height:number=The height of the quad to draw.
 // > Angle:number=The angle in which to rotate from the centre point (-1 to 1).
 // ? Presets the specified screen co-ordinates and dimensions with angle for
 // ? the next use of Texture:BlitP*.
@@ -731,8 +731,8 @@ LLFUNC(SetVX, 0,
   aTexture().FboItemSetVertexEx(aTriangleId, tpdNew))
 /* ========================================================================= */
 // $ Texture:TileA
-// > Left:integer=The left pixel position on the texture..
-// > Top:integer=The top pixel position on the texture..
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
 // > Right:integer=The right pixel position on the texture.
 // > Bottom:integer=The bottom pixel position on the texture.
 // < Id:integer=The id number for the cached texcoords..
@@ -749,17 +749,17 @@ LLFUNC(TileA, 1,
   LuaUtilPushVar(lS, aTexture().GetTileCount() - 1))
 /* ========================================================================= */
 // $ Texture:TileAM
-// > Left:integer=The left pixel position on the texture..
-// > Top:integer=The top pixel position on the texture..
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
 // > Right:integer=The right pixel position on the texture.
 // > Bottom:integer=The bottom pixel position on the texture.
 // > ...:integer=More tiles to add.
-// < Id:integer=The id number for the first cached texcoord.
+// < Id:integer=The the ID number of of the first tile from the list added.
 // ? Same as the 'TileA' method but you can overload the call with more tiles
 // ? without having to call the function multiple times.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TileAM, 1,
-  AgTexture aTexture{lS, 1};
+  const AgTexture aTexture{lS, 1};
   const AgIntegerVector<GLuint> aTiles{lS, 2};
   LuaUtilPushVar(lS, aTexture().AddTileDORA(0, aTiles)))
 /* ========================================================================= */
@@ -787,21 +787,21 @@ LLFUNC(TileAD, 1,
 // > Width:integer=The width of the texture.
 // > Height:integer=The height of the texture.
 // > ...:integer=More tiles to add.
-// < Id:integer=The id number for the first cached texcoord.
+// < Id:integer=The the ID number of of the first tile from the list added.
 // ? Same as the 'TileAD' method but you can overload the call with more tiles
 // ? without having to call the function multiple times.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TileADM, 1,
-  AgTexture aTexture{lS, 1};
+  const AgTexture aTexture{lS, 1};
   const AgIntegerVector<GLuint> aTiles{lS, 2};
   LuaUtilPushVar(lS, aTexture().AddTileDORWHA(0, aTiles)))
 /* ========================================================================= */
 // $ Texture:TileAS
-// > Id:integer=The id of the sub-texture to add to
+// > Id:integer=The id of the sub-texture to add to.
 // > Left:integer=The left pixel position on the texture.
 // > Top:integer=The top pixel position on the texture.
-// > Right:integer=The right pixel position on the texture
-// > Bottom:integer=The bottom pixel position on the texture
+// > Right:integer=The right pixel position on the texture.
+// > Bottom:integer=The bottom pixel position on the texture.
 // < Id:integer=The id number for the cached texcoords.
 // ? Caches the specified texture coordinates which you can use as a parameter
 // ? to 'tileid' on blitting functions of the specified sub-texture.
@@ -818,10 +818,10 @@ LLFUNC(TileAS, 1,
 /* ========================================================================= */
 // $ Texture:TileASD
 // > Id:integer=The id of the sub-texture to add to.
-// > Left:integer=The left pixel position on the texture..
-// > Top:integer=The top pixel position on the texture..
-// > Width:integer=The width of the texture..
-// > Height:integer=The height of the texture..
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
+// > Width:integer=The width of the texture.
+// > Height:integer=The height of the texture.
 // < Id:integer=The id number for the cached texcoords..
 // ? Caches the specified texture coordinates which you can use as a parameter
 // ? to 'tileid' on blitting functions of the specified sub-texture.
@@ -854,7 +854,7 @@ LLFUNC(TileGSTC, 1,
 LLFUNC(TileGTC, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().GetTileCount()))
 /* ========================================================================= */
 // $ Texture:TileS
-// > Id:integer=The id of the tile to change
+// > Id:integer=The id of the tile to change.
 // > Left:integer=The left pixel position on the texture.
 // > Top:integer=The top pixel position on the texture.
 // > Right:integer=The right pixel position on the texture
@@ -872,7 +872,7 @@ LLFUNC(TileS, 0,
   aTexture().SetTileDOR(0, aTileId, aLeft, aTop, aRight, aBottom))
 /* ========================================================================= */
 // $ Texture:TileSD
-// > Id:integer=The id of the tile to change
+// > Id:integer=The id of the tile to change.
 // > Left:integer=The left pixel position on the texture.
 // > Top:integer=The top pixel position on the texture.
 // > Width:integer=The width of the texture.
@@ -888,6 +888,36 @@ LLFUNC(TileSD, 0,
                   aWidth{lS, 5},
                   aHeight{lS, 6};
   aTexture().SetTileDORWH(0, aTileId, aLeft, aTop, aWidth, aHeight))
+/* ========================================================================= */
+// $ Texture:TileSDM
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
+// > Width:integer=The width of the texture.
+// > Height:integer=The height of the texture.
+// > ...:integer=More tiles to add.
+// ? Same as the 'TileSD' method but you can overload the call with more tiles
+// ? without having to call the function multiple times. This call also clears
+// ? the entire tileset and replaces it with the tiles you specified.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TileSDM, 0,
+  const AgTexture aTexture{lS, 1};
+  const AgIntegerVector<GLuint> aTiles{lS, 2};
+  aTexture().AddTileDORWHA(0, aTiles))
+/* ========================================================================= */
+// $ Texture:TileSM
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
+// > Width:integer=The width of the texture.
+// > Height:integer=The height of the texture.
+// > ...:integer=More tiles to add.
+// ? Same as the 'TileS' method but you can overload the call with more tiles
+// ? without having to call the function multiple times. This call also clears
+// ? the entire tileset and replaces it with the tiles you specified.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TileSM, 0,
+  const AgTexture aTexture{lS, 1};
+  const AgIntegerVector<GLuint> aTiles{lS, 2};
+  aTexture().SetTileDORA(0, aTiles))
 /* ========================================================================= */
 // $ Texture:TileSS
 // > TexId:integer=The id of the sub texture to change.
@@ -929,6 +959,40 @@ LLFUNC(TileSSD, 0,
                   aHeight{lS, 7};
   aTexture().SetTileDORWH(aTextureId, aTileId, aLeft, aTop, aWidth, aHeight))
 /* ========================================================================= */
+// $ Texture:TileSSDM
+// > TexId:integer=The id of the sub texture to change.
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
+// > Width:integer=The width of the texture.
+// > Height:integer=The height of the texture.
+// > ...:integer=More tiles to add.
+// ? Same as the 'TileSSD' method but you can overload the call with more tiles
+// ? without having to call the function multiple times. This call also clears
+// ? the entire tileset and replaces it with the tiles you specified.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TileSSDM, 0,
+  const AgTexture aTexture{lS, 1};
+  const AgTextureId aTextureId{lS, 2, aTexture};
+  const AgIntegerVector<GLuint> aTiles{lS, 3};
+  aTexture().SetTileDORWHA(aTextureId, aTiles))
+/* ========================================================================= */
+// $ Texture:TileSSM
+// > TexId:integer=The id of the sub texture to change.
+// > Left:integer=The left pixel position on the texture.
+// > Top:integer=The top pixel position on the texture.
+// > Width:integer=The width of the texture.
+// > Height:integer=The height of the texture.
+// > ...:integer=More tiles to add.
+// ? Same as the 'TileSS' method but you can overload the call with more tiles
+// ? without having to call the function multiple times. This call also clears
+// ? the entire tileset and replaces it with the tiles you specified.
+/* ------------------------------------------------------------------------- */
+LLFUNC(TileSSM, 0,
+  const AgTexture aTexture{lS, 1};
+  const AgTextureId aTextureId{lS, 2, aTexture};
+  const AgIntegerVector<GLuint> aTiles{lS, 3};
+  aTexture().SetTileDORA(aTextureId, aTiles))
+/* ========================================================================= */
 // $ Texture:TileSSTC
 // > Id:integer=The id of the sub-texture to set the size of.
 // > Count:integer=The new size of the tile list.
@@ -958,7 +1022,7 @@ LLFUNC(TileSTC, 0,
   aTexture().SetTileCount(aCount))
 /* ========================================================================= */
 // $ Texture:Upload
-// > Data:Image=The pixel data to update the texture with
+// > Source:Image=The pixel data to update the texture with.
 // ? Updates the whole texture in VRAM with the texture specified in the array.
 // ? The array data must be the same width, the same height and the same pixel
 // ? type of when the texture was first originally updated, thus the size of
@@ -968,10 +1032,10 @@ LLFUNC(TileSTC, 0,
 LLFUNC(Upload, 0, AgTexture{lS, 1}().Update(AgImage{lS,2}()))
 /* ========================================================================= */
 // $ Texture:UploadEx
-// > TexId:Integer=The sub-id of the texture to download
-// > Data:Image=The image to upload to the texture
-// > OffsetX:Integer=The X position on the destination texture where to place
-// > OffsetY:Integer=The Y position on the destination texture where to place
+// > TexId:Integer=The sub-id of the texture to download.
+// > Source:Image=The image to upload to the texture.
+// > OffsetX:Integer=The X position on the destination texture where to place.
+// > OffsetY:Integer=The Y position on the destination texture where to place.
 // ? Updates a partial area of the supplied texture in VRAM with the texture
 // ? data specified in the array. Only sources and destinations of 24 and 32
 // ? bits per pixel are supported.
@@ -984,10 +1048,10 @@ LLFUNC(UploadEx, 0,
   aTexture().UpdateEx(aTextureId, aImage, aX, aY))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Texture:* member functions structure                                ## **
+** ## Texture:* methods structure                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Texture:* member functions begin
+LLRSMFBEGIN                            // Texture:* methods begin
   LLRSFUNC(Blit),        LLRSFUNC(BlitILT),     LLRSFUNC(BlitILTA),
   LLRSFUNC(BlitILTRB),   LLRSFUNC(BlitILTWH),   LLRSFUNC(BlitILTWHA),
   LLRSFUNC(BlitISLT),    LLRSFUNC(BlitISLTA),   LLRSFUNC(BlitISLTRB),
@@ -1007,48 +1071,53 @@ LLRSMFBEGIN                            // Texture:* member functions begin
   LLRSFUNC(SetVX),       LLRSFUNC(TileA),       LLRSFUNC(TileAM),
   LLRSFUNC(TileAD),      LLRSFUNC(TileADM),     LLRSFUNC(TileAS),
   LLRSFUNC(TileASD),     LLRSFUNC(TileGSTC),    LLRSFUNC(TileGTC),
-  LLRSFUNC(TileS),       LLRSFUNC(TileSD),      LLRSFUNC(TileSS),
-  LLRSFUNC(TileSSD),     LLRSFUNC(TileSSTC),    LLRSFUNC(TileSTC),
-  LLRSFUNC(Upload),      LLRSFUNC(UploadEx),
-LLRSEND                                // Texture:* member functions end
+  LLRSFUNC(TileS),       LLRSFUNC(TileSD),      LLRSFUNC(TileSDM),
+  LLRSFUNC(TileSM),      LLRSFUNC(TileSS),      LLRSFUNC(TileSSD),
+  LLRSFUNC(TileSSM),     LLRSFUNC(TileSSDM),    LLRSFUNC(TileSSTC),
+  LLRSFUNC(TileSTC),     LLRSFUNC(Upload),      LLRSFUNC(UploadEx),
+LLRSEND                                // Texture:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Texture.* namespace functions                                       ## **
+** ## Texture.* non-member functions                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Texture.Console
-// < Handle:Texture=Texture handle to console texture
+// < Handle:Texture=Texture handle to console texture.
 // ? Returns the handle to the console texture. Useful if you want to reuse the
-// ? texture in your application. Careful not to mess around with it's
-// ? properties!
+// ? texture in your application. Careful not to mess around with its
+// ? properties.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Console, 1,
   LuaUtilClassCreateStaticPtr<Texture>
     (lS, cTextures, cConGfx->ConGfxGetTexture()))
 /* ========================================================================= */
 // $ Texture.Create
-// > Source:image=The image class to load from.
+// > Source:Image=The image class to load from.
 // > Filter:integer=The default filter to use
-// < Handle:Texture=A handle to the texture(s) created.
-// ? Creates the specified texture from the specified image class.
+// < Destination:Texture=A handle to the texture(s) created.
+// ? Creates a 'Texture' class from the specified 'Image' class. The call takes
+// ? complete ownership of the specified 'Image' class and drains all the
+// ? memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
   const AgImage aImage{lS, 1};
   const AgFilterId aFilterId{lS, 2};
   AcTexture{lS}().InitTextureImage(aImage, 0, 0, 0, 0, aFilterId))
 /* ========================================================================= */
-// $ Texture.Count
+// $ Texture.GetClasses
 // < Count:integer=Total number of textures created.
 // ? Returns the total number of texture classes currently active.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cTextures->CollectorCount()))
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cTextures->CollectorCount()))
 /* ========================================================================= */
 // $ Texture.Manifest
-// > Source:image=The image class to load from.
-// > Manifest:Jsonr=The Json object containing the texture metadata.
-// < Handle:Texture=A handle to the texture(s) created.
-// ? Creates the specified texture from the specified image class with the
-// ? specified json metadata.
+// > Source:Image=The image class to load from.
+// > Manifest:Json=The Json object containing the texture metadata.
+// < Destination:Texture=A handle to the texture(s) created.
+// ? Creates a 'Texture' class from the specified 'Image' class with the
+// ? specified JSON metadata containing all the pre-defined texture
+// ? co-ordinates. The call takes complete ownership of the specified 'Image'
+// ? class and drains all the memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Manifest, 1,
   const AgImage aImage{lS, 1};
@@ -1062,14 +1131,17 @@ LLFUNC(Manifest, 1,
 LLFUNC(MaxSize, 1, LuaUtilPushVar(lS, cOgl->MaxTexSize()))
 /* ========================================================================= */
 // $ Texture.CreateTS
-// > Source:image=The image class to load from.
+// > Source:Image=The image class to load from.
 // > TWidth:integer=The width of each tile in the image.
 // > THeight:integer=The height of each tile in the image.
 // > PWidth:integer=The width padding between each tile in the image.
 // > PHeight:integer=The height padding between each tile in the image.
-// > Filter:integer=The filtering setting to use on texture
-// < Handle:Texture=A handle to the texture(s) created.
-// ? Loads a texture as a tileset from the specified image class.
+// > Filter:integer=The filtering setting to use on texture.
+// < Destination:Texture=A handle to the texture(s) created.
+// ? Creates a 'Texture' class from the specified 'Image' class and
+// ? automatically generates a tileset from the specified arguments. The call
+// ? takes complete ownership of the specified 'Image' class and drains all the
+// ? memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CreateTS, 1,
   const AgImage aImage{lS, 1};
@@ -1079,11 +1151,14 @@ LLFUNC(CreateTS, 1,
   AcTexture{lS}().InitTextureImage(aImage, aTW, aTH, aPW, aPH, aFilterId))
 /* ========================================================================= */
 // $ Texture.ImageUT
-// > Source:image=The image class to load from.
-// > Filter:integer=The filtering setting to use on texture
-// > Tiles:table=The tileset to use (X, Y, Width, Height, [...]).
-// < Handle:Texture=A handle to the texture(s) created.
-// ? Loads a texture and applies the specified tile set.
+// > Source:Image=The image class to load from.
+// > Filter:integer=The filtering setting to use on texture.
+// > Tiles:table=A table of integers to generate the tileset from.
+// < Destination:Texture=A handle to the texture(s) created.
+// ? Creates a 'Texture' class from the specified 'Image' class and generates
+// ? the fileset from the specified 'Table' which is in the format of
+// ? '{ X, Y, Width, Height, [...] }'. The call takes complete ownership of the
+// ? specified 'Image' class and drains all the memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ImageUT, 1,
   const AgImage aImage{lS, 1};
@@ -1092,13 +1167,14 @@ LLFUNC(ImageUT, 1,
   AcTexture{lS}().InitTextureImageTiles(aImage, aFilterId, aTiles))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Texture.* namespace functions structure                             ## **
+** ## Texture.* non-member functions structure                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Texture.* namespace functions begin
-  LLRSFUNC(Create),  LLRSFUNC(Count),    LLRSFUNC(ImageUT), LLRSFUNC(Manifest),
-  LLRSFUNC(MaxSize), LLRSFUNC(CreateTS), LLRSFUNC(Console),
-LLRSEND                                // Texture.* namespace functions end
+LLRSBEGIN                              // Texture.* non-member functions begin
+  LLRSFUNC(Create),   LLRSFUNC(GetClasses), LLRSFUNC(ImageUT),
+  LLRSFUNC(Manifest), LLRSFUNC(MaxSize),    LLRSFUNC(CreateTS),
+  LLRSFUNC(Console),
+LLRSEND                                // Texture.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Texture namespace
 /* == EoF =========================================================== EoF == */

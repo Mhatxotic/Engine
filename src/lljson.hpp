@@ -33,7 +33,7 @@ struct AgMbString : public Memory {
     Memory{LuaUtilGetMBfromLStr(lS, iArg)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Json:* member functions                                             ## **
+** ## Json:* methods                                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Json:Destroy
@@ -43,24 +43,24 @@ struct AgMbString : public Memory {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Json>(lS, cJsons))
 /* ========================================================================= */
-// $ Json:Destroyed
-// < Destroyed:boolean=If the Json class is destroyed
-// ? Returns if the Json class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cJsons)))
-/* ========================================================================= */
-// $ Json:Id
+// $ Json:GetId
 // < Id:integer=The id number of the Json object.
 // ? Returns the unique id of the Json object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Json:Name
+// $ Json:GetName
 // < Name:string=Name of the json.
 // ? If this json was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgJson{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Json:IsDestroyed
+// < Destroyed:boolean=If the Json class is destroyed
+// ? Returns if the Json class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cJsons)))
 /* ========================================================================= */
 // $ Json:Sort
 // > Descending:bool=Descending (true) or ascending (false) flag.
@@ -109,18 +109,18 @@ LLFUNC(ToString, 1,
 LLFUNC(ToTable, 1, AgJson{lS, 1}().ToLuaTable(lS))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Json:* member functions structure                                   ## **
+** ## Json:* methods structure                                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Json:* member functions begin
-  LLRSFUNC(Destroy),  LLRSFUNC(Destroyed),  LLRSFUNC(Id),
-  LLRSFUNC(Name),     LLRSFUNC(Sort),       LLRSFUNC(ToTable),
-  LLRSFUNC(ToString), LLRSFUNC(ToHRString), LLRSFUNC(ToFile),
-  LLRSFUNC(ToHRFile),
-LLRSEND                                // Json:* member functions end
+LLRSMFBEGIN                            // Json:* methods begin
+  LLRSFUNC(Destroy),     LLRSFUNC(GetId),      LLRSFUNC(GetName),
+  LLRSFUNC(IsDestroyed), LLRSFUNC(Sort),       LLRSFUNC(ToFile),
+  LLRSFUNC(ToHRFile),    LLRSFUNC(ToHRString), LLRSFUNC(ToString),
+  LLRSFUNC(ToTable),
+LLRSEND                                // Json:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Json.* namespace functions                                          ## **
+** ## Json.* non-member functions                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Json.Asset
@@ -149,12 +149,6 @@ LLFUNC(AssetAsync, 0,
   LuaUtilCheckFunc(lS, 3, 4, 5);
   AcJson{lS}().AsyncInitArray(lS, aName(), "jsonasset", aAsset))
 /* ========================================================================= */
-// $ Json.Count
-// < Count:integer=Total number of jsons created.
-// ? Returns the total number of json classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cJsons->CollectorCount()))
-/* ========================================================================= */
 // $ Json.File
 // > Filename:string=The filename of the json to load
 // ? Decodes the specified string as JSON encoded. The level depth is limited
@@ -175,6 +169,12 @@ LLFUNC(FileAsync, 0,
   const AgNeString aFilename{lS, 1};
   LuaUtilCheckFunc(lS, 2, 3, 4);
   AcJson{lS}().AsyncInitFile(lS, aFilename, "jsonfile"));
+/* ========================================================================= */
+// $ Json.GetClasses
+// < Count:integer=Total number of jsons created.
+// ? Returns the total number of json classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cJsons->CollectorCount()))
 /* ========================================================================= */
 // $ Json.String
 // > Id:string=The user specified identifier of the asset.
@@ -217,14 +217,14 @@ LLFUNC(Table, 1, AcJson{lS}().ParseTableSafe(lS, 1))
 LLFUNC(WaitAsync, 0, cJsons->WaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Json.* namespace functions structure                                ## **
+** ## Json.* non-member functions structure                               ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Json.* namespace functions begin
-  LLRSFUNC(Asset),       LLRSFUNC(AssetAsync),  LLRSFUNC(Count),
-  LLRSFUNC(File),        LLRSFUNC(FileAsync),   LLRSFUNC(String),
+LLRSBEGIN                              // Json.* non-member functions begin
+  LLRSFUNC(Asset),       LLRSFUNC(AssetAsync),  LLRSFUNC(File),
+  LLRSFUNC(FileAsync),   LLRSFUNC(GetClasses),  LLRSFUNC(String),
   LLRSFUNC(StringAsync), LLRSFUNC(Table),       LLRSFUNC(WaitAsync),
-LLRSEND                                // Json.* namespace functions end
+LLRSEND                                // Json.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Json namespace
 /* == EoF =========================================================== EoF == */

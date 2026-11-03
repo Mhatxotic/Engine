@@ -240,7 +240,7 @@ CTOR_BEGIN_DUO(Urls, Url, CLHelperUnsafe, ICHelperUnsafe),
   Url() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperUrl{ cUrls, this },        // Register the object in collector
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

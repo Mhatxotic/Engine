@@ -37,7 +37,7 @@ struct AgBlend : public AgIntegerLGE<OglBlendEnum>
       AgIntegerLGE{ lS, iArg, OB_Z, OB_S_A_S }{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Fbo:* member functions                                              ## **
+** ## Fbo:* methods                                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Fbo:Activate
@@ -73,12 +73,6 @@ LLFUNC(BlitT, 0,
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Fbo>(lS, cFbos))
-/* ========================================================================= */
-// $ Fbo:Destroyed
-// < Destroyed:boolean=If the Fbo class is destroyed
-// ? Returns if the Fbo class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFbos)))
 /* ========================================================================= */
 // $ Fbo:Finish
 // ? Queues the FBO for redrawing after LUA has finished it's tick function.
@@ -153,6 +147,12 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().NameGet()))
 // ? Returns the width of the framebuffer.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().DimGetWidth()))
+/* ========================================================================= */
+// $ Fbo:IsDestroyed
+// < Destroyed:boolean=If the Fbo class is destroyed
+// ? Returns if the Fbo class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFbos)))
 /* ========================================================================= */
 // $ Fbo:Reserve
 // > Triangles:integer=How many triangles to reserve in GPU float list
@@ -402,35 +402,56 @@ LLFUNC(SetVX, 0,
 LLFUNC(SetWireframe, 0, AgFbo{lS, 1}().FboSetWireframe(AgBoolean{lS, 2}))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Fbo:* member functions structure                                    ## **
+** ## Fbo:* methods structure                                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Fbo:* member functions begin
+LLRSMFBEGIN                            // Fbo:* methods begin
   LLRSFUNC(Activate),       LLRSFUNC(Blit),          LLRSFUNC(BlitT),
-  LLRSFUNC(Destroy),        LLRSFUNC(Destroyed),     LLRSFUNC(Finish),
-  LLRSFUNC(Flush),          LLRSFUNC(GetFloatCount), LLRSFUNC(GetId),
-  LLRSFUNC(GetLFloatCount), LLRSFUNC(GetHeight),     LLRSFUNC(GetMatrix),
-  LLRSFUNC(GetName),        LLRSFUNC(GetWidth),      LLRSFUNC(Reserve),
+  LLRSFUNC(Destroy),        LLRSFUNC(Finish),        LLRSFUNC(Flush),
+  LLRSFUNC(GetFloatCount),  LLRSFUNC(GetId),         LLRSFUNC(GetLFloatCount),
+  LLRSFUNC(GetHeight),      LLRSFUNC(GetMatrix),     LLRSFUNC(GetName),
+  LLRSFUNC(GetWidth),       LLRSFUNC(IsDestroyed),   LLRSFUNC(Reserve),
   LLRSFUNC(SetBlend),       LLRSFUNC(SetClear),      LLRSFUNC(SetClearColour),
   LLRSFUNC(SetCRGBA),       LLRSFUNC(SetCX),         LLRSFUNC(SetFilter),
   LLRSFUNC(SetMatrix),      LLRSFUNC(SetTCLTRB),     LLRSFUNC(SetTCLTWH),
   LLRSFUNC(SetTCX),         LLRSFUNC(SetVLTRB),      LLRSFUNC(SetVLTWH),
   LLRSFUNC(SetVLTWHA),      LLRSFUNC(SetVX),         LLRSFUNC(SetWireframe),
-LLRSEND                                // Fbo:* member functions end
+LLRSEND                                // Fbo:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Fbo.* namespace functions                                           ## **
+** ## Fbo.* non-member functions                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Fbo.Main
-// < Handle:Fbo=A handle to the main FBO object.
-// ? Returns a handle to the main FBO so you can draw to it. Changing the
-// ? properties of the main FBO may result in undefined behaviour. Note that
-// ? the engine console shares the same FBO so you may want to create a
-// ? separatte FBO to draw to.
+// $ Fbo.ConEnabled
+// < State:boolean=The console state.
+// ? Returns true if the console is showing, false if it is not. This function
+// ? is in Fbo because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Main, 1,
-  LuaUtilClassCreateStaticPtr<Fbo>(lS, cFbos, &cFboCore->FboCoreGetMain()))
+LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
+/* ========================================================================= */
+// $ Fbo.ConHeight
+// > State:number=The console height.
+// ? Sets the console height normal without modifying the cvar. This function
+// ? is in Fbo because it only applies to opengl mode.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ConHeight, 0, cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
+/* ========================================================================= */
+// $ Fbo.ConLock
+// < State:boolean=The console visibility lock state.
+// ? Lock the visibility of the console on or off. This function is in Fbo
+// ? because it only applies to opengl mode.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ConLock, 0, cConGfx->ConGfxSetLocked(AgBoolean{lS, 1}))
+/* ========================================================================= */
+// $ Fbo.ConSet
+// > State:boolean=The console state.
+// < Success:boolean=Returns if the requested function was successful.
+// ? Shows or hides the console. This does not modify the cvar state. This
+// ? function is in Fbo because it only applies to opengl mode. It also
+// ? overrides the 'con_disabled' setting.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ConSet, 1,
+  LuaUtilPushVar(lS, cConGfx->ConGfxSetVisible(AgBoolean{lS, 1})))
 /* ========================================================================= */
 // $ Fbo.Create
 // > Name:string=Reference only user-defined identifier.
@@ -458,57 +479,27 @@ LLFUNC(Create, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Draw, 0, cFboCore->FboCoreSetDraw())
 /* ========================================================================= */
+// $ Fbo.GetClasses
+// < GetClasses:integer=Total number of FBO's created.
+// ? Returns the total number of FBO classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
+/* ========================================================================= */
 // $ Fbo.IsDrawing
 // < State:boolean=Is the main FBO set to redraw?
 // ? Returns if the main FBO is set to redraw.
 /* ------------------------------------------------------------------------- */
 LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->FboCoreCanDraw()))
 /* ========================================================================= */
-// $ Fbo.OnRedraw
-// > Func:function=The main redraw function to change to
-// ? When OpenGL needs to be reinitialised, the specified callback will be
-// ? called so the guest can redraw FBO's and maybe do other stuff. All
-// ? texture and FBO data is already preserved so there is no need to
-// ? reinitialise any of that, you just need to redraw them.
+// $ Fbo.Main
+// < Handle:Fbo=A handle to the main FBO object.
+// ? Returns a handle to the main FBO so you can draw to it. Changing the
+// ? properties of the main FBO may result in undefined behaviour. Note that
+// ? the engine console shares the same FBO so you may want to create a
+// ? separatte FBO to draw to.
 /* ------------------------------------------------------------------------- */
-LLFUNC(OnRedraw, 0, cLua->LuaSetRef(lS, cFboCore->FboCoreGetRedrawFunc()))
-/* ========================================================================= */
-// $ Fbo.ConSet
-// > State:boolean=The console state.
-// < Success:boolean=Returns if the requested function was successful.
-// ? Shows or hides the console. This does not modify the cvar state. This
-// ? function is in Fbo because it only applies to opengl mode. It also
-// ? overrides the 'con_disabled' setting.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConSet, 1,
-  LuaUtilPushVar(lS, cConGfx->ConGfxSetVisible(AgBoolean{lS, 1})))
-/* ========================================================================= */
-// $ Fbo.ConHeight
-// > State:number=The console height.
-// ? Sets the console height normal without modifying the cvar. This function
-// ? is in Fbo because it only applies to opengl mode.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConHeight, 0, cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
-/* ========================================================================= */
-// $ Fbo.ConEnabled
-// < State:boolean=The console state.
-// ? Returns true if the console is showing, false if it is not. This function
-// ? is in Fbo because it only applies to opengl mode.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
-/* ========================================================================= */
-// $ Fbo.ConLock
-// < State:boolean=The console visibility lock state.
-// ? Lock the visibility of the console on or off. This function is in Fbo
-// ? because it only applies to opengl mode.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConLock, 0, cConGfx->ConGfxSetLocked(AgBoolean{lS, 1}))
-/* ========================================================================= */
-// $ Fbo.Count
-// < Count:integer=Total number of FBO's created.
-// ? Returns the total number of FBO classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
+LLFUNC(Main, 1,
+  LuaUtilClassCreateStaticPtr<Fbo>(lS, cFbos, &cFboCore->FboCoreGetMain()))
 /* ========================================================================= */
 // $ Fbo.Matrix
 // < Width:number=Current requested matrix width.
@@ -520,6 +511,15 @@ LLFUNC(Count, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
 LLFUNC(Matrix, 2,
   LuaUtilPushVar(lS, cFboCore->FboCoreGetMatrixWidth(),
                      cFboCore->FboCoreGetMatrixHeight()))
+/* ========================================================================= */
+// $ Fbo.OnRedraw
+// > Func:function=The main redraw function to change to
+// ? When OpenGL needs to be reinitialised, the specified callback will be
+// ? called so the guest can redraw FBO's and maybe do other stuff. All
+// ? texture and FBO data is already preserved so there is no need to
+// ? reinitialise any of that, you just need to redraw them.
+/* ------------------------------------------------------------------------- */
+LLFUNC(OnRedraw, 0, cLua->LuaSetRef(lS, cFboCore->FboCoreGetRedrawFunc()))
 /* ========================================================================= */
 // $ Fbo.Resize
 // < Width:number=The new width of the main frame buffer
@@ -538,15 +538,15 @@ LLFUNC(Resize, 1,
       static_cast<GLfloat>(aHeight()))))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Fbo.* namespace functions structure                                 ## **
+** ## Fbo.* non-member functions structure                                ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Fbo.* namespace functions begin
+LLRSBEGIN                              // Fbo.* non-member functions begin
   LLRSFUNC(ConEnabled), LLRSFUNC(ConHeight), LLRSFUNC(ConLock),
-  LLRSFUNC(ConSet),     LLRSFUNC(Count),     LLRSFUNC(Create),
-  LLRSFUNC(Draw),       LLRSFUNC(IsDrawing), LLRSFUNC(Main),
+  LLRSFUNC(ConSet),     LLRSFUNC(Create),    LLRSFUNC(Draw),
+  LLRSFUNC(GetClasses), LLRSFUNC(IsDrawing), LLRSFUNC(Main),
   LLRSFUNC(OnRedraw),   LLRSFUNC(Matrix),    LLRSFUNC(Resize),
-LLRSEND                                // Fbo.* namespace functions end
+LLRSEND                                // Fbo.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Fbo.* namespace constants                                           ## **

@@ -48,7 +48,7 @@ struct AcArchive : public ArClass<Archive> {
     ArClass{LuaUtilClassCreateRef<Archive>(lS, cArchives)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Archive:* member functions                                          ## **
+** ## Archive:* methods                                                   ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Archive:Destroy
@@ -58,111 +58,114 @@ struct AcArchive : public ArClass<Archive> {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Archive>(lS, cArchives))
 /* ========================================================================= */
-// $ Archive:Destroyed
-// < Destroyed:boolean=If the Archive class is destroyed
-// ? Returns if the Archive class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1,
-  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cArchives)))
-/* ========================================================================= */
-// $ Archive:Dir
+// $ Archive:GetDir
 // > Id:integer=Zero-index id of the directory
 // < Name:string=The filename of the directory inside the archive
 // < UId:integer=The unique id of the directory inside the archive
 // ? Returns the name and unique id of the directory in the archive
 /* ------------------------------------------------------------------------- */
-LLFUNC(Dir, 2,
+LLFUNC(GetDir, 2,
   const AgArchive aArchive{lS, 1};
   const AgSizeTLGE aIndex{lS, 2, 0, aArchive().ArchiveGetDirList().size()};
   const StrUIntMapConstIt &suimciDir = aArchive().ArchiveGetDir(aIndex);
   LuaUtilPushVar(lS, suimciDir->first, suimciDir->second))
 /* ========================================================================= */
-// $ Archive:Dirs
+// $ Archive:GetDirs
 // < Directories:integer=Total number of directories inside the archive
 // ? Returns total number of the directories inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Dirs, 1,
+LLFUNC(GetDirs, 1,
   LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetDirList().size()))
 /* ========================================================================= */
-// $ Archive:DirList
+// $ Archive:GetDirList
 // < Directories:Table=A list of directories inside the archive
 // ? Returns all the directories inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(DirList, 1, LuaUtilToTable(lS, AgArchive{lS, 1}().ArchiveGetDirList()))
+LLFUNC(GetDirList, 1,
+  LuaUtilToTable(lS, AgArchive{lS, 1}().ArchiveGetDirList()))
 /* ========================================================================= */
-// $ Archive:File
+// $ Archive:GetFile
 // < Total:integer=Zero-index id of the file
 // > Name:string=The filename of the file inside the archive
 // > Id:integer=The unique id of the file inside the archive
 // ? Returns the name and unique id of the file in the archive
 /* ------------------------------------------------------------------------- */
-LLFUNC(File, 2,
+LLFUNC(GetFile, 2,
   const AgArchive aArchive{lS, 1};
   const AgSizeTLGE aIndex{lS, 2, 0, aArchive().ArchiveGetFileList().size()};
   const StrUIntMapConstIt &suimciFile = aArchive().ArchiveGetFile(aIndex);
   LuaUtilPushVar(lS, suimciFile->first, suimciFile->second))
 /* ========================================================================= */
-// $ Archive:Files
+// $ Archive:GetFiles
 // < Files:integer=Total number of files inside the archive
 // ? Returns total number of the files inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Files, 1,
+LLFUNC(GetFiles, 1,
   LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetFileList().size()))
 /* ========================================================================= */
-// $ Archive:FileList
+// $ Archive:GetFileList
 // < Directories:Table=A list of files inside the archive
 // ? Returns all the files inside the archive.
 /* ------------------------------------------------------------------------- */
-LLFUNC(FileList, 1,
+LLFUNC(GetFileList, 1,
   LuaUtilToTable(lS, AgArchive{lS, 1}().ArchiveGetFileList()))
 /* ========================================================================= */
-// $ Archive:Id
+// $ Archive:GetId
 // < Id:integer=The id number of the Archive object.
 // ? Returns the unique id of the Archive object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Archive:Name
+// $ Archive:GetName
 // < Name:string=Name of the archive.
 // ? Returns the name of the archive which was loaded.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().NameGet()))
 /* ========================================================================= */
-// $ Archive:Size
+// $ Archive:GetSize
 // > Id:integer=The zero-index unique-id of the file/dir in archive
 // < Size:integer=The uncompressed size of the file/dir in the archive
 // ? Returns the uncompressed size of the file
 /* ------------------------------------------------------------------------- */
-LLFUNC(Size, 1,
+LLFUNC(GetSize, 1,
   const AgArchive aArchive{lS, 1};
   const AgSizeTLGE aIndex{lS, 2, 0, aArchive().ArchiveGetTotal()};
   LuaUtilPushVar(lS, aArchive().ArchiveGetSize(aIndex)))
 /* ========================================================================= */
-// $ Archive:Total
+// $ Archive:GetTotal
 // < Total:integer=Total number of files and directories in archive
 // ? Returns the total number of files and directories in archive
 /* ------------------------------------------------------------------------- */
-LLFUNC(Total, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetTotal()))
+LLFUNC(GetTotal, 1, LuaUtilPushVar(lS, AgArchive{lS, 1}().ArchiveGetTotal()))
+/* ========================================================================= */
+// $ Archive:IsDestroyed
+// < Destroyed:boolean=If the Archive class is destroyed
+// ? Returns if the Archive class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cArchives)))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Archive:* member functions structure                                ## **
+** ## Archive:* methods structure                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Archive:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Dir),   LLRSFUNC(Dirs),
-  LLRSFUNC(DirList), LLRSFUNC(File),      LLRSFUNC(Files), LLRSFUNC(FileList),
-  LLRSFUNC(Id),      LLRSFUNC(Name),      LLRSFUNC(Size),  LLRSFUNC(Total),
-LLRSEND                                // Archive:* member functions end
+LLRSMFBEGIN                            // Archive:* methods begin
+  LLRSFUNC(Destroy),     LLRSFUNC(GetDir),   LLRSFUNC(GetDirs),
+  LLRSFUNC(GetDirList),  LLRSFUNC(GetFile),  LLRSFUNC(GetFiles),
+  LLRSFUNC(GetFileList), LLRSFUNC(GetId),    LLRSFUNC(GetName),
+  LLRSFUNC(GetSize),     LLRSFUNC(GetTotal),
+  LLRSFUNC(IsDestroyed),
+LLRSEND                                // Archive:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Archive.* namespace functions                                       ## **
+** ## Archive.* non-member functions                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Archive.Count
+// $ Archive.GetClasses
 // < Count:integer=Total number of archives created.
 // ? Returns the total number of archive classes currently active.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cArchives->CollectorCount()))
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cArchives->CollectorCount()))
 /* ========================================================================= */
 // $ Archive.Load
 // > Filename:string=The filename of the archive to load
@@ -198,12 +201,13 @@ LLFUNC(LoadAsync, 0,
 LLFUNC(WaitAsync, 0, cArchives->WaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Archive.* namespace functions structure                             ## **
+** ## Archive.* non-member functions structure                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Archive.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Load), LLRSFUNC(LoadAsync), LLRSFUNC(WaitAsync),
-LLRSEND                                // Archive.* namespace functions end
+LLRSBEGIN                              // Archive.* non-member functions begin
+  LLRSFUNC(GetClasses), LLRSFUNC(Load), LLRSFUNC(LoadAsync),
+  LLRSFUNC(WaitAsync),
+LLRSEND                                // Archive.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Archive namespace
 /* == EoF =========================================================== EoF == */

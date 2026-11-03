@@ -17,13 +17,12 @@ using namespace IFboCmd::P;            using namespace IFboItem::P;
 using namespace IImage::P;             using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IJson::P;
 using namespace ILog::P;               using namespace ILuaBase::P;
-using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IOgl::P;               using namespace ISerial::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace Lib::GlFW::Types;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IOgl::P;
+using namespace ISerial::P;            using namespace IShader::P;
+using namespace IShaders::P;           using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;              using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Define texture collector class --------------------------------------- */
@@ -516,10 +515,10 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   size_t AddTileMulti(const GLUIntVector &gluvTiles, auto &&fCbR, auto &&fCbF)
   { // Check for excess elements
     constexpr static size_t stValues = 4;
-    if(const size_t stExcess = gluvTiles.size() % stValues)
-      XC("Invalid count of tiles specified!",
-        "Name", NameGet(), "Count", stExcess,
-        "Size", AddTileMultigluvTiles.size());
+    const size_t stExcess = gluvTiles.size() % stValues;
+    if(stExcess || gluvTiles.empty())
+      XC("Invalid number of tiles in specified table!",
+        "Name", NameGet(), "Count", stExcess, "Size", gluvTiles.size());
     // Reserve memory for actual count
     CoordList &clFirst = clTiles.front();
     clFirst.reserve(gluvTiles.size() / stValues);
@@ -538,13 +537,13 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
             static_cast<GLfloat>(*(gluvicIt + 3)));
     }; // Are image pixels reversed?
     if(IsReversed())
-      fFunc([this, &fCbR](const GLfloat glfX1, const GLfloat glfY1,
-                          const GLfloat glfX2, const GLfloat glfY2)
-          { fCbR(glfX1, glfY1, glfX2, glfY2); });
+      fFunc([&fCbR](const GLfloat glfX1, const GLfloat glfY1,
+                    const GLfloat glfX2, const GLfloat glfY2)
+        { fCbR(glfX1, glfY1, glfX2, glfY2); });
     // Image pixels not reversed
-    else fFunc([this, &fCbF](const GLfloat glfX1, const GLfloat glfY1,
-                             const GLfloat glfX2, const GLfloat glfY2)
-        { fCbF(glfX1, glfY1, glfX2, glfY2); });
+    else fFunc([&fCbF](const GLfloat glfX1, const GLfloat glfY1,
+                       const GLfloat glfX2, const GLfloat glfY2)
+           { fCbF(glfX1, glfY1, glfX2, glfY2); });
     // Return number of items processed
     return stPosition;
   }
@@ -557,6 +556,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
           const GLfloat glfX2, const GLfloat glfY2)
             { AddTile(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
+  /* -- Clear the entire tileset and add the tiles ------------------------- */
+  void SetTileDORA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
+    { clTiles[stSubTexId].clear(); AddTileDORA(stSubTexId, gluvTiles); }
   /* -- Add a tile with width and height based on reversal ----------------- */
   void AddTileDORWH(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfWidth, const GLfloat glfHeight)
@@ -571,6 +573,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
           const GLfloat glfX2, const GLfloat glfY2)
             { AddTileWH(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
+  /* -- Clear the entire tileset and add the tiles ------------------------- */
+  void SetTileDORWHA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
+    { clTiles[stSubTexId].clear(); AddTileDORWHA(stSubTexId, gluvTiles); }
   /* -- Blit a triangle ---------------------------------------------------- */
   void BlitTri(const GLuint gluTexId, const TriTexData &ttdTex,
     const TriPosData &tpdVert, const TriIntData &tidClr)
@@ -717,7 +722,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   { // Deinit existing texture
     DeInit();
     // Replace image
-    SwapImage(imOther);
+    ImageSwap(imOther);
     // Reload texture
     ReloadTexture();
   }
@@ -768,9 +773,9 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     const OglFilterEnum ofeFilter, const bool bGenerateTileset = true)
   { // Show filename
     cLog->LogDebugExSafe("Texture loading from image '$'.", imgSrc.NameGet());
-    // Take control of the image if source and destination are not the same
-    if(this != &imgSrc) { SwapImage(imgSrc); NameSwap(imgSrc); }
-    // We'll set float versions for faster calculations later on
+    // If we don't already own the image? Take ownership of the image data
+    if(this != &imgSrc) { ImageSwap(imgSrc); NameSwap(imgSrc); }
+    // We're not to take ownership of the image so copy all the data over
     dglfPad.DimSet(static_cast<GLfloat>(gluPadX),
       static_cast<GLfloat>(gluPadY));
     // Set filter

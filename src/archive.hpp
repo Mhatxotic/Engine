@@ -104,7 +104,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       // failed
       if(const int iCode = SzArEx_Extract(&csaeRef, &cltrRef.vt, uSrcId,
          &uBlockIndex, &ucpData, &stUncompressed, &stOffset, &stCompressed,
-         &cParent->isaData, &cParent->isaData))
+         &ctParent.isaData, &ctParent.isaData))
         XC("Failed to extract file",
           "Archive", NameGet(), "File", ssvFile,
           "Index",   uSrcId,    "Code", iCode,
@@ -140,7 +140,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       Memory mData{ stCompressed,
         reinterpret_cast<void*>(ucpData + stOffset) };
       // Free the data that was allocated by LZMA as we had to copy it
-      cParent->isaData.Free(nullptr, reinterpret_cast<void*>(ucpData));
+      ctParent.isaData.Free(nullptr, reinterpret_cast<void*>(ucpData));
       // Return newly added item
       FileMap fmFile{ ssvFile, StdMove(mData), ArchiveGetCreatedTime(uSrcId),
         ArchiveGetModifiedTime(uSrcId) };
@@ -153,13 +153,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     catch(...)
     { // Free the block if it was allocated and rethrow the error
       if(ucpData)
-        cParent->isaData.Free(nullptr, reinterpret_cast<void*>(ucpData));
+        ctParent.isaData.Free(nullptr, reinterpret_cast<void*>(ucpData));
       throw;
     }
   }
   /* -- Free the decopmression buffer if it was created -------------------- */
   void ArchiveCleanupLookToRead(CLookToRead2 &cltrRef)
-    { if(cltrData.buf) ISzAlloc_Free(&cParent->isaData, cltrRef.buf); }
+    { if(cltrData.buf) ISzAlloc_Free(&ctParent.isaData, cltrRef.buf); }
   /* -- Initialise Look2Read structs --------------------------------------- */
   void ArchiveSetupLookToRead(CFileInStream &cfisRef, CLookToRead2 &cltrRef)
   { // Setup vtables and stream pointers
@@ -168,11 +168,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     cltrRef.realStream = &cfisRef.vt;
     // Need to allocate transfer buffer in later LZMA.
     cltrRef.buf = reinterpret_cast<Byte*>
-      (ISzAlloc_Alloc(&cParent->isaData, cParent->stExtractBufSize));
+      (ISzAlloc_Alloc(&ctParent.isaData, ctParent.stExtractBufSize));
     if(!cltrData.buf)
       XC("Error allocating buffer for archive!",
-        "Archive", NameGet(), "Bytes", cParent->stExtractBufSize);
-    cltrRef.bufSize = cParent->stExtractBufSize;
+        "Archive", NameGet(), "Bytes", ctParent.stExtractBufSize);
+    cltrRef.bufSize = ctParent.stExtractBufSize;
     // Initialise look2read structs. On p7zip, the buffer allocation is already
     // done for us.
     LookToRead2_INIT(&cltrRef)
@@ -270,7 +270,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
           SzArEx_Init(&csaeData2);
           // Initialise archive database and if failed, just log it
           if(const int iCode = SzArEx_Open(&csaeData2,
-            &cltrData2.vt, &cParent->isaData, &cParent->isaData))
+            &cltrData2.vt, &ctParent.isaData, &ctParent.isaData))
               XC("Failed to load archive!",
                 "Archive", NameGet(),      "Index", suimciIt->second,
                 "File",    suimciIt->first, "Code",  iCode,
@@ -281,7 +281,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
           // Clean up look to read
           ArchiveCleanupLookToRead(cltrData2);
           // Free memory
-          SzArEx_Free(&csaeData2, &cParent->isaData);
+          SzArEx_Free(&csaeData2, &ctParent.isaData);
           // Close archive
           if(File_Close(&cfisData2.file))
             cLog->LogWarningExSafe("Archive failed to close archive '$': $!",
@@ -293,7 +293,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         { // Clean up look to read
           ArchiveCleanupLookToRead(cltrData2);
           // Free memory
-          SzArEx_Free(&csaeData2, &cParent->isaData);
+          SzArEx_Free(&csaeData2, &ctParent.isaData);
           // Close archive
           if(File_Close(&cfisData2.file))
             cLog->LogWarningExSafe("Archive failed to close archive '$': $!",
@@ -342,7 +342,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     FlagSet(AE_ARCHIVEINIT);
     // Initialise archive database and if failed, just log it
     if(const int iCode = SzArEx_Open(&csaeData, &cltrData.vt,
-       &cParent->isaData, &cParent->isaData))
+       &ctParent.isaData, &ctParent.isaData))
       return cLog->LogWarningExSafe("Archive '$' not opened with code $ ($)!",
         NameGet(), iCode, CodecGetLzmaErrString(iCode));
     // Alocate memory for quick access via index vector. 7-zip won't tell us
@@ -408,7 +408,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   Archive() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperArchive{ cArchives },      // Initialise collector with this obj
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderArchive{ this,          // Initialise async collector
       EMC_MP_ARCHIVE },                // " our archive async event
     ArchiveFlags{ AE_STANDBY },        // Set default archive flags
@@ -438,7 +438,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       MutexUniqueCall([this](UniqueLock &ulLock){
         wait(ulLock, [this]{ return !astInUse; }); });
     } // Free archive structs if allocated
-    if(FlagIsSet(AE_ARCHIVEINIT)) SzArEx_Free(&csaeData, &cParent->isaData);
+    if(FlagIsSet(AE_ARCHIVEINIT)) SzArEx_Free(&csaeData, &ctParent.isaData);
     // Memory allocated? Free memory allocated for buffer
     if(FlagIsSet(AE_SETUPL2R)) ArchiveCleanupLookToRead(cltrData);
     // Close archive handle

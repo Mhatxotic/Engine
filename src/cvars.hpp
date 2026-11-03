@@ -800,8 +800,8 @@ struct CVars :                         // Start of vars class
       }
     }); // Compare requested active set
     if(sstReqActiveSet == -2)
-    { // Optionally look for a active set value and if it exists. This useful so
-      // developers can switch between different configurations easier.
+    { // Optionally look for a active set value and if it exists. This useful
+      // so developers can switch between different configurations easier.
       const Value::ConstMemberIterator
         vcmiIt{ jsManifest.FindMember("ActiveSet") };
       if(vcmiIt != jsManifest.MemberEnd())

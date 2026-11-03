@@ -19,7 +19,14 @@ struct ImageSlot :                     // Members initially public
   /* -- Initialisers ------------------------------------------------------- */
   public Memory,                       // Memory data
   public DimUInt                       // Bitmap dimensions
-{ /* -- Init constructor --------------------------------------------------- */
+{ /* -- Copy constructor --------------------------------------------------- */
+  ImageSlot(const Memory &mData, const unsigned uW, const unsigned uH) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Memory{ mData },                   // Copy memory in place
+    DimUInt{ uW, uH }                  // Set dimensions
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Move constructor --------------------------------------------------- */
   ImageSlot(Memory &&mData, const unsigned uW, const unsigned uH) :
     /* -- Initialisers ----------------------------------------------------- */
     Memory{ StdMove(mData) },          // Move memory in place
@@ -58,6 +65,22 @@ class ImageData :                      // Members initially private
     // Swap tiles and dimensions
     duTileOR.DimSwap(imdRef.duTileOR);
     StdSwap(stTiles, imdRef.stTiles);
+  }
+  /* ----------------------------------------------------------------------- */
+  void ImageDataCopy(ImageData &imdRef)
+  { // Copy flags
+    FlagReset(imdRef.FlagGet());
+    // Copy image lib data
+    DimSet(imdRef);
+    slSlots = imdRef.slSlots;
+    // Copy values
+    bdDepth = imdRef.bdDepth;
+    byDepth = imdRef.byDepth;
+    ttType = imdRef.ttType;
+    stAlloc = imdRef.stAlloc;
+    // Swap tiles and dimensions
+    duTileOR.DimSet(imdRef);
+    stTiles = imdRef.stTiles;
   }
   /* -- Set width and height and return if they are valid ------------------ */
   bool SetDimSafe(const unsigned uNWidth, const unsigned uNHeight)

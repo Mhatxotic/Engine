@@ -995,7 +995,8 @@ struct Console :                       // Members initially private
     // Reset cursor position
     clriPosition = rbegin();
     // Using text mode? Reset text flag
-    if(cMetadata->MetadataIsTextMode()) GetDefaultRedrawFlags().FlagReset(RD_TEXT);
+    if(cMetadata->MetadataIsTextMode())
+      GetDefaultRedrawFlags().FlagReset(RD_TEXT);
     // Redraw the console
     SetRedraw();
     // Initially shown and not closable

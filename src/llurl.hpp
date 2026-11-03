@@ -32,21 +32,9 @@ struct AcUrl : public ArClass<Url> {
     ArClass{LuaUtilClassCreateRef<Url>(lS, cUrls)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Url:* member functions                                              ## **
+** ## Url:* methods                                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Url:Bookmark
-// < String:string=The bookmark part of the url.
-// ? Returns the bookmark part of the parsed url.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Bookmark, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetBookmark()))
-/* ========================================================================= */
-// $ Url:Final
-// < Scheme:string=The final url.
-// ? Returns the final part of the Url object after the parse.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Final, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetUrl()))
-/* ========================================================================= */
 // $ Url:Destroy
 // ? Destroys the bin and frees all the memory associated with it. The object
 // ? will no longer be useable after this call and an error will be generated
@@ -54,29 +42,83 @@ LLFUNC(Final, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetUrl()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Url>(lS, cUrls))
 /* ========================================================================= */
-// $ Url:Destroyed
-// < Destroyed:boolean=If the Url class is destroyed
-// ? Returns if the Url class is destroyed.
+// $ Url:GetBookmark
+// < String:string=The bookmark part of the url.
+// ? Returns the bookmark part of the parsed url.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cUrls)))
+LLFUNC(GetBookmark, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetBookmark()))
 /* ========================================================================= */
-// $ Url:Host
+// $ Url:GetFinal
+// < Scheme:string=The final url.
+// ? Returns the final part of the Url object after the parse.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetFinal, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetUrl()))
+/* ========================================================================= */
+// $ Url:GetHost
 // < String:string=The hostname part of the url.
 // ? Returns the hostname part of the parsed url.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Host, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetHost()))
+LLFUNC(GetHost, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetHost()))
 /* ========================================================================= */
-// $ Url:Id
+// $ Url:GetId
 // < Id:integer=The id number of the Url object.
 // ? Returns the unique id of the Url object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Url:Params
+// $ Url:GetParams
 // < Params:table=The parameters as a table
 // ? Returns the parameters of the parsed url.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Params, 1, LuaUtilToTableEx(lS, AgUrl{lS, 1}()))
+LLFUNC(GetParams, 1, LuaUtilToTableEx(lS, AgUrl{lS, 1}()))
+/* ========================================================================= */
+// $ Url:GetPassword
+// < Password:string=The password part of the url.
+// ? Returns the password part of the Url object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetPassword, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetPassword()))
+/* ========================================================================= */
+// $ Url:GetPort
+// < Port:integer=The port number of the url.
+// ? Returns the port part of the parsed url.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetPort, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetPort()))
+/* ========================================================================= */
+// $ Url:GetResource
+// < Resource:string=The resource of the url.
+// ? Returns the resource part of the Url object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetResource, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetResource()))
+/* ========================================================================= */
+// $ Url:GetResult
+// < Code:integer=The result of the last parse.
+// ? Returns the hostname part of the parsed url.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetResult, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetResult()))
+/* ========================================================================= */
+// $ Url:GetScheme
+// < Scheme:string=The scheme of the url.
+// ? Returns the scheme part of the Url object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetScheme, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetScheme()))
+/* ========================================================================= */
+// $ Url:GetUsername
+// < Username:string=The username part of the url.
+// ? Returns the username part of the Url object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetUsername, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetUsername()))
+/* ========================================================================= */
+// $ Url:IsDestroyed
+// < Destroyed:boolean=If the Url class is destroyed
+// ? Returns if the Url class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cUrls)))
+/* ========================================================================= */
+// $ Url:IsSecure
+// < Secure:boolean=Does the url define a secure url?
+// ? Returns if the scheme would use SSL.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsSecure, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetSecure()))
 /* ========================================================================= */
 // $ Url:Parse
 // > URL:string=The url to parse.
@@ -95,78 +137,36 @@ LLFUNC(ParseEx, 0,
   const AgNeString aUrlAddr{lS, 2};
   const AgUIntLG aMode{lS, 3, 0, 2};
   aUrl().UrlParse(aUrlAddr(), aMode))
-/* ========================================================================= */
-// $ Url:Password
-// < Password:string=The password part of the url.
-// ? Returns the password part of the Url object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Password, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetPassword()))
-/* ========================================================================= */
-// $ Url:Port
-// < Port:integer=The port number of the url.
-// ? Returns the port part of the parsed url.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Port, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetPort()))
-/* ========================================================================= */
-// $ Url:Resource
-// < Resource:string=The resource of the url.
-// ? Returns the resource part of the Url object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Resource, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetResource()))
-/* ========================================================================= */
-// $ Url:Result
-// < Code:integer=The result of the last parse.
-// ? Returns the hostname part of the parsed url.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Result, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetResult()))
-/* ========================================================================= */
-// $ Url:Scheme
-// < Scheme:string=The scheme of the url.
-// ? Returns the scheme part of the Url object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Scheme, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetScheme()))
-/* ========================================================================= */
-// $ Url:Secure
-// < Secure:boolean=Does the url define a secure url?
-// ? Returns if the scheme would use SSL.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Secure, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetSecure()))
-/* ========================================================================= */
-// $ Url:Username
-// < Username:string=The username part of the url.
-// ? Returns the username part of the Url object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Username, 1, LuaUtilPushVar(lS, AgUrl{lS, 1}().UrlGetUsername()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Url:* member functions structure                                    ## **
+** ## Url:* methods structure                                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Url:* member functions begin
-  LLRSFUNC(Bookmark), LLRSFUNC(Destroy),  LLRSFUNC(Destroyed),
-  LLRSFUNC(Final),    LLRSFUNC(Host),     LLRSFUNC(Id),
-  LLRSFUNC(Params),   LLRSFUNC(Parse),    LLRSFUNC(ParseEx),
-  LLRSFUNC(Password), LLRSFUNC(Port),     LLRSFUNC(Resource),
-  LLRSFUNC(Result),   LLRSFUNC(Scheme),   LLRSFUNC(Secure),
-  LLRSFUNC(Username),
-LLRSEND                                // Url:* member functions end
+LLRSMFBEGIN                            // Url:* methods begin
+  LLRSFUNC(Destroy),     LLRSFUNC(GetBookmark), LLRSFUNC(GetFinal),
+  LLRSFUNC(GetHost),     LLRSFUNC(GetId),       LLRSFUNC(GetParams),
+  LLRSFUNC(GetPassword), LLRSFUNC(GetPort),     LLRSFUNC(GetResource),
+  LLRSFUNC(GetResult),   LLRSFUNC(GetScheme),   LLRSFUNC(GetUsername),
+  LLRSFUNC(IsDestroyed), LLRSFUNC(IsSecure),    LLRSFUNC(Parse),
+  LLRSFUNC(ParseEx),
+LLRSEND                                // Url:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Url:* namespace functions                                           ## **
+** ## Url.* non-member functions                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Url.Count
-// < Count:integer=Total number of bins created.
-// ? Returns the total number of bin classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cUrls->CollectorCount()))
-/* ========================================================================= */
 // $ Url.Blank
 // < Count:Url=The unparsed url class.
 // ? Returns an empty Url class which you will populate with the 'Url:Parse*'
 // ? methods.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Blank, 1, AcUrl{lS});           // cppcheck-suppress unusedScopedObject
+/* ========================================================================= */
+// $ Url.GetClasses
+// < Count:integer=Total number of bins created.
+// ? Returns the total number of bin classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cUrls->CollectorCount()))
 /* ========================================================================= */
 // $ Url.IsHost
 // > Hostname:string=The hostname to check.
@@ -198,13 +198,13 @@ LLFUNC(UrlEx, 1,
   AcUrl{lS}().UrlParse(aUrl(), aEncode))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Url:* namespace functions structure                                 ## **
+** ## Url.* non-member functions structure                                ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Url.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Blank), LLRSFUNC(IsHost), LLRSFUNC(Url),
-  LLRSFUNC(UrlEx),
-LLRSEND                                // Url.* namespace functions end
+LLRSBEGIN                              // Url.* non-member functions begin
+  LLRSFUNC(Blank), LLRSFUNC(GetClasses), LLRSFUNC(IsHost),
+  LLRSFUNC(Url),   LLRSFUNC(UrlEx),
+LLRSEND                                // Url.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## File.* namespace constants                                          ## **

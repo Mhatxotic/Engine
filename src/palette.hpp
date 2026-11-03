@@ -195,7 +195,7 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   Palette() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperPalette{ cPalettes, this },// Register the object in collector
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

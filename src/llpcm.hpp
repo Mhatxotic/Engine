@@ -33,7 +33,7 @@ struct AgPcmFlags : public AgFlags<PcmFlagsConst> {
     AgFlags{ lS, iArg, PL_MASK }{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Pcm:* member functions                                              ## **
+** ## Pcm:* methods                                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Pcm:Destroy
@@ -43,42 +43,43 @@ struct AgPcmFlags : public AgFlags<PcmFlagsConst> {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Pcm>(lS, cPcms))
 /* ========================================================================= */
-// $ Pcm:Destroyed
-// < Destroyed:boolean=If the Pcm class is destroyed
-// ? Returns if the Pcm class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cPcms)))
-/* ========================================================================= */
-// $ Pcm:Flags
+// $ Pcm:GetFlags
 // < Flags:integer=Pcm flags value
 // ? Returns the current pcm flags.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Flags, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().FlagGet()))
+LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().FlagGet()))
 /* ========================================================================= */
-// $ Pcm:Id
+// $ Pcm:GetId
 // < Id:integer=The id number of the PCM object.
 // ? Returns the unique id of the PCM object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Pcm:Name
+// $ Pcm:GetName
 // < Name:string=The name of the object
 // ? Returns the name of the specified object when it was created, or if used
 // ? by another function, a small trace of who took ownership of it prefixed
 // ? with an exclamation mark (!).
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgPcm{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Pcm:IsDestroyed
+// < Destroyed:boolean=If the Pcm class is destroyed
+// ? Returns if the Pcm class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cPcms)))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Pcm:* member functions structure                                    ## **
+** ## Pcm:* methods structure                                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Pcm:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
-LLRSEND                                // Pcm:* member functions end
+LLRSMFBEGIN                            // Pcm:* methods begin
+  LLRSFUNC(Destroy), LLRSFUNC(GetFlags),    LLRSFUNC(GetId),
+  LLRSFUNC(GetName), LLRSFUNC(IsDestroyed),
+LLRSEND                                // Pcm:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Pcm.* namespace functions                                           ## **
+** ## Pcm.* non-member functions                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Pcm.Asset
@@ -112,12 +113,6 @@ LLFUNC(AssetAsync, 0,
   LuaUtilCheckFunc(lS, 4, 5, 6);
   AcPcm{lS}().PcmInitAsyncArray(lS, aName, aAsset, aFlags))
 /* ========================================================================= */
-// $ Pcm.Count
-// < Count:integer=Total number of pcms created.
-// ? Returns the total number of pcm classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cPcms->CollectorCount()))
-/* ========================================================================= */
 // $ Pcm.File
 // > Filename:string=The filename of the audio file to load
 // > Flags:Integer=Load flags
@@ -146,6 +141,12 @@ LLFUNC(FileAsync, 0,
   LuaUtilCheckFunc(lS, 3, 4, 5);
   AcPcm{lS}().PcmInitAsyncFile(lS, aFilename, aFlags))
 /* ========================================================================= */
+// $ Pcm.GetClasses
+// < Count:integer=Total number of pcms created.
+// ? Returns the total number of pcm classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cPcms->CollectorCount()))
+/* ========================================================================= */
 // $ Pcm.Raw
 // > Name:string=Identifier of the sample.
 // > Data:Asset=Sample PCM data.
@@ -169,14 +170,14 @@ LLFUNC(Raw, 1,
 LLFUNC(WaitAsync, 0, cPcms->WaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Pcm.* namespace functions structure                                 ## **
+** ## Pcm.* non-member functions structure                                ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Pcm.* namespace functions begin
-  LLRSFUNC(AssetAsync), LLRSFUNC(Asset),     LLRSFUNC(Count),
-  LLRSFUNC(File),       LLRSFUNC(FileAsync), LLRSFUNC(Flags),
-  LLRSFUNC(Raw),        LLRSFUNC(WaitAsync),
-LLRSEND                                // Pcm.* namespace functions end
+LLRSBEGIN                              // Pcm.* non-member functions begin
+  LLRSFUNC(AssetAsync), LLRSFUNC(Asset),      LLRSFUNC(File),
+  LLRSFUNC(FileAsync),  LLRSFUNC(GetClasses), LLRSFUNC(Raw),
+  LLRSFUNC(WaitAsync),
+LLRSEND                                // Pcm.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Pcm.* namespace constants                                           ## **

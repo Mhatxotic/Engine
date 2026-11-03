@@ -39,7 +39,7 @@ using AgIntLGE   = AgIntegerLGE<int>;
 using AgUInt64LG = AgIntegerLG<uint64_t>;
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Display.* namespace functions                                       ## **
+** ## Display.* non-member functions                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Display.Attention
@@ -317,10 +317,10 @@ LLFUNC(VRAM, 5,
 LLFUNC(VReset, 0, cEvtMain->RequestQuitThread())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Display.* namespace functions structure                             ## **
+** ## Display.* non-member functions structure                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Display.* namespace func
+LLRSBEGIN                              // Display.* non-member functions begin
   LLRSFUNC(Attention),     LLRSFUNC(Centre),        LLRSFUNC(Decorated),
   LLRSFUNC(Floating),      LLRSFUNC(Focus),         LLRSFUNC(Focused),
   LLRSFUNC(FSType),        LLRSFUNC(GetPos),        LLRSFUNC(GetSize),
@@ -334,7 +334,7 @@ LLRSBEGIN                              // Display.* namespace func
   LLRSFUNC(SetSize),       LLRSFUNC(Transparent),   LLRSFUNC(VidMode),
   LLRSFUNC(VidModeData),   LLRSFUNC(VidModes),      LLRSFUNC(Visible),
   LLRSFUNC(VRAM),          LLRSFUNC(VReset),
-LLRSEND                                // Display.* namespace functions end
+LLRSEND                                // Display.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Display.* namespace constants                                       ## **

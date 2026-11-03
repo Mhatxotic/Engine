@@ -186,7 +186,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   Ftf() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFtf{ cFtfs },              // Initially unregistered
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderFtf{ this,              // Initialise async loader with class
       EMC_MP_FONT },                   // " and the event id
     fOutline(0.0f),                    // No outline size yet

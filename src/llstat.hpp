@@ -38,15 +38,9 @@ struct AgColumn : public AgSSizeTLGE {
     AgSSizeTLGE{lS, iArg, 0, static_cast<ssize_t>(stCref.Headers())}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Stat:* member functions                                             ## **
+** ## Stat:* methods                                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Stat:Cells
-// < Count:integer=Number of cells added
-// ? Returns the number of cells in the table
-/* ------------------------------------------------------------------------- */
-LLFUNC(Cells, 1, AgStat{lS, 1}().Cells())
-/* ========================================================================= */
 // $ Stat:Data
 // > String:string=Data string to add to the cell.
 // ? Inserts the specified string into the next cell.
@@ -118,12 +112,6 @@ LLFUNC(DataN, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Stat>(lS, cStats))
 /* ========================================================================= */
-// $ Stat:Destroyed
-// < Destroyed:boolean=If the Stat class is destroyed
-// ? Returns if the Stat class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cStats)))
-/* ========================================================================= */
 // $ Stat:Finish
 // > OmitLF:boolean=Omits the ending linefeed.
 // > Gap:integer=Number of whitespaces between each header field.
@@ -148,6 +136,36 @@ LLFUNC(Flush, 1, AgStat{lS, 1}().Flush())
 /* ------------------------------------------------------------------------- */
 LLFUNC(FlushData, 1, AgStat{lS, 1}().FlushData())
 /* ========================================================================= */
+// $ Stat:GetCells
+// < Count:integer=Number of cells added
+// ? Returns the number of cells in the table
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetCells, 1, AgStat{lS, 1}().Cells())
+/* ========================================================================= */
+// $ Stat:GetHeaders
+// < Count:integer=Number of headers registered
+// ? Returns the number of headers in the table
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetHeaders, 1, AgStat{lS, 1}().Headers())
+/* ========================================================================= */
+// $ Stat:GetId
+// < Id:integer=The id number of the Stat object.
+// ? Returns the unique id of the Stat object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().Serial()))
+/* ========================================================================= */
+// $ Stat:GetName
+// < Id:string=The stat identifier
+// ? Returns the identifier of the Stat object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Stat:GetRows
+// < Count:integer=Number of rows registered
+// ? Returns the number of complete rows in the table
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetRows, 1, AgStat{lS, 1}().Rows())
+/* ========================================================================= */
 // $ Stat:Header
 // > Text:string=Header string to add to the cell.
 // > Right:boolean=Header is right justified?
@@ -166,35 +184,17 @@ LLFUNC(Header, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(HeaderDupe, 0, AgStat{lS, 1}().DupeHeader(AgSizeT{lS, 2}))
 /* ========================================================================= */
-// $ Stat:Headers
-// < Count:integer=Number of headers registered
-// ? Returns the number of headers in the table
+// $ Stat:IsDestroyed
+// < Destroyed:boolean=If the Stat class is destroyed
+// ? Returns if the Stat class is destroyed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Headers, 1, AgStat{lS, 1}().Headers())
-/* ========================================================================= */
-// $ Stat:Id
-// < Id:integer=The id number of the Stat object.
-// ? Returns the unique id of the Stat object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().Serial()))
-/* ========================================================================= */
-// $ Stat:Name
-// < Id:string=The stat identifier
-// ? Returns the identifier of the Stat object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgStat{lS, 1}().NameGet()))
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cStats)))
 /* ========================================================================= */
 // $ Stat:Reserve
 // > Rows:integer=Reserve memory for this many rows.
 // ? Reserves memory for this many rows.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Reserve, 0, AgStat{lS, 1}().Reserve(AgSizeT{lS, 2}))
-/* ========================================================================= */
-// $ Stat:Rows
-// < Count:integer=Number of rows registered
-// ? Returns the number of complete rows in the table
-/* ------------------------------------------------------------------------- */
-LLFUNC(Rows, 1, AgStat{lS, 1}().Rows())
 /* ========================================================================= */
 // $ Stat:Sort
 // > Column:integer=Sort from this column
@@ -221,43 +221,43 @@ LLFUNC(SortTwo, 0,
   aStat().SortTwo(aColumn1, aColumn2, aReverse))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Stat:* member functions structure                                   ## **
+** ## Stat:* methods structure                                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // stat:* member functions begin
-  LLRSFUNC(Cells),     LLRSFUNC(Data),   LLRSFUNC(DataB),
-  LLRSFUNC(DataFB),    LLRSFUNC(DataFI), LLRSFUNC(DataFN),
-  LLRSFUNC(DataI),     LLRSFUNC(DataN),  LLRSFUNC(Destroy),
-  LLRSFUNC(Destroyed), LLRSFUNC(Finish), LLRSFUNC(Flush),
-  LLRSFUNC(FlushData), LLRSFUNC(Header), LLRSFUNC(HeaderDupe),
-  LLRSFUNC(Headers),   LLRSFUNC(Id),     LLRSFUNC(Name),
-  LLRSFUNC(Reserve),   LLRSFUNC(Rows),   LLRSFUNC(Sort),
+LLRSMFBEGIN                            // Stat:* methods begin
+  LLRSFUNC(Data),        LLRSFUNC(DataB),     LLRSFUNC(DataFB),
+  LLRSFUNC(DataFI),      LLRSFUNC(DataFN),    LLRSFUNC(DataI),
+  LLRSFUNC(DataN),       LLRSFUNC(Destroy),   LLRSFUNC(Finish),
+  LLRSFUNC(Flush),       LLRSFUNC(FlushData), LLRSFUNC(GetCells),
+  LLRSFUNC(GetHeaders),  LLRSFUNC(GetId),     LLRSFUNC(GetName),
+  LLRSFUNC(GetRows),     LLRSFUNC(Header),    LLRSFUNC(HeaderDupe),
+  LLRSFUNC(IsDestroyed), LLRSFUNC(Reserve),   LLRSFUNC(Sort),
   LLRSFUNC(SortTwo),
-LLRSEND                                // Stat:* member functions end
+LLRSEND                                // Stat:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Stat:* namespace functions                                          ## **
+** ## Stat.* non-member functions                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Stat.Count
-// < Count:integer=Total number of stats created.
-// ? Returns the total number of stat classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cStats->CollectorCount()))
-/* ========================================================================= */
 // $ Stat.Create
 // > Name:string=Name of the class
 // ? Creates an empty stat table.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1, AcStat{lS}().NameSet(AgNeString{lS, 1}))
+/* ========================================================================= */
+// $ Stat.GetClasses
+// < Count:integer=Total number of stats created.
+// ? Returns the total number of stat classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cStats->CollectorCount()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Stat:* namespace functions structure                                ## **
+** ## Stat.* non-member functions structure                               ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Bin.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Create),
-LLRSEND                                // Bin.* namespace functions end
+LLRSBEGIN                              // Stat.* non-member functions begin
+  LLRSFUNC(Create), LLRSFUNC(GetClasses),
+LLRSEND                                // Stat.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Bin namespace
 /* == EoF =========================================================== EoF == */

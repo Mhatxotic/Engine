@@ -32,7 +32,7 @@ struct AcSShot : public ArClass<SShot> {
     ArClass{LuaUtilClassCreateRef<SShot>(lS, cSShots)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## SShot:* member functions                                            ## **
+** ## SShot:* methods                                                     ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ SShot:Destroy
@@ -40,47 +40,42 @@ struct AcSShot : public ArClass<SShot> {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<SShot>(lS, cSShots))
 /* ========================================================================= */
-// $ SShot:Destroyed
-// < Destroyed:boolean=If the SShot class is destroyed
-// ? Returns if the SShot class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSShots)))
-/* ========================================================================= */
-// $ SShot:Id
+// $ SShot:GetId
 // < Id:integer=The id number of the SShot object.
 // ? Returns the unique id of the SShot object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ SShot:Name
+// $ SShot:GetName
 // < Name:string=The name of the SShot object.
 // ? Returns the filename generated on this screenshot object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgSShot{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ SShot:IsDestroyed
+// < Destroyed:boolean=If the SShot class is destroyed
+// ? Returns if the SShot class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSShots)))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## SShot:* member functions structure                                  ## **
+** ## SShot:* methods structure                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // SShot:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Id), LLRSFUNC(Name),
-LLRSEND                                // SShot:* member functions end
+LLRSMFBEGIN                            // SShot:* methods begin
+  LLRSFUNC(Destroy), LLRSFUNC(GetId), LLRSFUNC(GetName), LLRSFUNC(IsDestroyed),
+LLRSEND                                // SShot:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## SShot.* namespace functions                                         ## **
+** ## SShot.* non-member functions                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ SShot.Count
+// $ SShot.GetClasses
 // < Count:integer=Total number of sshots created.
 // ? Returns the total number of sshot classes currently active.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cSShots->CollectorCount()))
-/* ========================================================================= */
-// $ SShot.Screen
-// < Object:SShot=The screenshot object created.
-// ? Takes a screenshot of the screen.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Screen, 1, AcSShot{lS}().DumpMain())
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cSShots->CollectorCount()))
 /* ========================================================================= */
 // $ SShot.Fbo
 // > Dest:Fbo=The frame buffer to dump.
@@ -93,14 +88,20 @@ LLFUNC(Fbo, 1,
   const AgFbo aFbo{lS, 1};
   AcSShot{lS}().DumpFbo(aFbo,
     LuaBaseGetTop(lS) < 3 ? cCommon->CommonBlank() : AgFilename{lS,2}()))
+/* ========================================================================= */
+// $ SShot.Screen
+// < Object:SShot=The screenshot object created.
+// ? Takes a screenshot of the screen.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Screen, 1, AcSShot{lS}().DumpMain())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## SShot.* namespace functions structure                               ## **
+** ## SShot.* non-member functions structure                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // SShot.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Fbo), LLRSFUNC(Screen),
-LLRSEND                                // SShot.* namespace functions end
+LLRSBEGIN                              // SShot.* non-member functions begin
+  LLRSFUNC(Fbo), LLRSFUNC(GetClasses), LLRSFUNC(Screen),
+LLRSEND                                // SShot.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Util namespace
 /* == EoF =========================================================== EoF == */

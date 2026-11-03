@@ -34,7 +34,7 @@ using AgUInt16 = AgInteger<uint16_t>;
 using AgTimeT = AgInteger<StdTimeT>;
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Util.* namespace functions                                          ## **
+** ## Util.* non-member functions                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Util.AscNTime
@@ -1179,10 +1179,10 @@ LLFUNC(WordWrap, 1,
   LuaUtilToTable(lS, UtfWordWrap(aText(), aWidth(), aIndent())))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Util.* namespace functions structure                                ## **
+** ## Util.* non-member functions structure                               ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Util.* namespace functions begin
+LLRSBEGIN                              // Util.* non-member functions begin
   LLRSFUNC(AscNTime),                  LLRSFUNC(AscNTimeUTC),
   LLRSFUNC(AscTime),                   LLRSFUNC(AscTimeUTC),
   LLRSFUNC(B64D),                      LLRSFUNC(B64DA),
@@ -1267,7 +1267,7 @@ LLRSBEGIN                              // Util.* namespace functions begin
   LLRSFUNC(UrlEncode),                 LLRSFUNC(UTF8Char),
   LLRSFUNC(UUIDDecode),                LLRSFUNC(UUIDEncode),
   LLRSFUNC(UUIDRandom),                LLRSFUNC(WordWrap),
-LLRSEND                                // Util.* namespace functions end
+LLRSEND                                // Util.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Util namespace
 /* == EoF =========================================================== EoF == */

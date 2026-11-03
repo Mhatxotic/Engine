@@ -142,10 +142,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   ClkDuration      cdQuery;            // Last query execution time
   /* -- Convert sql error id to string ---------------------------- */ private:
   const StdStringView &SqlResultToString(const int iCode) const
-    { return cParent->elStrings.Get(iCode); }
+    { return ctParent.elStrings.Get(iCode); }
   /* -- Convert ADR id to string ------------------------------------------- */
   const StdStringView &SqlADResultToString(const ADResult adrResult) const
-    { return cParent->adrlStrings.Get(adrResult); }
+    { return ctParent.adrlStrings.Get(adrResult); }
   /* -- Close the database ------------------------------------------------- */
   void SqlDoClose()
   { // Number of retries needed to close the database
@@ -196,9 +196,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
         // The database is busy?
         case SQLITE_BUSY:
           // Wait a little and try again if busy until we've retried enough
-          if(++uRetries < cParent->uQueryRetries ||
-             cParent->uQueryRetries == StdMaxUInt)
-            { StdSuspend(cParent->cdRetry); continue; }
+          if(++uRetries < ctParent.uQueryRetries ||
+             ctParent.uQueryRetries == StdMaxUInt)
+            { StdSuspend(ctParent.cdRetry); continue; }
           // Return failure
           [[fallthrough]];
         // Complete and utter failure
@@ -273,7 +273,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       // Only one or two tables (key and/or cvars table)?
       case 1: case 2:
         // Get number of records in the cvars table
-        switch(SqlGetRecordCount(cParent->ssvCVTable))
+        switch(SqlGetRecordCount(ctParent.ssvCVTable))
         { // Error occured? Don't delete the database!
           case StdMaxSizeT: return ADR_ERR_LU_RECORD;
           // Zero records? Delete the database! There is always the
@@ -947,7 +947,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   bool SqlCVarReadKeys()
   { // Read all variable names and if failed?
     if(SqlExecute(StrFormat("SELECT `$` from `$`",
-         cParent->strCVKeyColumn, cParent->ssvCVTable)))
+         ctParent.strCVKeyColumn, ctParent.ssvCVTable)))
     { // Put in log and return nothing loaded
       cLog->LogWarningExSafe(
         "CVars failed to fetch cvar key names because $ ($)!",
@@ -962,8 +962,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   bool SqlCVarReadAll()
   { // Read all variables and if failed?
     if(SqlExecute(StrFormat("SELECT `$`,`$`,`$` from `$`",
-         cParent->strCVKeyColumn, cParent->strCVFlagsColumn,
-         cParent->strCVValueColumn, cParent->ssvCVTable)))
+         ctParent.strCVKeyColumn, ctParent.strCVFlagsColumn,
+         ctParent.strCVValueColumn, ctParent.ssvCVTable)))
     { // Put in log and return nothing loaded
       cLog->LogWarningExSafe("Sql failed to read CVars table because $ ($)!",
         SqlGetErrorStr(), SqlGetError());
@@ -976,9 +976,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlCVarDropTable()
   { // If table exists return that it already exists
-    if(SqlIsTableExist(cParent->ssvCVTable)) return CTR_OK_ALREADY;
+    if(SqlIsTableExist(ctParent.ssvCVTable)) return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
-    if(SqlDropTable(cParent->ssvCVTable))
+    if(SqlDropTable(ctParent.ssvCVTable))
     { // Write error in console and return failure
       cLog->LogWarningExSafe(
         "Sql failed to destroy CVars table because $ ($)!",
@@ -991,15 +991,15 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlCVarCreateTable()
   { // If table already exists then return success already
-    if(SqlIsTableExist(cParent->ssvCVTable)) return CTR_OK_ALREADY;
+    if(SqlIsTableExist(ctParent.ssvCVTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
     if(SqlExecute(StrFormat(
          "CREATE table `$`("           // Table name
          "`$` TEXT UNIQUE NOT NULL,"   // Variable name
          "`$` INTEGER DEFAULT 0,"      // Value flags (crypt,comp,etc.)
          "`$` TEXT)",                  // Value (any type allowed)
-         cParent->ssvCVTable, cParent->strCVKeyColumn,
-         cParent->strCVFlagsColumn, cParent->strCVValueColumn)))
+         ctParent.ssvCVTable, ctParent.strCVKeyColumn,
+         ctParent.strCVFlagsColumn, ctParent.strCVValueColumn)))
     { // Write error in console and return failure
       cLog->LogWarningExSafe("Sql failed to create CVars table because $ ($)!",
         SqlGetErrorStr(), SqlGetError());
@@ -1011,10 +1011,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlLuaCacheDropTable()
   { // If table exists return that it already exists
-    if(SqlGetRecordCount(cParent->ssvLCTable) == StdMaxSizeT)
+    if(SqlGetRecordCount(ctParent.ssvLCTable) == StdMaxSizeT)
       return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
-    if(SqlDropTable(cParent->ssvLCTable))
+    if(SqlDropTable(ctParent.ssvLCTable))
     { // Write error in console and return failure
       cLog->LogWarningExSafe(
         "Sql failed to destroy cache table because $ ($)!",
@@ -1027,7 +1027,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   CreateTableResult SqlLuaCacheCreateTable()
   { // If table already exists then return success already
-    if(SqlIsTableExist(cParent->ssvLCTable)) return CTR_OK_ALREADY;
+    if(SqlIsTableExist(ctParent.ssvLCTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
     if(SqlExecute(StrFormat(
          "CREATE table `$`("              // Table name
@@ -1035,9 +1035,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
            "`$` INTEGER NOT NULL,"        // Code update timestamp
            "`$` TEXT UNIQUE NOT NULL,"    // Code eference
            "`$` TEXT NOT NULL)",          // Code binary
-         cParent->ssvLCTable, cParent->ssvLCCRCColumn,
-         cParent->ssvLCTimeColumn, cParent->ssvLCRefColumn,
-         cParent->ssvLCCodeColumn)))
+         ctParent.ssvLCTable, ctParent.ssvLCCRCColumn,
+         ctParent.ssvLCTimeColumn, ctParent.ssvLCRefColumn,
+         ctParent.ssvLCCodeColumn)))
     { // Write error in console and return failure
       cLog->LogWarningExSafe("Sql failed to create cache table because $ ($)!",
         SqlGetErrorStr(), SqlGetError());
@@ -1056,8 +1056,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   { // Try to write the specified cvar and if failed?
     if(SqlExecute(StrFormat(
          "INSERT or REPLACE into `$`(`$`,`$`,`$`) VALUES(?,?,?)",
-         cParent->ssvCVTable, cParent->strCVKeyColumn,
-         cParent->strCVFlagsColumn, cParent->strCVValueColumn),
+         ctParent.ssvCVTable, ctParent.strCVKeyColumn,
+         ctParent.strCVFlagsColumn, ctParent.strCVValueColumn),
          strVar, scvdfcFlags.FlagGet<int>(), cpData, stLength, iType))
     { // Log the warning and return failure
       cLog->LogWarningExSafe(
@@ -1145,9 +1145,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Load schema version ------------------------------------------------ */
   void SqlLoadSchemaVersion()
   { // If table exists create a new table
-    if(!SqlIsTableExist(cParent->ssvSKeyTable)) goto NewKeyNoDrop;
+    if(!SqlIsTableExist(ctParent.ssvSKeyTable)) goto NewKeyNoDrop;
     // Check record count
-    switch(SqlGetRecordCount(cParent->ssvSKeyTable))
+    switch(SqlGetRecordCount(ctParent.ssvSKeyTable))
     { // Error reading table?
       case StdMaxSizeT:
       { // Log failure and create a new private key
@@ -1159,8 +1159,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       default:
       { // Read schema version key and if failed?
         if(SqlExecute(StrFormat("SELECT `$` from `$` WHERE `$`=?",
-             cParent->ssvSValueColumn, cParent->ssvSKeyTable,
-             cParent->ssvSIndexColumn), cParent->ssvSVersionKey))
+             ctParent.ssvSValueColumn, ctParent.ssvSKeyTable,
+             ctParent.ssvSIndexColumn), ctParent.ssvSVersionKey))
         { // Log failure and create a new private key
           cLog->LogWarningExSafe(
             "Sql failed to read schema version because $ ($<$>)!",
@@ -1207,7 +1207,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     } // Could not read new private key so setup new private key
     NewKey:
     // Try to drop the original private key table
-    if(SqlDropTable(cParent->ssvSKeyTable))
+    if(SqlDropTable(ctParent.ssvSKeyTable))
       cLog->LogWarningExSafe(
         "Sql failed to drop schema table because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
@@ -1217,8 +1217,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     if(!SqlExecuteAndSuccess(StrFormat(
           "CREATE table `$`(`$` TEXT UNIQUE NOT NULL,"
           "`$` INTEGER NOT NULL)",
-          cParent->ssvSKeyTable, cParent->ssvSIndexColumn,
-          cParent->ssvSValueColumn)))
+          ctParent.ssvSKeyTable, ctParent.ssvSIndexColumn,
+          ctParent.ssvSValueColumn)))
       cLog->LogWarningExSafe(
         "Sql failed to create schema table because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
@@ -1227,8 +1227,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     // Now try to create the table that holds the private key and if failed?
     if(!SqlExecuteAndSuccess(StrFormat(
           "INSERT or REPLACE into `$`(`$`,`$`) VALUES(?,?)",
-          cParent->ssvSKeyTable, cParent->ssvSIndexColumn,
-          cParent->ssvSValueColumn), cParent->ssvSVersionKey, llVersion))
+          ctParent.ssvSKeyTable, ctParent.ssvSIndexColumn,
+          ctParent.ssvSValueColumn), ctParent.ssvSVersionKey, llVersion))
       cLog->LogWarningExSafe(
         "Sql failed to insert schema version record because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
@@ -1241,8 +1241,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     if(SqlExecute(StrFormat(
          "CREATE table `$`(`$` INTEGER NOT NULL,"
          "`$` INTEGER NOT NULL)",
-      cParent->ssvPKeyTable, cParent->ssvPIndexColumn,
-      cParent->ssvPValueColumn)))
+      ctParent.ssvPKeyTable, ctParent.ssvPIndexColumn,
+      ctParent.ssvPValueColumn)))
     { // Log failure and return
       cLog->LogWarningExSafe(
         "Sql failed to create key table because $ ($<$>)!",
@@ -1251,8 +1251,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     } // Prepare statement to insert values into sql
     const StdString strInsert{
       StrFormat("INSERT into `$`(`$`,`$`) VALUES(?,?)",
-        cParent->ssvPKeyTable, cParent->ssvPIndexColumn,
-        cParent->ssvPValueColumn) };
+        ctParent.ssvPKeyTable, ctParent.ssvPIndexColumn,
+        ctParent.ssvPValueColumn) };
     // For each key part to write
     for(size_t stIndex = 0; stIndex < cCrypt->pkKey.qkData.size(); ++stIndex)
     { // Get private key value and if failed?
@@ -1276,7 +1276,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   { // Generate a new private key
     cCrypt->CryptResetPrivateKey();
     // Try to drop the original private key table
-    if(SqlDropTable(cParent->ssvPKeyTable))
+    if(SqlDropTable(ctParent.ssvPKeyTable))
       cLog->LogWarningExSafe("Sql failed to drop key table because $ ($<$>)!",
         SqlGetErrorStr(), SqlGetErrorAsIdString(), SqlGetError());
     // Now create the private key table
@@ -1285,9 +1285,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Load private key --------------------------------------------------- */
   void SqlLoadPrivateKey()
   { // If table exists create a new table
-    if(!SqlIsTableExist(cParent->ssvPKeyTable)) SqlCreatePrivateKeyNoDrop();
+    if(!SqlIsTableExist(ctParent.ssvPKeyTable)) SqlCreatePrivateKeyNoDrop();
     // Check record count
-    switch(const size_t stCount = SqlGetRecordCount(cParent->ssvPKeyTable))
+    switch(const size_t stCount = SqlGetRecordCount(ctParent.ssvPKeyTable))
     { // Error reading table?
       case StdMaxSizeT:
       { // Log failure and create a new private key
@@ -1307,8 +1307,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       case Crypt::stPkTotalCount:
       { // Read keys and if failed?
         if(SqlExecute(StrFormat("SELECT `$` from `$` ORDER BY `$` ASC",
-          cParent->ssvPValueColumn, cParent->ssvPKeyTable,
-          cParent->ssvPIndexColumn)))
+          ctParent.ssvPValueColumn, ctParent.ssvPKeyTable,
+          ctParent.ssvPIndexColumn)))
         { // Log failure and create a new private key
           cLog->LogWarningExSafe(
             "Sql failed to read key table because $ ($<$>)!",
@@ -1385,12 +1385,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       return false;
     } // Log initialisation. Set filename using memory db name if empty
     const StdString &strDb =
-      strPrefix.empty() ? cParent->strMemoryDBName : strPrefix;
+      strPrefix.empty() ? ctParent.strMemoryDBName : strPrefix;
     cLog->LogDebugExSafe("Sql initialising core database '$'...", strDb);
     // Update flags from global if they changed
-    FlagReset(cParent->sFlags);
+    FlagReset(ctParent.sFlags);
     // Set temporary database boolean if is a memory database
-    if(strPrefix == cParent->strMemoryDBName) FlagSet(SF_ISTEMPDB);
+    if(strPrefix == ctParent.strMemoryDBName) FlagSet(SF_ISTEMPDB);
     // Open database with a temporary sqlite handle so if the open fails,
     // the old one stays intact. The cast of the sqlDBtemp for the last
     // parameter (VFS) that resolves to 'nullptr' is just to shut CppCheck up
@@ -1415,8 +1415,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   explicit Sql(bool bLocked = false) : // Default unlocked
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSql{ cSqls, this },        // Register the object in collector
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
-    SqlFlags{ cParent->sFlags },       // Copy global sql flags
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
+    SqlFlags{ ctParent.sFlags },       // Copy global sql flags
     Lockable{ bLocked },               // Set locked by LUA flag
     sqlDB(nullptr),                    // No sql database handle yet
     iError(SQLITE_OK)                  // Initialise sqlite and store error

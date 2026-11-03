@@ -40,59 +40,15 @@ struct AgCVarId : public AgIntegerLGE<CVarEnums>
 struct AgVariableFlags : public AgFlags<CVarFlagsConst> {
   explicit AgVariableFlags(lua_State*const lS, const int iArg) :
     AgFlags{ lS, iArg, CVMASK }{} };
-/* ========================================================================= */
-// $ Variable:Boolean
-// > State:boolean=The new cvar value.
-// < Success:integer=The return code.
-// ? Sets the new value based on the specified boolean. "0" if false or "1" if
-// ? true. See Variable.Result to see the possible results.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Boolean, 1,
-  LuaUtilPushVar(lS, AgVariable{lS, 1}().SetBoolean(AgBoolean{lS, 2})))
-/* ========================================================================= */
-// $ Variable:Clear
-// < Success:integer=The return code.
-// ? Clears the variable (with an empty string). See Variable.Result to see
-// ?the possible results.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Clear, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Clear()))
-/* ========================================================================= */
+/* ========================================================================= **
+** ######################################################################### **
+** ## Variable:* methods                                                  ## **
+** ######################################################################### **
+** ========================================================================= */
 // $ Variable:Destroy
 // ? Unregisters the specified console command.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Variable>(lS, cVariables))
-/* ========================================================================= */
-// $ Variable:Destroyed
-// < Destroyed:boolean=If the Variable class is destroyed
-// ? Returns if the Variable class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1,
-  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cVariables)))
-/* ========================================================================= */
-// $ Variable:Empty
-// < Empty:boolean=Is the value empty?
-// ? Returns if the value is empty.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Empty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Empty()))
-/* ========================================================================= */
-// $ Variable:Id
-// < Id:integer=The id of the Variable object.
-// ? Returns the unique id of the Variable object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Serial()))
-/* ========================================================================= */
-// $ Variable:Name
-// < Name:string=The name of the console command.
-// ? Returns the name of the console command this object was registered with.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Name()))
-/* ========================================================================= */
-// $ Variable:Default
-// < Value:string=The engine default cvar value.
-// ? Retrieves the value of the specified cvar name. An exception is raised if
-// ? the specified cvar does not exist.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Default, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Default()))
 /* ========================================================================= */
 // $ Variable:Get
 // < Value:mixed=The engine cvar value.
@@ -101,64 +57,131 @@ LLFUNC(Default, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Default()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Get, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Get()))
 /* ========================================================================= */
-// $ Variable:Integer
+// $ Variable:GetDefault
+// < Value:string=The engine default cvar value.
+// ? Retrieves the value of the specified cvar name. An exception is raised if
+// ? the specified cvar does not exist.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetDefault, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Default()))
+/* ========================================================================= */
+// $ Variable:GetId
+// < Id:integer=The id of the Variable object.
+// ? Returns the unique id of the Variable object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Serial()))
+/* ========================================================================= */
+// $ Variable:GetName
+// < Name:string=The name of the console command.
+// ? Returns the name of the console command this object was registered with.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Name()))
+/* ========================================================================= */
+// $ Variable:IsDestroyed
+// < Destroyed:boolean=If the Variable class is destroyed
+// ? Returns if the Variable class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cVariables)))
+/* ========================================================================= */
+// $ Variable:IsEmpty
+// < Empty:boolean=Is the value empty?
+// ? Returns if the value is empty.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsEmpty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Empty()))
+/* ========================================================================= */
+// $ Variable:IsNotEmpty
+// < NotEmpty:boolean=Is the value not empty?
+// ? Returns if the value is not empty.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsNotEmpty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().NotEmpty()))
+/* ========================================================================= */
+// $ Variable:SetBoolean
+// > State:boolean=The new cvar value.
+// < Success:integer=The return code.
+// ? Sets the new value based on the specified boolean. "0" if false or "1" if
+// ? true. See Variable.Result to see the possible results.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetBoolean, 1,
+  LuaUtilPushVar(lS, AgVariable{lS, 1}().SetBoolean(AgBoolean{lS, 2})))
+/* ========================================================================= */
+// $ Variable:SetDefault
+// ? Resets the cvar to the default value as registered.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetDefault, 0, AgVariable{lS, 1}().Reset())
+/* ========================================================================= */
+// $ Variable:SetEmpty
+// < Success:integer=The return code.
+// ? Clears the variable (with an empty string). See 'Variable.Result' to see
+// ? the possible results.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetEmpty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Clear()))
+/* ========================================================================= */
+// $ Variable:SetInteger
 // > Value:integer=The new cvar value.
 // < Success:integer=The return code.
 // ? Sets the new value based on the specified integer. See Variable.Result to
 // ? see the possible results.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Integer, 1,
+LLFUNC(SetInteger, 1,
   LuaUtilPushVar(lS, AgVariable{lS, 1}().SetInteger(AgLuaInteger{lS, 2})))
 /* ========================================================================= */
-// $ Variable:NotEmpty
-// < NotEmpty:boolean=Is the value not empty?
-// ? Returns if the value is not empty.
-/* ------------------------------------------------------------------------- */
-LLFUNC(NotEmpty, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().NotEmpty()))
-/* ========================================================================= */
-// $ Variable:Number
+// $ Variable:SetNumber
 // > Value:numberr=The new cvar value.
 // < Success:integer=The return code.
 // ? Sets the new value based on the specified number. See Variable.Result to
 // ? see the possible results.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Number, 1,
+LLFUNC(SetNumber, 1,
   LuaUtilPushVar(lS, AgVariable{lS, 1}().SetNumber(AgLuaNumber{lS, 2})))
 /* ========================================================================= */
-// $ Variable:Reset
-// ? Resets the cvar to the default value as registered.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Reset, 0, AgVariable{lS, 1}().Reset())
-/* ========================================================================= */
-// $ Variable:String
+// $ Variable:SetString
 // > String:string=The new cvar value.
 // < Success:integer=The return code.
 // ? Sets the new value of the specified cvar name. An exception is raised if
 // ? any error occurs. See Variable.Result to see the possible results.
 /* ------------------------------------------------------------------------- */
-LLFUNC(String, 1,
+LLFUNC(SetString, 1,
   LuaUtilPushVar(lS, AgVariable{lS, 1}().SetString(AgString{lS, 2})))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Variable:* member functions structure                               ## **
+** ## Variable:* methods structure                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Variable:* member functions begin
-  LLRSFUNC(Boolean),   LLRSFUNC(Clear), LLRSFUNC(Default), LLRSFUNC(Destroy),
-  LLRSFUNC(Destroyed), LLRSFUNC(Empty), LLRSFUNC(Get),     LLRSFUNC(Id),
-  LLRSFUNC(Integer),   LLRSFUNC(Name),  LLRSFUNC(NotEmpty),LLRSFUNC(Number),
-  LLRSFUNC(Reset),     LLRSFUNC(String),
-LLRSEND                                // Variable:* member functions end
+LLRSMFBEGIN                            // Variable:* methods begin
+  LLRSFUNC(Destroy),    LLRSFUNC(IsDestroyed), LLRSFUNC(IsEmpty),
+  LLRSFUNC(IsNotEmpty), LLRSFUNC(Get),         LLRSFUNC(GetDefault),
+  LLRSFUNC(GetId),      LLRSFUNC(GetName),     LLRSFUNC(SetBoolean),
+  LLRSFUNC(SetDefault), LLRSFUNC(SetEmpty),    LLRSFUNC(SetInteger),
+  LLRSFUNC(SetNumber),  LLRSFUNC(SetString),
+LLRSEND                                // Variable:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Variable.* namespace functions                                      ## **
+** ## Variable.* non-member functions                                     ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Variable.Count
+// $ Variable.GetClasses
 // < Count:integer=Total number of variables created.
 // ? Returns the total number of variable classes currently active.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
+/* ========================================================================= */
+// $ Variable.IsExist
+// > String:string=The console command name to lookup.
+// < Registered:boolean=True if the command is registered.
+// ? Returns if the specified console command is registered which includes
+// ? the built-in engine console commands too.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsExist, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS, 1})))
+/* ========================================================================= */
+// $ Variable.IsValid
+// > Var:string=Cvar name to test.
+// < Valid:boolean=Cvar name is valid.
+// ? Returns true if the given string has valid characters, false if not. CVars
+// ? must begin with a letter but subsequent characters can be underscores and
+// ? numbers. The name must also be between 5 and 255 characters in length.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsValid, 1,
+  LuaUtilPushVar(lS, cCVars->IsValidVariableName(AgString{lS, 1})))
 /* ========================================================================= */
 // $ Variable.Register
 // > Name:string=The engine cvar name.
@@ -190,46 +213,28 @@ LLFUNC(Register, 1,
   cLua->LuaStateAssert(lS);
   AcVariable{lS}().Init(lS, aName, aDefault, aFlags))
 /* ========================================================================= */
-// $ Variable.Exists
-// > String:string=The console command name to lookup
-// < Registered:boolean=True if the command is registered
-// ? Returns if the specified console command is registered which includes
-// ? the built-in engine console commands too.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Exists, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS, 1})))
-/* ========================================================================= */
 // $ Variable.Save
-// < Count:number=Number of items saved
+// < Count:number=Number of items saved.
 // ? Commits all modified variables to database. Returns number of items
 // ? written.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Save, 1, LuaUtilPushVar(lS, cCVars->CVarsSaveToDatabase()))
-/* ========================================================================= */
-// $ Variable.Valid
-// > Var:string=Cvar name to test.
-// < Valid:boolean=Cvar name is valid.
-// ? Returns true if the given string has valid characters, false if not. CVars
-// ? must begin with a letter but subsequent characters can be underscores and
-// ? numbers. The name must also be between 5 and 255 characters in length.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Valid, 1,
-  LuaUtilPushVar(lS, cCVars->IsValidVariableName(AgString{lS, 1})))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Variable.* namespace functions structure                            ## **
+** ## Variable.* non-member functions structure                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Variable.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Exists), LLRSFUNC(Register), LLRSFUNC(Save),
-  LLRSFUNC(Valid),
-LLRSEND                                // Variable.* namespace functions end
+LLRSBEGIN                              // Variable.* non-member functions begin
+  LLRSFUNC(GetClasses), LLRSFUNC(IsExist), LLRSFUNC(IsValid),
+  LLRSFUNC(Register),   LLRSFUNC(Save),
+LLRSEND                                // Variable.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Variable.* namespace constants                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // @ Variable.Flags
-// < Data:table=A table of const string/int key pairs
+// < Data:table=A table of const string/int key pairs.
 // ? Returns all the cvar flags supported by the engine in the form of a
 // ? string/int key pairs which can be used with the Variable.Register()
 // ? command.
@@ -249,7 +254,7 @@ LLRSKTBEGIN(Flags)                     // Beginning of cvar register flags
 LLRSKTEND                              // End of cvar register status flags
 /* ========================================================================= */
 // @ Variable.Result
-// < Data:table=A table of const string/int key pairs
+// < Data:table=A table of const string/int key pairs.
 // ? Returns the possible values that can be returned with the Variable.Set()
 // ? function. Any other errors are thrown as an exception.
 /* ------------------------------------------------------------------------- */

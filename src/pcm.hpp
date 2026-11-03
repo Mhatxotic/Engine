@@ -264,7 +264,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   Pcm() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperPcm{ cPcms },              // Initially unregistered
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderPcm{ this, EMC_MP_PCM } // Setup async loader with this class
     /* -- No code ---------------------------------------------------------- */
     {}

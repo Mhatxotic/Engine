@@ -304,26 +304,31 @@ struct CLHelper :                      // Members initially public
 ** ######################################################################### **
 ** == Parent class helper ================================================== */
 template<class CollectorType, class MemberType, class IteratorType>
-struct ICHelperBase                    // Members initially public
-{ /* -- Swap registration with another class ------------------------------- */
-  CollectorType*const cParent;         // Parent class of this object
+class ICHelperBase                     // Members initially private
+{ /* -- Protected variables ------------------------------------------------ */
+  IteratorType     cIterator;          // Iterator to this object in parent
+  /* -- Parent collector class ---------------------------------- */ protected:
+  CollectorType   &ctParent;           // Reference to collector class
   /* -- Gets a reference to the object contained in the iterator ----------- */
   constexpr static auto &ICHelperItAddr(const IteratorType &cIt)
     { return *StdAddressOf(*cIt); }
-  /* -- Protected variables ------------------------------------- */ protected:
-  IteratorType     cIterator;          // Iterator to this object in parent
+  /* -- Returns if the item is registered already -------------------------- */
+  bool ICHelperBaseIsUnregistered() const
+    { return cIterator == ctParent.CollectorGetLastItemUnsafe(); }
+  bool ICHelperBaseIsRegistered() const
+    { return !ICHelperBaseIsUnregistered(); }
   /* -- Add from collector with set parent --------------------------------- */
   void ICHelperBaseRegister()
   { // Return if already registered else check count and add to collector
-    if(cIterator != cParent->CollectorGetLastItemUnsafe()) return;
-    cParent->CollectorCheckUnsafe();
-    cIterator = cParent->CollectorAddUnsafe(static_cast<MemberType*>(this));
+    if(ICHelperBaseIsRegistered()) return;
+    ctParent.CollectorCheckUnsafe();
+    cIterator = ctParent.CollectorAddUnsafe(static_cast<MemberType*>(this));
   }
   /* -- Erase from collector with set parent ------------------------------- */
   void ICHelperBaseUnregister()
   { // Return if not registered otherwise unregister from collector
-    if(cIterator == cParent->CollectorGetLastItemUnsafe()) return;
-    cIterator = cParent->CollectorEraseUnsafe(cIterator);
+    if(ICHelperBaseIsUnregistered()) return;
+    cIterator = ctParent.CollectorEraseUnsafe(cIterator);
   }
   /* -- Initialisation helpers on construction ----------------------------- */
   static IteratorType
@@ -331,7 +336,11 @@ struct ICHelperBase                    // Members initially public
       { return ctPtr->CollectorAddUnsafe(mtPtr); }
   static IteratorType ICHelperBaseInit(CollectorType*const ctPtr)
     { return ctPtr->CollectorGetLastItemUnsafe(); }
-   /* -- Swap registration ------------------------------------------------- */
+  /* -- Register if other collector is registered -------------------------- */
+  void ICHelperBaseCopyRegistration(const MemberType &mtObj)
+    { if(mtObj.ICHelperBaseIsRegistered()) ICHelperBaseRegister();
+      else ICHelperBaseUnregister(); }
+  /* -- Swap registration -------------------------------------------------- */
   // We ideally want to just replace the pointers in the iterator without
   // actually disturbing any actual iterators because it will be much faster
   // than just erasing the iterator and readding it! We unfortunately cannot
@@ -340,10 +349,10 @@ struct ICHelperBase                    // Members initially public
   { // Convert to non-const
     MemberType &mtObjRef = const_cast<MemberType&>(mtObj);
     // If this class is registered?
-    if(cIterator != this->cParent->CollectorGetLastItemUnsafe())
+    if(ICHelperBaseIsRegistered())
     { // If other is registered? Nothing needs swapping because both iterators
       // are already in the collector list
-      if(mtObjRef.cIterator != this->cParent->CollectorGetLastItemUnsafe())
+      if(mtObjRef.ICHelperBaseIsRegistered())
       { // Just swap iterators and pointers to the members
         StdSwap(cIterator, mtObjRef.cIterator);
         StdSwap(ICHelperItAddr(cIterator), ICHelperItAddr(mtObjRef.cIterator));
@@ -357,12 +366,11 @@ struct ICHelperBase                    // Members initially public
       // is now registered, and not this.
       ICHelperItAddr(mtObjRef.cIterator) = &mtObjRef;
       // We are now unregistered
-      cIterator = this->cParent->CollectorGetLastItemUnsafe();
+      cIterator = ctParent.CollectorGetLastItemUnsafe();
       // Done
       return;
     } // This isn't registered and if other isn't too, just return
-    else if(mtObjRef.cIterator ==
-      this->cParent->CollectorGetLastItemUnsafe()) return;
+    else if(mtObjRef.ICHelperBaseIsUnregistered()) return;
     // Copy other iterator over this iterator because we are using the same
     // physical position in the collector list...
     cIterator = mtObjRef.cIterator;
@@ -371,13 +379,13 @@ struct ICHelperBase                    // Members initially public
     ICHelperItAddr(cIterator) = static_cast<MemberType*>(this);
     // Other member no longer registered. Any use of the iterator in the other
     // class is now undefined behaviour.
-    mtObjRef.cIterator = this->cParent->CollectorGetLastItemUnsafe();
+    mtObjRef.cIterator = ctParent.CollectorGetLastItemUnsafe();
   }
   /* ----------------------------------------------------------------------- */
   explicit ICHelperBase(CollectorType*const ctPtr, IteratorType &&itObj) :
     /* -- Initialisers ----------------------------------------------------- */
-    cParent{ ctPtr },                  // Initialise pointer to collector class
-    cIterator{ StdMove(itObj) }        // Initialise iterator
+    cIterator{ StdMove(itObj) },       // Initialise iterator
+    ctParent{ *ctPtr }                 // Initialise pointer to collector class
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -405,14 +413,18 @@ class ICHelperSafe :                   // Members initially private
         return this->ICHelperBaseInit(ctPtr);}); }
   /* -- Insert from collector list with synchronisation --------- */ protected:
   void ICHelperPush()
-    { this->cParent->MutexCall([this](){ this->ICHelperBaseRegister(); }); }
+    { this->ctParent.MutexCall([this](){ this->ICHelperBaseRegister(); }); }
   /* -- Remove from collector list with synchronisation -------------------- */
   void ICHelperErase()
-    { this->cParent->MutexCall([this](){ this->ICHelperBaseUnregister(); }); }
-  /* -- Swap to objects ---------------------------------------------------- */
+    { this->ctParent.MutexCall([this](){ this->ICHelperBaseUnregister(); }); }
+  /* -- Swap objects ------------------------------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
-    { this->cParent->MutexCall([this, &mtObj](){
+    { this->ctParent.MutexCall([this, &mtObj](){
         this->ICHelperBaseSwapRegistration(mtObj);}); }
+  /* -- Copy objects ------------------------------------------------------- */
+  void ICHelperCopy(const MemberType &mtObj)
+    { this->ctParent.MutexCall([this, &mtObj](){
+        this->ICHelperBaseCopyRegistration(mtObj);}); }
   /* -- Constructor with registration -------------------------------------- */
   explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
     BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) } {}
@@ -449,6 +461,9 @@ class ICHelperUnsafe :                 // Members initially private
   /* -- Remove object from collector list ---------------------------------- */
   void ICHelperSwap(const MemberType &mtObj)
     { this->ICHelperBaseSwapRegistration(mtObj); }
+  /* -- Copy object from collector list ------------------------------------ */
+  void ICHelperCopy(const MemberType &mtObj)
+    { this->ICHelperBaseCopyRegistration(mtObj); }
   /* -- Constructors without registration ---------------------------------- */
   explicit ICHelperUnsafe(CollectorType*const ctPtr) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -482,8 +497,12 @@ struct ICHelper :                      // Members initially public
   /* -- Swap registration with another class ------------------------------- */
   void CollectorSwapRegistration(const MemberType &mtObj)
     { this->ICHelperSwap(mtObj); }
+  /* -- Copy registration (register if other is registered) ---------------- */
+  void CollectorCopyRegistration(const MemberType &mtObj)
+    { this->ICHelperCopy(mtObj); }
   /* -- Register to list --------------------------------------------------- */
   void CollectorRegister() { this->ICHelperPush(); }
+  /* -- Unregister to list ------------------------------------------------- */
   void CollectorUnregister() { this->ICHelperErase(); }
   /* -- Destructor (unregister if registered) ------------------- */ protected:
   DTORHELPER(~ICHelper, CollectorUnregister())

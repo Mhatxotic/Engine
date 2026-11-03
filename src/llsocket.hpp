@@ -52,7 +52,7 @@ struct AgMethod { StdString strString;
     strString{LuaUtilGetCppStrUpper(lS, iArg)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Socket:* member functions                                           ## **
+** ## Socket:* methods                                                    ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Socket:Callback
@@ -315,10 +315,10 @@ LLFUNC(WriteString, 1,
   aSocket().SendStringSafe(aText()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Socket:* member functions structure                                 ## **
+** ## Socket:* methods structure                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Socket:* member functions begin
+LLRSMFBEGIN                            // Socket:* methods begin
   LLRSFUNC(Callback),       LLRSFUNC(CompactRecvQ), LLRSFUNC(CompactSendQ),
   LLRSFUNC(Destroy),        LLRSFUNC(Destroyed),    LLRSFUNC(Disconnect),
   LLRSFUNC(GetAddress),     LLRSFUNC(GetAddressEx), LLRSFUNC(GetCipher),
@@ -331,24 +331,12 @@ LLRSMFBEGIN                            // Socket:* member functions begin
   LLRSFUNC(TConnected),     LLRSFUNC(TDisconnect),  LLRSFUNC(TDisconnected),
   LLRSFUNC(TRead),          LLRSFUNC(TWrite),       LLRSFUNC(Write),
   LLRSFUNC(WriteString),
-LLRSEND                                // Socket:* member functions end
+LLRSEND                                // Socket:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Socket.* namespace functions                                        ## **
+** ## Socket.* non-member functions                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Socket.Connected
-// < Count:integer=Total number of sockets connected
-// ? Returns the total number of socket classes currently connected.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Connected, 1, LuaUtilPushVar(lS, cSockets->astConnected.load()))
-/* ========================================================================= */
-// $ Socket.Count
-// < Count:integer=Total number of sockets created.
-// ? Returns the total number of socket classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cSockets->CollectorCount()))
-/* ========================================================================= */
 // $ Socket.Create
 // > Name:string=Name to identify the socket.
 // > Address:string=The network destination address to connect to.
@@ -408,29 +396,41 @@ LLFUNC(CreateHTTP, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Flush, 1, LuaUtilPushVar(lS, SocketReset()))
 /* ========================================================================= */
-// $ Socket.TotalRXBytes
+// $ Socket.GetClasses
+// < Count:integer=Total number of sockets created.
+// ? Returns the total number of socket classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cSockets->CollectorCount()))
+/* ========================================================================= */
+// $ Socket.GetConnected
+// < Count:integer=Total number of sockets connected
+// ? Returns the total number of socket classes currently connected.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetConnected, 1, LuaUtilPushVar(lS, cSockets->astConnected.load()))
+/* ========================================================================= */
+// $ Socket.GetTotalRXBytes
 // < Total:integer=The number of bytes read from this socket.
 // ? Returns the total number of bytes read from this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalRXBytes, 1, LuaUtilPushVar(lS, cSockets->aullRX.load()))
+LLFUNC(GetTotalRXBytes, 1, LuaUtilPushVar(lS, cSockets->aullRX.load()))
 /* ========================================================================= */
-// $ Socket.TotalTXBytes
+// $ Socket.GetTotalTXBytes
 // < Total:integer=The number of bytes written to this socket.
 // ? Returns the total number of bytes written to this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalTXBytes, 1, LuaUtilPushVar(lS, cSockets->aullTX.load()))
+LLFUNC(GetTotalTXBytes, 1, LuaUtilPushVar(lS, cSockets->aullTX.load()))
 /* ========================================================================= */
-// $ Socket.TotalRXPackets
+// $ Socket.GetTotalRXPackets
 // < Total:integer=The total number of packets read from this socket.
 // ? Returns the total number of packets read from this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalRXPackets, 1, LuaUtilPushVar(lS, cSockets->aullRXp.load()))
+LLFUNC(GetTotalRXPackets, 1, LuaUtilPushVar(lS, cSockets->aullRXp.load()))
 /* ========================================================================= */
-// $ Socket.TotalTXPackets
+// $ Socket.GetTotalTXPackets
 // < Total:integer=The total number of packets written to all sockets.
 // ? Returns the total number of packets written to all sockets.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TotalTXPackets, 1, LuaUtilPushVar(lS, cSockets->aullTXp.load()))
+LLFUNC(GetTotalTXPackets, 1, LuaUtilPushVar(lS, cSockets->aullTXp.load()))
 /* ========================================================================= */
 // $ Socket.SocketWaitAsync
 // < Count:integer=Total number of sockets disconnected.
@@ -439,15 +439,16 @@ LLFUNC(TotalTXPackets, 1, LuaUtilPushVar(lS, cSockets->aullTXp.load()))
 LLFUNC(WaitAsync, 1, LuaUtilPushVar(lS, SocketWaitAsync()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Socket.* namespace functions structure                              ## **
+** ## Socket.* non-member functions structure                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Socket.* namespace functions begin
-  LLRSFUNC(Create),         LLRSFUNC(CreateHTTP),     LLRSFUNC(Count),
-  LLRSFUNC(Connected),      LLRSFUNC(Flush),          LLRSFUNC(TotalRXBytes),
-  LLRSFUNC(TotalTXBytes),   LLRSFUNC(TotalRXPackets), LLRSFUNC(TotalTXPackets),
-  LLRSFUNC(WaitAsync),
-LLRSEND                                // Socket.* namespace functions end
+LLRSBEGIN                              // Socket.* non-member functions begin
+  LLRSFUNC(Create),            LLRSFUNC(CreateHTTP),
+  LLRSFUNC(Flush),             LLRSFUNC(GetClasses),
+  LLRSFUNC(GetConnected),      LLRSFUNC(GetTotalRXBytes),
+  LLRSFUNC(GetTotalRXPackets), LLRSFUNC(GetTotalTXBytes),
+  LLRSFUNC(GetTotalTXPackets), LLRSFUNC(WaitAsync),
+LLRSEND                                // Socket.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Socket.* namespace constants                                        ## **

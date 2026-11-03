@@ -39,15 +39,9 @@ struct AgDimension : public AgUIntLGE {
     AgUIntLGE{ lS, iArg, 1, StdLimits<uint16_t>::max() }{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Image:* member functions                                            ## **
+** ## Image:* methods                                                     ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Image:Depth
-// < Height:integer=The bit-depth of the image in bits
-// ? Returns the bit-depth of the image
-/* ------------------------------------------------------------------------- */
-LLFUNC(Depth, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().GetBitsPerPixel()))
-/* ========================================================================= */
 // $ Image:Destroy
 // ? Destroys the image and frees all the memory associated with it. The
 // ? object will no longer be useable after this call and an error will be
@@ -55,36 +49,49 @@ LLFUNC(Depth, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().GetBitsPerPixel()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Image>(lS, cImages))
 /* ========================================================================= */
-// $ Image:Destroyed
-// < Destroyed:boolean=If the Image class is destroyed
-// ? Returns if the Image class is destroyed.
+// $ Image:GetDepth
+// < Height:integer=The bit-depth of the image in bits
+// ? Returns the bit-depth of the image
 /* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cImages)))
+LLFUNC(GetDepth, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().GetBitsPerPixel()))
 /* ========================================================================= */
-// $ Image:Flags
+// $ Image:GetFlags
 // < Flags:integer=Image flags value
 // ? Returns the current image flags.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Flags, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().FlagGet()))
+LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().FlagGet()))
 /* ========================================================================= */
-// $ Image:Height
+// $ Image:GetHeight
 // < Height:integer=The height of the image in pixels
 // ? Returns the height if the image.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Height, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetHeight()))
+LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetHeight()))
 /* ========================================================================= */
-// $ Image:Id
-// < Id:integer=The id number of the Image object.
+// $ Image:GetId
+// < GetId:integer=The id number of the Image object.
 // ? Returns the unique id of the Image object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Image:Name
+// $ Image:GetName
 // < Name:string=Name of the image.
 // ? If this font was loaded by a filename or it was set with a custom id.
 // ? This function returns that name which was assigned to it.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Image:GetWidth
+// < Width:integer=The width of the image in pixels
+// ? Returns the width if the image.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetWidth()))
+/* ========================================================================= */
+// $ Image:IsDestroyed
+// < Destroyed:boolean=If the Image class is destroyed
+// ? Returns if the Image class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cImages)))
 /* ========================================================================= */
 // $ Image:Replace
 // > Data:Asset=The new pixel data to replace with.
@@ -107,25 +114,20 @@ LLFUNC(Save, 0,
   const AgImage aImage{lS, 1};
   const AgFilename aFilename{lS, 2};
   aImage().SaveFile(aFilename, 0, IFMT_PNG))
-/* ========================================================================= */
-// $ Image:Width
-// < Width:integer=The width of the image in pixels
-// ? Returns the width if the image.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Width, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().DimGetWidth()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Image:* member functions structure                                  ## **
+** ## Image:* methods structure                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Image:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Depth), LLRSFUNC(Flags),
-  LLRSFUNC(Height),  LLRSFUNC(Id),        LLRSFUNC(Name),  LLRSFUNC(Replace),
-  LLRSFUNC(Save),    LLRSFUNC(Width),
-LLRSEND                                // Image:* member functions end
+LLRSMFBEGIN                            // Image:* methods begin
+  LLRSFUNC(Destroy),     LLRSFUNC(GetDepth), LLRSFUNC(GetFlags),
+  LLRSFUNC(GetHeight),   LLRSFUNC(GetId),    LLRSFUNC(GetName),
+  LLRSFUNC(GetWidth),    LLRSFUNC(Replace),  LLRSFUNC(Save),
+  LLRSFUNC(IsDestroyed),
+LLRSEND                                // Image:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Image.* namespace functions                                         ## **
+** ## Image.* non-member functions                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Image.Asset
@@ -184,12 +186,6 @@ LLFUNC(Blank, 1,
 LLFUNC(Colour, 1, const AgUInt32 aColour{lS, 1};
   AcImage{lS}().InitColour(aColour))
 /* ========================================================================= */
-// $ Image.Count
-// < Count:integer=Total number of images created.
-// ? Returns the total number of image classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cImages->CollectorCount()))
-/* ========================================================================= */
 // $ Image.File
 // > Filename:string=The filename of the image to load
 // > Flags:Integer=Load flags
@@ -218,6 +214,22 @@ LLFUNC(FileAsync, 0,
   LuaUtilCheckFunc(lS, 3, 4, 5);
   AcImage{lS}().InitAsyncFile(lS, aFilename, aFlags))
 /* ========================================================================= */
+// $ Image.GetClasses
+// < Count:integer=Total number of images created.
+// ? Returns the total number of image classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cImages->CollectorCount()))
+/* ========================================================================= */
+// $ Image.Image
+// > Other:Image=The image to duplicate.
+// < Duplicated:Image=The duplicated image.
+// ? Duplicates the specified 'Image' class perfectly. This is mainly if you
+// ? really need to keep a copy of the 'Image' class for further work as
+// ? function arguments which require an 'Image' will usually drain all the
+// ? memory from it and take complete ownership of it.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Image, 1, AcImage{lS}().ImageCopy(AgImage(lS, 1)))
+/* ========================================================================= */
 // $ Image.Raw
 // > Name:string=Name of the image.
 // > Data:Asset=The data of the image to load which is consumed.
@@ -241,14 +253,15 @@ LLFUNC(Raw, 1,
 LLFUNC(WaitAsync, 0, cImages->WaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Image.* namespace functions structure                               ## **
+** ## Image.* non-member functions structure                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Image.* namespace functions begin
-  LLRSFUNC(AssetAsync), LLRSFUNC(Asset),  LLRSFUNC(Blank),
-  LLRSFUNC(Colour),     LLRSFUNC(Count),  LLRSFUNC(File),
-  LLRSFUNC(FileAsync),  LLRSFUNC(Raw),    LLRSFUNC(WaitAsync),
-LLRSEND                                // Image.* namespace functions end
+LLRSBEGIN                              // Image.* non-member functions begin
+  LLRSFUNC(AssetAsync), LLRSFUNC(Asset),      LLRSFUNC(Blank),
+  LLRSFUNC(Colour),     LLRSFUNC(GetClasses), LLRSFUNC(File),
+  LLRSFUNC(FileAsync),  LLRSFUNC(Image),      LLRSFUNC(Raw),
+  LLRSFUNC(WaitAsync),
+LLRSEND                                // Image.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Image.* namespace constants                                         ## **

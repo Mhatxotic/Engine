@@ -190,21 +190,19 @@ class MemConst                         // Start of const MemBase Block Class
     requires StdIsIntegral<IntType>
   bool MemIsSizeOverflow() const
     { return UtilIntWillOverflow<IntType>(MemSize()); }
-  /* -- Init from string (does not copy) ----------------------------------- */
+  /* -- Init from string (does not allocate and copy) ---------------------- */
   explicit MemConst(const StdString &strRef) :
     /* -- Initialisers ----------------------------------------------------- */
     MemConst{ strRef.size(),           // Copy string size and pointer over
       strRef.data() }                  // from specified string
     /* -- Copy pointer and size over from string --------------------------- */
     {}
-  /* -- Assignment constructor (rvalue) ------------------------------------ */
+  /* -- Move constructor --------------------------------------------------- */
   explicit MemConst(MemConst &&mbOther) :
     /* -- Initialisers ----------------------------------------------------- */
     sbData{ StdMove(mbOther.sbData) }    // Copy pointer and size
     /* -- Code to clear other MemConst ------------------------------------ */
     { mbOther.MemReset(); }
-  /* -- Uninitialised constructor -- pointer ------------------------------- */
-  MemConst() = default;
   /* -- Inherit an already allocated pointer ------------------------------- */
   MemConst(const size_t stBytes, uint8_t*const ubpNPtr) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -222,6 +220,8 @@ class MemConst                         // Start of const MemBase Block Class
   /* -- Cast const void pointer to const char ------------------------------ */
   MemConst(const size_t stBytes, const void*const vpSrc) :
     MemConst(stBytes, const_cast<void*>(vpSrc)) {}
+  /* -- Default constructor ------------------------------------------------ */
+  MemConst() = default;
 };/* ----------------------------------------------------------------------- */
 /* == Read and write data class ============================================ */
 class MemBase :
@@ -604,26 +604,6 @@ class Memory :
     { MemInitData(mcRef.MemSize(), mcRef.MemPtr()); }
   /* -- Allocate and zero memory ------------------------------------------- */
   void MemInitSafe(const size_t stBytes) { MemInitBlank(stBytes); MemFill(); }
-  /* -- Assignment operator (rvalue) ------------------------------------ -- */
-  Memory &operator=(Memory &&mOther) { MemSwap(mOther); return *this; }
-  /* -- Assignment constructor (rvalue) ------------------------------------ */
-  Memory(Memory &&mOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ StdMove(mOther) }         // Move other memory object
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Take ownership of pointer (must originally be malloc'd) ------------ */
-  explicit Memory(MemBase &&mbOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ StdMove(mbOther) }        // Move other data object
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Take ownership of pointer (must originally be malloc'd) ------------ */
-  explicit Memory(MemConst &&mcOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ StdMove(mcOther) }        // Move other read only memory object
-    /* -- No code ---------------------------------------------------------- */
-    {}
   /* -- Init from string --------------------------------------------------- */
   explicit Memory(const StdString &strRef) :
     /* -- Initialisers ----------------------------------------------------- */
@@ -652,13 +632,43 @@ class Memory :
     Memory{ stBytes }                  // Allocate memory
     /* -- Full memory with zeros if there is data -------------------------- */
     { if(MemIsNotEmpty()) MemFill(); }
-  /* -- Alloc with copy ---------------------------------------------------- */
+  /* -- Constructor that duplicates an existing buffer --------------------- */
   Memory(const size_t stBytes, const void*const vpSrc) :
     /* -- Initialisers ----------------------------------------------------- */
     Memory{ stBytes }                  // Allocate size of pointer
     /* -- Code to initialise pointer --------------------------------------- */
     { if(vpSrc) MemDoWrite(0, vpSrc, stBytes); }
-  /* -- Standby constructor ------------------------------------------------ */
+  /* -- Copy assignment operator ------------------------------------------- */
+  Memory &operator=(const Memory &mOther)
+    { MemInitCopy(mOther); return *this; }
+  /* -- Copy constructor --------------------------------------------------- */
+  Memory(const Memory &mOther) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Memory{ mOther.MemSize(),          // Copy other memory object...
+            mOther.MemPtr() }          // ...including contents
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Move assignment operator ------------------------------------------- */
+  Memory &operator=(Memory &&mOther) { MemSwap(mOther); return *this; }
+  /* -- Move constructor from another Memory class ------------------------- */
+  Memory(Memory &&mOther) :
+    /* -- Initialisers ----------------------------------------------------- */
+    MemBase{ StdMove(mOther) }         // Move other memory object
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Move constructor from another MemBase class ------------------------ */
+  explicit Memory(MemBase &&mbOther) :
+    /* -- Initialisers ----------------------------------------------------- */
+    MemBase{ StdMove(mbOther) }        // Move other data object
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Move constructor from another MemConst class ----------------------- */
+  explicit Memory(MemConst &&mcOther) :
+    /* -- Initialisers ----------------------------------------------------- */
+    MemBase{ StdMove(mcOther) }        // Move other read only memory object
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Default constructor ------------------------------------------------ */
   Memory() = default;
   /* -- Destructor (just a free() needed) ---------------------------------- */
   ~Memory() { MemFreePtrIfSet(); }

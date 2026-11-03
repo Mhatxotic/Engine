@@ -40,14 +40,21 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   public Lockable,                     // Lua garbage collector instruction
   public ImageData                     // Raw image data
 { /* -- Swap image data  ------------------------------------------- */ public:
-  void SwapImage(Image &imRef)
+  void ImageSwap(Image &imRef)
   { // Swap members with other class
-    LockSwap(imRef);                   // Lua lock status
-    CollectorSwapRegistration(imRef);  // Collector registration
-    ImageDataSwap(imRef);              // Image data and flags swap
+    LockSwap(imRef);                   // Move Lua lock status
+    CollectorSwapRegistration(imRef);  // Move collector registration status
+    ImageDataSwap(imRef);              // Move image data and flags
+  }
+  /* -- Copy image data  --------------------------------------------------- */
+  void ImageCopy(Image &imRef)
+  { // Swap members with other class
+    LockCopy(imRef);                   // Copy Lua lock status
+    CollectorCopyRegistration(imRef);  // Copy collector registration status
+    ImageDataCopy(imRef);              // Copy image data and flags swap
   }
   /* -- Swap image data (so you can use temporary variables) --------------- */
-  void SwapImage(Image &&imRef) { SwapImage(imRef); }
+  void ImageSwap(Image &&imRef) { ImageSwap(imRef); }
   /* -- Force the specified colour mode ------------------------------------ */
   bool ForcePixelOrder(const TextureType ttNType)
   { // Return failure if parameters are wrong
@@ -930,7 +937,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   Image() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- No code ---------------------------------------------------------- */
@@ -941,7 +948,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     const ImageFlagsConst ifcPurpose) :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE },                  // Initialise async event id
     ImageData{ ifcPurpose }            // Initialise purpose of image class
@@ -953,7 +960,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     const uint32_t ulColour            // 32-bit RGBA colour pixel value
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperImage{ cImages },          // Initialise collector helper
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Init 1x1 tex with specified colour ------------------------------- */
@@ -969,7 +976,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ): /* -- Initialisation of members ------------------------------------- */
     Name{ ssvName },                   // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    SerialSlave{ cParent->Serial() } , // Initialise identification number
+    SerialSlave{ ctParent.Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise raw image --------------------------------------------- */
@@ -983,7 +990,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ): /* -- Initialisation of members ------------------------------------- */
     Name{ ssvName },                   // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    SerialSlave{ cParent->Serial() } , // Initialise identification number
+    SerialSlave{ ctParent.Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Initialise from array -------------------------------------------- */
@@ -996,7 +1003,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ): /* -- Initialisation of members ------------------------------------- */
     Name{ ssvName },                   // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    SerialSlave{ cParent->Serial() } , // Initialise identification number
+    SerialSlave{ ctParent.Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Code to initialise from file ------------------------------------- */
@@ -1008,11 +1015,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     ): /* -- Initialisation of members ------------------------------------- */
     Name{ StdMove(imOtherRval) },      // Initialise identifier
     ICHelperImage{ cImages },          // Initialise collector helper
-    SerialSlave{ cParent->Serial() } , // Initialise identification number
+    SerialSlave{ ctParent.Serial() } , // Initialise identification number
     AsyncLoaderImage{ this,            // Initialise async loader
       EMC_MP_IMAGE }                   // Initialise async event id
     /* -- Swap image over -------------------------------------------------- */
-    { SwapImage(imOtherRval); }
+    { ImageSwap(imOtherRval); }
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Image, AsyncCancel())    // Wait for loading thread to cancel
 };/* -- End ---------------------------------------------------------------- */

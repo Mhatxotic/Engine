@@ -245,8 +245,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Increment received bytes and packet counters
         aullRX += stRead;
         ++aullRXp;
-        cParent->aullRX += stRead;
-        ++cParent->aullRXp;
+        ctParent.aullRX += stRead;
+        ++ctParent.aullRXp;
         // Set last received timestamp
         acdRead = cmHiRes.GetEpochTime();
         // Return bytes read
@@ -277,8 +277,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Increment sent bytes and packet counters
         aullTX += stWritten;
         ++aullTXp;
-        cParent->aullTX += stWritten;
-        ++cParent->aullTXp;
+        ctParent.aullTX += stWritten;
+        ++ctParent.aullTXp;
         // Set last sent timestamp
         acdWrite = cmHiRes.GetEpochTime();
         // Make sure we sent the same bytes as requested. This should never
@@ -356,7 +356,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     strRealHost.clear();
     strIP.clear();
     // Default specified? Use defaults from both cvars
-    if(cParent->ssvCipherDefault == ssvCipher)
+    if(ctParent.ssvCipherDefault == ssvCipher)
     { // Setup <=TLSv1.2 ciphers
       strCipherList = cSockets->ssvCipher12;
       // Setup TLSv1.3 ciphers
@@ -374,7 +374,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       { // Set TLSv1.3 cipher suite
         const StdStringView &ssvSuite = tsvData.front();
         strCipherSuite =
-          ssvSuite == cParent->ssvCipherDefault ?
+          ssvSuite == ctParent.ssvCipherDefault ?
             cSockets->ssvCipher13 : ssvSuite;
         // Set <=TLSv1.2 cipher list
         strCipherList = cSockets->ssvCipher12;
@@ -384,11 +384,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       case 2:
       { // Set TLSv1.3 cipher suite
         const StdStringView &ssvSuite = tsvData.front();
-        strCipherSuite = ssvSuite == cParent->ssvCipherDefault ?
+        strCipherSuite = ssvSuite == ctParent.ssvCipherDefault ?
           cSockets->ssvCipher13 : ssvSuite;
         // Set <= TLSv1.2 cipher list
         const StdStringView &ssvList = tsvData[1];
-        strCipherList = ssvList == cParent->ssvCipherDefault ?
+        strCipherList = ssvList == ctParent.ssvCipherDefault ?
           cSockets->ssvCipher12 : ssvList;
         // Done
         break;
@@ -425,7 +425,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Return if socket was never connected
     if(FlagIsClear(SS_CONNECTED)) return;
     // Decrement connection count
-    --cParent->astConnected;
+    --ctParent.astConnected;
     // Report disconnection and statistics to log
     SocketLogUnsafe(LH_DEBUG, "disconnected (RX:$/$;TX:$/$).",
       GetRXpkt(), GetRX(), GetTXpkt(), GetTX());
@@ -504,7 +504,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     SocketLogSafe(LH_DEBUG, "connected to '$'.", GetIPAddress());
     // Set socket read and send timeout
     switch(cSystem->SetSocketTimeout(aiFd,
-      cParent->adRecvTimeout, cParent->adSendTimeout))
+      ctParent.adRecvTimeout, ctParent.adSendTimeout))
     { // Success
       case 0: break;
       // Failed so just log message
@@ -548,7 +548,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // The callback when used on the client side should return a negative value
     // on error; 0 if the response is not acceptable (in which case the
     // handshake will fail) or a positive value if it is acceptable.
-    return cParent->aiOCSP >= 2 ? 0 : 1;
+    return ctParent.aiOCSP >= 2 ? 0 : 1;
   }
   /* -- Socket initial connect function ------------------------------------ */
   ThreadStatus InitialConnect()
@@ -578,8 +578,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Set context to release buffers as we don't reuse the contexts
       SSL_CTX_set_mode(sslctxPtr, SSL_MODE_RELEASE_BUFFERS);
       // Set our shared certificate store if we have one
-      if(cParent->CertsIsStoreAvailable() &&
-        !CryptSSLCtxSet1VerifyCertStore(sslctxPtr, cParent->CertsGetStore()))
+      if(ctParent.CertsIsStoreAvailable() &&
+        !CryptSSLCtxSet1VerifyCertStore(sslctxPtr, ctParent.CertsGetStore()))
           return SetErrorStaticSafe("Cert store failure!");
       // Setup verification, make a new verification context and if succeded?
       using X509VerifyParamPtr = StdUniquePtr<X509_VERIFY_PARAM,
@@ -643,7 +643,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       // Client mode
       BIO_set_ssl_mode(bioPtr, 1);
       // OCSP verification option enabled?
-      if(cParent->aiOCSP >= 1)
+      if(ctParent.aiOCSP >= 1)
       { // Setup OCSP verification
         if(!SSL_set_tlsext_status_type(sslPtr, TLSEXT_STATUSTYPE_ocsp))
           SocketLogSafe(LH_WARNING, "failed to setup OCSP verification!");
@@ -705,10 +705,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         // Anything else?
         default:
         { // Find error code if the error code information is not found?
-          const Certs::X509ErrConstIt xeciIt{ cParent->CertsGetError(stRes) };
-          if(cParent->CertsIsNotErrorValid(xeciIt))
+          const Certs::X509ErrConstIt xeciIt{ ctParent.CertsGetError(stRes) };
+          if(ctParent.CertsIsNotErrorValid(xeciIt))
           { // Return success if user wants to bypass it
-            if(cParent->CertsIsNotX509BypassFlagSet(1, 0x8000000000000000ULL))
+            if(ctParent.CertsIsNotX509BypassFlagSet(1, 0x8000000000000000ULL))
             { // Set error and return status
               SetErrorStaticSafe(StrAppend("X509_V_ERR_UNKNOWN_", stRes));
               return TS_ERROR;
@@ -722,7 +722,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
             // Build error code
             const StdString strErr{ StrAppend("X509_V_ERR_", xeiData.cpErr) };
             // Return success if user wants to bypass it
-            if(cParent->CertsIsNotX509BypassFlagSet(
+            if(ctParent.CertsIsNotX509BypassFlagSet(
                  xeiData.stBank, xeiData.ullFlag))
             { // Set error and return status
               SetErrorStaticSafe(strErr);
@@ -745,7 +745,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     } // Now connected
     AddStatus(SS_CONNECTED, acdConnected);
     // Increase connected count
-    ++cParent->astConnected;
+    ++ctParent.astConnected;
     // Successful connect
     return TS_OK;
   }
@@ -1027,17 +1027,17 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         eMode = WEBSOCKET;
         // Remove request method from registry so it doesn't accidentally get
         // sent as a header.
-        psvciIt = GetRegistryIterator(cParent->strRegVarMETHOD);
+        psvciIt = GetRegistryIterator(ctParent.strRegVarMETHOD);
         if(psvciIt != psvRegistry.cend()) psvRegistry.erase(psvciIt);
       } // Set normal HTTP request or HEAD request
-      else eMode = GetRegistry(cParent->strRegVarMETHOD) == "HEAD" ?
+      else eMode = GetRegistry(ctParent.strRegVarMETHOD) == "HEAD" ?
                      HTTP_HEAD : HTTP;
     } // Set sending request status event
     AddStatus(SS_SENDREQUEST);
     { // Get resource requested
-      const StdString strReq{ StdMove(GetRegistry(cParent->strRegVarREQ)) };
+      const StdString strReq{ StdMove(GetRegistry(ctParent.strRegVarREQ)) };
       // Get body requested
-      const StdString strBody{ StdMove(GetRegistry(cParent->strRegVarBODY)) };
+      const StdString strBody{ StdMove(GetRegistry(ctParent.strRegVarBODY)) };
       // Get the request headers to be sent
       const StdString strHdrs{
         StdMove(psvRegistry.ParserImplodeEx(": ", cCommon->CommonCrLf())) };
@@ -1055,7 +1055,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Initialise memory for response headers
     StdReserved<StdString> strHeaders{ 1024 };
     // Allocate memory for read buffer
-    Memory mDest{ cParent->astBufferSize };
+    Memory mDest{ ctParent.astBufferSize };
     // Expecting reponse headers? and connection closed status
     bool bHeaders = true;
     // Begin monitoring for reply and break if thread should exit
@@ -1134,7 +1134,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       strHeaders.shrink_to_fit();
       // Find initial reponse (should be #0 set by VARS class)
       const StrNCStrMapConstIt
-        vlR{ GetRegistryIterator(cParent->strRegVarRESPONSE) };
+        vlR{ GetRegistryIterator(ctParent.strRegVarRESPONSE) };
       if(vlR == psvRegistry.cend()) return SetErrorStaticSafe("Bad response!");
       // Split into words. We should have got at least three words
       const TokenStrView tsvWords{ vlR->second, cCommon->CommonSpace() };
@@ -1165,9 +1165,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
           SetErrorStaticSafe("Not upgrading");
       // Add protocol and status code to registry so guest can read them
       // without having to perform any special string operations
-      psvRegistry.ParserPushOrUpdatePair(cParent->strRegVarPROTO,
+      psvRegistry.ParserPushOrUpdatePair(ctParent.strRegVarPROTO,
         StdString{ ssvProtoRecv });
-      psvRegistry.ParserPushOrUpdatePair(cParent->strRegVarCODE,
+      psvRegistry.ParserPushOrUpdatePair(ctParent.strRegVarCODE,
         StdString{ ssvStatus });
       // We have to lock the TX list since a LUA function can read this
       MutexCall([this](){
@@ -1437,7 +1437,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Try to connect and if it didn't fail kill the thread
     if(InitialConnect() == TS_ERROR) return TS_ERROR;
     // Create read transfer buffer
-    Memory mDest{ cParent->astBufferSize };
+    Memory mDest{ ctParent.astBufferSize };
     // Loop until thread should terminate
     while(tReader.ThreadShouldNotExit())
     { // Wait for new data to be read and kill thread on error
@@ -1798,18 +1798,18 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       { "Host", strAddrPort },
       // Push the formulated request line. Remove the right hand fragment from
       // the URL if neccesary.
-      { cParent->strRegVarREQ, StrFormat("$ $ HTTP/1.0\r\n",
+      { ctParent.strRegVarREQ, StrFormat("$ $ HTTP/1.0\r\n",
           ssvChosenMethod, StrUrlEncodeSpaces(strRequest())) },
       // Push method because we need to check if this is a HEAD request and
       // thus to know when to expect no output.
-      { cParent->strRegVarMETHOD, StdString{ ssvChosenMethod } },
+      { ctParent.strRegVarMETHOD, StdString{ ssvChosenMethod } },
     });
     // Body specified?
     if(!ssvBody.empty()) psvRegistry.ParserPushOrUpdatePairs({
       // Add length of body text
       { "Content-Length", StrFromNum(ssvBody.size()) },
       // Add body text
-      { cParent->strRegVarBODY, StdString{ ssvBody } }
+      { ctParent.strRegVarBODY, StdString{ ssvBody } }
     });
     // Init LUA references
     LuaEvtInitEx(lS);
@@ -1821,7 +1821,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   Socket() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSocket{ cSockets, this },  // Register in collector
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     LuaEvtSlave{ this,EMC_MP_SOCKET }, // Socket async events init
     SocketFlags{ SS_STANDBY },         // Initially on standby
     bioPtr(nullptr),                   // Invalid bio (openssl)

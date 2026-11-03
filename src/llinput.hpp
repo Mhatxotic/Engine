@@ -44,7 +44,7 @@ struct AgDeadZone : public AgNumberLGE<float> {
     AgNumberLGE{ lS, iArg, 0.0f, 1.0f }{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Input.* namespace functions                                         ## **
+** ## Input.* non-member functions                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Input.SetJoyAxisForwardDeadZone
@@ -106,6 +106,14 @@ LLFUNC(SetCursorPos, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(ClearStates, 0, cInput->JoyClearStates())
 /* ========================================================================= */
+// $ Input.IsJoyExist
+// > Id:integer=The joystick id.
+// < State:boolean=True if it exists, false if it does not.
+// ? Tests if the specified joystick exists.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsJoyExist, 1,
+  LuaUtilPushVar(lS, cInput->JoyIsConnected(AgJoystickId{lS, 1})))
+/* ========================================================================= */
 // $ Input.CursorCentre
 // ? Sets the mouse cursor in the centre of the window.
 /* ------------------------------------------------------------------------- */
@@ -117,14 +125,6 @@ LLFUNC(SetCursorCentre, 0, cInput->InputSetCursorCentre())
 // ? software based cursor.
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetCursor, 0, cInput->InputSetCursor(AgBoolean{lS, 1}))
-/* ========================================================================= */
-// $ Input.JoyExists
-// > Id:integer=The joystick id.
-// < State:boolean=True if it exists, false if it does not.
-// ? Tests if the specified joystick exists.
-/* ------------------------------------------------------------------------- */
-LLFUNC(JoyExists, 1,
-  LuaUtilPushVar(lS, cInput->JoyIsConnected(AgJoystickId{lS, 1})))
 /* ========================================================================= */
 // $ Input.GetJoyName
 // > Id:integer=The joystick id.
@@ -266,15 +266,15 @@ LLFUNC(GetKeyName, 1,
   LuaUtilPushVar(lS, GlFWGetKeyName(aKeyId, aScanId)))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Input.* namespace functions structure                               ## **
+** ## Input.* non-member functions structure                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Input.* namespace functions begin
+LLRSBEGIN                              // Input.* non-member functions begin
   LLRSFUNC(ClearStates),               LLRSFUNC(GetJoyAxis),
   LLRSFUNC(GetJoyAxisUB),              LLRSFUNC(GetJoyButton),
   LLRSFUNC(GetJoyName),                LLRSFUNC(GetKeyName),
   LLRSFUNC(GetNumJoyAxises),           LLRSFUNC(GetNumJoyButtons),
-  LLRSFUNC(JoyExists),                 LLRSFUNC(OnChar),
+  LLRSFUNC(IsJoyExist),                LLRSFUNC(OnChar),
   LLRSFUNC(OnDragDrop),                LLRSFUNC(OnJoyState),
   LLRSFUNC(OnKey),                     LLRSFUNC(OnMouseClick),
   LLRSFUNC(OnMouseFocus),              LLRSFUNC(OnMouseMove),
@@ -282,7 +282,7 @@ LLRSBEGIN                              // Input.* namespace functions begin
   LLRSFUNC(SetCursorCentre),           LLRSFUNC(SetCursorPos),
   LLRSFUNC(SetJoyAxisDeadZones),       LLRSFUNC(SetJoyAxisForwardDeadZone),
   LLRSFUNC(SetJoyAxisReverseDeadZone),
-LLRSEND                                // Input.* namespace functions end
+LLRSEND                                // Input.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Input.* namespace constants                                         ## **

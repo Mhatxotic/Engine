@@ -34,7 +34,7 @@ struct AcVideo : public ArClass<Video> {
     ArClass{LuaUtilClassCreateRef<Video>(lS, cVideos)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Video:* member functions                                            ## **
+** ## Video:* methods                                                     ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Video:Advance
@@ -76,12 +76,6 @@ LLFUNC(BlitT, 0,
 // ? useable after this call and an error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Video>(lS, cVideos))
-/* ========================================================================= */
-// $ Video:Destroyed
-// < Destroyed:boolean=If the Video class is destroyed
-// ? Returns if the Video class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cVideos)))
 /* ========================================================================= */
 // $ Video:GetATime
 // < Seconds:Number=Returns the elapsed audio time in seconds
@@ -144,12 +138,6 @@ LLFUNC(GetLoop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetLoop()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().NameGet()))
 /* ========================================================================= */
-// $ Video:GetPlaying
-// < Status:boolean=Playback status
-// ? Returns the playback status
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetPlaying, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().IsPlaying()))
-/* ========================================================================= */
 // $ Video:GetTime
 // < Seconds:Number=Returns the elapsed video time in seconds
 // ? Returns the elapsed audio time in seconds
@@ -161,6 +149,19 @@ LLFUNC(GetTime, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetVideoTime()))
 // ? Returns the width of the video
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetWidth()))
+/* ========================================================================= */
+// $ Video:IsDestroyed
+// < Destroyed:boolean=If the Video class is destroyed
+// ? Returns if the Video class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cVideos)))
+/* ========================================================================= */
+// $ Video:IsPlaying
+// < Status:boolean=Playback status
+// ? Returns the playback status
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsPlaying, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().IsPlaying()))
 /* ========================================================================= */
 // $ Video:OnEvent
 // > Func:function=The callback function to call when an event occurds. This
@@ -417,28 +418,28 @@ LLFUNC(SetVX, 0,
 LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Stop()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Video:* member functions structure                                  ## **
+** ## Video:* methods structure                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Video:* member functions begin
-  LLRSFUNC(Advance),      LLRSFUNC(Awaken),     LLRSFUNC(Blit),
-  LLRSFUNC(BlitT),        LLRSFUNC(Destroy),    LLRSFUNC(Destroyed),
-  LLRSFUNC(GetATime),     LLRSFUNC(GetDrift),   LLRSFUNC(GetFPS),
-  LLRSFUNC(GetFrame),     LLRSFUNC(GetFrames),  LLRSFUNC(GetFramesLost),
-  LLRSFUNC(GetHeight),    LLRSFUNC(GetId),      LLRSFUNC(GetLoop),
-  LLRSFUNC(GetName),      LLRSFUNC(GetPlaying), LLRSFUNC(GetTime),
-  LLRSFUNC(GetWidth),     LLRSFUNC(OnEvent),    LLRSFUNC(Pause),
-  LLRSFUNC(Play),         LLRSFUNC(Rewind),     LLRSFUNC(SetCRGBA),
-  LLRSFUNC(SetCX),        LLRSFUNC(SetFDR),     LLRSFUNC(SetFilter),
-  LLRSFUNC(SetKeyColour), LLRSFUNC(SetKeyed),   LLRSFUNC(SetLoop),
-  LLRSFUNC(SetRec709),    LLRSFUNC(SetTCLTRB),  LLRSFUNC(SetTCLTWH),
-  LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),   LLRSFUNC(SetVLTWH),
-  LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),      LLRSFUNC(SetVolume),
+LLRSMFBEGIN                            // Video:* methods begin
+  LLRSFUNC(Advance),      LLRSFUNC(Awaken),        LLRSFUNC(Blit),
+  LLRSFUNC(BlitT),        LLRSFUNC(Destroy),       LLRSFUNC(GetATime),
+  LLRSFUNC(GetDrift),     LLRSFUNC(GetFPS),        LLRSFUNC(GetFrame),
+  LLRSFUNC(GetFrames),    LLRSFUNC(GetFramesLost), LLRSFUNC(GetHeight),
+  LLRSFUNC(GetId),        LLRSFUNC(GetLoop),       LLRSFUNC(GetName),
+  LLRSFUNC(GetTime),      LLRSFUNC(GetWidth),      LLRSFUNC(IsDestroyed),
+  LLRSFUNC(IsPlaying),    LLRSFUNC(OnEvent),       LLRSFUNC(Pause),
+  LLRSFUNC(Play),         LLRSFUNC(Rewind),        LLRSFUNC(SetCRGBA),
+  LLRSFUNC(SetCX),        LLRSFUNC(SetFDR),        LLRSFUNC(SetFilter),
+  LLRSFUNC(SetKeyColour), LLRSFUNC(SetKeyed),      LLRSFUNC(SetLoop),
+  LLRSFUNC(SetRec709),    LLRSFUNC(SetTCLTRB),     LLRSFUNC(SetTCLTWH),
+  LLRSFUNC(SetTCX),       LLRSFUNC(SetVLTRB),      LLRSFUNC(SetVLTWH),
+  LLRSFUNC(SetVLTWHA),    LLRSFUNC(SetVX),         LLRSFUNC(SetVolume),
   LLRSFUNC(Stop),
-LLRSEND                                // Video:* member functions end
+LLRSEND                                // Video:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Video.* namespace functions                                         ## **
+** ## Video.* non-member functions                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Video.Asset
@@ -470,12 +471,6 @@ LLFUNC(AssetAsync, 0,
   LuaUtilCheckFunc(lS, 3, 4, 5);
   AcVideo{lS}().AsyncInitArray(lS, aName, "videoarray", aAsset))
 /* ========================================================================= */
-// $ Video.Count
-// < Count:integer=Total number of videos created.
-// ? Returns the total number of video classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cVideos->CollectorCount()))
-/* ========================================================================= */
 // $ Video.File
 // > Filename:string=The filename of the ogg file to load
 // < Handle:Video=The video stream object
@@ -499,6 +494,12 @@ LLFUNC(FileAsync, 0,
   LuaUtilCheckFunc(lS, 2, 3, 4);
   AcVideo{lS}().AsyncInitFile(lS, aFilename, "videofile"))
 /* ========================================================================= */
+// $ Video.GetClasses
+// < Count:integer=Total number of videos created.
+// ? Returns the total number of video classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cVideos->CollectorCount()))
+/* ========================================================================= */
 // $ Video.WaitAsync
 // ? Halts main-thread execution until all async video stream events have
 // ? completed.
@@ -514,14 +515,14 @@ LLFUNC(WaitAsync, 0, cVideos->WaitAsync())
 LLFUNC(ClearEvents, 0, VideoClearEvents())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Video.* namespace functions structure                               ## **
+** ## Video.* non-member functions structure                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Video.* namespace functions begin
+LLRSBEGIN                              // Video.* non-member functions begin
   LLRSFUNC(Asset),     LLRSFUNC(AssetAsync), LLRSFUNC(ClearEvents),
-  LLRSFUNC(Count),     LLRSFUNC(File),       LLRSFUNC(FileAsync),
+  LLRSFUNC(File),      LLRSFUNC(FileAsync),  LLRSFUNC(GetClasses),
   LLRSFUNC(WaitAsync),
-LLRSEND                                // Video.* namespace functions end
+LLRSEND                                // Video.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Video.* namespace constants                                         ## **
@@ -531,11 +532,11 @@ LLRSEND                                // Video.* namespace functions end
 // < Codes:table=The table of key/value pairs of available flags
 // ? Returns possible values for Video:OnEvent() event command.
 /* ------------------------------------------------------------------------- */
-LLRSKTBEGIN(Events)                    // Beginning of Stream event flags
+LLRSKTBEGIN(Events)                    // Beginning of Video event flags
   LLRSKTITEM(Video::VE_,FINISH),       LLRSKTITEM(Video::VE_,LOOP),
   LLRSKTITEM(Video::VE_,PAUSE),        LLRSKTITEM(Video::VE_,PLAY),
   LLRSKTITEM(Video::VE_,STOP),
-LLRSKTEND                              // End of Stream event flags
+LLRSKTEND                              // End of Video event flags
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Video.* namespace constants structure                               ## **

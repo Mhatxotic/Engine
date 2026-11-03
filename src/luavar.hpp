@@ -127,7 +127,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
     // class which calls luaL_ref will fail as it ONLY reads position -1.
     LuaBasePushValue(lS, 4);
     // Save the function at the top of the stack used for the callback
-    lcvmiIt = cParent->lcvmMap.insert(GetLuaVarListEnd(), {
+    lcvmiIt = ctParent.lcvmMap.insert(GetLuaVarListEnd(), {
       StdString{ ssvName },
       make_pair(LuaFunc{ StrAppend("CV:", ssvName), true },
         cCVars->GetVarListEnd())
@@ -142,7 +142,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   { // Get cvar name
     const StdString &ssvName = cvmiIt->first;
     // Insert a new variable
-    lcvmiIt = cParent->lcvmMap.insert(GetLuaVarListEnd(), { ssvName,
+    lcvmiIt = ctParent.lcvmMap.insert(GetLuaVarListEnd(), { ssvName,
       make_pair(LuaFunc{ ssvName, false }, cCVars->GetVarListEnd()) });
     // Register the variable and set the iterator to the new cvar.
     Pair().second = cvmiIt;
@@ -151,7 +151,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   Variable() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperVariable{ cVariables },    // Initialise with NO registration
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     lcvmiIt{ GetLuaVarListEnd() }      // Initialise iterator to the last
     /* --------------------------------------------------------------------- */
     {}

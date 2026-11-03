@@ -40,7 +40,7 @@ struct AgCreditEnum : public AgIntegerLGE<CreditEnums> {
     AgIntegerLGE{lS, iArg, CL_FIRST, CL_MAX}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Core.* namespace functions                                          ## **
+** ## Core.* non-member functions                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Core.Catchup
@@ -553,10 +553,10 @@ LLFUNC(WriteEx, 0,
   cConsole->ConsoleAddLine(aColour, aMessage))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Core.* namespace functions structure                                ## **
+** ## Core.* non-member functions structure                               ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Core.* namespace functions begin
+LLRSBEGIN                              // Core.* non-member functions begin
   LLRSFUNC(Catchup),      LLRSFUNC(CPU),          LLRSFUNC(CPUFPS),
   LLRSFUNC(CPUProcUsage), LLRSFUNC(CPUSysUsage),  LLRSFUNC(CPUUsage),
   LLRSFUNC(Delay),        LLRSFUNC(Done),         LLRSFUNC(End),
@@ -577,7 +577,7 @@ LLRSBEGIN                              // Core.* namespace functions begin
   LLRSFUNC(Ticks),        LLRSFUNC(Time),         LLRSFUNC(UpMicroTime),
   LLRSFUNC(UpMilliTime),  LLRSFUNC(UpNanoTime),   LLRSFUNC(Uptime),
   LLRSFUNC(WaitAsync),    LLRSFUNC(Write),        LLRSFUNC(WriteEx),
-LLRSEND                                // Core.* namespace functions end
+LLRSEND                                // Core.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Core.* namespace constants                                          ## **

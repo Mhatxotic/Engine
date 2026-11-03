@@ -246,7 +246,7 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   Shader() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperShader{ cShaders, this },  // Register in Shaders list
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     uProgram(0),                       // No program set
     bLinked(false)                     // Not linked
     /* -- No code ---------------------------------------------------------- */

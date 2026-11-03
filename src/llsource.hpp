@@ -29,7 +29,7 @@ struct AgSource : public ArClass<Source> {
     ArClass{LuaUtilGetClassRef<Source>(lS, iArg, cSources)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Source:* member functions                                           ## **
+** ## Source:* methods                                                    ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Source:Destroy
@@ -38,12 +38,6 @@ struct AgSource : public ArClass<Source> {
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Source>(lS, cSources))
-/* ========================================================================= */
-// $ Source:Destroyed
-// < Destroyed:boolean=If the Source class is destroyed
-// ? Returns if the Source class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSources)))
 /* ========================================================================= */
 // $ Source:GetDirection
 // < X:number=Current X direction.
@@ -149,6 +143,13 @@ LLFUNC(GetVelocity, 3,
   ALfloat fX, fY, fZ;
   AgSource{lS, 1}().GetVelocity(fX, fY, fZ);
   LuaUtilPushVar(lS, fX, fY, fZ))
+/* ========================================================================= */
+// $ Source:IsDestroyed
+// < Destroyed:boolean=If the Source class is destroyed
+// ? Returns if the Source class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSources)))
 /* ========================================================================= */
 // $ Source:IsPlaying
 // < Playing:boolean=Is the source playing?
@@ -315,41 +316,41 @@ LLFUNC(SetVelocity, 0,
 LLFUNC(Stop, 0, AgSource{lS, 1}().Stop())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Source:* member functions structure                                 ## **
+** ## Source:* methods structure                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Source:* member functions begin
-  LLRSFUNC(Destroy),      LLRSFUNC(Destroyed),    LLRSFUNC(GetDirection),
-  LLRSFUNC(GetElapsed),   LLRSFUNC(GetGain),      LLRSFUNC(GetId),
-  LLRSFUNC(GetLooping),   LLRSFUNC(GetMaxDist),   LLRSFUNC(GetMaxGain),
-  LLRSFUNC(GetMinGain),   LLRSFUNC(GetPitch),     LLRSFUNC(GetPosition),
-  LLRSFUNC(GetRefDist),   LLRSFUNC(GetRelative),  LLRSFUNC(GetRollOff),
-  LLRSFUNC(GetState),     LLRSFUNC(GetVelocity),  LLRSFUNC(IsPlaying),
+LLRSMFBEGIN                            // Source:* methods begin
+  LLRSFUNC(Destroy),      LLRSFUNC(GetDirection), LLRSFUNC(GetElapsed),
+  LLRSFUNC(GetGain),      LLRSFUNC(GetId),        LLRSFUNC(GetLooping),
+  LLRSFUNC(GetMaxDist),   LLRSFUNC(GetMaxGain),   LLRSFUNC(GetMinGain),
+  LLRSFUNC(GetPitch),     LLRSFUNC(GetPosition),  LLRSFUNC(GetRefDist),
+  LLRSFUNC(GetRelative),  LLRSFUNC(GetRollOff),   LLRSFUNC(GetState),
+  LLRSFUNC(GetVelocity),  LLRSFUNC(IsDestroyed),  LLRSFUNC(IsPlaying),
   LLRSFUNC(IsStopped),    LLRSFUNC(IsValid),      LLRSFUNC(Play),
   LLRSFUNC(PlayTwo),      LLRSFUNC(SetDirection), LLRSFUNC(SetElapsed),
   LLRSFUNC(SetGain),      LLRSFUNC(SetLooping),   LLRSFUNC(SetMaxDist),
   LLRSFUNC(SetMaxGain),   LLRSFUNC(SetMinGain),   LLRSFUNC(SetPitch),
   LLRSFUNC(SetPosition),  LLRSFUNC(SetRefDist),   LLRSFUNC(SetRelative),
   LLRSFUNC(SetRollOff),   LLRSFUNC(SetVelocity),  LLRSFUNC(Stop),
-LLRSEND                                // Source:* member functions end
+LLRSEND                                // Source:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Source.* namespace functions                                        ## **
+** ## Source.* non-member functions                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Source.Count
+// $ Source.GetClasses
 // < Count:integer=Total number of sources created.
 // ? Returns the total number of source classes currently active.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cSources->CollectorCount()))
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cSources->CollectorCount()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Source.* namespace functions structure                              ## **
+** ## Source.* non-member functions structure                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Source.* namespace functions begin
-  LLRSFUNC(Count),
-LLRSEND                                // Source.* namespace functions end
+LLRSBEGIN                              // Source.* non-member functions begin
+  LLRSFUNC(GetClasses),
+LLRSEND                                // Source.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Stream namespace
 /* == EoF =========================================================== EoF == */

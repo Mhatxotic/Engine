@@ -41,7 +41,7 @@ struct AgOutline : public AgGLfloatLG
       AgGLfloatLG{lS, iArg, 0.0f, 1024.0f}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Ftf:* member functions                                              ## **
+** ## Ftf:* methods                                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Ftf:Destroy
@@ -51,53 +51,54 @@ struct AgOutline : public AgGLfloatLG
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Ftf>(lS, cFtfs))
 /* ========================================================================= */
-// $ Ftf:Destroyed
-// < Destroyed:boolean=If the Ftf class is destroyed
-// ? Returns if the Ftf class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFtfs)))
-/* ========================================================================= */
-// $ Ftf:Family
+// $ Ftf:GetFamily
 // < Name:string=The internal name of the freetype font
 // ? Returns the internal name of the actual freetype font. (e.g. Arial)
 /* ------------------------------------------------------------------------- */
-LLFUNC(Family, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetFamily()))
+LLFUNC(GetFamily, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetFamily()))
 /* ========================================================================= */
-// $ Ftf:Id
+// $ Ftf:GetId
 // < Id:integer=The id number of the Ftf object.
 // ? Returns the unique id of the Ftf object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().Serial()))
 /* ========================================================================= */
-// $ Ftf:Glyphs
+// $ Ftf:GetGlyphs
 // < Count:integer=Number of glyphs available.
 // ? Returns the internal number of glyphs supported by this freetype font.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Glyphs, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetGlyphCount()))
+LLFUNC(GetGlyphs, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetGlyphCount()))
 /* ========================================================================= */
-// $ Ftf:Name
+// $ Ftf:GetName
 // < Name:string=The name of the freetype font
 // ? Returns the name of the specified object when it was created.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().NameGet()))
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().NameGet()))
 /* ========================================================================= */
-// $ Ftf:Style
+// $ Ftf:GetStyle
 // < Name:string=The internal style name of the freetype font
 // ? Returns the internal name of the actual freetype font. (e.g. Bold)
 /* ------------------------------------------------------------------------- */
-LLFUNC(Style, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetStyle()))
+LLFUNC(GetStyle, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetStyle()))
+/* ========================================================================= */
+// $ Ftf:IsDestroyed
+// < Destroyed:boolean=If the Ftf class is destroyed
+// ? Returns if the Ftf class is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFtfs)))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Ftf:* member functions structure                                    ## **
+** ## Ftf:* methods structure                                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Ftf:* member functions begin
-  LLRSFUNC(Destroy), LLRSFUNC(Destroyed), LLRSFUNC(Family), LLRSFUNC(Glyphs),
-  LLRSFUNC(Id),      LLRSFUNC(Name),      LLRSFUNC(Style),
-LLRSEND                                // Ftf:* member functions end
+LLRSMFBEGIN                            // Ftf:* methods begin
+  LLRSFUNC(Destroy),     LLRSFUNC(GetFamily), LLRSFUNC(GetGlyphs),
+  LLRSFUNC(GetId),       LLRSFUNC(GetName),   LLRSFUNC(GetStyle),
+  LLRSFUNC(IsDestroyed),
+LLRSEND                                // Ftf:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Ftf.* namespace functions                                           ## **
+** ## Ftf.* non-member functions                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Ftf.Asset
@@ -151,12 +152,6 @@ LLFUNC(AssetAsync, 0,
   AcFtf{lS}().InitAsyncArray(lS, aName(), aAsset, aWidth, aHeight,
     aDpiWidth, aDpiHeight, aOutline))
 /* ========================================================================= */
-// $ Ftf.Count
-// < Count:integer=Total number of ftfs created.
-// ? Returns the total number of ftf classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cFtfs->CollectorCount()))
-/* ========================================================================= */
 // $ Ftf.File
 // > Filename:string=The filename of the ftf file to load
 // > Width:number=The width of the font in pixels.
@@ -203,19 +198,25 @@ LLFUNC(FileAsync, 0,
   AcFtf{lS}().InitAsyncFile(lS, aFilename, aWidth, aHeight, aDpiWidth,
     aDpiHeight, aOutline))
 /* ========================================================================= */
+// $ Ftf.GetClasses
+// < Count:integer=Total number of ftfs created.
+// ? Returns the total number of ftf classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFtfs->CollectorCount()))
+/* ========================================================================= */
 // $ Ftf.WaitAsync
 // ? Halts main-thread execution until all async Ftf events have completed
 /* ------------------------------------------------------------------------- */
 LLFUNC(WaitAsync, 0, cFtfs->WaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Ftf.* namespace functions structure                                 ## **
+** ## Ftf.* non-member functions structure                                ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Ftf.* namespace functions begin
-  LLRSFUNC(Asset), LLRSFUNC(AssetAsync), LLRSFUNC(Count),
-  LLRSFUNC(File),  LLRSFUNC(FileAsync),  LLRSFUNC(WaitAsync),
-LLRSEND                                // Ftf.* namespace functions end
+LLRSBEGIN                              // Ftf.* non-member functions begin
+  LLRSFUNC(Asset),     LLRSFUNC(AssetAsync), LLRSFUNC(File),
+  LLRSFUNC(FileAsync), LLRSFUNC(GetClasses), LLRSFUNC(WaitAsync),
+LLRSEND                                // Ftf.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Ftf namespace
 /* == EoF =========================================================== EoF == */

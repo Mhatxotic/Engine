@@ -78,21 +78,62 @@ struct AgDirectory { const StdString strFilename;
     strFilename{LuaUtilGetCppDir(lS, iArg)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Asset:* member functions                                            ## **
+** ## Asset:* methods                                                     ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ Asset:BitClear
+// > Position:integer=Position (in bits) to clear the bit from.
+// ? Clears the bit at the specified position. Remember this is the bit
+// ? position and not a byte position.
+/* ------------------------------------------------------------------------- */
+LLFUNC(BitClear, 0, const AgAsPo aAsset{lS}; aAsset().MemBitClear(aAsset.stP))
+/* ========================================================================= */
+// $ Asset:BitFlip
+// > Position:integer=Position (in bits) to flip the bit from.
+// ? Flips the bit at the specified position. Remember this is the bit
+// ? position and not a byte position.
+/* ------------------------------------------------------------------------- */
+LLFUNC(BitFlip, 0, const AgAsPo aAsset{lS}; aAsset().MemBitFlip(aAsset.stP))
+/* ========================================================================= */
+// $ Asset:BitSet
+// > Position:integer=Position (in bits) to set the bit from.
+// ? Sets the bit at the specified position. Remember this is the bit
+// ? position and not a byte position.
+/* ------------------------------------------------------------------------- */
+LLFUNC(BitSet, 0, const AgAsPo aAsset{lS}; aAsset().MemBitSet(aAsset.stP))
+/* ========================================================================= */
+// $ Asset:BitState
+// > Position:integer=Position (in bits) to set the bit from.
+// < Set:boolean=Boolean to show if the bit is set or not.
+// ? Sets the bit at the specified position. Remember this is the bit
+// ? position and not a byte position.
+/* ------------------------------------------------------------------------- */
+LLFUNC(BitState, 1, const AgAsPo aAsset{lS};
+  LuaUtilPushVar(lS, aAsset().MemBitTest(aAsset.stP)))
+/* ========================================================================= */
+// $ Asset:Clear
+// ? Same as Asset:F64 but automatically assumes zero fill.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Clear, 0, AgAsset{lS, 1}().MemFill())
+/* ========================================================================= */
+// $ Asset:Crop
+// > Position:integer=Position to start crop at.
+// > Bytes:integer=Number of bytes to keep.
+// < Output:Asset=A new asset block containing the cropped memory.
+// ? Crops the specified array from the specified position and the specified
+// ? number of bytes.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Crop, 0,
+  const AgAsPo aAsset{lS};
+  const AgSizeT aBytes{lS, 3};
+  aAsset().MemCrop(aAsset.stP, aBytes))
+/* ========================================================================= */
 // $ Asset:Destroy
 // ? Frees the internal memory allocated to the asset. The object will no
 // ? longer be useable after this call and an error will be generated if
 // ? accessed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Asset>(lS, cAssets))
-/* ========================================================================= */
-// $ Asset:Destroyed
-// < Destroyed:boolean=If the Asset is destroyed
-// ? Returns if the Asset is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cAssets)))
 /* ========================================================================= */
 // $ Asset:Fill
 // > Position:integer=Starting position to start filling at.
@@ -162,6 +203,47 @@ LLFUNC(FF64BE, 0, const AgAsPoByVn<double> aAsset{lS};
 LLFUNC(FF64LE, 0, const AgAsPoByVn<double> aAsset{lS};
   aAsset().MemFillEx<double>(aAsset.stP, UtilToF64LE(aAsset.atV), aAsset.stB))
 /* ========================================================================= */
+// $ Asset:Find
+// > Text:string=String to find in array.
+// < Position:integer=Position of occurrence.
+// ? Finds the first occurence of 'Text' in array from the beginning.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Find, 1,
+  const AgAsset aAsset{lS, 1};
+  const AgNeString aText{lS, 2};
+  LuaUtilPushVar(lS, aAsset().MemFind(aText())))
+/* ========================================================================= */
+// $ Asset:FindEx
+// > Text:string=String to find in array.
+// > Position:integer=Position to start checking for occurences.
+// < Position:integer=Position of occurrence.
+// ? Finds the first occurrence of 'Text' in array from the specified position.
+/* ------------------------------------------------------------------------- */
+LLFUNC(FindEx, 1,
+  const AgAsset aAsset{lS, 1};
+  const AgNeString aText{lS, 2};
+  const AgSizeT aPosition{lS, 3};
+  LuaUtilPushVar(lS, aAsset().MemFind(aText(), aPosition)))
+/* ========================================================================= */
+// $ Asset:GetId
+// < Id:integer=The id number of the Asset object.
+// ? Returns the unique id of the Asset object.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().Serial()))
+/* ========================================================================= */
+// $ Asset:GetName
+// < Name:string=Name of the asset.
+// ? If this asset was loaded by a filename or it was set with a custom id.
+// ? This function returns that name which was assigned to it.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().NameGet()))
+/* ========================================================================= */
+// $ Asset:GetSize
+// < Size:integer=Size of the array in bytes.
+// ? Returns the size of the array.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetSize, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().MemSize()))
+/* ========================================================================= */
 // $ Asset:Invert
 // > Position:integer=Position to invert.
 // > Bits:integer=Bits to invert (I*F functions only, all bits otherwise).
@@ -199,6 +281,13 @@ LLFUNC(I64FBE, 0, const AgAsPoVi<uint64_t> aAsset{lS};
   aAsset().MemInvert<uint64_t>(aAsset.stP, EndianTo64BE(aAsset.atV)))
 LLFUNC(I64FLE, 0, const AgAsPoVi<uint64_t> aAsset{lS};
   aAsset().MemInvert<uint64_t>(aAsset.stP, EndianTo64LE(aAsset.atV)))
+/* ========================================================================= */
+// $ Asset:IsDestroyed
+// < Destroyed:boolean=If the Asset is destroyed
+// ? Returns if the Asset is destroyed.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDestroyed, 1,
+  LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cAssets)))
 /* ========================================================================= */
 // $ Asset:Read
 // > Position:integer=Position to write in the array.
@@ -269,6 +358,86 @@ LLFUNC(RF64BE, 1, const AgAsPo aAsset{lS};
   LuaUtilPushVar(lS, UtilCastInt64ToDouble(EndianTo64BE(
     aAsset().MemReadInt<uint64_t>(aAsset.stP)))))
 /* ========================================================================= */
+// $ Asset:Resize
+// > Size:integer=The new size of the array in bytes.
+// ? Resizes the specified array.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Resize, 0,
+  const AgAsset aAsset{lS, 1};
+  const AgSizeT aSize{lS, 2};
+  aAsset().MemResize(aSize))
+/* ========================================================================= */
+// $ Asset:ResizeUp
+// > Size:integer=The new size of the array in bytes.
+// ? Resizes the specified array upwards but never downwards.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ResizeUp, 0,
+  const AgAsset aAsset{lS, 1};
+  const AgSizeT aSize{lS, 2};
+  aAsset().MemResizeUp(aSize))
+/* ========================================================================= */
+// $ Asset:Reverse
+// ? Completely reverses all the bytes in the array.
+/* ------------------------------------------------------------------------- */
+LLFUNC(Reverse, 0, AgAsset{lS, 1}().MemReverse())
+/* ========================================================================= */
+// $ Asset:Swap
+// > Position:integer=Position to swap the bytes at
+// ? Swaps the high/low order bits at the specified position.
+// ?
+// ? Actual functions (replace 'Swap' with one of the following)...
+// ? - S8     = Swaps high/low 4-bits.
+// ? - S16    = Swaps high/low 8-bits.
+// ? - S32    = Swaps high/low 16-bits.
+// ? - S64    = Swaps high/low 32-bits.
+/* ------------------------------------------------------------------------- */
+LLFUNC(S8, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap8(aAsset.stP))
+LLFUNC(S16, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap16(aAsset.stP))
+LLFUNC(S32, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap32(aAsset.stP))
+LLFUNC(S64, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap64(aAsset.stP))
+/* ========================================================================= */
+// $ Asset:SwapEx
+// > Position:integer=Position to swap the bytes at.
+// > Bytes:integer=Number of bytes to swap.
+// ? Same as Asset:Swap but swaps the specified number of bytes. The byte value
+// ? is always truncated by the integer size. Misaligned positions will cause
+// ? a copy to a new buffer and copy back which is a lot slower so keep the
+// ? position in multiples of the integer size for the fastest execution.
+// ?
+// ? Actual functions (replace 'SwapEx' with one of the following)...
+// ? - SX8     = Swaps high/low 4-bits.
+// ? - SX16    = Swaps high/low 8-bits.
+// ? - SX32    = Swaps high/low 16-bits.
+// ? - SX64    = Swaps high/low 32-bits.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SX8, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap8(aAsset.stP, aAsset.stB))
+LLFUNC(SX16, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap16(aAsset.stP, aAsset.stB))
+LLFUNC(SX32, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap32(aAsset.stP, aAsset.stB))
+LLFUNC(SX64, 0, const AgAsPoBy aAsset{lS};
+  aAsset().MemByteSwap64(aAsset.stP, aAsset.stB))
+/* ========================================================================= */
+// $ Asset:ToFile
+// > Filename:string=Filename to write to.
+// < Bytes:integer=Number of bytes written.
+// ? Dumps the array to the specified file on disk. Useful for debugging.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ToFile, 1,
+  const AgAsset aAsset{lS, 1};
+  const AgFilename aFilename{lS, 2};
+  LuaUtilPushVar(lS, FStream{ aFilename, FM_W_B }.
+    FStreamWriteBlockSafe(aAsset)))
+/* ========================================================================= */
+// $ Asset:ToString
+// < Text:string=The array converted to a string.
+// ? Converts the array to a string. This is binary safe but will obviously
+// ? terminate at the first null character or at the end of array, whichever
+// ? comes first.
+/* ------------------------------------------------------------------------- */
+LLFUNC(ToString, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().MemToStringSafe()))
+/* ========================================================================= */
 // $ Asset:Write
 // > Position:integer=Position to write the integer to in the array.
 // > Value:integer|number=Value to write to the array.
@@ -327,198 +496,31 @@ LLFUNC(WF64BE, 0, const AgAsPoVn<double> aAsset{lS};
   aAsset().MemWriteDoubleBE(aAsset.stP, aAsset.atV))
 LLFUNC(WF64LE, 0, const AgAsPoVn<double> aAsset{lS};
   aAsset().MemWriteDoubleLE(aAsset.stP, aAsset.atV))
-/* ========================================================================= */
-// $ Asset:Swap
-// > Position:integer=Position to swap the bytes at
-// ? Swaps the high/low order bits at the specified position.
-// ?
-// ? Actual functions (replace 'Swap' with one of the following)...
-// ? - S8     = Swaps high/low 4-bits.
-// ? - S16    = Swaps high/low 8-bits.
-// ? - S32    = Swaps high/low 16-bits.
-// ? - S64    = Swaps high/low 32-bits.
-/* ------------------------------------------------------------------------- */
-LLFUNC(S8, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap8(aAsset.stP))
-LLFUNC(S16, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap16(aAsset.stP))
-LLFUNC(S32, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap32(aAsset.stP))
-LLFUNC(S64, 0, const AgAsPo aAsset{lS}; aAsset().MemSwap64(aAsset.stP))
-/* ========================================================================= */
-// $ Asset:SwapEx
-// > Position:integer=Position to swap the bytes at.
-// > Bytes:integer=Number of bytes to swap.
-// ? Same as Asset:Swap but swaps the specified number of bytes. The byte value
-// ? is always truncated by the integer size. Misaligned positions will cause
-// ? a copy to a new buffer and copy back which is a lot slower so keep the
-// ? position in multiples of the integer size for the fastest execution.
-// ?
-// ? Actual functions (replace 'SwapEx' with one of the following)...
-// ? - SX8     = Swaps high/low 4-bits.
-// ? - SX16    = Swaps high/low 8-bits.
-// ? - SX32    = Swaps high/low 16-bits.
-// ? - SX64    = Swaps high/low 32-bits.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SX8, 0, const AgAsPoBy aAsset{lS};
-  aAsset().MemByteSwap8(aAsset.stP, aAsset.stB))
-LLFUNC(SX16, 0, const AgAsPoBy aAsset{lS};
-  aAsset().MemByteSwap16(aAsset.stP, aAsset.stB))
-LLFUNC(SX32, 0, const AgAsPoBy aAsset{lS};
-  aAsset().MemByteSwap32(aAsset.stP, aAsset.stB))
-LLFUNC(SX64, 0, const AgAsPoBy aAsset{lS};
-  aAsset().MemByteSwap64(aAsset.stP, aAsset.stB))
-/* ========================================================================= */
-// $ Asset:Resize
-// > Size:integer=The new size of the array in bytes.
-// ? Resizes the specified array.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Resize, 0,
-  const AgAsset aAsset{lS, 1};
-  const AgSizeT aSize{lS, 2};
-  aAsset().MemResize(aSize))
-/* ========================================================================= */
-// $ Asset:ResizeUp
-// > Size:integer=The new size of the array in bytes.
-// ? Resizes the specified array upwards but never downwards.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ResizeUp, 0,
-  const AgAsset aAsset{lS, 1};
-  const AgSizeT aSize{lS, 2};
-  aAsset().MemResizeUp(aSize))
-/* ========================================================================= */
-// $ Asset:Clear
-// ? Same as Asset:F64 but automatically assumes zero fill.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Clear, 0, AgAsset{lS, 1}().MemFill())
-/* ========================================================================= */
-// $ Asset:Reverse
-// ? Completely reverses all the bytes in the array.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Reverse, 0, AgAsset{lS, 1}().MemReverse())
-/* ========================================================================= */
-// $ Asset:ToString
-// < Text:string=The array converted to a string.
-// ? Converts the array to a string. This is binary safe but will obviously
-// ? terminate at the first null character or at the end of array, whichever
-// ? comes first.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ToString, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().MemToStringSafe()))
-/* ========================================================================= */
-// $ Asset:ToFile
-// > Filename:string=Filename to write to.
-// < Bytes:integer=Number of bytes written.
-// ? Dumps the array to the specified file on disk. Useful for debugging.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ToFile, 1,
-  const AgAsset aAsset{lS, 1};
-  const AgFilename aFilename{lS, 2};
-  LuaUtilPushVar(lS, FStream{ aFilename, FM_W_B }.
-    FStreamWriteBlockSafe(aAsset)))
-/* ========================================================================= */
-// $ Asset:Size
-// < Size:integer=Size of the array in bytes.
-// ? Returns the size of the array.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Size, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().MemSize()))
-/* ========================================================================= */
-// $ Asset:Find
-// > Text:string=String to find in array.
-// < Position:integer=Position of occurrence.
-// ? Finds the first occurence of 'Text' in array from the beginning.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Find, 1,
-  const AgAsset aAsset{lS, 1};
-  const AgNeString aText{lS, 2};
-  LuaUtilPushVar(lS, aAsset().MemFind(aText())))
-/* ========================================================================= */
-// $ Asset:FindEx
-// > Text:string=String to find in array.
-// > Position:integer=Position to start checking for occurences.
-// < Position:integer=Position of occurrence.
-// ? Finds the first occurrence of 'Text' in array from the specified position.
-/* ------------------------------------------------------------------------- */
-LLFUNC(FindEx, 1,
-  const AgAsset aAsset{lS, 1};
-  const AgNeString aText{lS, 2};
-  const AgSizeT aPosition{lS, 3};
-  LuaUtilPushVar(lS, aAsset().MemFind(aText(), aPosition)))
-/* ========================================================================= */
-// $ Asset:Crop
-// > Position:integer=Position to start crop at.
-// > Bytes:integer=Number of bytes to keep.
-// < Output:Asset=A new asset block containing the cropped memory.
-// ? Crops the specified array from the specified position and the specified
-// ? number of bytes.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Crop, 0,
-  const AgAsPo aAsset{lS};
-  const AgSizeT aBytes{lS, 3};
-  aAsset().MemCrop(aAsset.stP, aBytes))
-/* ========================================================================= */
-// $ Asset:BitClear
-// > Position:integer=Position (in bits) to clear the bit from.
-// ? Clears the bit at the specified position. Remember this is the bit
-// ? position and not a byte position.
-/* ------------------------------------------------------------------------- */
-LLFUNC(BitClear, 0, const AgAsPo aAsset{lS}; aAsset().MemBitClear(aAsset.stP))
-/* ========================================================================= */
-// $ Asset:BitFlip
-// > Position:integer=Position (in bits) to flip the bit from.
-// ? Flips the bit at the specified position. Remember this is the bit
-// ? position and not a byte position.
-/* ------------------------------------------------------------------------- */
-LLFUNC(BitFlip, 0, const AgAsPo aAsset{lS}; aAsset().MemBitFlip(aAsset.stP))
-/* ========================================================================= */
-// $ Asset:BitSet
-// > Position:integer=Position (in bits) to set the bit from.
-// ? Sets the bit at the specified position. Remember this is the bit
-// ? position and not a byte position.
-/* ------------------------------------------------------------------------- */
-LLFUNC(BitSet, 0, const AgAsPo aAsset{lS}; aAsset().MemBitSet(aAsset.stP))
-/* ========================================================================= */
-// $ Asset:BitTest
-// > Position:integer=Position (in bits) to set the bit from.
-// < Set:boolean=Boolean to show if the bit is set or not.
-// ? Sets the bit at the specified position. Remember this is the bit
-// ? position and not a byte position.
-/* ------------------------------------------------------------------------- */
-LLFUNC(BitState, 1, const AgAsPo aAsset{lS};
-  LuaUtilPushVar(lS, aAsset().MemBitTest(aAsset.stP)))
-/* ========================================================================= */
-// $ Asset:Id
-// < Id:integer=The id number of the Asset object.
-// ? Returns the unique id of the Asset object.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().Serial()))
-/* ========================================================================= */
-// $ Asset:Name
-// < Name:string=Name of the asset.
-// ? If this asset was loaded by a filename or it was set with a custom id.
-// ? This function returns that name which was assigned to it.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Name, 1, LuaUtilPushVar(lS, AgAsset{lS, 1}().NameGet()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Asset:* member functions structure                                  ## **
+** ## Asset:* methods structure                                           ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Asset:* member functions begin
+LLRSMFBEGIN                            // Asset:* methods begin
   LLRSFUNC(BitClear),                  LLRSFUNC(BitFlip),
   LLRSFUNC(BitSet),                    LLRSFUNC(BitState),
   LLRSFUNC(Clear),                     LLRSFUNC(Crop),
-  LLRSFUNC(Destroy),                   LLRSFUNC(Destroyed),
-  LLRSFUNCEX(FF32,FillN<float>),       LLRSFUNC(FF32BE),
-  LLRSFUNC(FF32LE),                    LLRSFUNCEX(FF64,FillN<double>),
-  LLRSFUNC(FF64BE),                    LLRSFUNC(FF64LE),
-  LLRSFUNCEX(FI16,FillI<int16_t>),     LLRSFUNCEX(FI16BE,FI16BE<int16_t>),
-  LLRSFUNCEX(FI16LE,FI16LE<int16_t>),  LLRSFUNCEX(FI32,FillI<int32_t>),
-  LLRSFUNCEX(FI32BE,FI32BE<int32_t>),  LLRSFUNCEX(FI32LE,FI32LE<int32_t>),
-  LLRSFUNCEX(FI64,FillI<int64_t>),     LLRSFUNCEX(FI64BE,FI64BE<int64_t>),
-  LLRSFUNCEX(FI64LE,FI64LE<int64_t>),  LLRSFUNCEX(FI8,FillI<int8_t>),
-  LLRSFUNCEX(FU16,FillI<uint16_t>),    LLRSFUNCEX(FU16BE,FI16BE<uint16_t>),
-  LLRSFUNCEX(FU16LE,FI16LE<uint16_t>), LLRSFUNCEX(FU32,FillI<uint32_t>),
-  LLRSFUNCEX(FU32BE,FI32BE<uint32_t>), LLRSFUNCEX(FU32LE,FI32LE<uint32_t>),
-  LLRSFUNCEX(FU64,FillI<uint64_t>),    LLRSFUNCEX(FU64BE,FI64BE<uint64_t>),
-  LLRSFUNCEX(FU64LE,FI64LE<uint64_t>), LLRSFUNCEX(FU8,FillI<uint8_t>),
-  LLRSFUNC(Find),                      LLRSFUNC(FindEx),
+  LLRSFUNC(Destroy),                   LLRSFUNCEX(FF32,FillN<float>),
+  LLRSFUNC(FF32BE),                    LLRSFUNC(FF32LE),
+  LLRSFUNCEX(FF64,FillN<double>),      LLRSFUNC(FF64BE),
+  LLRSFUNC(FF64LE),                    LLRSFUNCEX(FI16,FillI<int16_t>),
+  LLRSFUNCEX(FI16BE,FI16BE<int16_t>),  LLRSFUNCEX(FI16LE,FI16LE<int16_t>),
+  LLRSFUNCEX(FI32,FillI<int32_t>),     LLRSFUNCEX(FI32BE,FI32BE<int32_t>),
+  LLRSFUNCEX(FI32LE,FI32LE<int32_t>),  LLRSFUNCEX(FI64,FillI<int64_t>),
+  LLRSFUNCEX(FI64BE,FI64BE<int64_t>),  LLRSFUNCEX(FI64LE,FI64LE<int64_t>),
+  LLRSFUNCEX(FI8,FillI<int8_t>),       LLRSFUNCEX(FU16,FillI<uint16_t>),
+  LLRSFUNCEX(FU16BE,FI16BE<uint16_t>), LLRSFUNCEX(FU16LE,FI16LE<uint16_t>),
+  LLRSFUNCEX(FU32,FillI<uint32_t>),    LLRSFUNCEX(FU32BE,FI32BE<uint32_t>),
+  LLRSFUNCEX(FU32LE,FI32LE<uint32_t>), LLRSFUNCEX(FU64,FillI<uint64_t>),
+  LLRSFUNCEX(FU64BE,FI64BE<uint64_t>), LLRSFUNCEX(FU64LE,FI64LE<uint64_t>),
+  LLRSFUNCEX(FU8,FillI<uint8_t>),      LLRSFUNC(Find),
+  LLRSFUNC(FindEx),                    LLRSFUNC(GetId),
+  LLRSFUNC(GetName),                   LLRSFUNC(GetSize),
   LLRSFUNCEX(I16,Invert<uint16_t>),    LLRSFUNCEX(I16F,InvertEx<uint16_t>),
   LLRSFUNC(I16FBE),                    LLRSFUNC(I16FLE),
   LLRSFUNCEX(I32,Invert<uint32_t>),    LLRSFUNCEX(I32F,InvertEx<uint32_t>),
@@ -526,24 +528,23 @@ LLRSMFBEGIN                            // Asset:* member functions begin
   LLRSFUNCEX(I64,Invert<uint64_t>),    LLRSFUNCEX(I64F,InvertEx<uint64_t>),
   LLRSFUNC(I64FBE),                    LLRSFUNC(I64FLE),
   LLRSFUNCEX(I8,Invert<uint8_t>),      LLRSFUNCEX(I8F,InvertEx<uint8_t>),
-  LLRSFUNC(Id),                        LLRSFUNC(Name),
-  LLRSFUNC(Resize),                    LLRSFUNC(ResizeUp),
-  LLRSFUNC(Reverse),                   LLRSFUNCEX(RF32,ReadN<float>),
-  LLRSFUNC(RF32BE),                    LLRSFUNC(RF32LE),
-  LLRSFUNCEX(RF64,ReadN<double>),      LLRSFUNC(RF64BE),
-  LLRSFUNC(RF64LE),                    LLRSFUNCEX(RI16,ReadI<int16_t>),
-  LLRSFUNCEX(RI16BE,RI16BE<int16_t>),  LLRSFUNCEX(RI16LE,RI16LE<int16_t>),
-  LLRSFUNCEX(RI32,ReadI<int32_t>),     LLRSFUNCEX(RI32BE,RI32BE<int32_t>),
-  LLRSFUNCEX(RI32LE,RI32LE<int32_t>),  LLRSFUNCEX(RI64,ReadI<int64_t>),
-  LLRSFUNCEX(RI64BE,RI64BE<int64_t>),  LLRSFUNCEX(RI64LE,RI64LE<int64_t>),
-  LLRSFUNCEX(RI8,ReadI<int8_t>),       LLRSFUNCEX(RU16,ReadI<uint16_t>),
-  LLRSFUNCEX(RU16BE,RI16BE<uint16_t>), LLRSFUNCEX(RU16LE,RI16LE<uint16_t>),
-  LLRSFUNCEX(RU32,ReadI<uint32_t>),    LLRSFUNCEX(RU32BE,RI32BE<uint32_t>),
-  LLRSFUNCEX(RU32LE,RI32LE<uint32_t>), LLRSFUNCEX(RU64,ReadI<uint64_t>),
-  LLRSFUNCEX(RU64BE,RI64BE<uint64_t>), LLRSFUNCEX(RU64LE,RI64LE<uint64_t>),
-  LLRSFUNCEX(RU8,ReadI<uint8_t>),      LLRSFUNC(S16),
-  LLRSFUNC(S32),                       LLRSFUNC(S64),
-  LLRSFUNC(S8),                        LLRSFUNC(Size),
+  LLRSFUNC(IsDestroyed),               LLRSFUNC(Resize),
+  LLRSFUNC(ResizeUp),                  LLRSFUNC(Reverse),
+  LLRSFUNCEX(RF32,ReadN<float>),       LLRSFUNC(RF32BE),
+  LLRSFUNC(RF32LE),                    LLRSFUNCEX(RF64,ReadN<double>),
+  LLRSFUNC(RF64BE),                    LLRSFUNC(RF64LE),
+  LLRSFUNCEX(RI16,ReadI<int16_t>),     LLRSFUNCEX(RI16BE,RI16BE<int16_t>),
+  LLRSFUNCEX(RI16LE,RI16LE<int16_t>),  LLRSFUNCEX(RI32,ReadI<int32_t>),
+  LLRSFUNCEX(RI32BE,RI32BE<int32_t>),  LLRSFUNCEX(RI32LE,RI32LE<int32_t>),
+  LLRSFUNCEX(RI64,ReadI<int64_t>),     LLRSFUNCEX(RI64BE,RI64BE<int64_t>),
+  LLRSFUNCEX(RI64LE,RI64LE<int64_t>),  LLRSFUNCEX(RI8,ReadI<int8_t>),
+  LLRSFUNCEX(RU16,ReadI<uint16_t>),    LLRSFUNCEX(RU16BE,RI16BE<uint16_t>),
+  LLRSFUNCEX(RU16LE,RI16LE<uint16_t>), LLRSFUNCEX(RU32,ReadI<uint32_t>),
+  LLRSFUNCEX(RU32BE,RI32BE<uint32_t>), LLRSFUNCEX(RU32LE,RI32LE<uint32_t>),
+  LLRSFUNCEX(RU64,ReadI<uint64_t>),    LLRSFUNCEX(RU64BE,RI64BE<uint64_t>),
+  LLRSFUNCEX(RU64LE,RI64LE<uint64_t>), LLRSFUNCEX(RU8,ReadI<uint8_t>),
+  LLRSFUNC(S16),                       LLRSFUNC(S32),
+  LLRSFUNC(S64),                       LLRSFUNC(S8),
   LLRSFUNC(SX16),                      LLRSFUNC(SX32),
   LLRSFUNC(SX64),                      LLRSFUNC(SX8),
   LLRSFUNC(ToFile),                    LLRSFUNC(ToString),
@@ -560,10 +561,10 @@ LLRSMFBEGIN                            // Asset:* member functions begin
   LLRSFUNCEX(WU32BE,WI32BE<uint32_t>), LLRSFUNCEX(WU32LE,WI32LE<uint32_t>),
   LLRSFUNCEX(WU64,WriteI<uint64_t>),   LLRSFUNCEX(WU64BE,WI64BE<uint64_t>),
   LLRSFUNCEX(WU64LE,WI64LE<uint64_t>), LLRSFUNCEX(WU8,WriteI<uint8_t>),
-LLRSEND                                // Asset:* member functions end
+LLRSEND                                // Asset:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Asset.* namespace functions                                         ## **
+** ## Asset.* non-member functions                                        ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Asset.Asset
@@ -645,12 +646,6 @@ LLFUNC(Create, 1,
   const AgNeString aName{lS, 1};
   const AgSizeT aBytes{lS, 2};
   AcAsset{lS}().AssetInitBlank(aName(), aBytes))
-/* ========================================================================= */
-// $ Asset.Count
-// < Count:integer=Total number of assets created.
-// ? Returns the total number of asset classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cAssets->CollectorCount()))
 /* ========================================================================= */
 // $ Asset:Duplicate
 // < Handle:Asset=Handle to the duplicated asset.
@@ -749,7 +744,13 @@ LLFUNC(FileAsync, 0,
   LuaUtilCheckFunc(lS, 3, 4, 5);
   AcAsset{lS}().AssetInitAsyncFile(lS, aFilename(), aFlags))
 /* ========================================================================= */
-// $ Asset.FileExists
+// $ Asset.GetClasses
+// < Count:integer=Total number of assets created.
+// ? Returns the total number of asset classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cAssets->CollectorCount()))
+/* ========================================================================= */
+// $ Asset.IsExist
 // > Filename:string=The name of the file to check
 // < Status:boolean=Is the file availabe
 // ? Checks if the specified file exists and is readable. The file is checked
@@ -757,7 +758,7 @@ LLFUNC(FileAsync, 0,
 // ? then the function traverses archives. Use this function to make sure
 // ? exceptions aren't raised when loading files with any API function.
 /* ------------------------------------------------------------------------- */
-LLFUNC(FileExists, 1, LuaUtilPushVar(lS, AssetExists(AgFilename{lS, 1})))
+LLFUNC(IsExist, 1, LuaUtilPushVar(lS, AssetExists(AgFilename{lS, 1})))
 /* ========================================================================= */
 // $ Asset.Parse
 // > Filename:string=The name of the file to parse.
@@ -828,18 +829,18 @@ LLFUNC(String, 1,
 LLFUNC(WaitAsync, 0, cAssets->WaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Asset.* namespace functions structure                               ## **
+** ## Asset.* non-member functions structure                              ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Asset.* namespace functions begin
+LLRSBEGIN                              // Asset.* non-member functions begin
   LLRSFUNC(Asset),        LLRSFUNC(AssetAsync),      LLRSFUNC(Compile),
   LLRSFUNC(CompileBlock), LLRSFUNC(CompileFunction), LLRSFUNC(CompileString),
-  LLRSFUNC(Count),        LLRSFUNC(Create),          LLRSFUNC(Duplicate),
-  LLRSFUNC(Enumerate),    LLRSFUNC(EnumerateEx),     LLRSFUNC(Exec),
-  LLRSFUNC(ExecEx),       LLRSFUNC(File),            LLRSFUNC(FileAsync),
-  LLRSFUNC(FileExists),   LLRSFUNC(Parse),           LLRSFUNC(ParseBlock),
+  LLRSFUNC(Create),       LLRSFUNC(Duplicate),       LLRSFUNC(Enumerate),
+  LLRSFUNC(EnumerateEx),  LLRSFUNC(Exec),            LLRSFUNC(ExecEx),
+  LLRSFUNC(File),         LLRSFUNC(FileAsync),       LLRSFUNC(GetClasses),
+  LLRSFUNC(IsExist),      LLRSFUNC(Parse),           LLRSFUNC(ParseBlock),
   LLRSFUNC(ParseString),  LLRSFUNC(String),          LLRSFUNC(WaitAsync),
-LLRSEND                                // Asset.* namespace functions end
+LLRSEND                                // Asset.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Asset.* namespace constants                                         ## **

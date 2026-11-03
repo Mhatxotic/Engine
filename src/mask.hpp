@@ -386,7 +386,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
   Mask() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperMask{ cMasks, this },      // Register this object in collector
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     stAlloc(0)                         // Uninitialised allocated size
     /* -- No code ---------------------------------------------------------- */
     {}

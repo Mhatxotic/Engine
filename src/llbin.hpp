@@ -36,7 +36,7 @@ struct AgDimension : public AgUIntLGE {
     AgUIntLGE{lS, iArg, 1, StdLimits<int>::max()}{} };
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Bin:* member functions                                              ## **
+** ## Bin:* methods                                                       ## **
 ** ######################################################################### **
 ** ========================================================================= */
 // $ Bin:Destroy
@@ -45,12 +45,6 @@ struct AgDimension : public AgUIntLGE {
 // ? if accessed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Bin>(lS, cBins))
-/* ========================================================================= */
-// $ Bin:Destroyed
-// < Destroyed:boolean=If the Bin class is destroyed
-// ? Returns if the Bin class is destroyed.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cBins)))
 /* ========================================================================= */
 // $ Bin:Enlarge
 // > Width:integer=The new width of the bin in units
@@ -66,17 +60,29 @@ LLFUNC(Enlarge, 1,
                     aHeight{lS, 3};
   LuaUtilPushVar(lS, aBin().Resize(aWidth, aHeight)))
 /* ========================================================================= */
-// $ Bin:Height
+// $ Bin:GetHeight
 // < Height:integer=The height of the bin in units
 // ? Returns the height of the bin in units.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Height, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().DimGetHeight()))
+LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().DimGetHeight()))
 /* ========================================================================= */
-// $ Bin:Id
+// $ Bin:GetId
 // < Id:integer=The id number of the Bin object.
 // ? Returns the unique id of the Bin object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Id, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().Serial()))
+/* ========================================================================= */
+// $ Bin:GetOccupancy
+// < Height:integer=The height of the bin in units
+// ? Returns the height of the bin in units.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetOccupancy, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().Occupancy()))
+/* ========================================================================= */
+// $ Bin:GetWidth
+// < Width:integer=The width of the bin in units
+// ? Returns the width of the bin in units.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().DimGetWidth()))
 /* ========================================================================= */
 // $ Bin:Insert
 // > Width:integer=The width of the item to insert in units
@@ -96,11 +102,11 @@ LLFUNC(Insert, 4,
   LuaUtilPushVar(lS, rAllotted.CoordGetX(), rAllotted.CoordGetY(),
     rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
 /* ========================================================================= */
-// $ Bin:Occupancy
-// < Height:integer=The height of the bin in units
-// ? Returns the height of the bin in units.
+// $ Bin:IsDestroyed
+// < Destroyed:boolean=If the Bin class is destroyed
+// ? Returns if the Bin class is destroyed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Occupancy, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().Occupancy()))
+LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cBins)))
 /* ========================================================================= */
 // $ Bin:Test
 // > Width:integer=The width of the item to insert in units
@@ -119,33 +125,21 @@ LLFUNC(Test, 4,
   const Pack<int>::Rect &rAllotted = aBin().Test(aWidth, aHeight);
   LuaUtilPushVar(lS, rAllotted.CoordGetX(), rAllotted.CoordGetY(),
     rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
-/* ========================================================================= */
-// $ Bin:Width
-// < Width:integer=The width of the bin in units
-// ? Returns the width of the bin in units.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Width, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().DimGetWidth()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Bin:* member functions structure                                    ## **
+** ## Bin:* methods structure                                             ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSMFBEGIN                            // Bin:* member functions begin
-  LLRSFUNC(Destroy),   LLRSFUNC(Destroyed), LLRSFUNC(Id),
-  LLRSFUNC(Insert),    LLRSFUNC(Enlarge),   LLRSFUNC(Height),
-  LLRSFUNC(Occupancy), LLRSFUNC(Test),      LLRSFUNC(Width),
-LLRSEND                                // Bin:* member functions end
+LLRSMFBEGIN                            // Bin:* methods begin
+  LLRSFUNC(Destroy),   LLRSFUNC(Enlarge),      LLRSFUNC(GetId),
+  LLRSFUNC(GetHeight), LLRSFUNC(GetOccupancy), LLRSFUNC(GetWidth),
+  LLRSFUNC(Insert),    LLRSFUNC(IsDestroyed),  LLRSFUNC(Test),
+LLRSEND                                // Bin:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Bin:* namespace functions                                           ## **
+** ## Bin.* non-member functions                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Bin.Count
-// < Count:integer=Total number of bins created.
-// ? Returns the total number of bin classes currently active.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Count, 1, LuaUtilPushVar(lS, cBins->CollectorCount()))
-/* ========================================================================= */
 // $ Bin.Create
 // > Width:integer=The width of the bin in units
 // > Height:integer=The height of the bin in units
@@ -156,14 +150,20 @@ LLFUNC(Create, 1,
   const AgDimension aWidth{lS, 1},
                     aHeight{lS, 2};
   AcBin{lS}().Init(aWidth, aHeight))
+/* ========================================================================= */
+// $ Bin.GetClasses
+// < Count:integer=Total number of bins created.
+// ? Returns the total number of bin classes currently active.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cBins->CollectorCount()))
 /* ========================================================================= **
 ** ######################################################################### **
-** ## Bin:* namespace functions structure                                 ## **
+** ## Bin.* non-member functions structure                                ## **
 ** ######################################################################### **
 ** ========================================================================= */
-LLRSBEGIN                              // Bin.* namespace functions begin
-  LLRSFUNC(Count), LLRSFUNC(Create),
-LLRSEND                                // Bin.* namespace functions end
+LLRSBEGIN                              // Bin.* non-member functions begin
+  LLRSFUNC(Create), LLRSFUNC(GetClasses),
+LLRSEND                                // Bin.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Bin namespace
 /* == EoF =========================================================== EoF == */

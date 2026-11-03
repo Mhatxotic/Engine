@@ -297,7 +297,7 @@ CTOR_BEGIN_DUO(Bins, Bin, CLHelperUnsafe, ICHelperUnsafe),
   Bin() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperBin{ cBins, this },        // Register the object in collector
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

@@ -432,7 +432,7 @@ CTOR_BEGIN_DUO(Stats, Stat, CLHelperUnsafe, ICHelperUnsafe),
   Stat() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperStat{ cStats, this },      // Automatic (de)registration
-    SerialSlave{ cParent->Serial() }   // Initialise identification number
+    SerialSlave{ ctParent.Serial() }   // Initialise identification number
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

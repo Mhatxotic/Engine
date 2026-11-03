@@ -57,8 +57,8 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const CbFuncDecoder &cfdNFunc      // Function to call when loading
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ pfNId, ssvNName, ssvNExt, cfdNFunc, cParent->size() }
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
+    DataFormat{ pfNId, ssvNName, ssvNExt, cfdNFunc, ctParent.size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with saver function only ------------------------------- */
@@ -70,8 +70,8 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
-    DataFormat{ pfNId, ssvNName, ssvNExt, cfeNFunc, cParent->size() }
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
+    DataFormat{ pfNId, ssvNName, ssvNExt, cfeNFunc, ctParent.size() }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with both loader and saver functions ------------------- */
@@ -84,9 +84,9 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
     const CbFuncEncoder &cfeNFunc      // Function to call when saving
     ): /* -- Initialisers -------------------------------------------------- */
     ICHelperPcmLib{ cPcmLibs, this },  // Register filter in filter
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     DataFormat{ pfNId, ssvNName, ssvNExt, cfdNFunc, cfeNFunc,
-      cParent->size() }
+      ctParent.size() }
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* -- End of objects collector (reserve and set limit for formats) ------- */

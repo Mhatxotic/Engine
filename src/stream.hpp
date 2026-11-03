@@ -115,11 +115,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   /* -- Convert stop reason to string -------------------------------------- */
   const StdStringView
     &StopReasonToString(const StreamStopReason ssrReason) const
-  { return cParent->srStrings.Get(ssrReason); }
+  { return ctParent.srStrings.Get(ssrReason); }
   /* -- Convert stop reason to string -------------------------------------- */
   const StdStringView
     &StateReasonToString(const StreamPlayState psReason) const
-  { return cParent->psStrings.Get(psReason); }
+  { return ctParent.psStrings.Get(psReason); }
   /* -- Stop (without locks) ----------------------------------------------- */
   void Stop(const StreamStopReason ssrReason)
   { // Don't have source class? There is nothing else to do!
@@ -548,8 +548,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     // a stream with no data.
     aluvBuffers.resize(
       UtilClamp(static_cast<size_t>(ceil(static_cast<ALdouble>
-      (GetSamples()) / static_cast<ALdouble>(cParent->stBufSize))), 1,
-      cParent->stBufCount));
+      (GetSamples()) / static_cast<ALdouble>(ctParent.stBufSize))), 1,
+      ctParent.stBufCount));
     // Get info about ogg and copy it into our static buffer if succeeded,
     // else show an exception if failed. This removes dereferencing of the
     // vorbis info struct.
@@ -566,7 +566,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
       (cOal->Have32FPPB() ? AL_FORMAT_STEREO_FLOAT32 : AL_FORMAT_STEREO16);
     // Allocate the buffer with size from global setting. We can re-use the
     // 'Memory' class from the 'AsyncLoader' class.
-    MemInitBlank(cParent->stBufSize);
+    MemInitBlank(ctParent.stBufSize);
     // Set default loop position to the end
     SetLoopRange(0, GetSamples());
     // Parse vorbis comments and if we got them?
@@ -596,7 +596,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   Stream() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperStream{ cStreams },        // Initialise collector unregistered
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderStream{ this,           // Initialise async loader
       EMC_MP_STREAM },                 //   with our streaming event
     LuaEvtSlave{ this,                 // Initialise stream event manager

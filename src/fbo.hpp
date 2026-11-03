@@ -149,7 +149,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   /* -- Activate this Fbo -------------------------------------------------- */
   void FboSetActive()
   { // Set active fbo to this
-    cParent->fboActive = this;
+    ctParent.fboActive = this;
     // Return if we've already activated this Fbo this frame
     if(ullActive == cFrame->FrameGetTicks()) [[unlikely]] return;
     // Set new Fbo activation tick to this frame
@@ -350,7 +350,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   /* -- DeInitialise ------------------------------------------------------- */
   void FboDeInit()
   { // Remove as active Fbo if set
-    if(cParent->fboActive == this) cParent->fboMain->FboSetActive();
+    if(ctParent.fboActive == this) ctParent.fboMain->FboSetActive();
     // Reset everything
     FboFlushFull();
     // Have Fbo texture?
@@ -442,7 +442,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   Fbo() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFbo{ cFbos, this },        // Initially registered
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     FboBase{ GL_RGBA8, false }         // Has alpha channel and not protected
     /* -- No code ---------------------------------------------------------- */
     {}
@@ -451,7 +451,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
       const bool bLocked) :            // Locked from garbage collector
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFbo{ cFbos },              // Initially unregistered
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     FboBase{ iPixFmt, bLocked }        // Init alpha channel and lua protect
     /* -- No code ---------------------------------------------------------- */
     {}

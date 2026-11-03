@@ -425,7 +425,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
   Json() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperJson{ cJsons },            // Initialise collector
-    SerialSlave{ cParent->Serial() },  // Initialise identification number
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
     AsyncLoaderJson{ this,             // Initialise async loader with this
       EMC_MP_JSON }                    // ...and the event id
     /* -- No code ---------------------------------------------------------- */
