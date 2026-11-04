@@ -51,7 +51,7 @@ struct AgCreditEnum : public AgIntegerLGE<CreditEnums> {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Catchup, 0, cFrame->FrameCatchup())
 /* ========================================================================= */
-// $ Core.CPU
+// $ Core.GetCPU
 // < CPUid:string=The CPUID string.
 // < Count:integer=Number of threads available to the engine.
 // < Speed:integer=Processor frequency in Hz.
@@ -60,34 +60,34 @@ LLFUNC(Catchup, 0, cFrame->FrameCatchup())
 // < Stepping:integer=Processor stepping.
 // ? Returns information about the installed Central Processing Unit.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPU, 6,
+LLFUNC(GetCPU, 6,
   LuaUtilPushExtStr(lS, cSystem->CPUName());
   LuaUtilPushVar(lS, cSystem->CPUCount(), cSystem->CPUSpeed(),
     cSystem->CPUFamily(), cSystem->CPUModel(), cSystem->CPUStepping()))
 /* ========================================================================= */
-// $ Core.CPUFPS
+// $ Core.GetCPUFPS
 // < FPS:number=Frames per second.
 // ? Get CPU loops processed in the last second. Should be the same as GPU for
 // ? most people but at times may be different, sometimes much higher.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPUFPS, 1, LuaUtilPushVar(lS, cFrame->FrameGetFPS()))
+LLFUNC(GetCPUFPS, 1, LuaUtilPushVar(lS, cFrame->FrameGetFPS()))
 /* ========================================================================= */
-// $ Core.CPUProcUsage
+// $ Core.GetCPUProcUsage
 // < Percent:number=Percentage process.
 // ? Returns the engine CPU load. It is hard-coded to only update once a
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPUProcUsage, 1, LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsage()))
+LLFUNC(GetCPUProcUsage, 1, LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsage()))
 /* ========================================================================= */
-// $ Core.CPUSysUsage
+// $ Core.GetCPUSysUsage
 // < Percent:number=Percentage system.
 // ? Returns the system CPU load. It is hard-coded to only update once a
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPUSysUsage, 1,
+LLFUNC(GetCPUSysUsage, 1,
   LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsageSystem()))
 /* ========================================================================= */
-// $ Core.CPUUsage
+// $ Core.GetCPUUsage
 // < Percent:number=Percentage process.
 // < Percent:number=Percentage system.
 // ? Returns the engine and system CPU load. Use this instead of the other
@@ -96,32 +96,218 @@ LLFUNC(CPUSysUsage, 1,
 // ? both cpu usage functions which are hard-coded to only update once a
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
-LLFUNC(CPUUsage, 2,
+LLFUNC(GetCPUUsage, 2,
   LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsage(),
     cSystem->CPUUsageSystem()))
 /* ========================================================================= */
-// $ Core.Delay
+// $ Core.GetDelay
 // < Time:number=Delay time in seconds.
 // ? Returns the current thread delay time in seconds without having to read
 // ? the 'vid_delay' variable. This would be useful if you are actually using
 // ? the delay and you want to offset a time point by the thread delay.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Delay, 1,
+LLFUNC(GetDelay, 1,
   LuaUtilPushVar(lS, static_cast<lua_Number>(cFrame->FrameGetDelay()) / 1000))
 /* ========================================================================= */
-// $ Core.Done
-// ? Confirms that you want the engine to exit. This is so you can perform
-// ? clean up actions in your own time by setting Core.SetEnd(), then calling
-// ? this function to confirm you're done.
+// $ Core.GetEnv
+// > Value:string=The name of the variable to query.
+// < Value:string=The value of the specified variable.
+// ? Queries the specified environment variable. Returns a blank string if
+// ? empty. All environment variables are converted to upper-case at startup.
+// ? Type 'env' in the console to see the current environment.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Done, 0, cEvtMain->ConfirmExit())
+LLFUNC(GetEnv, 1,
+  LuaUtilPushExtStr(lS, cCmdLine->CmdLineGetEnv(AgString{lS,1}())))
 /* ========================================================================= */
-// $ Core.End
-// ? Ends LUA execution and enables the console.
+// $ Core.GetEvents
+// < Events:integer=Number of events in the engine events system.
+// ? Returns the number of events in the engine event system. Helps with
+// ? synchronising 'Video' or 'Stream' class events.
 /* ------------------------------------------------------------------------- */
-LLFUNC(End, 0, cEvtMain->Add(EMC_LUA_END))
+LLFUNC(GetEvents, 1, LuaUtilPushVar(lS, cEvtMain->SizeSafe()))
 /* ========================================================================= */
-// $ Core.Engine
+// $ Core.GetLibrary
+// > Id:integer=The index of the license.
+// < Name:string=Name of the credit.
+// < Version:string=Version of the api.
+// < Id:integer=License index.
+// < Website:string=Website of the api.
+// < Copyright:string=Copyright of the api.
+// < Author:string=Author of the api.
+// ? Shows the full credits information of the specified api index.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLibrary, 4,
+  const AgCreditEnum aCredit{lS, 1};
+  const CreditLib &clItem = cCredits->CreditGetItem(aCredit);
+  LuaUtilPushExtStr(lS, clItem.GetName());
+  LuaUtilPushExtStr(lS, clItem.GetVersion());
+  LuaBasePushBool(lS, clItem.IsCopyright());
+  LuaUtilPushExtStr(lS, clItem.GetAuthor()))
+/* ========================================================================= */
+// $ Core.GetLicense
+// > Id:integer=The index of the license.
+// < Name:string=Name of the license.
+// < Text:string=Full text file of the license.
+// ? Shows the full license information of the specified index.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLicense, 1,
+  LuaUtilPushVar(lS, cCredits->CreditGetItemText(AgCreditEnum{lS, 1})))
+/* ========================================================================= */
+// $ Core.GetLocale
+// < LocaleID:number=Locale id.
+// ? Returns the system locale id.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLocale, 1, LuaUtilPushVar(lS, cSystem->OSLocale()))
+/* ========================================================================= */
+// $ Core.GetLUAMicroTime
+// < Time:integer=The time in microseconds.
+// ? Returns the total time in the LUA sandbox in microseconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLUAMicroTime, 1, LuaUtilPushVar(lS, cLua->CCDeltaUS()))
+/* ========================================================================= */
+// $ Core.GetLUAMilliTime
+// < Time:integer=The execution time in milliseconds.
+// ? Returns the total time in the LUA sandbox in milliseconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLUAMilliTime, 1, LuaUtilPushVar(lS, cLua->CCDeltaMS()))
+/* ========================================================================= */
+// $ Core.GetLUANanoTime
+// < Time:integer=The time in nanoseconds.
+// ? Returns the total time in the LUA sandbox in nanoseconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLUANanoTime, 1, LuaUtilPushVar(lS, cLua->CCDeltaNS()))
+/* ========================================================================= */
+// $ Core.GetLUATime
+// < Timestamp:number=The execution time as a number.
+// ? Returns the total time in the LUA sandbox in seconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLUATime, 1, LuaUtilPushVar(lS, cLua->CCDeltaToDouble()))
+/* ========================================================================= */
+// $ Core.GetLUAUsage
+// < Bytes:integer=Bytes of memory.
+// ? Returns the amount of memory in use by Lua
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetLUAUsage, 1, LuaUtilPushVar(lS, LuaUtilGetUsage(lS)))
+/* ========================================================================= */
+// $ Core.GetOS
+// < Name:string=Operating system type (Windows,Linux,MacOS).
+// < Major:integer=Major version number of operating system.
+// < Minor:integer=Minor version number of operating system.
+// < Build:integer=Build version number of operating system.
+// < Platform:integer=Platform version number of operating system (Windows).
+// < SPack:integer=Service pack number of operating system (Windows).
+// < Suite:integer=Suite number of operating system (Windows).
+// < ProdType:integer=Product number of operating system (Windows).
+// < Bits:integer=Bits version of operating system.
+// < Extra:string=Extra operating system information (e.g. Wine/Kernel).
+// ? Returns version information about the operating system.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetOS, 6,
+  LuaUtilPushExtStr(lS, cSystem->OSName());
+  LuaUtilPushVar(lS, cSystem->OSMajor(), cSystem->OSMinor(),
+    cSystem->OSBuild(), cSystem->OSBits());
+  LuaUtilPushExtStr(lS, cSystem->OSNameEx()))
+/* ========================================================================= */
+// $ Core.GetOSMicroTime
+// < Time:integer=The time in microseconds.
+// ? Returns the time elapsed in microseconds since the OS started. Precision
+// ? will be lost over time.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetOSMicroTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeUS()))
+/* ========================================================================= */
+// $ Core.GetOSMilliTime
+// < Time:integer=The time in milliseconds.
+// ? Returns the time elapsed in milliseconds since the OS started. Precision
+// ? will be lost over time.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetOSMilliTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeMS()))
+/* ========================================================================= */
+// $ Core.GetOSNanoTime
+// < Time:integer=The time in nanoseconds.
+// ? Returns the time elapsed in nanoseconds since the OS started. Precision
+// ? will be lost over time.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetOSNanoTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeNS()))
+/* ========================================================================= */
+// $ Core.GetOSNumTime
+// < Timestamp:number=The UNIX timestamp as a number.
+// ? Returns a unix timestamp of the current time in seconds as a number.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetOSNumTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS<lua_Number>()))
+/* ========================================================================= */
+// $ Core.GetOSTime
+// < Timestamp:integer=The UNIX timestamp.
+// ? Returns a unix timestamp of the current time in seconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetOSTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS()))
+/* ========================================================================= */
+// $ Core.GetRAM
+// < Load:number=% load of total physical memory.
+// < Total:integer=Total physical memory installed in system.
+// < Free:integer=Available physical memory to engine.
+// < Used:integer=Physical memory in use by the system and other apps.
+// < ProcUse:integer=The total memory in use by the engine (including Virtual).
+// < ProcPeak:integer=The peak memory usage of the engine.
+// ? Returns information about physical memory in the computer.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetRAM, 6, cSystem->UpdateMemoryUsageData();
+  LuaUtilPushVar(lS, cSystem->RAMLoad(), cSystem->RAMTotal(),
+    cSystem->RAMFree(), cSystem->RAMUsed(), cSystem->RAMProcUse(),
+    cSystem->RAMProcPeak()))
+/* ========================================================================= */
+// $ Core.GetStack
+// < Stack:string=The current stack trace.
+// > Text:string=The message to prefix.
+// ? Returns the current stack as a string formatted by the engine and not
+// ? Lua. This is needed for example when you use xpcall() with an error
+// ? handler. Note that pcall() error messages do not include the stack.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetStack, 1, const AgCStringChar aString{lS, 1};
+  LuaUtilPushVar(lS, StrAppend(aString, LuaUtilStack(lS))))
+/* ========================================================================= */
+// $ Core.GetTicks
+// < Ticks:integer=Number of ticks.
+// ? Returns the total number of frames rendered since the engine started.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetTicks, 1, LuaUtilPushVar(lS, cFrame->FrameGetTicks()))
+/* ========================================================================= */
+// $ Core.GetTime
+// < Time:number=The time in seconds.
+// ? Returns the time elapsed in seconds since the engine started. This is a
+// ? very high resolution timer. Use it for time-criticial timings. This
+// ? counter can be reset with Core.Update() as it will lose precision over
+// ? time.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetTime, 1, LuaUtilPushVar(lS, cmHiRes.GetTimeDouble()))
+/* ========================================================================= */
+// $ Core.GetUptime
+// < Ticks:number=Uptime in seconds
+// ? Returns the total number of seconds elapsed since the start of the engine
+// ? this call maybe a little more expensive than Glfw.Time() but you have no
+// ? choice to use this if you are using terminal mode. This uses the STL
+// ? chrono class to retrieve this value.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetUptime, 1, LuaUtilPushVar(lS, cLog->CCDeltaToDouble()))
+/* ========================================================================= */
+// $ Core.GetUpMicroTime
+// < Time:integer=The engine uptime in microseconds.
+// ? Returns the total time the engine has been running in microseconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetUpMicroTime, 1, LuaUtilPushVar(lS, cLog->CCDeltaUS()))
+/* ========================================================================= */
+// $ Core.GetUpMilliTime
+// < Time:integer=The engine uptime in milliseconds.
+// ? Returns the total time in the engine has been running in milliseconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetUpMilliTime, 1, LuaUtilPushVar(lS, cLog->CCDeltaMS()))
+/* ========================================================================= */
+// $ Core.GetUpNanoTime
+// < Time:integer=The engine time in nanoseconds.
+// ? Returns the total time in the engine has been running in nanoseconds.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetUpNanoTime, 1, LuaUtilPushVar(lS, cLog->CCDeltaNS()))
+/* ========================================================================= */
+// $ Core.GetVersion
 // < Title:string=Title of engine (normally Mhatxotic Engine).
 // < Vendor:string=Author of engine (normally Mhatxotic Design).
 // < Major:integer=Major version number of engine.
@@ -136,7 +322,7 @@ LLFUNC(End, 0, cEvtMain->Add(EMC_LUA_END))
 // < CompVersion:string=The version of the compiler that built the executable.
 // ? Returns version information about the engine.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Engine, 12,
+LLFUNC(GetVersion, 12,
   LuaUtilPushExtStr(lS, cSystem->ENGName());
   LuaUtilPushExtStr(lS, cSystem->ENGAuthor());
   LuaUtilPushVar(lS, cSystem->ENGMajor(), cSystem->ENGMinor(),
@@ -147,22 +333,10 @@ LLFUNC(Engine, 12,
   LuaUtilPushExtStr(lS, cSystem->ENGCompiler());
   LuaUtilPushExtStr(lS, cSystem->ENGCompVer()))
 /* ========================================================================= */
-// $ Core.Env
-// > Value:string=The name of the variable to query.
-// < Value:string=The value of the specified variable.
-// ? Queries the specified environment variable. Returns a blank string if
-// ? empty. All environment variables are converted to upper-case at startup.
-// ? Type 'env' in the console to see the current environment.
+// $ Core.End
+// ? Ends LUA execution and enables the console.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Env, 1,
-  LuaUtilPushExtStr(lS, cCmdLine->CmdLineGetEnv(AgString{lS,1}())))
-/* ========================================================================= */
-// $ Core.Events
-// < Events:integer=Number of events in the engine events system.
-// ? Returns the number of events in the engine event system. Helps with
-// ? synchronising Video or Stream class events.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Events, 1, LuaUtilPushVar(lS, cEvtMain->SizeSafe()))
+LLFUNC(End, 0, cEvtMain->Add(EMC_LUA_END))
 /* ========================================================================= */
 // $ Core.IsOSLinux
 // < Boolean:boolean=True if using Linux, false if not.
@@ -194,6 +368,16 @@ LLFUNC(IsOSWindows, 1, LuaUtilPushVar(lS, true))
 LLFUNC(IsOSWindows, 1, LuaUtilPushVar(lS, false))
 #endif
 /* ========================================================================= */
+// $ Core.IsPidRunning
+// > Id:integer=The pid number to check
+// < Result:boolean=The pid is valid and running?
+// ? Asks the operating system to check if the specified pid exists and if the
+// ? specified executable matches, true is returned, else false. Specifying
+// ? pid zero will cause an exception.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsPidRunning, 1, const AgPid aPid{lS, 1};
+  LuaUtilPushVar(lS, cSystem->IsPidRunning(aPid)))
+/* ========================================================================= */
 // $ Core.IsWayland
 // < Boolean:boolean=True if using Wayland compositor on Linux, false if not.
 // ? Returns 'true' if executable was built for Linux and the engine is running
@@ -205,12 +389,6 @@ LLFUNC(IsWayland, 1, LuaUtilPushVar(lS, GlFWIsWayland()))
 #else
 LLFUNC(IsWayland, 1, LuaUtilPushVar(lS, false))
 #endif
-/* ========================================================================= */
-// $ Core.Locale
-// < LocaleID:number=Locale id.
-// ? Returns the system locale id.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Locale, 1, LuaUtilPushVar(lS, cSystem->OSLocale()))
 /* ========================================================================= */
 // $ Core.KillPid
 // > Pid:integer=The pid of the executable to kill.
@@ -240,109 +418,6 @@ LLFUNC(LogEx, 0,
   const AgIntegerLGE<LHLevel> aLevel{lS, 2, LH_CRITICAL, LH_MAX};
   cLog->LogExSafe(aLevel, "(Lua) $", aString()))
 /* ========================================================================= */
-// $ Core.LUAMicroTime
-// < Time:integer=The time in microseconds.
-// ? Returns the total time in the LUA sandbox in microseconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(LUAMicroTime, 1, LuaUtilPushVar(lS, cLua->CCDeltaUS()))
-/* ========================================================================= */
-// $ Core.LUAMilliTime
-// < Time:integer=The execution time in milliseconds.
-// ? Returns the total time in the LUA sandbox in milliseconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(LUAMilliTime, 1, LuaUtilPushVar(lS, cLua->CCDeltaMS()))
-/* ========================================================================= */
-// $ Core.LUANanoTime
-// < Time:integer=The time in nanoseconds.
-// ? Returns the total time in the LUA sandbox in nanoseconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(LUANanoTime, 1, LuaUtilPushVar(lS, cLua->CCDeltaNS()))
-/* ========================================================================= */
-// $ Core.LUATime
-// < Timestamp:number=The execution time as a number.
-// ? Returns the total time in the LUA sandbox in seconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(LUATime, 1, LuaUtilPushVar(lS, cLua->CCDeltaToDouble()))
-/* ========================================================================= */
-// $ Core.LUAUsage
-// < Bytes:integer=Bytes of memory.
-// ? Returns the amount of memory in use by Lua
-/* ------------------------------------------------------------------------- */
-LLFUNC(LUAUsage, 1, LuaUtilPushVar(lS, LuaUtilGetUsage(lS)))
-/* ========================================================================= */
-// $ Core.Library
-// > Id:integer=The index of the license.
-// < Name:string=Name of the credit.
-// < Version:string=Version of the api.
-// < Id:integer=License index.
-// < Website:string=Website of the api.
-// < Copyright:string=Copyright of the api.
-// < Author:string=Author of the api.
-// ? Shows the full credits information of the specified api index.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Library, 4,
-  const AgCreditEnum aCredit{lS, 1};
-  const CreditLib &clItem = cCredits->CreditGetItem(aCredit);
-  LuaUtilPushExtStr(lS, clItem.GetName());
-  LuaUtilPushExtStr(lS, clItem.GetVersion());
-  LuaBasePushBool(lS, clItem.IsCopyright());
-  LuaUtilPushExtStr(lS, clItem.GetAuthor()))
-/* ========================================================================= */
-// $ Core.License
-// > Id:integer=The index of the license.
-// < Name:string=Name of the license.
-// < Text:string=Full text file of the license.
-// ? Shows the full license information of the specified index.
-/* ------------------------------------------------------------------------- */
-LLFUNC(License, 1,
-  LuaUtilPushVar(lS, cCredits->CreditGetItemText(AgCreditEnum{lS, 1})))
-/* ========================================================================= */
-// $ Core.OS
-// < Name:string=Operating system type (Windows,Linux,MacOS).
-// < Major:integer=Major version number of operating system.
-// < Minor:integer=Minor version number of operating system.
-// < Build:integer=Build version number of operating system.
-// < Platform:integer=Platform version number of operating system (Windows).
-// < SPack:integer=Service pack number of operating system (Windows).
-// < Suite:integer=Suite number of operating system (Windows).
-// < ProdType:integer=Product number of operating system (Windows).
-// < Bits:integer=Bits version of operating system.
-// < Extra:string=Extra operating system information (e.g. Wine/Kernel).
-// ? Returns version information about the operating system.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OS, 6,
-  LuaUtilPushExtStr(lS, cSystem->OSName());
-  LuaUtilPushVar(lS, cSystem->OSMajor(), cSystem->OSMinor(),
-    cSystem->OSBuild(), cSystem->OSBits());
-  LuaUtilPushExtStr(lS, cSystem->OSNameEx()))
-/* ========================================================================= */
-// $ Core.OSMicroTime
-// < Time:integer=The time in microseconds.
-// ? Returns the time elapsed in microseconds since the OS started. Precision
-// ? will be lost over time.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OSMicroTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeUS()))
-/* ========================================================================= */
-// $ Core.OSMilliTime
-// < Time:integer=The time in milliseconds.
-// ? Returns the time elapsed in milliseconds since the OS started. Precision
-// ? will be lost over time.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OSMilliTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeMS()))
-/* ========================================================================= */
-// $ Core.OSNanoTime
-// < Time:integer=The time in nanoseconds.
-// ? Returns the time elapsed in nanoseconds since the OS started. Precision
-// ? will be lost over time.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OSNanoTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeNS()))
-/* ========================================================================= */
-// $ Core.OSNumTime
-// < Timestamp:number=The UNIX timestamp as a number.
-// ? Returns a unix timestamp of the current time in seconds as a number.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OSNumTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS<lua_Number>()))
-/* ========================================================================= */
 // $ Core.OnTick
 // > Func:function=The main tick function to change to.
 // ? On initialisation of IfLua:: The function address of 'MainTick' is.
@@ -362,45 +437,15 @@ LLFUNC(OnTick, 0, cLua->LuaSetRef(lS, cLua->LuaGetTickFunc()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnEnd, 0, cLua->LuaSetRef(lS, cLua->LuaGetEndFunc()))
 /* ========================================================================= */
-// $ Core.OSTime
-// < Timestamp:integer=The UNIX timestamp.
-// ? Returns a unix timestamp of the current time in seconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(OSTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS()))
-/* ========================================================================= */
 // $ Core.Pause
 // ? Pauses LUA execution. Obviously, you can't resume and must do it manually!
 /* ------------------------------------------------------------------------- */
 LLFUNC(Pause, 0, cEvtMain->Add(EMC_LUA_PAUSE))
 /* ========================================================================= */
-// $ Core.PidRunning
-// > Id:integer=The pid number to check
-// < Result:boolean=The pid is valid and running?
-// ? Asks the operating system to check if the specified pid exists and if the
-// ? specified executable matches, true is returned, else false. Specifying
-// ? pid zero will cause an exception.
-/* ------------------------------------------------------------------------- */
-LLFUNC(PidRunning, 1, const AgPid aPid{lS, 1};
-  LuaUtilPushVar(lS, cSystem->IsPidRunning(aPid)))
-/* ========================================================================= */
 // $ Core.Quit
 // ? Terminates the engine process cleanly.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Quit, 0, cEvtMain->RequestQuit())
-/* ========================================================================= */
-// $ Core.RAM
-// < Load:number=% load of total physical memory.
-// < Total:integer=Total physical memory installed in system.
-// < Free:integer=Available physical memory to engine.
-// < Used:integer=Physical memory in use by the system and other apps.
-// < ProcUse:integer=The total memory in use by the engine (including Virtual).
-// < ProcPeak:integer=The peak memory usage of the engine.
-// ? Returns information about physical memory in the computer.
-/* ------------------------------------------------------------------------- */
-LLFUNC(RAM, 6, cSystem->UpdateMemoryUsageData();
-  LuaUtilPushVar(lS, cSystem->RAMLoad(), cSystem->RAMTotal(),
-    cSystem->RAMFree(), cSystem->RAMUsed(), cSystem->RAMProcUse(),
-    cSystem->RAMProcPeak()))
 /* ========================================================================= */
 // $ Core.Reset
 // < Result:boolean = Was the event sent successfully?
@@ -414,7 +459,7 @@ LLFUNC(Reset, 1, LuaUtilPushVar(lS, cLua->LuaReInit()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Restart, 0, cEvtMain->Add(EMC_QUIT_RESTART))
 /* ========================================================================= */
-// $ Core.RestartFresh
+// $ Core.RestartNP
 // ? Restarts the engine process cleanly without command-line arguments.
 /* ------------------------------------------------------------------------- */
 LLFUNC(RestartNP, 0, cEvtMain->Add(EMC_QUIT_RESTARTNP))
@@ -424,16 +469,6 @@ LLFUNC(RestartNP, 0, cEvtMain->Add(EMC_QUIT_RESTARTNP))
 /* ------------------------------------------------------------------------- */
 LLFUNC(RestoreDelay, 0, cFrame->FrameRestoreDelay())
 /* ========================================================================= */
-// $ Core.ScrollDown
-// ? Scrolls the console up one line.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ScrollDown, 0, cConsole->MoveLogDown())
-/* ========================================================================= */
-// $ Core.ScrollUp
-// ? Scrolls the console up one line.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ScrollUp, 0, cConsole->MoveLogUp())
-/* ========================================================================= */
 // $ Core.SetDelay
 // > Millisecs:integer=Milliseconds to delay by each tick
 // ? This is the same as updating the cvar 'app_delay' apart from that the cvar
@@ -441,6 +476,13 @@ LLFUNC(ScrollUp, 0, cConsole->MoveLogUp())
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
   cFrame->FrameUpdateDelay(aMilliseconds))
+/* ========================================================================= */
+// $ Core.SetDone
+// ? Confirms that you want the engine to exit. This is so you can perform
+// ? clean up actions in your own time by setting Core.SetEnd(), then calling
+// ? this function to confirm you're done.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetDone, 0, cEvtMain->ConfirmExit())
 /* ========================================================================= */
 // $ Core.SetIcon
 // > Filename:string=The filenames of the large icon to set.
@@ -451,31 +493,21 @@ LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetIcon, 0, cDisplay->DisplaySetIconFromLua(AgString{lS, 1}()))
 /* ========================================================================= */
-// $ Core.Stack
-// < Stack:string=The current stack trace.
-// > Text:string=The message to prefix.
-// ? Returns the current stack as a string formatted by the engine and not
-// ? Lua. This is needed for example when you use xpcall() with an error
-// ? handler. Note that pcall() error messages do not include the stack.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Stack, 1, const AgCStringChar aString{lS, 1};
-  LuaUtilPushVar(lS, StrAppend(aString, LuaUtilStack(lS))))
-/* ========================================================================= */
-// $ Core.StatusLeft
+// $ Core.SetStatusLeft
 // > String:string=Console status text.
 // ? In terminal mode, this function will set the text to appear when no text
 // ? is input into the input bar. Useful for customised stats. It will update
 // ? every second.
 /* ------------------------------------------------------------------------- */
-LLFUNC(StatusLeft, 0, cConsole->SetStatusLeft(AgString{lS, 1}))
+LLFUNC(SetStatusLeft, 0, cConsole->SetStatusLeft(AgString{lS, 1}))
 /* ========================================================================= */
-// $ Core.StatusRight
+// $ Core.SetStatusRight
 // > String:string=Console status text.
 // ? In terminal mode, this function will set the text to appear when no text
 // ? is input into the input bar. Useful for customised stats. It will update
 // ? every second.
 /* ------------------------------------------------------------------------- */
-LLFUNC(StatusRight, 0, cConsole->SetStatusRight(AgString{lS, 1}))
+LLFUNC(SetStatusRight, 0, cConsole->SetStatusRight(AgString{lS, 1}))
 /* ========================================================================= */
 // $ Core.Suspend
 // > Millisecs:integer=Time in seconds.
@@ -483,48 +515,6 @@ LLFUNC(StatusRight, 0, cConsole->SetStatusRight(AgString{lS, 1}))
 /* ------------------------------------------------------------------------- */
 LLFUNC(Suspend, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
   StdSuspend(milliseconds{ aMilliseconds }))
-/* ========================================================================= */
-// $ Core.Ticks
-// < Ticks:integer=Number of ticks.
-// ? Returns the total number of frames rendered since the engine started.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Ticks, 1, LuaUtilPushVar(lS, cFrame->FrameGetTicks()))
-/* ========================================================================= */
-// $ Core.Time
-// < Time:number=The time in seconds.
-// ? Returns the time elapsed in seconds since the engine started. This is a
-// ? very high resolution timer. Use it for time-criticial timings. This
-// ? counter can be reset with Core.Update() as it will lose precision over
-// ? time.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Time, 1, LuaUtilPushVar(lS, cmHiRes.GetTimeDouble()))
-/* ========================================================================= */
-// $ Core.Uptime
-// < Ticks:number=Uptime in seconds
-// ? Returns the total number of seconds elapsed since the start of the engine
-// ? this call maybe a little more expensive than Glfw.Time() but you have no
-// ? choice to use this if you are using terminal mode. This uses the STL
-// ? chrono class to retrieve this value.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Uptime, 1, LuaUtilPushVar(lS, cLog->CCDeltaToDouble()))
-/* ========================================================================= */
-// $ Core.UpMicroTime
-// < Time:integer=The engine uptime in microseconds.
-// ? Returns the total time the engine has been running in microseconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(UpMicroTime, 1, LuaUtilPushVar(lS, cLog->CCDeltaUS()))
-/* ========================================================================= */
-// $ Core.UpMilliTime
-// < Time:integer=The engine uptime in milliseconds.
-// ? Returns the total time in the engine has been running in milliseconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(UpMilliTime, 1, LuaUtilPushVar(lS, cLog->CCDeltaMS()))
-/* ========================================================================= */
-// $ Core.UpNanoTime
-// < Time:integer=The engine time in nanoseconds.
-// ? Returns the total time in the engine has been running in nanoseconds.
-/* ------------------------------------------------------------------------- */
-LLFUNC(UpNanoTime, 1, LuaUtilPushVar(lS, cLog->CCDeltaNS()))
 /* ========================================================================= */
 // $ Core.WaitAsync
 // ? Delays main thread execution until ALL asynchronous threads have completed
@@ -557,26 +547,35 @@ LLFUNC(WriteEx, 0,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Core.* non-member functions begin
-  LLRSFUNC(Catchup),      LLRSFUNC(CPU),          LLRSFUNC(CPUFPS),
-  LLRSFUNC(CPUProcUsage), LLRSFUNC(CPUSysUsage),  LLRSFUNC(CPUUsage),
-  LLRSFUNC(Delay),        LLRSFUNC(Done),         LLRSFUNC(End),
-  LLRSFUNC(Engine),       LLRSFUNC(Env),          LLRSFUNC(Events),
-  LLRSFUNC(IsOSLinux),    LLRSFUNC(IsOSMac),      LLRSFUNC(IsOSWindows),
-  LLRSFUNC(IsWayland),    LLRSFUNC(KillPid),      LLRSFUNC(Library),
-  LLRSFUNC(License),      LLRSFUNC(Locale),       LLRSFUNC(Log),
-  LLRSFUNC(LogEx),        LLRSFUNC(LUAMicroTime), LLRSFUNC(LUAMilliTime),
-  LLRSFUNC(LUANanoTime),  LLRSFUNC(LUATime),      LLRSFUNC(LUAUsage),
-  LLRSFUNC(OnEnd),        LLRSFUNC(OnTick),       LLRSFUNC(OS),
-  LLRSFUNC(OSMicroTime),  LLRSFUNC(OSMilliTime),  LLRSFUNC(OSNanoTime),
-  LLRSFUNC(OSNumTime),    LLRSFUNC(OSTime),       LLRSFUNC(Pause),
-  LLRSFUNC(PidRunning),   LLRSFUNC(Quit),         LLRSFUNC(RAM),
-  LLRSFUNC(Reset),        LLRSFUNC(Restart),      LLRSFUNC(RestartNP),
-  LLRSFUNC(RestoreDelay), LLRSFUNC(ScrollDown),   LLRSFUNC(ScrollUp),
-  LLRSFUNC(SetDelay),     LLRSFUNC(SetIcon),      LLRSFUNC(Stack),
-  LLRSFUNC(StatusLeft),   LLRSFUNC(StatusRight),  LLRSFUNC(Suspend),
-  LLRSFUNC(Ticks),        LLRSFUNC(Time),         LLRSFUNC(UpMicroTime),
-  LLRSFUNC(UpMilliTime),  LLRSFUNC(UpNanoTime),   LLRSFUNC(Uptime),
-  LLRSFUNC(WaitAsync),    LLRSFUNC(Write),        LLRSFUNC(WriteEx),
+  LLRSFUNC(Catchup),         LLRSFUNC(GetCPU),
+  LLRSFUNC(GetCPUFPS),       LLRSFUNC(GetCPUProcUsage),
+  LLRSFUNC(GetCPUSysUsage),  LLRSFUNC(GetCPUUsage),
+  LLRSFUNC(GetDelay),        LLRSFUNC(GetEnv),
+  LLRSFUNC(GetEvents),       LLRSFUNC(GetLibrary),
+  LLRSFUNC(GetLicense),      LLRSFUNC(GetLocale),
+  LLRSFUNC(GetLUAMicroTime), LLRSFUNC(GetLUAMilliTime),
+  LLRSFUNC(GetLUANanoTime),  LLRSFUNC(GetLUATime),
+  LLRSFUNC(GetLUAUsage),     LLRSFUNC(GetOS),
+  LLRSFUNC(GetOSMicroTime),  LLRSFUNC(GetOSMilliTime),
+  LLRSFUNC(GetOSNanoTime),   LLRSFUNC(GetOSNumTime),
+  LLRSFUNC(GetOSTime),       LLRSFUNC(GetRAM),
+  LLRSFUNC(GetStack),        LLRSFUNC(GetTicks),
+  LLRSFUNC(GetTime),         LLRSFUNC(GetUpMicroTime),
+  LLRSFUNC(GetUpMilliTime),  LLRSFUNC(GetUpNanoTime),
+  LLRSFUNC(GetUptime),       LLRSFUNC(GetVersion),
+  LLRSFUNC(End),             LLRSFUNC(IsOSLinux),
+  LLRSFUNC(IsOSMac),         LLRSFUNC(IsOSWindows),
+  LLRSFUNC(IsPidRunning),    LLRSFUNC(IsWayland),
+  LLRSFUNC(KillPid),         LLRSFUNC(Log),
+  LLRSFUNC(LogEx),           LLRSFUNC(OnEnd),
+  LLRSFUNC(OnTick),          LLRSFUNC(Pause),
+  LLRSFUNC(Quit),            LLRSFUNC(Reset),
+  LLRSFUNC(Restart),         LLRSFUNC(RestartNP),
+  LLRSFUNC(RestoreDelay),    LLRSFUNC(SetDelay),
+  LLRSFUNC(SetDone),         LLRSFUNC(SetIcon),
+  LLRSFUNC(SetStatusLeft),   LLRSFUNC(SetStatusRight),
+  LLRSFUNC(Suspend),         LLRSFUNC(WaitAsync),
+  LLRSFUNC(Write),           LLRSFUNC(WriteEx),
 LLRSEND                                // Core.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **

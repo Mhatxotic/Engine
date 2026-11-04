@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.11.3.89 -->
-<!-- Automatically built at Tue Nov 03 22:39:34 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.11.3.89 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.4.26 -->
+<!-- Automatically built at Wed Nov 04 20:31:13 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.4.26 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.3.89">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.4.26">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.3.89">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.4.26">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.3.89">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.4.26">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.11.3.89 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.4.26 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.11.3.89 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.4.26 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.11.3.89 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.4.26 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 946 functions (417 members, 529 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 947 functions (415 members, 532 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -421,65 +421,63 @@
 						<OL>
 							<LI><P>The core class allows manipulation of and retrieve information from the game engine itself.</P></LI>
 							<LI>
-								<B>Members</B> <I>(60 members)</I>
+								<B>Members</B> <I>(58 members)</I>
 								<OL>
-									<LI><A href="#Core.CPU">CPU</A></LI>
-									<LI><A href="#Core.CPUFPS">CPUFPS</A></LI>
-									<LI><A href="#Core.CPUProcUsage">CPUProcUsage</A></LI>
-									<LI><A href="#Core.CPUSysUsage">CPUSysUsage</A></LI>
-									<LI><A href="#Core.CPUUsage">CPUUsage</A></LI>
 									<LI><A href="#Core.Catchup">Catchup</A></LI>
-									<LI><A href="#Core.Delay">Delay</A></LI>
-									<LI><A href="#Core.Done">Done</A></LI>
 									<LI><A href="#Core.End">End</A></LI>
-									<LI><A href="#Core.Engine">Engine</A></LI>
-									<LI><A href="#Core.Env">Env</A></LI>
-									<LI><A href="#Core.Events">Events</A></LI>
+									<LI><A href="#Core.GetCPU">GetCPU</A></LI>
+									<LI><A href="#Core.GetCPUFPS">GetCPUFPS</A></LI>
+									<LI><A href="#Core.GetCPUProcUsage">GetCPUProcUsage</A></LI>
+									<LI><A href="#Core.GetCPUSysUsage">GetCPUSysUsage</A></LI>
+									<LI><A href="#Core.GetCPUUsage">GetCPUUsage</A></LI>
+									<LI><A href="#Core.GetDelay">GetDelay</A></LI>
+									<LI><A href="#Core.GetEnv">GetEnv</A></LI>
+									<LI><A href="#Core.GetEvents">GetEvents</A></LI>
+									<LI><A href="#Core.GetLUAMicroTime">GetLUAMicroTime</A></LI>
+									<LI><A href="#Core.GetLUAMilliTime">GetLUAMilliTime</A></LI>
+									<LI><A href="#Core.GetLUANanoTime">GetLUANanoTime</A></LI>
+									<LI><A href="#Core.GetLUATime">GetLUATime</A></LI>
+									<LI><A href="#Core.GetLUAUsage">GetLUAUsage</A></LI>
+									<LI><A href="#Core.GetLibrary">GetLibrary</A></LI>
+									<LI><A href="#Core.GetLicense">GetLicense</A></LI>
+									<LI><A href="#Core.GetLocale">GetLocale</A></LI>
+									<LI><A href="#Core.GetOS">GetOS</A></LI>
+									<LI><A href="#Core.GetOSMicroTime">GetOSMicroTime</A></LI>
+									<LI><A href="#Core.GetOSMilliTime">GetOSMilliTime</A></LI>
+									<LI><A href="#Core.GetOSNanoTime">GetOSNanoTime</A></LI>
+									<LI><A href="#Core.GetOSNumTime">GetOSNumTime</A></LI>
+									<LI><A href="#Core.GetOSTime">GetOSTime</A></LI>
+									<LI><A href="#Core.GetRAM">GetRAM</A></LI>
+									<LI><A href="#Core.GetStack">GetStack</A></LI>
+									<LI><A href="#Core.GetTicks">GetTicks</A></LI>
+									<LI><A href="#Core.GetTime">GetTime</A></LI>
+									<LI><A href="#Core.GetUpMicroTime">GetUpMicroTime</A></LI>
+									<LI><A href="#Core.GetUpMilliTime">GetUpMilliTime</A></LI>
+									<LI><A href="#Core.GetUpNanoTime">GetUpNanoTime</A></LI>
+									<LI><A href="#Core.GetUptime">GetUptime</A></LI>
+									<LI><A href="#Core.GetVersion">GetVersion</A></LI>
 									<LI><A href="#Core.IsOSLinux">IsOSLinux</A></LI>
 									<LI><A href="#Core.IsOSMac">IsOSMac</A></LI>
 									<LI><A href="#Core.IsOSWindows">IsOSWindows</A></LI>
+									<LI><A href="#Core.IsPidRunning">IsPidRunning</A></LI>
 									<LI><A href="#Core.IsWayland">IsWayland</A></LI>
 									<LI><A href="#Core.KillPid">KillPid</A></LI>
-									<LI><A href="#Core.LUAMicroTime">LUAMicroTime</A></LI>
-									<LI><A href="#Core.LUAMilliTime">LUAMilliTime</A></LI>
-									<LI><A href="#Core.LUANanoTime">LUANanoTime</A></LI>
-									<LI><A href="#Core.LUATime">LUATime</A></LI>
-									<LI><A href="#Core.LUAUsage">LUAUsage</A></LI>
-									<LI><A href="#Core.Library">Library</A></LI>
-									<LI><A href="#Core.License">License</A></LI>
-									<LI><A href="#Core.Locale">Locale</A></LI>
 									<LI><A href="#Core.Log">Log</A></LI>
 									<LI><A href="#Core.LogEx">LogEx</A></LI>
-									<LI><A href="#Core.OS">OS</A></LI>
-									<LI><A href="#Core.OSMicroTime">OSMicroTime</A></LI>
-									<LI><A href="#Core.OSMilliTime">OSMilliTime</A></LI>
-									<LI><A href="#Core.OSNanoTime">OSNanoTime</A></LI>
-									<LI><A href="#Core.OSNumTime">OSNumTime</A></LI>
-									<LI><A href="#Core.OSTime">OSTime</A></LI>
 									<LI><A href="#Core.OnEnd">OnEnd</A></LI>
 									<LI><A href="#Core.OnTick">OnTick</A></LI>
 									<LI><A href="#Core.Pause">Pause</A></LI>
-									<LI><A href="#Core.PidRunning">PidRunning</A></LI>
 									<LI><A href="#Core.Quit">Quit</A></LI>
-									<LI><A href="#Core.RAM">RAM</A></LI>
 									<LI><A href="#Core.Reset">Reset</A></LI>
 									<LI><A href="#Core.Restart">Restart</A></LI>
-									<LI><A href="#Core.RestartFresh">RestartFresh</A></LI>
+									<LI><A href="#Core.RestartNP">RestartNP</A></LI>
 									<LI><A href="#Core.RestoreDelay">RestoreDelay</A></LI>
-									<LI><A href="#Core.ScrollDown">ScrollDown</A></LI>
-									<LI><A href="#Core.ScrollUp">ScrollUp</A></LI>
 									<LI><A href="#Core.SetDelay">SetDelay</A></LI>
+									<LI><A href="#Core.SetDone">SetDone</A></LI>
 									<LI><A href="#Core.SetIcon">SetIcon</A></LI>
-									<LI><A href="#Core.Stack">Stack</A></LI>
-									<LI><A href="#Core.StatusLeft">StatusLeft</A></LI>
-									<LI><A href="#Core.StatusRight">StatusRight</A></LI>
+									<LI><A href="#Core.SetStatusLeft">SetStatusLeft</A></LI>
+									<LI><A href="#Core.SetStatusRight">SetStatusRight</A></LI>
 									<LI><A href="#Core.Suspend">Suspend</A></LI>
-									<LI><A href="#Core.Ticks">Ticks</A></LI>
-									<LI><A href="#Core.Time">Time</A></LI>
-									<LI><A href="#Core.UpMicroTime">UpMicroTime</A></LI>
-									<LI><A href="#Core.UpMilliTime">UpMilliTime</A></LI>
-									<LI><A href="#Core.UpNanoTime">UpNanoTime</A></LI>
-									<LI><A href="#Core.Uptime">Uptime</A></LI>
 									<LI><A href="#Core.WaitAsync">WaitAsync</A></LI>
 									<LI><A href="#Core.Write">Write</A></LI>
 									<LI><A href="#Core.WriteEx">WriteEx</A></LI>
@@ -509,42 +507,42 @@
 								<OL>
 									<LI><A href="#Display.Attention">Attention</A></LI>
 									<LI><A href="#Display.Centre">Centre</A></LI>
-									<LI><A href="#Display.Decordated">Decordated</A></LI>
-									<LI><A href="#Display.FSType">FSType</A></LI>
-									<LI><A href="#Display.Floating">Floating</A></LI>
 									<LI><A href="#Display.Focus">Focus</A></LI>
-									<LI><A href="#Display.Focused">Focused</A></LI>
-									<LI><A href="#Display.GPU">GPU</A></LI>
-									<LI><A href="#Display.GPUFPS">GPUFPS</A></LI>
+									<LI><A href="#Display.GetFSType">GetFSType</A></LI>
+									<LI><A href="#Display.GetGPU">GetGPU</A></LI>
+									<LI><A href="#Display.GetGPUFPS">GetGPUFPS</A></LI>
+									<LI><A href="#Display.GetMonitor">GetMonitor</A></LI>
+									<LI><A href="#Display.GetMonitorData">GetMonitorData</A></LI>
+									<LI><A href="#Display.GetMonitors">GetMonitors</A></LI>
 									<LI><A href="#Display.GetPos">GetPos</A></LI>
 									<LI><A href="#Display.GetSize">GetSize</A></LI>
-									<LI><A href="#Display.Hovered">Hovered</A></LI>
-									<LI><A href="#Display.Iconified">Iconified</A></LI>
+									<LI><A href="#Display.GetVRAM">GetVRAM</A></LI>
+									<LI><A href="#Display.GetVidMode">GetVidMode</A></LI>
+									<LI><A href="#Display.GetVidModeData">GetVidModeData</A></LI>
+									<LI><A href="#Display.GetVidModes">GetVidModes</A></LI>
 									<LI><A href="#Display.Iconify">Iconify</A></LI>
+									<LI><A href="#Display.IsDecordated">IsDecordated</A></LI>
+									<LI><A href="#Display.IsFloating">IsFloating</A></LI>
+									<LI><A href="#Display.IsFocused">IsFocused</A></LI>
+									<LI><A href="#Display.IsHovered">IsHovered</A></LI>
+									<LI><A href="#Display.IsIconified">IsIconified</A></LI>
+									<LI><A href="#Display.IsMaximised">IsMaximised</A></LI>
+									<LI><A href="#Display.IsResizable">IsResizable</A></LI>
+									<LI><A href="#Display.IsTransparent">IsTransparent</A></LI>
+									<LI><A href="#Display.IsVisible">IsVisible</A></LI>
 									<LI><A href="#Display.Maximise">Maximise</A></LI>
-									<LI><A href="#Display.Maximised">Maximised</A></LI>
-									<LI><A href="#Display.Monitor">Monitor</A></LI>
-									<LI><A href="#Display.MonitorData">MonitorData</A></LI>
-									<LI><A href="#Display.Monitors">Monitors</A></LI>
 									<LI><A href="#Display.OnFocused">OnFocused</A></LI>
 									<LI><A href="#Display.OnMoved">OnMoved</A></LI>
 									<LI><A href="#Display.OnResized">OnResized</A></LI>
 									<LI><A href="#Display.OnScaled">OnScaled</A></LI>
 									<LI><A href="#Display.Reset">Reset</A></LI>
 									<LI><A href="#Display.ResetCursor">ResetCursor</A></LI>
-									<LI><A href="#Display.Resizable">Resizable</A></LI>
 									<LI><A href="#Display.Restore">Restore</A></LI>
 									<LI><A href="#Display.SetCursor">SetCursor</A></LI>
 									<LI><A href="#Display.SetFullScreen">SetFullScreen</A></LI>
 									<LI><A href="#Display.SetPos">SetPos</A></LI>
 									<LI><A href="#Display.SetSize">SetSize</A></LI>
-									<LI><A href="#Display.Transparent">Transparent</A></LI>
-									<LI><A href="#Display.VRAM">VRAM</A></LI>
 									<LI><A href="#Display.VReset">VReset</A></LI>
-									<LI><A href="#Display.VidMode">VidMode</A></LI>
-									<LI><A href="#Display.VidModeData">VidModeData</A></LI>
-									<LI><A href="#Display.VidModes">VidModes</A></LI>
-									<LI><A href="#Display.Visible">Visible</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -568,19 +566,19 @@
 							<LI>
 								<B>Members</B> <I>(13 members)</I>
 								<OL>
-									<LI><A href="#Fbo.ConEnabled">ConEnabled</A></LI>
-									<LI><A href="#Fbo.ConHeight">ConHeight</A></LI>
-									<LI><A href="#Fbo.ConLock">ConLock</A></LI>
-									<LI><A href="#Fbo.ConSet">ConSet</A></LI>
 									<LI><A href="#Fbo.Create">Create</A></LI>
-									<LI><A href="#Fbo.Draw">Draw</A></LI>
 									<LI><A href="#Fbo.GetClasses">GetClasses</A></LI>
+									<LI><A href="#Fbo.GetConHeight">GetConHeight</A></LI>
+									<LI><A href="#Fbo.GetMainSize">GetMainSize</A></LI>
+									<LI><A href="#Fbo.IsConEnabled">IsConEnabled</A></LI>
 									<LI><A href="#Fbo.IsDrawing">IsDrawing</A></LI>
 									<LI><A href="#Fbo.Main">Main</A></LI>
-									<LI><A href="#Fbo.Matrix">Matrix</A></LI>
 									<LI><A href="#Fbo.OnRedraw">OnRedraw</A></LI>
-									<LI><A href="#Fbo.Resize">Resize</A></LI>
 									<LI><A href="#Fbo.SetBlend">SetBlend</A></LI>
+									<LI><A href="#Fbo.SetConLock">SetConLock</A></LI>
+									<LI><A href="#Fbo.SetConVisible">SetConVisible</A></LI>
+									<LI><A href="#Fbo.SetDraw">SetDraw</A></LI>
+									<LI><A href="#Fbo.SetMainSize">SetMainSize</A></LI>
 								</OL>
 							</LI>
 							<LI>
@@ -1637,7 +1635,6 @@
 									<LI><A href="#Util.FormatNumberI">FormatNumberI</A></LI>
 									<LI><A href="#Util.FormatTime">FormatTime</A></LI>
 									<LI><A href="#Util.FormatTimeUTC">FormatTimeUTC</A></LI>
-									<LI><A href="#Util.GetRatio">GetRatio</A></LI>
 									<LI><A href="#Util.Grouped">Grouped</A></LI>
 									<LI><A href="#Util.Hash">Hash</A></LI>
 									<LI><A href="#Util.Hex">Hex</A></LI>
@@ -1682,6 +1679,7 @@
 									<LI><A href="#Util.Position">Position</A></LI>
 									<LI><A href="#Util.Random">Random</A></LI>
 									<LI><A href="#Util.RandomA">RandomA</A></LI>
+									<LI><A href="#Util.Ratio">Ratio</A></LI>
 									<LI><A href="#Util.RelTime">RelTime</A></LI>
 									<LI><A href="#Util.RelTimeEx">RelTimeEx</A></LI>
 									<LI><A href="#Util.Replace">Replace</A></LI>
@@ -1730,13 +1728,16 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(14 methods)</I>
+								<B>Methods</B> <I>(17 methods)</I>
 								<OL>
 									<LI><A href="#Variable:Destroy">Destroy</A></LI>
-									<LI><A href="#Variable:Get">Get</A></LI>
+									<LI><A href="#Variable:GetBoolean">GetBoolean</A></LI>
 									<LI><A href="#Variable:GetDefault">GetDefault</A></LI>
 									<LI><A href="#Variable:GetId">GetId</A></LI>
+									<LI><A href="#Variable:GetInteger">GetInteger</A></LI>
 									<LI><A href="#Variable:GetName">GetName</A></LI>
+									<LI><A href="#Variable:GetNumber">GetNumber</A></LI>
+									<LI><A href="#Variable:GetString">GetString</A></LI>
 									<LI><A href="#Variable:IsDestroyed">IsDestroyed</A></LI>
 									<LI><A href="#Variable:IsEmpty">IsEmpty</A></LI>
 									<LI><A href="#Variable:IsNotEmpty">IsNotEmpty</A></LI>
@@ -3343,80 +3344,12 @@
 		<PRE>Returns if the Command class is destroyed.<BR></PRE>
 		<H4><A href="#idx:Command">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.CPU" style="display:none">
-		<H3>Core.CPU</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>CPUid</U>, <U>Count</U>, <U>Speed</U>, <U>Family</U>, <U>Model</U>, <U>Stepping</U> = Core.CPU()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>CPUid</U> <I>(string)</I> = The CPUID string.<BR><U>Count</U> <I>(integer)</I> = Number of threads available to the engine.<BR><U>Speed</U> <I>(integer)</I> = Processor frequency in Hz.<BR><U>Family</U> <I>(integer)</I> = Processor family.<BR><U>Model</U> <I>(integer)</I> = Processor model.<BR><U>Stepping</U> <I>(integer)</I> = Processor stepping.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns information about the installed Central Processing Unit.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.CPUFPS" style="display:none">
-		<H3>Core.CPUFPS</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>FPS</U> = Core.CPUFPS()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>FPS</U> <I>(number)</I> = Frames per second.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Get CPU loops processed in the last second. Should be the same as GPU for most people but at times may be different, sometimes much higher.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.CPUProcUsage" style="display:none">
-		<H3>Core.CPUProcUsage</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Percent</U> = Core.CPUProcUsage()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Percent</U> <I>(number)</I> = Percentage process.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the engine CPU load. It is hard-coded to only update once a a second so constant calls won't stress the kernel.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.CPUSysUsage" style="display:none">
-		<H3>Core.CPUSysUsage</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Percent</U> = Core.CPUSysUsage()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Percent</U> <I>(number)</I> = Percentage system.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the system CPU load. It is hard-coded to only update once a a second so constant calls won't stress the kernel.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.CPUUsage" style="display:none">
-		<H3>Core.CPUUsage</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Percent</U>, <U>Percent</U> = Core.CPUUsage()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Percent</U> <I>(number)</I> = Percentage process.<BR><U>Percent</U> <I>(number)</I> = Percentage system.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the engine and system CPU load. Use this instead of the other two cpu usage functions if you need both values. This omits a second check to update cpu usage and very slightly more optimal than calling both cpu usage functions which are hard-coded to only update once a a second so constant calls won't stress the kernel.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Core.Catchup" style="display:none">
 		<H3>Core.Catchup</H3>
 		<H4>Syntax:-</H4>
 		<PRE>Core.Catchup()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Resets the high resolution timer and resets the accumulator. Please be advised that the video system relies on this timer so videos will not play properly if this is constantly used. Only use when doing loading screens.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.Delay" style="display:none">
-		<H3>Core.Delay</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.Delay()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(number)</I> = Delay time in seconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the current thread delay time in seconds without having to read the 'vid_delay' variable. This would be useful if you are actually using the delay and you want to offset a time point by the thread delay.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.Done" style="display:none">
-		<H3>Core.Done</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Core.Done()</PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Confirms that you want the engine to exit. This is so you can perform clean up actions in your own time by setting Core.SetEnd(), then calling this function to confirm you're done.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.End" style="display:none">
@@ -3427,20 +3360,70 @@
 		<PRE>Ends LUA execution and enables the console.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.Engine" style="display:none">
-		<H3>Core.Engine</H3>
+	<DIV id="Core.GetCPU" style="display:none">
+		<H3>Core.GetCPU</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Title</U>, <U>Vendor</U>, <U>Major</U>, <U>Minor</U>, <U>Build</U>, <U>Revision</U>, <U>Bits</U>, <U>Type</U>, <U>Target</U>, <U>Compiled</U>, <U>Compiler</U>, <U>CompVersion</U> = Core.Engine()</PRE>
+		<PRE><U>CPUid</U>, <U>Count</U>, <U>Speed</U>, <U>Family</U>, <U>Model</U>, <U>Stepping</U> = Core.GetCPU()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Title</U> <I>(string)</I> = Title of engine (normally Mhatxotic Engine).<BR><U>Vendor</U> <I>(string)</I> = Author of engine (normally Mhatxotic Design).<BR><U>Major</U> <I>(integer)</I> = Major version number of engine.<BR><U>Minor</U> <I>(integer)</I> = Minor version number of engine.<BR><U>Build</U> <I>(integer)</I> = Build version number of engine.<BR><U>Revision</U> <I>(integer)</I> = Revision version number of engine.<BR><U>Bits</U> <I>(integer)</I> = Bits version number of engine (32 or 64).<BR><U>Type</U> <I>(string)</I> = Text representation of built type (Release,Alpha,Beta).<BR><U>Target</U> <I>(string)</I> = Text string of the type of executable file.<BR><U>Compiled</U> <I>(string)</I> = The timestamp of the executable compilation time.<BR><U>Compiler</U> <I>(string)</I> = The name of the compiler that built the executable.<BR><U>CompVersion</U> <I>(string)</I> = The version of the compiler that built the executable.<BR></PRE>
+		<PRE><U>CPUid</U> <I>(string)</I> = The CPUID string.<BR><U>Count</U> <I>(integer)</I> = Number of threads available to the engine.<BR><U>Speed</U> <I>(integer)</I> = Processor frequency in Hz.<BR><U>Family</U> <I>(integer)</I> = Processor family.<BR><U>Model</U> <I>(integer)</I> = Processor model.<BR><U>Stepping</U> <I>(integer)</I> = Processor stepping.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns version information about the engine.<BR></PRE>
+		<PRE>Returns information about the installed Central Processing Unit.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.Env" style="display:none">
-		<H3>Core.Env</H3>
+	<DIV id="Core.GetCPUFPS" style="display:none">
+		<H3>Core.GetCPUFPS</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Value</U> = Core.Env(<I><U>Value</U></I>)</PRE>
+		<PRE><U>FPS</U> = Core.GetCPUFPS()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>FPS</U> <I>(number)</I> = Frames per second.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Get CPU loops processed in the last second. Should be the same as GPU for most people but at times may be different, sometimes much higher.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetCPUProcUsage" style="display:none">
+		<H3>Core.GetCPUProcUsage</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Percent</U> = Core.GetCPUProcUsage()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Percent</U> <I>(number)</I> = Percentage process.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the engine CPU load. It is hard-coded to only update once a a second so constant calls won't stress the kernel.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetCPUSysUsage" style="display:none">
+		<H3>Core.GetCPUSysUsage</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Percent</U> = Core.GetCPUSysUsage()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Percent</U> <I>(number)</I> = Percentage system.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the system CPU load. It is hard-coded to only update once a a second so constant calls won't stress the kernel.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetCPUUsage" style="display:none">
+		<H3>Core.GetCPUUsage</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Percent</U>, <U>Percent</U> = Core.GetCPUUsage()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Percent</U> <I>(number)</I> = Percentage process.<BR><U>Percent</U> <I>(number)</I> = Percentage system.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the engine and system CPU load. Use this instead of the other two cpu usage functions if you need both values. This omits a second check to update cpu usage and very slightly more optimal than calling both cpu usage functions which are hard-coded to only update once a a second so constant calls won't stress the kernel.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetDelay" style="display:none">
+		<H3>Core.GetDelay</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetDelay()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(number)</I> = Delay time in seconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current thread delay time in seconds without having to read the 'vid_delay' variable. This would be useful if you are actually using the delay and you want to offset a time point by the thread delay.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetEnv" style="display:none">
+		<H3>Core.GetEnv</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Value</U> = Core.GetEnv(<I><U>Value</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>Value</U> <I>(string)</I> = The name of the variable to query.<BR></PRE>
 		<H4>Return Parameters:-</H4>
@@ -3449,14 +3432,250 @@
 		<PRE>Queries the specified environment variable. Returns a blank string if empty. All environment variables are converted to upper-case at startup.<BR>Type 'env' in the console to see the current environment.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.Events" style="display:none">
-		<H3>Core.Events</H3>
+	<DIV id="Core.GetEvents" style="display:none">
+		<H3>Core.GetEvents</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Events</U> = Core.Events()</PRE>
+		<PRE><U>Events</U> = Core.GetEvents()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Events</U> <I>(integer)</I> = Number of events in the engine events system.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the number of events in the engine event system. Helps with synchronising Video or Stream class events.<BR></PRE>
+		<PRE>Returns the number of events in the engine event system. Helps with synchronising 'Video' or 'Stream' class events.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLUAMicroTime" style="display:none">
+		<H3>Core.GetLUAMicroTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetLUAMicroTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The time in microseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total time in the LUA sandbox in microseconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLUAMilliTime" style="display:none">
+		<H3>Core.GetLUAMilliTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetLUAMilliTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The execution time in milliseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total time in the LUA sandbox in milliseconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLUANanoTime" style="display:none">
+		<H3>Core.GetLUANanoTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetLUANanoTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The time in nanoseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total time in the LUA sandbox in nanoseconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLUATime" style="display:none">
+		<H3>Core.GetLUATime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Timestamp</U> = Core.GetLUATime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Timestamp</U> <I>(number)</I> = The execution time as a number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total time in the LUA sandbox in seconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLUAUsage" style="display:none">
+		<H3>Core.GetLUAUsage</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Bytes</U> = Core.GetLUAUsage()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Bytes</U> <I>(integer)</I> = Bytes of memory.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the amount of memory in use by Lua </PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLibrary" style="display:none">
+		<H3>Core.GetLibrary</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Name</U>, <U>Version</U>, <U>Id</U>, <U>Website</U>, <U>Copyright</U>, <U>Author</U> = Core.GetLibrary(<I><U>Id</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The index of the license.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Name</U> <I>(string)</I> = Name of the credit.<BR><U>Version</U> <I>(string)</I> = Version of the api.<BR><U>Id</U> <I>(integer)</I> = License index.<BR><U>Website</U> <I>(string)</I> = Website of the api.<BR><U>Copyright</U> <I>(string)</I> = Copyright of the api.<BR><U>Author</U> <I>(string)</I> = Author of the api.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Shows the full credits information of the specified api index.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLicense" style="display:none">
+		<H3>Core.GetLicense</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Name</U>, <U>Text</U> = Core.GetLicense(<I><U>Id</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The index of the license.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Name</U> <I>(string)</I> = Name of the license.<BR><U>Text</U> <I>(string)</I> = Full text file of the license.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Shows the full license information of the specified index.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetLocale" style="display:none">
+		<H3>Core.GetLocale</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>LocaleID</U> = Core.GetLocale()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>LocaleID</U> <I>(number)</I> = Locale id.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the system locale id.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetOS" style="display:none">
+		<H3>Core.GetOS</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Name</U>, <U>Major</U>, <U>Minor</U>, <U>Build</U>, <U>Platform</U>, <U>SPack</U>, <U>Suite</U>, <U>ProdType</U>, <U>Bits</U>, <U>Extra</U> = Core.GetOS()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Name</U> <I>(string)</I> = Operating system type (Windows,Linux,MacOS).<BR><U>Major</U> <I>(integer)</I> = Major version number of operating system.<BR><U>Minor</U> <I>(integer)</I> = Minor version number of operating system.<BR><U>Build</U> <I>(integer)</I> = Build version number of operating system.<BR><U>Platform</U> <I>(integer)</I> = Platform version number of operating system (Windows).<BR><U>SPack</U> <I>(integer)</I> = Service pack number of operating system (Windows).<BR><U>Suite</U> <I>(integer)</I> = Suite number of operating system (Windows).<BR><U>ProdType</U> <I>(integer)</I> = Product number of operating system (Windows).<BR><U>Bits</U> <I>(integer)</I> = Bits version of operating system.<BR><U>Extra</U> <I>(string)</I> = Extra operating system information (e.g. Wine/Kernel).<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns version information about the operating system.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetOSMicroTime" style="display:none">
+		<H3>Core.GetOSMicroTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetOSMicroTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The time in microseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the time elapsed in microseconds since the OS started. Precision will be lost over time.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetOSMilliTime" style="display:none">
+		<H3>Core.GetOSMilliTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetOSMilliTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The time in milliseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the time elapsed in milliseconds since the OS started. Precision will be lost over time.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetOSNanoTime" style="display:none">
+		<H3>Core.GetOSNanoTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetOSNanoTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The time in nanoseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the time elapsed in nanoseconds since the OS started. Precision will be lost over time.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetOSNumTime" style="display:none">
+		<H3>Core.GetOSNumTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Timestamp</U> = Core.GetOSNumTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Timestamp</U> <I>(number)</I> = The UNIX timestamp as a number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns a unix timestamp of the current time in seconds as a number.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetOSTime" style="display:none">
+		<H3>Core.GetOSTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Timestamp</U> = Core.GetOSTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Timestamp</U> <I>(integer)</I> = The UNIX timestamp.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns a unix timestamp of the current time in seconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetRAM" style="display:none">
+		<H3>Core.GetRAM</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Load</U>, <U>Total</U>, <U>Free</U>, <U>Used</U>, <U>ProcUse</U>, <U>ProcPeak</U> = Core.GetRAM()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Load</U> <I>(number)</I> = % load of total physical memory.<BR><U>Total</U> <I>(integer)</I> = Total physical memory installed in system.<BR><U>Free</U> <I>(integer)</I> = Available physical memory to engine.<BR><U>Used</U> <I>(integer)</I> = Physical memory in use by the system and other apps.<BR><U>ProcUse</U> <I>(integer)</I> = The total memory in use by the engine (including Virtual).<BR><U>ProcPeak</U> <I>(integer)</I> = The peak memory usage of the engine.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns information about physical memory in the computer.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetStack" style="display:none">
+		<H3>Core.GetStack</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Stack</U> = Core.GetStack(<I><U>Text</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Text</U> <I>(string)</I> = The message to prefix.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Stack</U> <I>(string)</I> = The current stack trace.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current stack as a string formatted by the engine and not Lua. This is needed for example when you use xpcall() with an error handler. Note that pcall() error messages do not include the stack.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetTicks" style="display:none">
+		<H3>Core.GetTicks</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Ticks</U> = Core.GetTicks()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Ticks</U> <I>(integer)</I> = Number of ticks.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of frames rendered since the engine started.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetTime" style="display:none">
+		<H3>Core.GetTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(number)</I> = The time in seconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the time elapsed in seconds since the engine started. This is a very high resolution timer. Use it for time-criticial timings. This counter can be reset with Core.Update() as it will lose precision over time.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetUpMicroTime" style="display:none">
+		<H3>Core.GetUpMicroTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetUpMicroTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The engine uptime in microseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total time the engine has been running in microseconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetUpMilliTime" style="display:none">
+		<H3>Core.GetUpMilliTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetUpMilliTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The engine uptime in milliseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total time in the engine has been running in milliseconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetUpNanoTime" style="display:none">
+		<H3>Core.GetUpNanoTime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Time</U> = Core.GetUpNanoTime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Time</U> <I>(integer)</I> = The engine time in nanoseconds.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total time in the engine has been running in nanoseconds.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetUptime" style="display:none">
+		<H3>Core.GetUptime</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Ticks</U> = Core.GetUptime()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Ticks</U> <I>(number)</I> = Uptime in seconds<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of seconds elapsed since the start of the engine this call maybe a little more expensive than Glfw.Time() but you have no choice to use this if you are using terminal mode. This uses the STL chrono class to retrieve this value.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.GetVersion" style="display:none">
+		<H3>Core.GetVersion</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Title</U>, <U>Vendor</U>, <U>Major</U>, <U>Minor</U>, <U>Build</U>, <U>Revision</U>, <U>Bits</U>, <U>Type</U>, <U>Target</U>, <U>Compiled</U>, <U>Compiler</U>, <U>CompVersion</U> = Core.GetVersion()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Title</U> <I>(string)</I> = Title of engine (normally Mhatxotic Engine).<BR><U>Vendor</U> <I>(string)</I> = Author of engine (normally Mhatxotic Design).<BR><U>Major</U> <I>(integer)</I> = Major version number of engine.<BR><U>Minor</U> <I>(integer)</I> = Minor version number of engine.<BR><U>Build</U> <I>(integer)</I> = Build version number of engine.<BR><U>Revision</U> <I>(integer)</I> = Revision version number of engine.<BR><U>Bits</U> <I>(integer)</I> = Bits version number of engine (32 or 64).<BR><U>Type</U> <I>(string)</I> = Text representation of built type (Release,Alpha,Beta).<BR><U>Target</U> <I>(string)</I> = Text string of the type of executable file.<BR><U>Compiled</U> <I>(string)</I> = The timestamp of the executable compilation time.<BR><U>Compiler</U> <I>(string)</I> = The name of the compiler that built the executable.<BR><U>CompVersion</U> <I>(string)</I> = The version of the compiler that built the executable.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns version information about the engine.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.IsOSLinux" style="display:none">
@@ -3489,6 +3708,18 @@
 		<PRE>Returns true if executable was built for Windows, false if not.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Core.IsPidRunning" style="display:none">
+		<H3>Core.IsPidRunning</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Core.IsPidRunning(<I><U>Id</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = The pid number to check<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(boolean)</I> = The pid is valid and running?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Asks the operating system to check if the specified pid exists and if the specified executable matches, true is returned, else false. Specifying pid zero will cause an exception.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Core.IsWayland" style="display:none">
 		<H3>Core.IsWayland</H3>
 		<H4>Syntax:-</H4>
@@ -3511,90 +3742,6 @@
 		<PRE>Kills the specified process id. This only works on pids that were originally spawned by the engine. Specifying pid zero will cause an exception.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.LUAMicroTime" style="display:none">
-		<H3>Core.LUAMicroTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.LUAMicroTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The time in microseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total time in the LUA sandbox in microseconds.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.LUAMilliTime" style="display:none">
-		<H3>Core.LUAMilliTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.LUAMilliTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The execution time in milliseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total time in the LUA sandbox in milliseconds.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.LUANanoTime" style="display:none">
-		<H3>Core.LUANanoTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.LUANanoTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The time in nanoseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total time in the LUA sandbox in nanoseconds.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.LUATime" style="display:none">
-		<H3>Core.LUATime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Timestamp</U> = Core.LUATime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Timestamp</U> <I>(number)</I> = The execution time as a number.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total time in the LUA sandbox in seconds.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.LUAUsage" style="display:none">
-		<H3>Core.LUAUsage</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Bytes</U> = Core.LUAUsage()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Bytes</U> <I>(integer)</I> = Bytes of memory.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the amount of memory in use by Lua </PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.Library" style="display:none">
-		<H3>Core.Library</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Name</U>, <U>Version</U>, <U>Id</U>, <U>Website</U>, <U>Copyright</U>, <U>Author</U> = Core.Library(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The index of the license.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Name</U> <I>(string)</I> = Name of the credit.<BR><U>Version</U> <I>(string)</I> = Version of the api.<BR><U>Id</U> <I>(integer)</I> = License index.<BR><U>Website</U> <I>(string)</I> = Website of the api.<BR><U>Copyright</U> <I>(string)</I> = Copyright of the api.<BR><U>Author</U> <I>(string)</I> = Author of the api.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Shows the full credits information of the specified api index.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.License" style="display:none">
-		<H3>Core.License</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Name</U>, <U>Text</U> = Core.License(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The index of the license.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Name</U> <I>(string)</I> = Name of the license.<BR><U>Text</U> <I>(string)</I> = Full text file of the license.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Shows the full license information of the specified index.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.Locale" style="display:none">
-		<H3>Core.Locale</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>LocaleID</U> = Core.Locale()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>LocaleID</U> <I>(number)</I> = Locale id.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the system locale id.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Core.Log" style="display:none">
 		<H3>Core.Log</H3>
 		<H4>Syntax:-</H4>
@@ -3613,66 +3760,6 @@
 		<PRE><U>Text</U> <I>(string)</I> = The line of text to write to the log.<BR><U>Level</U> <I>(integer)</I> = The log severity level.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Writes the specified line of text to the engine log. Note that if the current log level cvar setting is below this then the function does not log anything.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.OS" style="display:none">
-		<H3>Core.OS</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Name</U>, <U>Major</U>, <U>Minor</U>, <U>Build</U>, <U>Platform</U>, <U>SPack</U>, <U>Suite</U>, <U>ProdType</U>, <U>Bits</U>, <U>Extra</U> = Core.OS()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Name</U> <I>(string)</I> = Operating system type (Windows,Linux,MacOS).<BR><U>Major</U> <I>(integer)</I> = Major version number of operating system.<BR><U>Minor</U> <I>(integer)</I> = Minor version number of operating system.<BR><U>Build</U> <I>(integer)</I> = Build version number of operating system.<BR><U>Platform</U> <I>(integer)</I> = Platform version number of operating system (Windows).<BR><U>SPack</U> <I>(integer)</I> = Service pack number of operating system (Windows).<BR><U>Suite</U> <I>(integer)</I> = Suite number of operating system (Windows).<BR><U>ProdType</U> <I>(integer)</I> = Product number of operating system (Windows).<BR><U>Bits</U> <I>(integer)</I> = Bits version of operating system.<BR><U>Extra</U> <I>(string)</I> = Extra operating system information (e.g. Wine/Kernel).<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns version information about the operating system.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.OSMicroTime" style="display:none">
-		<H3>Core.OSMicroTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.OSMicroTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The time in microseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the time elapsed in microseconds since the OS started. Precision will be lost over time.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.OSMilliTime" style="display:none">
-		<H3>Core.OSMilliTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.OSMilliTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The time in milliseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the time elapsed in milliseconds since the OS started. Precision will be lost over time.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.OSNanoTime" style="display:none">
-		<H3>Core.OSNanoTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.OSNanoTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The time in nanoseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the time elapsed in nanoseconds since the OS started. Precision will be lost over time.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.OSNumTime" style="display:none">
-		<H3>Core.OSNumTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Timestamp</U> = Core.OSNumTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Timestamp</U> <I>(number)</I> = The UNIX timestamp as a number.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns a unix timestamp of the current time in seconds as a number.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.OSTime" style="display:none">
-		<H3>Core.OSTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Timestamp</U> = Core.OSTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Timestamp</U> <I>(integer)</I> = The UNIX timestamp.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns a unix timestamp of the current time in seconds.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.OnEnd" style="display:none">
@@ -3703,34 +3790,12 @@
 		<PRE>Pauses LUA execution. Obviously, you can't resume and must do it manually! </PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.PidRunning" style="display:none">
-		<H3>Core.PidRunning</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Core.PidRunning(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = The pid number to check<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(boolean)</I> = The pid is valid and running?<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Asks the operating system to check if the specified pid exists and if the specified executable matches, true is returned, else false. Specifying pid zero will cause an exception.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Core.Quit" style="display:none">
 		<H3>Core.Quit</H3>
 		<H4>Syntax:-</H4>
 		<PRE>Core.Quit()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Terminates the engine process cleanly.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.RAM" style="display:none">
-		<H3>Core.RAM</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Load</U>, <U>Total</U>, <U>Free</U>, <U>Used</U>, <U>ProcUse</U>, <U>ProcPeak</U> = Core.RAM()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Load</U> <I>(number)</I> = % load of total physical memory.<BR><U>Total</U> <I>(integer)</I> = Total physical memory installed in system.<BR><U>Free</U> <I>(integer)</I> = Available physical memory to engine.<BR><U>Used</U> <I>(integer)</I> = Physical memory in use by the system and other apps.<BR><U>ProcUse</U> <I>(integer)</I> = The total memory in use by the engine (including Virtual).<BR><U>ProcPeak</U> <I>(integer)</I> = The peak memory usage of the engine.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns information about physical memory in the computer.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.Reset" style="display:none">
@@ -3751,10 +3816,10 @@
 		<PRE>Restarts the engine process cleanly.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.RestartFresh" style="display:none">
-		<H3>Core.RestartFresh</H3>
+	<DIV id="Core.RestartNP" style="display:none">
+		<H3>Core.RestartNP</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Core.RestartFresh()</PRE>
+		<PRE>Core.RestartNP()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Restarts the engine process cleanly without command-line arguments.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
@@ -3767,22 +3832,6 @@
 		<PRE>Restores the frame thread suspend value set via cvars </PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.ScrollDown" style="display:none">
-		<H3>Core.ScrollDown</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Core.ScrollDown()</PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Scrolls the console up one line.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.ScrollUp" style="display:none">
-		<H3>Core.ScrollUp</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Core.ScrollUp()</PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Scrolls the console up one line.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Core.SetDelay" style="display:none">
 		<H3>Core.SetDelay</H3>
 		<H4>Syntax:-</H4>
@@ -3791,6 +3840,14 @@
 		<PRE><U>Millisecs</U> <I>(integer)</I> = Milliseconds to delay by each tick<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>This is the same as updating the cvar 'app_delay' apart from that the cvar is not updated and not saved.<BR></PRE>
+		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Core.SetDone" style="display:none">
+		<H3>Core.SetDone</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Core.SetDone()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Confirms that you want the engine to exit. This is so you can perform clean up actions in your own time by setting Core.SetEnd(), then calling this function to confirm you're done.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.SetIcon" style="display:none">
@@ -3803,32 +3860,20 @@
 		<PRE>Asks the operating system to set the specified icons of the programmers choosing. Separate each filename with a colon ':'. On Windows, anything but the first and the last icon are dropped so make sure you list the first filename as the large icon and the last filename as the small icon.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.Stack" style="display:none">
-		<H3>Core.Stack</H3>
+	<DIV id="Core.SetStatusLeft" style="display:none">
+		<H3>Core.SetStatusLeft</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Stack</U> = Core.Stack(<I><U>Text</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Text</U> <I>(string)</I> = The message to prefix.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Stack</U> <I>(string)</I> = The current stack trace.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the current stack as a string formatted by the engine and not Lua. This is needed for example when you use xpcall() with an error handler. Note that pcall() error messages do not include the stack.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.StatusLeft" style="display:none">
-		<H3>Core.StatusLeft</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Core.StatusLeft(<I><U>String</U></I>)</PRE>
+		<PRE>Core.SetStatusLeft(<I><U>String</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>String</U> <I>(string)</I> = Console status text.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>In terminal mode, this function will set the text to appear when no text is input into the input bar. Useful for customised stats. It will update every second.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Core.StatusRight" style="display:none">
-		<H3>Core.StatusRight</H3>
+	<DIV id="Core.SetStatusRight" style="display:none">
+		<H3>Core.SetStatusRight</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Core.StatusRight(<I><U>String</U></I>)</PRE>
+		<PRE>Core.SetStatusRight(<I><U>String</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>String</U> <I>(string)</I> = Console status text.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -3843,66 +3888,6 @@
 		<PRE><U>Millisecs</U> <I>(integer)</I> = Time in seconds.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Delays the engine thread for this amount of time.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.Ticks" style="display:none">
-		<H3>Core.Ticks</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Ticks</U> = Core.Ticks()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Ticks</U> <I>(integer)</I> = Number of ticks.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total number of frames rendered since the engine started.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.Time" style="display:none">
-		<H3>Core.Time</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.Time()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(number)</I> = The time in seconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the time elapsed in seconds since the engine started. This is a very high resolution timer. Use it for time-criticial timings. This counter can be reset with Core.Update() as it will lose precision over time.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.UpMicroTime" style="display:none">
-		<H3>Core.UpMicroTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.UpMicroTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The engine uptime in microseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total time the engine has been running in microseconds.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.UpMilliTime" style="display:none">
-		<H3>Core.UpMilliTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.UpMilliTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The engine uptime in milliseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total time in the engine has been running in milliseconds.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.UpNanoTime" style="display:none">
-		<H3>Core.UpNanoTime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Time</U> = Core.UpNanoTime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Time</U> <I>(integer)</I> = The engine time in nanoseconds.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total time in the engine has been running in nanoseconds.<BR></PRE>
-		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Core.Uptime" style="display:none">
-		<H3>Core.Uptime</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Ticks</U> = Core.Uptime()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Ticks</U> <I>(number)</I> = Uptime in seconds<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total number of seconds elapsed since the start of the engine this call maybe a little more expensive than Glfw.Time() but you have no choice to use this if you are using terminal mode. This uses the STL chrono class to retrieve this value.<BR></PRE>
 		<H4><A href="#idx:Core">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Core.WaitAsync" style="display:none">
@@ -3979,36 +3964,6 @@
 		<PRE>Moves the window to the centre of the screen.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Decordated" style="display:none">
-		<H3>Display.Decordated</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Decordated()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The window is decorated?<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns if the window is decorated with a border.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.FSType" style="display:none">
-		<H3>Display.FSType</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Type</U> = Display.FSType()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Type</U> <I>(integer)</I> = Type of full-screen<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>This function returns the type of full-screen currently engaged. Check Display.FSTypes table for a list of possible values.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.Floating" style="display:none">
-		<H3>Display.Floating</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Floating()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The window is floating?<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns if the window is floating an always showing on top.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Display.Focus" style="display:none">
 		<H3>Display.Focus</H3>
 		<H4>Syntax:-</H4>
@@ -4017,34 +3972,66 @@
 		<PRE>Sets input focus to the window. This will actually restore the window if in full-screen mode.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Focused" style="display:none">
-		<H3>Display.Focused</H3>
+	<DIV id="Display.GetFSType" style="display:none">
+		<H3>Display.GetFSType</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Focused()</PRE>
+		<PRE><U>Type</U> = Display.GetFSType()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The window is focused?<BR></PRE>
+		<PRE><U>Type</U> <I>(integer)</I> = Type of full-screen<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns if the window is focused.<BR></PRE>
+		<PRE>This function returns the type of full-screen currently engaged. Check Display.FSTypes table for a list of possible values.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.GPU" style="display:none">
-		<H3>Display.GPU</H3>
+	<DIV id="Display.GetGPU" style="display:none">
+		<H3>Display.GetGPU</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Vendor</U>, <U>Version</U>, <U>Renderer</U> = Display.GPU()</PRE>
+		<PRE><U>Vendor</U>, <U>Version</U>, <U>Renderer</U> = Display.GetGPU()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Vendor</U> <I>(string)</I> = GL vendor string.<BR><U>Version</U> <I>(string)</I> = GL version string.<BR><U>Renderer</U> <I>(string)</I> = GL gpu string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns info about OpenGL.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.GPUFPS" style="display:none">
-		<H3>Display.GPUFPS</H3>
+	<DIV id="Display.GetGPUFPS" style="display:none">
+		<H3>Display.GetGPUFPS</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>FPS</U> = Display.GPUFPS()</PRE>
+		<PRE><U>FPS</U> = Display.GetGPUFPS()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>FPS</U> <I>(number)</I> = Frames per second.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Get GPU frames rendered in the second. Should be 60 for most people. This (for now) is the same value as Core.CPUFPS() until the renderer is de-coupled from the engine thread.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.GetMonitor" style="display:none">
+		<H3>Display.GetMonitor</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Id</U> = Display.GetMonitor()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Id</U> <I>(number)</I> = Monitor index.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the currently selected monitor id.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.GetMonitorData" style="display:none">
+		<H3>Display.GetMonitorData</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Name</U> = Display.GetMonitorData(<I><U>Id</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Id</U> <I>(integer)</I> = Id of monitor to query.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Name</U> <I>(string)</I> = Name of monitor.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the name of the specified monitor.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.GetMonitors" style="display:none">
+		<H3>Display.GetMonitors</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Id</U> = Display.GetMonitors()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Id</U> <I>(number)</I> = Monitor count.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of detected monitors on the system.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Display.GetPos" style="display:none">
@@ -4067,24 +4054,46 @@
 		<PRE>Resets the current size of the window.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Hovered" style="display:none">
-		<H3>Display.Hovered</H3>
+	<DIV id="Display.GetVRAM" style="display:none">
+		<H3>Display.GetVRAM</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Hovered()</PRE>
+		<PRE><U>Available</U>, <U>Total</U>, <U>Used</U>, <U>Dedicated</U> = Display.GetVRAM()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = Mouse is over the window?<BR></PRE>
+		<PRE><U>Available</U> <I>(integer)</I> = Available video memory in bytes<BR><U>Total</U> <I>(integer)</I> = Total video memory in bytes<BR><U>Used</U> <I>(integer)</I> = Used video memory in bytes<BR><U>Dedicated</U> <I>(boolean)</I> = Is video memory separate from main memory<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Indicates whether the cursor is currently directly over the content area of the window, with no other windows between.<BR></PRE>
+		<PRE>Returns info about the GPU's video memory.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Iconified" style="display:none">
-		<H3>Display.Iconified</H3>
+	<DIV id="Display.GetVidMode" style="display:none">
+		<H3>Display.GetVidMode</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Iconified()</PRE>
+		<PRE><U>Id</U> = Display.GetVidMode()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The window is inconified?<BR></PRE>
+		<PRE><U>Id</U> <I>(number)</I> = Mode id.<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns if the window is iconified.<BR></PRE>
+		<PRE>Returns the currently selected video mode id.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.GetVidModeData" style="display:none">
+		<H3>Display.GetVidModeData</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U>, <U>Height</U>, <U>Depth</U>, <U>Refresh</U>, <U>Red</U>, <U>Green</U>, <U>Blue</U> = Display.GetVidModeData(<I><U>MonitorId</U>, <U>ModeId</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>MonitorId</U> <I>(integer)</I> = Id of monitor to query.<BR><U>ModeId</U> <I>(integer)</I> = Id of video mode to query.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(integer)</I> = Width of the video mode in pixels.<BR><U>Height</U> <I>(integer)</I> = Height of the video mode in pixels.<BR><U>Depth</U> <I>(integer)</I> = Depth of the video mode. (16 or 24).<BR><U>Refresh</U> <I>(integer)</I> = Refresh rate of the video mode (normally 60).<BR><U>Red</U> <I>(integer)</I> = Number of bits in the red component (normally 8).<BR><U>Green</U> <I>(integer)</I> = Number of bits in the green component (normally 8).<BR><U>Blue</U> <I>(integer)</I> = Number of bits in the blue component (normally 8).<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns information about the specified video mode.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.GetVidModes" style="display:none">
+		<H3>Display.GetVidModes</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Count</U> = Display.GetVidModes()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Count</U> <I>(number)</I> = Total video modes.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the total number of video modes supported by the GPU.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Display.Iconify" style="display:none">
@@ -4095,54 +4104,102 @@
 		<PRE>Minimises the window.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Maximise" style="display:none">
-		<H3>Display.Maximise</H3>
+	<DIV id="Display.IsDecordated" style="display:none">
+		<H3>Display.IsDecordated</H3>
 		<H4>Syntax:-</H4>
-		<PRE>Display.Maximise()</PRE>
+		<PRE><U>State</U> = Display.IsDecordated()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The window is decorated?<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Maximises the window.<BR></PRE>
+		<PRE>Returns if the window is decorated with a border.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Maximised" style="display:none">
-		<H3>Display.Maximised</H3>
+	<DIV id="Display.IsFloating" style="display:none">
+		<H3>Display.IsFloating</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Maximised()</PRE>
+		<PRE><U>State</U> = Display.IsFloating()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The window is floating?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the window is floating an always showing on top.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.IsFocused" style="display:none">
+		<H3>Display.IsFocused</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>State</U> = Display.IsFocused()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The window is focused?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the window is focused.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.IsHovered" style="display:none">
+		<H3>Display.IsHovered</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>State</U> = Display.IsHovered()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = Mouse is over the window?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Indicates whether the cursor is currently directly over the content area of the window, with no other windows between.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.IsIconified" style="display:none">
+		<H3>Display.IsIconified</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>State</U> = Display.IsIconified()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The window is inconified?<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns if the window is iconified.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.IsMaximised" style="display:none">
+		<H3>Display.IsMaximised</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>State</U> = Display.IsMaximised()</PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>State</U> <I>(boolean)</I> = The window is maximised?<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns if the window is maximised.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Monitor" style="display:none">
-		<H3>Display.Monitor</H3>
+	<DIV id="Display.IsResizable" style="display:none">
+		<H3>Display.IsResizable</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Id</U> = Display.Monitor()</PRE>
+		<PRE><U>State</U> = Display.IsResizable()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Id</U> <I>(number)</I> = Monitor index.<BR></PRE>
+		<PRE><U>State</U> <I>(boolean)</I> = The window is visible?<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the currently selected monitor id.<BR></PRE>
+		<PRE>Indicates whether the window is resizable.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.MonitorData" style="display:none">
-		<H3>Display.MonitorData</H3>
+	<DIV id="Display.IsTransparent" style="display:none">
+		<H3>Display.IsTransparent</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Name</U> = Display.MonitorData(<I><U>Id</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Id</U> <I>(integer)</I> = Id of monitor to query.<BR></PRE>
+		<PRE><U>State</U> = Display.IsTransparent()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Name</U> <I>(string)</I> = Name of monitor.<BR></PRE>
+		<PRE><U>State</U> <I>(boolean)</I> = The window is using an alpha framebuffer?<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the name of the specified monitor.<BR></PRE>
+		<PRE>Returns if the window is transparent and using a alpha framebuffer.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Monitors" style="display:none">
-		<H3>Display.Monitors</H3>
+	<DIV id="Display.IsVisible" style="display:none">
+		<H3>Display.IsVisible</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Id</U> = Display.Monitors()</PRE>
+		<PRE><U>State</U> = Display.IsVisible()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Id</U> <I>(number)</I> = Monitor count.<BR></PRE>
+		<PRE><U>State</U> <I>(boolean)</I> = The window is visible?<BR></PRE>
 		<H4>Synopsis:-</H4>
-		<PRE>Returns the total number of detected monitors on the system.<BR></PRE>
+		<PRE>Indicates whether the window is visible.<BR></PRE>
+		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Display.Maximise" style="display:none">
+		<H3>Display.Maximise</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Display.Maximise()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Maximises the window.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Display.OnFocused" style="display:none">
@@ -4201,16 +4258,6 @@
 		<PRE>Resets to the standard cursor graphic </PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Resizable" style="display:none">
-		<H3>Display.Resizable</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Resizable()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The window is visible?<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Indicates whether the window is resizable.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Display.Restore" style="display:none">
 		<H3>Display.Restore</H3>
 		<H4>Syntax:-</H4>
@@ -4259,74 +4306,12 @@
 		<PRE>Sets the new size of the window. This does not change the cvars which control the default window size.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Display.Transparent" style="display:none">
-		<H3>Display.Transparent</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Transparent()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The window is using an alpha framebuffer?<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns if the window is transparent and using a alpha framebuffer.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.VRAM" style="display:none">
-		<H3>Display.VRAM</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Available</U>, <U>Total</U>, <U>Used</U>, <U>Dedicated</U> = Display.VRAM()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Available</U> <I>(integer)</I> = Available video memory in bytes<BR><U>Total</U> <I>(integer)</I> = Total video memory in bytes<BR><U>Used</U> <I>(integer)</I> = Used video memory in bytes<BR><U>Dedicated</U> <I>(boolean)</I> = Is video memory separate from main memory<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns info about the GPU's video memory.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Display.VReset" style="display:none">
 		<H3>Display.VReset</H3>
 		<H4>Syntax:-</H4>
 		<PRE>Display.VReset()</PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Resets the video subsystem.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.VidMode" style="display:none">
-		<H3>Display.VidMode</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Id</U> = Display.VidMode()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Id</U> <I>(number)</I> = Mode id.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the currently selected video mode id.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.VidModeData" style="display:none">
-		<H3>Display.VidModeData</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Width</U>, <U>Height</U>, <U>Depth</U>, <U>Refresh</U>, <U>Red</U>, <U>Green</U>, <U>Blue</U> = Display.VidModeData(<I><U>MonitorId</U>, <U>ModeId</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>MonitorId</U> <I>(integer)</I> = Id of monitor to query.<BR><U>ModeId</U> <I>(integer)</I> = Id of video mode to query.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Width</U> <I>(integer)</I> = Width of the video mode in pixels.<BR><U>Height</U> <I>(integer)</I> = Height of the video mode in pixels.<BR><U>Depth</U> <I>(integer)</I> = Depth of the video mode. (16 or 24).<BR><U>Refresh</U> <I>(integer)</I> = Refresh rate of the video mode (normally 60).<BR><U>Red</U> <I>(integer)</I> = Number of bits in the red component (normally 8).<BR><U>Green</U> <I>(integer)</I> = Number of bits in the green component (normally 8).<BR><U>Blue</U> <I>(integer)</I> = Number of bits in the blue component (normally 8).<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns information about the specified video mode.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.VidModes" style="display:none">
-		<H3>Display.VidModes</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Count</U> = Display.VidModes()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Count</U> <I>(number)</I> = Total video modes.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the total number of video modes supported by the GPU.<BR></PRE>
-		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Display.Visible" style="display:none">
-		<H3>Display.Visible</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Display.Visible()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The window is visible?<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Indicates whether the window is visible.<BR></PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Display.Cursors" style="display:none">
@@ -4349,48 +4334,6 @@
 		<PRE>Returns a table of key/value pairs that identify the states of the window.<BR>ID   Keyname     Meaning ===  =======     ========================================================= [0]  WINDOW      Decorated and can be moved and sized around the desktop.<BR>[1]  EXCLUSIVE   Undecorated, covers the whole screen and set resolution.<BR>[2]  BORDERLESS  Undecorated, covers the whole screen only.<BR>[3]  NATIVE      (MacOS only) Same as BORDERLESS but disables toggler.<BR>===  =======     ========================================================= </PRE>
 		<H4><A href="#idx:Display">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Fbo.ConEnabled" style="display:none">
-		<H3>Fbo.ConEnabled</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Fbo.ConEnabled()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The console state.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns true if the console is showing, false if it is not. This function is in Fbo because it only applies to opengl mode.<BR></PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Fbo.ConHeight" style="display:none">
-		<H3>Fbo.ConHeight</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Fbo.ConHeight(<I><U>State</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>State</U> <I>(number)</I> = The console height.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Sets the console height normal without modifying the cvar. This function is in Fbo because it only applies to opengl mode.<BR></PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Fbo.ConLock" style="display:none">
-		<H3>Fbo.ConLock</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>State</U> = Fbo.ConLock()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The console visibility lock state.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Lock the visibility of the console on or off. This function is in Fbo because it only applies to opengl mode.<BR></PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Fbo.ConSet" style="display:none">
-		<H3>Fbo.ConSet</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Success</U> = Fbo.ConSet(<I><U>State</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>State</U> <I>(boolean)</I> = The console state.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Success</U> <I>(boolean)</I> = Returns if the requested function was successful.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Shows or hides the console. This does not modify the cvar state. This function is in Fbo because it only applies to opengl mode. It also overrides the 'con_disabled' setting.<BR></PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Fbo.Create" style="display:none">
 		<H3>Fbo.Create</H3>
 		<H4>Syntax:-</H4>
@@ -4403,14 +4346,6 @@
 		<PRE>Creates a new FBO of the specified size and reserves memory the respective number of triangles and commands.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Fbo.Draw" style="display:none">
-		<H3>Fbo.Draw</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Fbo.Draw()</PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>When the UI mode is set to 3 which is fully manual mode, you need to call this function for every frame that changes. The main screen FBO will be flushed and not finished and OpenGL will NOT swap buffers if you do not call this function.<BR></PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Fbo.GetClasses" style="display:none">
 		<H3>Fbo.GetClasses</H3>
 		<H4>Syntax:-</H4>
@@ -4419,6 +4354,36 @@
 		<PRE><U>GetClasses</U> <I>(integer)</I> = Total number of FBO's created.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the total number of FBO classes currently active.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.GetConHeight" style="display:none">
+		<H3>Fbo.GetConHeight</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Fbo.GetConHeight(<I><U>State</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>State</U> <I>(number)</I> = The console height.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Sets the console height normal without modifying the cvar. This function is in Fbo because it only applies to opengl mode.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.GetMainSize" style="display:none">
+		<H3>Fbo.GetMainSize</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U>, <U>Height</U> = Fbo.GetMainSize()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(number)</I> = Current requested matrix width.<BR><U>Height</U> <I>(number)</I> = Current requested matrix height.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the active matrix size of the main framebuffer. This is the value set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the 'Fbo.SetMainSize()' function.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.IsConEnabled" style="display:none">
+		<H3>Fbo.IsConEnabled</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>State</U> = Fbo.IsConEnabled()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The console state.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns true if the console is showing, false if it is not. This function is in Fbo because it only applies to opengl mode.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo.IsDrawing" style="display:none">
@@ -4441,16 +4406,6 @@
 		<PRE>Returns a handle to the main FBO so you can draw to it. Changing the properties of the main FBO may result in undefined behaviour. Note that the engine console shares the same FBO so you may want to create a separatte FBO to draw to.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Fbo.Matrix" style="display:none">
-		<H3>Fbo.Matrix</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Width</U>, <U>Height</U> = Fbo.Matrix()</PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Width</U> <I>(number)</I> = Current requested matrix width.<BR><U>Height</U> <I>(number)</I> = Current requested matrix height.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Returns the active matrix size of the main framebuffer. This is the value set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the Fbo.Resize() function.<BR></PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Fbo.OnRedraw" style="display:none">
 		<H3>Fbo.OnRedraw</H3>
 		<H4>Syntax:-</H4>
@@ -4461,18 +4416,6 @@
 		<PRE>When OpenGL needs to be reinitialised, the specified callback will be called so the guest can redraw FBO's and maybe do other stuff. All texture and FBO data is already preserved so there is no need to reinitialise any of that, you just need to redraw them.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Fbo.Resize" style="display:none">
-		<H3>Fbo.Resize</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Width</U>, <U>Height</U> = Fbo.Resize(<I><U>Success</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Success</U> <I>(boolean)</I> = Returns whether the frame buffer changed or not.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Width</U> <I>(number)</I> = The new width of the main frame buffer<BR><U>Height</U> <I>(number)</I> = The new height of the main frame buffer<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>This is a run-time override for 'vid_orwidth' and 'vid_orheight' cvars in which the main frame buffer viewport is re-calculated and reinitialised to these dimensions. Note that this modifies the console size as well.<BR></PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Fbo.SetBlend" style="display:none">
 		<H3>Fbo.SetBlend</H3>
 		<H4>Syntax:-</H4>
@@ -4481,6 +4424,48 @@
 		<PRE><U>srcRGB</U> <I>(integer)</I> = How the source RGB blending factors are computed.<BR><U>dstRGB</U> <I>(integer)</I> = How the dest RGB blending factors are computed.<BR><U>srcAlpha</U> <I>(integer)</I> = How the alpha source blending factor is computed.<BR><U>dstAlpha</U> <I>(integer)</I> = How the alpha destination blending factor is computed.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Sets the alpha blending function formula of the back buffer using glBlendFuncSeparate. The parameters are a zero index of the formula you want to use. These values are available in the 'Fbo.Blends' table.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.SetConLock" style="display:none">
+		<H3>Fbo.SetConLock</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>State</U> = Fbo.SetConLock()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The console visibility lock state.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Lock the visibility of the console on or off. This function is in Fbo because it only applies to opengl mode.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.SetConVisible" style="display:none">
+		<H3>Fbo.SetConVisible</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Success</U> = Fbo.SetConVisible(<I><U>State</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>State</U> <I>(boolean)</I> = The console state.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Returns if the requested function was successful.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Shows or hides the console. This does not modify the cvar state. This function is in Fbo because it only applies to opengl mode. It also overrides the 'con_disabled' setting.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.SetDraw" style="display:none">
+		<H3>Fbo.SetDraw</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Fbo.SetDraw()</PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>When the UI mode is set to 3 which is fully manual mode, you need to call this function for every frame that changes. The main screen FBO will be flushed and not finished and OpenGL will NOT swap buffers if you do not call this function.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo.SetMainSize" style="display:none">
+		<H3>Fbo.SetMainSize</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U>, <U>Height</U> = Fbo.SetMainSize(<I><U>Success</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Success</U> <I>(boolean)</I> = Returns whether the frame buffer changed or not.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(number)</I> = The new width of the main frame buffer<BR><U>Height</U> <I>(number)</I> = The new height of the main frame buffer<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>This is a run-time override for 'vid_orwidth' and 'vid_orheight' cvars in which the main frame buffer viewport is re-calculated and reinitialised to these dimensions. Note that this modifies the console size as well.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo:Activate" style="display:none">
@@ -10787,18 +10772,6 @@
 		<PRE>Converts the timestamp into the specified formatted string. There may be slight differences across different operating systems. Note that time will be in UTC time format.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Util.GetRatio" style="display:none">
-		<H3>Util.GetRatio</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.GetRatio(<I><U>Width</U>, <U>Height</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Width</U> <I>(integer)</I> = The width integer.<BR><U>Height</U> <I>(integer)</I> = The height integer.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The ratio between the two numbers.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Caclulates the ratio between the two numbers and returns a string in the format of "n:n".<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
 	<DIV id="Util.Grouped" style="display:none">
 		<H3>Util.Grouped</H3>
 		<H4>Syntax:-</H4>
@@ -11325,6 +11298,18 @@
 		<PRE>Uses OpenSSL to generate random data. This data is constantly salted so you always get unique data.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.Ratio" style="display:none">
+		<H3>Util.Ratio</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.Ratio(<I><U>Width</U>, <U>Height</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Width</U> <I>(integer)</I> = The width integer.<BR><U>Height</U> <I>(integer)</I> = The height integer.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The ratio between the two numbers.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Caclulates the ratio between the two numbers and returns a string in the format of "n:n".<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.RelTime" style="display:none">
 		<H3>Util.RelTime</H3>
 		<H4>Syntax:-</H4>
@@ -11675,12 +11660,12 @@
 		<PRE>Unregisters the specified console command.<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
-	<DIV id="Variable:Get" style="display:none">
-		<H3>Variable:Get</H3>
+	<DIV id="Variable:GetBoolean" style="display:none">
+		<H3>Variable:GetBoolean</H3>
 		<H4>Syntax:-</H4>
-		<PRE><U>Value</U> = Variable:Get()</PRE>
+		<PRE><U>Value</U> = Variable:GetBoolean()</PRE>
 		<H4>Return Parameters:-</H4>
-		<PRE><U>Value</U> <I>(mixed)</I> = The engine cvar value.<BR></PRE>
+		<PRE><U>Value</U> <I>(boolean)</I> = The engine cvar value as a boolean.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Retrieves the value of the specified cvar name. An exception is raised if the specified cvar does not exist.<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
@@ -11705,6 +11690,16 @@
 		<PRE>Returns the unique id of the Variable object.<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Variable:GetInteger" style="display:none">
+		<H3>Variable:GetInteger</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Value</U> = Variable:GetInteger()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = The engine cvar value as an integer.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Retrieves the value of the specified cvar name. An exception is raised if the specified cvar does not exist.<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Variable:GetName" style="display:none">
 		<H3>Variable:GetName</H3>
 		<H4>Syntax:-</H4>
@@ -11713,6 +11708,26 @@
 		<PRE><U>Name</U> <I>(string)</I> = The name of the console command.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns the name of the console command this object was registered with.<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Variable:GetNumber" style="display:none">
+		<H3>Variable:GetNumber</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Value</U> = Variable:GetNumber()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Value</U> <I>(number)</I> = The engine cvar value as a number.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Retrieves the value of the specified cvar name. An exception is raised if the specified cvar does not exist.<BR></PRE>
+		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Variable:GetString" style="display:none">
+		<H3>Variable:GetString</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Value</U> = Variable:GetString()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Value</U> <I>(string)</I> = The engine cvar value.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Retrieves the value of the specified cvar name. An exception is raised if the specified cvar does not exist.<BR></PRE>
 		<H4><A href="#idx:Variable">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Variable:IsDestroyed" style="display:none">
@@ -13865,6 +13880,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Tue Nov 03 22:39:34 2026 +0000</ADDRESS>
+	This document was generated at Wed Nov 04 20:31:13 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

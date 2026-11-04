@@ -55,18 +55,19 @@ template<class MutexType>class Mutex   // Members initially private
     return invoke(StdForward<Func>(fCb));
   }
   /* -- Safe unique lock call wrapper -------------------------------------- */
-  template<typename Func, typename...Args>
-    decltype(auto) MutexUniqueCall(Func &&fCb, Args&&...aArgs)
+  template<typename Func, typename...VarArgs>
+    decltype(auto) MutexUniqueCall(Func &&fCb, VarArgs&&...vaArgs)
   { // Lock access to the mutex with the specified type and call the lambda
-    unique_lock<MutexType> ulLock{ MutexGet(), StdForward<Args>(aArgs)... };
+    unique_lock<MutexType>
+      ulLock{ MutexGet(), StdForward<VarArgs>(vaArgs)... };
     return invoke(StdForward<Func>(fCb), ulLock);
   }
   /* -- Safe scoped call wrapper ------------------------------------------- */
-  template<typename Func, typename...Args>
-    decltype(auto) MutexScopedCall(Func &&fCb, Args&&...aArgs)
+  template<typename Func, typename...VarArgs>
+    decltype(auto) MutexScopedCall(Func &&fCb, VarArgs&&...vaArgs)
   { // Lock access to the mutex and call the requested function
     const auto slLock{
-      MutexMakeScopedLock(MutexGet(), StdForward<Args>(aArgs)...) };
+      MutexMakeScopedLock(MutexGet(), StdForward<VarArgs>(vaArgs)...) };
     return invoke(StdForward<Func>(fCb));
   }
   /* -- Default constructor to initialise random uuid ---------------------- */

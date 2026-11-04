@@ -34,15 +34,18 @@ class CodecGIF :                       // GIF codec object
     { if(!vpBuffer) throw StdRunTimeError{ "Get buffer null pointer" };
       return reinterpret_cast<unsigned char*>(vpBuffer); }
   /* -- Sets whether a image should opaque --------------------------------- */
-  static void GIFOpaque(void*const vpBuffer, bool)
-    { if(!vpBuffer) throw StdRunTimeError{ "Set opaque null pointer" }; }
+  static void GIFOpaque
+    (void*const vpBuffer, bool)     // cppcheck-suppress constParameterCallback
+  { if(!vpBuffer) throw StdRunTimeError{ "Set opaque null pointer" }; }
   /* -- If image has an opaque alpha channel ------------------------------- */
-  static bool GIFIsOpaque(void*const vpBuffer)
-    { if(!vpBuffer) throw StdRunTimeError{ "Test opaque null pointer" };
+  static bool GIFIsOpaque
+    (void*const vpBuffer)           // cppcheck-suppress constParameterCallback
+  { if(!vpBuffer) throw StdRunTimeError{ "Test opaque null pointer" };
       return true; }
   /* -- Image changed, flush cache ----------------------------------------- */
-  static void GIFFlush(void*const vpBuffer)
-    { if(!vpBuffer) throw StdRunTimeError{ "Modified data null pointer" }; }
+  static void GIFFlush
+    (void*const vpBuffer)           // cppcheck-suppress constParameterCallback
+  { if(!vpBuffer) throw StdRunTimeError{ "Modified data null pointer" }; }
   /* -- Error checker with custom error details ---------------------------- */
   template<typename ...VarArgs>
     static void GIFError(const nsgif_error nsgErr, const char*const cpMessage,

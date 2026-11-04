@@ -622,8 +622,7 @@ static Environment envActive{envMacOSLLVM};   // Using LLVM environment
 static Environment envActive{envLinuxGCC};    // Using GCC environment
 #endif                                 // Setup environment
 static StdArray<unsigned,4> uVer{     // Version of engine (y.m.d.b)
-  static_cast<unsigned>(-1), static_cast<unsigned>(-1),
-  static_cast<unsigned>(-1), static_cast<unsigned>(-1) };
+  StdUIntM1, StdUIntM1, StdUIntM1, StdUIntM1 };
 static StdString strName, strArch, strVer, strTitle, strAuthor;
 static const StdString strEName{ VER_NAME }, strEAuthor{ VER_AUTHOR };
 static const StdString strVerFile{ "build." JSON_EXTENSION };
@@ -4368,7 +4367,7 @@ static bool CheckCommandLine(StdString &strX1, StdString &strX2)
 #endif
   { "a", { 0, PF_PREPROC,         PF_OTHERS,
     "Pre-process to amalgamation."} },
-  { "A", { 0, PF_ANALYSE,         PF_OTHERS,
+  { "A", { 0, PF_ANALYSE|PF_MORE, PF_OTHERS,
     "Analyse code for issues."} },
   { "b", { 0, PF_BETA,            PF_OTHERS|PF_ALPHA|PF_FINAL,
     "Compile beta version."} },

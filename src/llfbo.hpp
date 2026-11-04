@@ -422,37 +422,6 @@ LLRSEND                                // Fbo:* methods end
 ** ## Fbo.* non-member functions                                          ## **
 ** ######################################################################### **
 ** ========================================================================= */
-// $ Fbo.ConEnabled
-// < State:boolean=The console state.
-// ? Returns true if the console is showing, false if it is not. This function
-// ? is in Fbo because it only applies to opengl mode.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
-/* ========================================================================= */
-// $ Fbo.ConHeight
-// > State:number=The console height.
-// ? Sets the console height normal without modifying the cvar. This function
-// ? is in Fbo because it only applies to opengl mode.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConHeight, 0, cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
-/* ========================================================================= */
-// $ Fbo.ConLock
-// < State:boolean=The console visibility lock state.
-// ? Lock the visibility of the console on or off. This function is in Fbo
-// ? because it only applies to opengl mode.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConLock, 0, cConGfx->ConGfxSetLocked(AgBoolean{lS, 1}))
-/* ========================================================================= */
-// $ Fbo.ConSet
-// > State:boolean=The console state.
-// < Success:boolean=Returns if the requested function was successful.
-// ? Shows or hides the console. This does not modify the cvar state. This
-// ? function is in Fbo because it only applies to opengl mode. It also
-// ? overrides the 'con_disabled' setting.
-/* ------------------------------------------------------------------------- */
-LLFUNC(ConSet, 1,
-  LuaUtilPushVar(lS, cConGfx->ConGfxSetVisible(AgBoolean{lS, 1})))
-/* ========================================================================= */
 // $ Fbo.Create
 // > Name:string=Reference only user-defined identifier.
 // > Width:integer=Width of the FBO.
@@ -471,19 +440,36 @@ LLFUNC(Create, 1,
                   aCommands{lS, 3, 1, 1000000};
   AcFbo{lS}().FboInit(aName(), aWidth, aHeight, aVertexes, aCommands))
 /* ========================================================================= */
-// $ Fbo.Draw
-// ? When the UI mode is set to 3 which is fully manual mode, you need to call
-// ? this function for every frame that changes. The main screen FBO will be
-// ? flushed and not finished and OpenGL will NOT swap buffers if you do not
-// ? call this function.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Draw, 0, cFboCore->FboCoreSetDraw())
-/* ========================================================================= */
 // $ Fbo.GetClasses
 // < GetClasses:integer=Total number of FBO's created.
 // ? Returns the total number of FBO classes currently active.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
+/* ========================================================================= */
+// $ Fbo.GetConHeight
+// > State:number=The console height.
+// ? Sets the console height normal without modifying the cvar. This function
+// ? is in Fbo because it only applies to opengl mode.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetConHeight, 0, cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
+/* ========================================================================= */
+// $ Fbo.GetMainSize
+// < Width:number=Current requested matrix width.
+// < Height:number=Current requested matrix height.
+// ? Returns the active matrix size of the main framebuffer. This is the value
+// ? set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the
+// ? 'Fbo.SetMainSize()' function.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetMainSize, 2,
+  LuaUtilPushVar(lS, cFboCore->FboCoreGetMatrixWidth(),
+                     cFboCore->FboCoreGetMatrixHeight()))
+/* ========================================================================= */
+// $ Fbo.IsConEnabled
+// < State:boolean=The console state.
+// ? Returns true if the console is showing, false if it is not. This function
+// ? is in Fbo because it only applies to opengl mode.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsConEnabled, 1, LuaUtilPushVar(lS, cConsole->IsVisible()))
 /* ========================================================================= */
 // $ Fbo.IsDrawing
 // < State:boolean=Is the main FBO set to redraw?
@@ -501,17 +487,6 @@ LLFUNC(IsDrawing, 1, LuaUtilPushVar(lS, cFboCore->FboCoreCanDraw()))
 LLFUNC(Main, 1,
   LuaUtilClassCreateStaticPtr<Fbo>(lS, cFbos, &cFboCore->FboCoreGetMain()))
 /* ========================================================================= */
-// $ Fbo.Matrix
-// < Width:number=Current requested matrix width.
-// < Height:number=Current requested matrix height.
-// ? Returns the active matrix size of the main framebuffer. This is the value
-// ? set by cvars 'vid_orwidth', 'vid_orheight' and also modified with the
-// ? Fbo.Resize() function.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Matrix, 2,
-  LuaUtilPushVar(lS, cFboCore->FboCoreGetMatrixWidth(),
-                     cFboCore->FboCoreGetMatrixHeight()))
-/* ========================================================================= */
 // $ Fbo.OnRedraw
 // > Func:function=The main redraw function to change to
 // ? When OpenGL needs to be reinitialised, the specified callback will be
@@ -521,7 +496,32 @@ LLFUNC(Matrix, 2,
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnRedraw, 0, cLua->LuaSetRef(lS, cFboCore->FboCoreGetRedrawFunc()))
 /* ========================================================================= */
-// $ Fbo.Resize
+// $ Fbo.SetConLock
+// < State:boolean=The console visibility lock state.
+// ? Lock the visibility of the console on or off. This function is in Fbo
+// ? because it only applies to opengl mode.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetConLock, 0, cConGfx->ConGfxSetLocked(AgBoolean{lS, 1}))
+/* ========================================================================= */
+// $ Fbo.SetConVisible
+// > State:boolean=The console state.
+// < Success:boolean=Returns if the requested function was successful.
+// ? Shows or hides the console. This does not modify the cvar state. This
+// ? function is in Fbo because it only applies to opengl mode. It also
+// ? overrides the 'con_disabled' setting.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetConVisible, 1,
+  LuaUtilPushVar(lS, cConGfx->ConGfxSetVisible(AgBoolean{lS, 1})))
+/* ========================================================================= */
+// $ Fbo.SetDraw
+// ? When the UI mode is set to 3 which is fully manual mode, you need to call
+// ? this function for every frame that changes. The main screen FBO will be
+// ? flushed and not finished and OpenGL will NOT swap buffers if you do not
+// ? call this function.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetDraw, 0, cFboCore->FboCoreSetDraw())
+/* ========================================================================= */
+// $ Fbo.SetMainSize
 // < Width:number=The new width of the main frame buffer
 // < Height:number=The new height of the main frame buffer
 // > Success:boolean=Returns whether the frame buffer changed or not.
@@ -529,7 +529,7 @@ LLFUNC(OnRedraw, 0, cLua->LuaSetRef(lS, cFboCore->FboCoreGetRedrawFunc()))
 // ? which the main frame buffer viewport is re-calculated and reinitialised
 // ? to these dimensions. Note that this modifies the console size as well.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Resize, 1,
+LLFUNC(SetMainSize, 1,
   using namespace IDisplay::P;
   const AgUIntLG aWidth{lS, 1, 1, cOgl->MaxTexSize() },
                  aHeight{lS, 2, 1, cOgl->MaxTexSize() };
@@ -542,10 +542,10 @@ LLFUNC(Resize, 1,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Fbo.* non-member functions begin
-  LLRSFUNC(ConEnabled), LLRSFUNC(ConHeight), LLRSFUNC(ConLock),
-  LLRSFUNC(ConSet),     LLRSFUNC(Create),    LLRSFUNC(Draw),
-  LLRSFUNC(GetClasses), LLRSFUNC(IsDrawing), LLRSFUNC(Main),
-  LLRSFUNC(OnRedraw),   LLRSFUNC(Matrix),    LLRSFUNC(Resize),
+  LLRSFUNC(Create),        LLRSFUNC(GetClasses),    LLRSFUNC(GetConHeight),
+  LLRSFUNC(GetMainSize),   LLRSFUNC(IsConEnabled),  LLRSFUNC(IsDrawing),
+  LLRSFUNC(Main),          LLRSFUNC(OnRedraw),      LLRSFUNC(SetConLock),
+  LLRSFUNC(SetConVisible), LLRSFUNC(SetDraw),       LLRSFUNC(SetMainSize),
 LLRSEND                                // Fbo.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **

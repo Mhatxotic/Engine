@@ -263,11 +263,10 @@ static void StdSRand(const unsigned uSeed) { srandom(uSeed); }
 /* -- Wrapper for mmap function -------------------------------------------- */
 template<typename CharType>
   requires (!StdIsPointer<CharType>)
-static CharType *StdMMap(void*const vpAddr, const size_t stLen,
-  const int iProtection, const int iFlags, const int iDescriptor,
-  const off_t otOffset)
-{ return reinterpret_cast<CharType*>(mmap(vpAddr, stLen, iProtection, iFlags,
-    iDescriptor, otOffset)); }
+static CharType *StdMMap(const size_t stLen,
+  const int iProtection, const int iFlags, const int iDescriptor)
+{ return reinterpret_cast<CharType*>(mmap(nullptr, stLen, iProtection, iFlags,
+    iDescriptor, 0)); }
 /* ------------------------------------------------------------------------- */
 #endif                                 // Operating system check
 /* ------------------------------------------------------------------------- */

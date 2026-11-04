@@ -213,7 +213,7 @@ template<typename IntType = int64_t, class StrType>
             StdIsStrOrCStr<StrType>
 static IntType StrToNum(StrType &&strStr)
   { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
-      [](auto &aStr)->IntType{
+      [](auto &&aStr)->IntType{
         return PtrToNum<IntType>(aStr.data(),
           static_cast<ssize_t>(aStr.size())); }); }
 /* -- Quickly convert hex string to integer -------------------------------- */

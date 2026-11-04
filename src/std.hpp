@@ -124,11 +124,12 @@ template<class AnyType, typename AnyTypeRR = StdRemoveReference<AnyType>>
   requires (StdIsReference<AnyType> || StdIsSame<AnyType, AnyTypeRR>)
 constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept
   { return static_cast<AnyTypeRR&&>(atVar); }
-/* -- Some frequently used maximums ---------------------------------------- */
-constexpr const unsigned StdMaxUInt = StdLimits<unsigned>::max();
+/* -- Some frequently used integrals --------------------------------------- */
+constexpr const unsigned StdMaxUInt = StdLimits<unsigned>::max(),
+                         StdUIntM1 = static_cast<unsigned>(-1);
 constexpr const uint64_t StdMaxUInt64 = StdLimits<uint64_t>::max();
-constexpr const size_t StdMaxSizeT = StdLimits<size_t>::max();
-constexpr const size_t StdNPos = StdString::npos;
+constexpr const size_t StdMaxSizeT = StdLimits<size_t>::max(),
+                       StdNPos = StdString::npos;
 /* -- Set error number ----------------------------------------------------- */
 static void StdSetError(const int iValue) { errno = iValue; }
 /* -- Get error number ----------------------------------------------------- */
@@ -234,17 +235,17 @@ static AnyType *StdAlloc(const IntType itBytes)
   { return reinterpret_cast<AnyType*>
       (::std::malloc(static_cast<size_t>(itBytes))); }
 /* -- Re-allocate memory ('inline' prevents -Wallocator-wrappers) ---------- */
-template<typename AnyType, typename IntType>
-  requires StdIsPointer<AnyType*> && StdIsIntegral<IntType>
-static AnyType *StdReAlloc(AnyType*const atPtr, const IntType itBytes)
-  { return reinterpret_cast<AnyType*>
-      (::std::realloc(reinterpret_cast<void*>(atPtr),
+template<typename PtrType, typename IntType>
+  requires StdIsPointer<PtrType*> && StdIsIntegral<IntType>
+static PtrType *StdReAlloc(PtrType*const atPtr, const IntType itBytes)
+  { return reinterpret_cast<PtrType*>
+      (::std::realloc(StdToNonConstCast<void*>(atPtr),
          static_cast<size_t>(itBytes))); }
 /* -- Release allocated memory --------------------------------------------- */
 template<typename PtrType>
   requires (!StdIsPointer<PtrType>)
 static void StdFree(PtrType*const ptPtr)
-  { ::std::free(reinterpret_cast<void*>(ptPtr)); }
+  { ::std::free(StdToNonConstCast<void*>(ptPtr)); }
 /* -- Compare memory ------------------------------------------------------- */
 static int StdCompare(const void*const vpA, const void*const vpB,
   const size_t stSize)

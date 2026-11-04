@@ -55,36 +55,55 @@ LLFUNC(Attention, 0, cDisplay->DisplayRequestAttention())
 /* ------------------------------------------------------------------------- */
 LLFUNC(Centre, 0, cDisplay->DisplayRequestCentre())
 /* ========================================================================= */
-// $ Display.Decordated
-// < State:boolean=The window is decorated?
-// ? Returns if the window is decorated with a border.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Decorated, 1, LuaUtilPushVar(lS, cGlFW->WinIsDecoratedAttribEnabled()))
-/* ========================================================================= */
-// $ Display.Floating
-// < State:boolean=The window is floating?
-// ? Returns if the window is floating an always showing on top.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Floating, 1, LuaUtilPushVar(lS, cGlFW->WinIsFloatingAttribEnabled()))
-/* ========================================================================= */
 // $ Display.Focus
 // ? Sets input focus to the window. This will actually restore the window if
 // ? in full-screen mode.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Focus, 0, cDisplay->DisplayRequestFocus())
 /* ========================================================================= */
-// $ Display.Focused
-// < State:boolean=The window is focused?
-// ? Returns if the window is focused.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Focused, 1, LuaUtilPushVar(lS, cGlFW->WinIsFocusAttribEnabled()))
-/* ========================================================================= */
-// $ Display.FSType
+// $ Display.GetFSType
 // < Type:integer=Type of full-screen
 // ? This function returns the type of full-screen currently engaged. Check
 // ? Display.FSTypes table for a list of possible values.
 /* ------------------------------------------------------------------------- */
-LLFUNC(FSType, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetFSType()))
+LLFUNC(GetFSType, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetFSType()))
+/* ========================================================================= */
+// $ Display.GetGPU
+// < Vendor:string=GL vendor string.
+// < Version:string=GL version string.
+// < Renderer:string=GL gpu string.
+// ? Returns info about OpenGL.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetGPU, 3,
+  LuaUtilPushVar(lS, cOgl->GetVendor(), cOgl->GetVersion(),
+    cOgl->GetRenderer()))
+/* ========================================================================= */
+// $ Display.GetGPUFPS
+// < FPS:number=Frames per second.
+// ? Get GPU frames rendered in the second. Should be 60 for most people. This
+// ? (for now) is the same value as Core.CPUFPS() until the renderer is
+// ? de-coupled from the engine thread.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetGPUFPS, 1, LuaUtilPushVar(lS, cFboCore->FboCoreGetFPS()))
+/* ========================================================================= */
+// $ Display.GetMonitor
+// < Id:number=Monitor index.
+// ? Returns the currently selected monitor id.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetMonitor, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetMonitorId()))
+/* ========================================================================= */
+// $ Display.GetMonitorData
+// > Id:integer=Id of monitor to query.
+// < Name:string=Name of monitor.
+// ? Returns the name of the specified monitor.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetMonitorData, 1, LuaUtilPushVar(lS, AgMonitorData{lS, 1}().Name()))
+/* ========================================================================= */
+// $ Display.GetMonitors
+// < Id:number=Monitor count.
+// ? Returns the total number of detected monitors on the system.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetMonitors, 1, LuaUtilPushVar(lS, cDisplay->MonitorsCount()))
 /* ========================================================================= */
 // $ Display.GetPos
 // < X:integer=Current X position of the window.
@@ -102,72 +121,118 @@ LLFUNC(GetPos, 2, LuaUtilPushVar(lS,
 LLFUNC(GetSize, 2,
   LuaUtilPushVar(lS, cInput->DimGetWidth(), cInput->DimGetHeight()))
 /* ========================================================================= */
-// $ Display.GPU
-// < Vendor:string=GL vendor string.
-// < Version:string=GL version string.
-// < Renderer:string=GL gpu string.
-// ? Returns info about OpenGL.
+// $ Display.GetVidMode
+// < Id:number=Mode id.
+// ? Returns the currently selected video mode id.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GPU, 3,
-  LuaUtilPushVar(lS, cOgl->GetVendor(), cOgl->GetVersion(),
-    cOgl->GetRenderer()))
+LLFUNC(GetVidMode, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetVideoModeId()))
 /* ========================================================================= */
-// $ Display.GPUFPS
-// < FPS:number=Frames per second.
-// ? Get GPU frames rendered in the second. Should be 60 for most people. This
-// ? (for now) is the same value as Core.CPUFPS() until the renderer is
-// ? de-coupled from the engine thread.
+// $ Display.GetVidModeData
+// > MonitorId:integer=Id of monitor to query.
+// > ModeId:integer=Id of video mode to query.
+// < Width:integer=Width of the video mode in pixels.
+// < Height:integer=Height of the video mode in pixels.
+// < Depth:integer=Depth of the video mode. (16 or 24).
+// < Refresh:integer=Refresh rate of the video mode (normally 60).
+// < Red:integer=Number of bits in the red component (normally 8).
+// < Green:integer=Number of bits in the green component (normally 8).
+// < Blue:integer=Number of bits in the blue component (normally 8).
+// ? Returns information about the specified video mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GPUFPS, 1, LuaUtilPushVar(lS, cFboCore->FboCoreGetFPS()))
+LLFUNC(GetVidModeData, 7,
+  const AgMonitorData aMonitorData{lS, 1};
+  const AgSizeTLGE aVideoModeId{lS, 2, 0, aMonitorData().Count()};
+  const GlFWRes &rItem = aMonitorData().Get(aVideoModeId);
+  LuaUtilPushVar(lS, rItem.Width(), rItem.Height(), rItem.Depth(),
+    rItem.Refresh(), rItem.Red(), rItem.Green(), rItem.Blue()))
 /* ========================================================================= */
-// $ Display.Hovered
-// < State:boolean=Mouse is over the window?
-// ? Indicates whether the cursor is currently directly over the content area
-// ? of the window, with no other windows between.
+// $ Display.GetVidModes
+// < Count:number=Total video modes.
+// ? Returns the total number of video modes supported by the GPU.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Hovered, 1,
-  LuaUtilPushVar(lS, cGlFW->WinIsMouseHoveredAttribEnabled()))
+LLFUNC(GetVidModes, 1, LuaUtilPushVar(lS, AgMonitorData{lS, 1}().Count()))
 /* ========================================================================= */
-// $ Display.Iconified
-// < State:boolean=The window is inconified?
-// ? Returns if the window is iconified.
+// $ Display.GetVRAM
+// < Available:integer=Available video memory in bytes
+// < Total:integer=Total video memory in bytes
+// < Used:integer=Used video memory in bytes
+// < Dedicated:boolean=Is video memory separate from main memory
+// ? Returns info about the GPU's video memory.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Iconified, 1, LuaUtilPushVar(lS, cGlFW->WinIsIconifyAttribEnabled()))
+LLFUNC(GetVRAM, 5,
+  LuaUtilPushVar(lS, cOgl->GetVRAMFreePC(), cOgl->GetVRAMTotal(),
+    cOgl->GetVRAMFree(), cOgl->GetVRAMUsed(), cOgl->FlagIsSet(GFL_SHARERAM)))
 /* ========================================================================= */
 // $ Display.Iconify
 // ? Minimises the window.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Iconify, 0, cDisplay->DisplayRequestMinimise())
 /* ========================================================================= */
+// $ Display.IsDecordated
+// < State:boolean=The window is decorated?
+// ? Returns if the window is decorated with a border.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsDecorated, 1,
+  LuaUtilPushVar(lS, cGlFW->WinIsDecoratedAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsFloating
+// < State:boolean=The window is floating?
+// ? Returns if the window is floating an always showing on top.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsFloating, 1,
+  LuaUtilPushVar(lS, cGlFW->WinIsFloatingAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsFocused
+// < State:boolean=The window is focused?
+// ? Returns if the window is focused.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsFocused, 1, LuaUtilPushVar(lS, cGlFW->WinIsFocusAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsHovered
+// < State:boolean=Mouse is over the window?
+// ? Indicates whether the cursor is currently directly over the content area
+// ? of the window, with no other windows between.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsHovered, 1,
+  LuaUtilPushVar(lS, cGlFW->WinIsMouseHoveredAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsIconified
+// < State:boolean=The window is inconified?
+// ? Returns if the window is iconified.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsIconified, 1, LuaUtilPushVar(lS, cGlFW->WinIsIconifyAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsMaximised
+// < State:boolean=The window is maximised?
+// ? Returns if the window is maximised.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsMaximised, 1,
+  LuaUtilPushVar(lS, cGlFW->WinIsMaximisedAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsResizable
+// < State:boolean=The window is visible?
+// ? Indicates whether the window is resizable.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsResizable, 1,
+  LuaUtilPushVar(lS, cGlFW->WinIsResizableAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsTransparent
+// < State:boolean=The window is using an alpha framebuffer?
+// ? Returns if the window is transparent and using a alpha framebuffer.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsTransparent, 1,
+  LuaUtilPushVar(lS, cGlFW->WinIsTransparencyAttribEnabled()))
+/* ========================================================================= */
+// $ Display.IsVisible
+// < State:boolean=The window is visible?
+// ? Indicates whether the window is visible.
+/* ------------------------------------------------------------------------- */
+LLFUNC(IsVisible, 1, LuaUtilPushVar(lS, cGlFW->WinIsVisibilityAttribEnabled()))
+/* ========================================================================= */
 // $ Display.Maximise
 // ? Maximises the window.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Maximise, 0, cDisplay->DisplayRequestMaximise())
-/* ========================================================================= */
-// $ Display.Maximised
-// < State:boolean=The window is maximised?
-// ? Returns if the window is maximised.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Maximised, 1, LuaUtilPushVar(lS, cGlFW->WinIsMaximisedAttribEnabled()))
-/* ========================================================================= */
-// $ Display.Monitor
-// < Id:number=Monitor index.
-// ? Returns the currently selected monitor id.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Monitor, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetMonitorId()))
-/* ========================================================================= */
-// $ Display.Monitors
-// < Id:number=Monitor count.
-// ? Returns the total number of detected monitors on the system.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Monitors, 1, LuaUtilPushVar(lS, cDisplay->MonitorsCount()))
-/* ========================================================================= */
-// $ Display.MonitorData
-// > Id:integer=Id of monitor to query.
-// < Name:string=Name of monitor.
-// ? Returns the name of the specified monitor.
-/* ------------------------------------------------------------------------- */
-LLFUNC(MonitorData, 1, LuaUtilPushVar(lS, AgMonitorData{lS, 1}().Name()))
 /* ========================================================================= */
 // $ Display.OnFocused
 // > Func:function=The event callback function
@@ -205,12 +270,6 @@ LLFUNC(Reset, 0, cDisplay->DisplayRequestReposition())
 // ? Resets to the standard cursor graphic
 /* ------------------------------------------------------------------------- */
 LLFUNC(ResetCursor, 0, cDisplay->DisplayRequestResetCursor())
-/* ========================================================================= */
-// $ Display.Resizable
-// < State:boolean=The window is visible?
-// ? Indicates whether the window is resizable.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Resizable, 1, LuaUtilPushVar(lS, cGlFW->WinIsResizableAttribEnabled()))
 /* ========================================================================= */
 // $ Display.Restore
 // ? Restores the window from a minimized state. This may not work in
@@ -256,61 +315,6 @@ LLFUNC(SetSize, 0,
                  aHeight{lS, 2, 0, StdLimits<int>::max()};
   cDisplay->DisplayRequestResize(aWidth, aHeight))
 /* ========================================================================= */
-// $ Display.Transparent
-// < State:boolean=The window is using an alpha framebuffer?
-// ? Returns if the window is transparent and using a alpha framebuffer.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Transparent, 1,
-  LuaUtilPushVar(lS, cGlFW->WinIsTransparencyAttribEnabled()))
-/* ========================================================================= */
-// $ Display.VidMode
-// < Id:number=Mode id.
-// ? Returns the currently selected video mode id.
-/* ------------------------------------------------------------------------- */
-LLFUNC(VidMode, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetVideoModeId()))
-/* ========================================================================= */
-// $ Display.VidModeData
-// > MonitorId:integer=Id of monitor to query.
-// > ModeId:integer=Id of video mode to query.
-// < Width:integer=Width of the video mode in pixels.
-// < Height:integer=Height of the video mode in pixels.
-// < Depth:integer=Depth of the video mode. (16 or 24).
-// < Refresh:integer=Refresh rate of the video mode (normally 60).
-// < Red:integer=Number of bits in the red component (normally 8).
-// < Green:integer=Number of bits in the green component (normally 8).
-// < Blue:integer=Number of bits in the blue component (normally 8).
-// ? Returns information about the specified video mode.
-/* ------------------------------------------------------------------------- */
-LLFUNC(VidModeData, 7,
-  const AgMonitorData aMonitorData{lS, 1};
-  const AgSizeTLGE aVideoModeId{lS, 2, 0, aMonitorData().Count()};
-  const GlFWRes &rItem = aMonitorData().Get(aVideoModeId);
-  LuaUtilPushVar(lS, rItem.Width(), rItem.Height(), rItem.Depth(),
-    rItem.Refresh(), rItem.Red(), rItem.Green(), rItem.Blue()))
-/* ========================================================================= */
-// $ Display.VidModes
-// < Count:number=Total video modes.
-// ? Returns the total number of video modes supported by the GPU.
-/* ------------------------------------------------------------------------- */
-LLFUNC(VidModes, 1, LuaUtilPushVar(lS, AgMonitorData{lS, 1}().Count()))
-/* ========================================================================= */
-// $ Display.Visible
-// < State:boolean=The window is visible?
-// ? Indicates whether the window is visible.
-/* ------------------------------------------------------------------------- */
-LLFUNC(Visible, 1, LuaUtilPushVar(lS, cGlFW->WinIsVisibilityAttribEnabled()))
-/* ========================================================================= */
-// $ Display.VRAM
-// < Available:integer=Available video memory in bytes
-// < Total:integer=Total video memory in bytes
-// < Used:integer=Used video memory in bytes
-// < Dedicated:boolean=Is video memory separate from main memory
-// ? Returns info about the GPU's video memory.
-/* ------------------------------------------------------------------------- */
-LLFUNC(VRAM, 5,
-  LuaUtilPushVar(lS, cOgl->GetVRAMFreePC(), cOgl->GetVRAMTotal(),
-    cOgl->GetVRAMFree(), cOgl->GetVRAMUsed(), cOgl->FlagIsSet(GFL_SHARERAM)))
-/* ========================================================================= */
 // $ Display.VReset
 // ? Resets the video subsystem.
 /* ------------------------------------------------------------------------- */
@@ -321,19 +325,19 @@ LLFUNC(VReset, 0, cEvtMain->RequestQuitThread())
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Display.* non-member functions begin
-  LLRSFUNC(Attention),     LLRSFUNC(Centre),        LLRSFUNC(Decorated),
-  LLRSFUNC(Floating),      LLRSFUNC(Focus),         LLRSFUNC(Focused),
-  LLRSFUNC(FSType),        LLRSFUNC(GetPos),        LLRSFUNC(GetSize),
-  LLRSFUNC(GPU),           LLRSFUNC(GPUFPS),        LLRSFUNC(Hovered),
-  LLRSFUNC(Iconified),     LLRSFUNC(Iconify),       LLRSFUNC(Maximise),
-  LLRSFUNC(Maximised),     LLRSFUNC(Monitor),       LLRSFUNC(MonitorData),
-  LLRSFUNC(Monitors),      LLRSFUNC(OnFocused),     LLRSFUNC(OnMoved),
-  LLRSFUNC(OnResized),     LLRSFUNC(OnScaled),      LLRSFUNC(Reset),
-  LLRSFUNC(ResetCursor),   LLRSFUNC(Resizable),     LLRSFUNC(Restore),
-  LLRSFUNC(SetCursor),     LLRSFUNC(SetFullScreen), LLRSFUNC(SetPos),
-  LLRSFUNC(SetSize),       LLRSFUNC(Transparent),   LLRSFUNC(VidMode),
-  LLRSFUNC(VidModeData),   LLRSFUNC(VidModes),      LLRSFUNC(Visible),
-  LLRSFUNC(VRAM),          LLRSFUNC(VReset),
+  LLRSFUNC(Attention),      LLRSFUNC(Centre),         LLRSFUNC(Focus),
+  LLRSFUNC(GetFSType),      LLRSFUNC(GetGPU),         LLRSFUNC(GetGPUFPS),
+  LLRSFUNC(GetMonitor),     LLRSFUNC(GetMonitorData), LLRSFUNC(GetMonitors),
+  LLRSFUNC(GetPos),         LLRSFUNC(GetSize),        LLRSFUNC(GetVidMode),
+  LLRSFUNC(GetVidModeData), LLRSFUNC(GetVidModes),    LLRSFUNC(GetVRAM),
+  LLRSFUNC(IsDecorated),    LLRSFUNC(IsFloating),     LLRSFUNC(IsFocused),
+  LLRSFUNC(IsHovered),      LLRSFUNC(IsIconified),    LLRSFUNC(IsMaximised),
+  LLRSFUNC(IsResizable),    LLRSFUNC(IsTransparent),  LLRSFUNC(IsVisible),
+  LLRSFUNC(Iconify),        LLRSFUNC(Maximise),       LLRSFUNC(OnFocused),
+  LLRSFUNC(OnMoved),        LLRSFUNC(OnResized),      LLRSFUNC(OnScaled),
+  LLRSFUNC(Reset),          LLRSFUNC(ResetCursor),    LLRSFUNC(Restore),
+  LLRSFUNC(SetCursor),      LLRSFUNC(SetFullScreen),  LLRSFUNC(SetPos),
+  LLRSFUNC(SetSize),        LLRSFUNC(VReset),
 LLRSEND                                // Display.* non-member functions end
 /* ========================================================================= **
 ** ######################################################################### **

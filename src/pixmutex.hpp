@@ -87,8 +87,8 @@ class SysMutex                         // Need this before of System init order
         XCL("Failed to reopen setup shared memory object!",
           "Name", ssvTitle, "Mode", shmShm.Mode());
       // Initialise memory
-      pipProcessId = StdMMap<pid_t>
-        (nullptr, stPidSize, PROT_READ, MAP_SHARED, shmShm.Get(), 0);
+      pipProcessId =
+        StdMMap<pid_t>(stPidSize, PROT_READ, MAP_SHARED, shmShm.Get());
       if(pipProcessId == MAP_FAILED)
         XCL("Failed to setup shared memory for reading!",
           "Name", ssvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
@@ -116,8 +116,9 @@ class SysMutex                         // Need this before of System init order
       XCL("Failed to truncate shared memory object!",
         "Name", ssvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);
     // Initialise memory
-    pipProcessId = StdMMap<pid_t>(nullptr, stPidSize,
-      PROT_READ | PROT_WRITE, MAP_SHARED, shmShm.Get(), 0);
+    pipProcessId =
+      StdMMap<pid_t>(stPidSize, PROT_READ | PROT_WRITE, MAP_SHARED,
+        shmShm.Get());
     if(pipProcessId == MAP_FAILED)
       XCL("Failed to setup shared memory for writing!",
         "Name", ssvTitle, "ObjectFD", shmShm.Get(), "Size", stPidSize);

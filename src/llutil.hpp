@@ -405,18 +405,6 @@ LLFUNC(FormatTimeUTC, 1,
   const AgCStringChar aFormat{lS, 2};
   LuaUtilPushVar(lS, TimeUTCTTtoStr(aTimestamp, aFormat)))
 /* ========================================================================= */
-// $ Util.GetRatio
-// > Width:integer=The width integer.
-// > Height:integer=The height integer.
-// < Result:string=The ratio between the two numbers.
-// ? Caclulates the ratio between the two numbers and returns a string in the
-// ? format of "n:n".
-/* ------------------------------------------------------------------------- */
-LLFUNC(GetRatio, 1,
-  const AgLuaIntegerL aWidth{lS, 1, 1},
-                      aHeight{lS, 2, 1};
-  LuaUtilPushVar(lS, StrFromRatio(aWidth(), aHeight())))
-/* ========================================================================= */
 // $ Util.Grouped
 // > Count:integer=The number to convert.
 // > Precision:integer=The precision after the decimal point to use
@@ -892,6 +880,18 @@ LLFUNC(PlusOrMinusEx, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Position, 1, LuaUtilPushVar(lS, StrFromPosition(AgUInt64{lS, 1})))
 /* ========================================================================= */
+// $ Util.Ratio
+// > Width:integer=The width integer.
+// > Height:integer=The height integer.
+// < Result:string=The ratio between the two numbers.
+// ? Caclulates the ratio between the two numbers and returns a string in the
+// ? format of "n:n".
+/* ------------------------------------------------------------------------- */
+LLFUNC(Ratio, 1,
+  const AgLuaIntegerL aWidth{lS, 1, 1},
+                      aHeight{lS, 2, 1};
+  LuaUtilPushVar(lS, StrFromRatio(aWidth(), aHeight())))
+/* ========================================================================= */
 // $ Util.RelTime
 // > Seconds:integer=The unix timestamp.
 // < Result:string=The resulting string
@@ -1203,28 +1203,28 @@ LLRSBEGIN                              // Util.* non-member functions begin
   LLRSFUNC(FormatNTime),               LLRSFUNC(FormatNTimeUTC),
   LLRSFUNC(FormatNumber),              LLRSFUNC(FormatNumberI),
   LLRSFUNC(FormatTime),                LLRSFUNC(FormatTimeUTC),
-  LLRSFUNC(GetRatio),                  LLRSFUNC(Grouped),
-  LLRSFUNC(Hex),                       LLRSFUNC(HexDecode),
-  LLRSFUNC(HexDecodeA),                LLRSFUNC(HexEncode),
-  LLRSFUNC(HexEncodeA),                LLRSFUNC(HexEncodeL),
-  LLRSFUNC(HexEncodeLA),               LLRSFUNC(HexL),
-  LLRSFUNC(HighByte),                  LLRSFUNC(HighDWord),
-  LLRSFUNC(HighWord),                  LLRSFUNC(IfBlank),
-  LLRSFUNC(Implode),                   LLRSFUNC(ImplodeEx),
-  LLRSFUNC(IsASCII),                   LLRSFUNC(IsBoolean),
-  LLRSFUNC(IsExtASCII),                LLRSFUNC(IsFunction),
-  LLRSFUNC(IsInteger),                 LLRSFUNC(IsNumber),
-  LLRSFUNC(IsString),                  LLRSFUNC(IsTable),
-  LLRSFUNC(IsUserdata),                LLRSFUNC(LineType),
-  LLRSFUNC(LowByte),                   LLRSFUNC(LowDWord),
-  LLRSFUNC(LowWord),                   LLRSFUNC(MakeDWord),
-  LLRSFUNC(MakeQWord),                 LLRSFUNC(MakeWord),
-  LLRSFUNC(ParseArgs),                 LLRSFUNC(ParseTime),
-  LLRSFUNC(ParseTime2),                LLRSFUNC(ParseTimeEx),
-  LLRSFUNC(Pluralise),                 LLRSFUNC(PluraliseEx),
-  LLRSFUNC(PluraliseGrouped),          LLRSFUNC(PlusOrMinus),
-  LLRSFUNC(PlusOrMinusEx),             LLRSFUNC(Position),
-  LLRSFUNC(Random),                    LLRSFUNC(RandomA),
+  LLRSFUNC(Grouped),                   LLRSFUNC(Hex),
+  LLRSFUNC(HexDecode),                 LLRSFUNC(HexDecodeA),
+  LLRSFUNC(HexEncode),                 LLRSFUNC(HexEncodeA),
+  LLRSFUNC(HexEncodeL),                LLRSFUNC(HexEncodeLA),
+  LLRSFUNC(HexL),                      LLRSFUNC(HighByte),
+  LLRSFUNC(HighDWord),                 LLRSFUNC(HighWord),
+  LLRSFUNC(IfBlank),                   LLRSFUNC(Implode),
+  LLRSFUNC(ImplodeEx),                 LLRSFUNC(IsASCII),
+  LLRSFUNC(IsBoolean),                 LLRSFUNC(IsExtASCII),
+  LLRSFUNC(IsFunction),                LLRSFUNC(IsInteger),
+  LLRSFUNC(IsNumber),                  LLRSFUNC(IsString),
+  LLRSFUNC(IsTable),                   LLRSFUNC(IsUserdata),
+  LLRSFUNC(LineType),                  LLRSFUNC(LowByte),
+  LLRSFUNC(LowDWord),                  LLRSFUNC(LowWord),
+  LLRSFUNC(MakeDWord),                 LLRSFUNC(MakeQWord),
+  LLRSFUNC(MakeWord),                  LLRSFUNC(ParseArgs),
+  LLRSFUNC(ParseTime),                 LLRSFUNC(ParseTime2),
+  LLRSFUNC(ParseTimeEx),               LLRSFUNC(Pluralise),
+  LLRSFUNC(PluraliseEx),               LLRSFUNC(PluraliseGrouped),
+  LLRSFUNC(PlusOrMinus),               LLRSFUNC(PlusOrMinusEx),
+  LLRSFUNC(Position),                  LLRSFUNC(Random),
+  LLRSFUNC(RandomA),                   LLRSFUNC(Ratio),
   LLRSFUNC(RelTime),                   LLRSFUNC(RelTimeEx),
   LLRSFUNC(Replace),                   LLRSFUNC(ReplaceEx),
   LLRSFUNC(Round),                     LLRSFUNC(RoundInt),

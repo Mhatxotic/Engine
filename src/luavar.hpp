@@ -82,14 +82,17 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
   const StdString &Name() const { return lcvmiIt->first; }
   /* -- Get cvar data ------------------------------------------------------ */
   CVarItem &Data() const { return Iterator()->second; }
-  /* -- Get current value as string ---------------------------------------- */
-  StdString Get() const { return cCVars->GetStr(Iterator()); }
+  /* -- Get current value as specified type -------------------------------- */
+  const StdString &GetString() const { return cCVars->GetStr(Iterator()); }
+  lua_Number GetNumber() const { return StrToNum<lua_Number>(GetString()); }
+  lua_Integer GetInteger() const { return StrToNum<lua_Integer>(GetString()); }
+  bool GetBoolean() const { return StrToNum<int>(GetString()) != 0; }
   /* -- Get default value as string ---------------------------------------- */
   StdString Default() const { return cCVars->GetDefStr(Iterator()); }
   /* -- Reset default value ------------------------------------------------ */
   void Reset() const { cCVars->Reset(Iterator()); }
   /* -- Returns if value is empty ------------------------------------------ */
-  bool Empty() const { return Get().empty(); }
+  bool Empty() const { return GetString().empty(); }
   bool NotEmpty() const { return !Empty(); }
   /* -- Set value from different types ------------------------------------- */
   CVarSetEnums SetString(const StdStringView &ssvValue) const

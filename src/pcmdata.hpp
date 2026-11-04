@@ -62,9 +62,9 @@ class PcmData :                        // Audio data structure
       pbitBits = static_cast<PcmBitType>(pbytBytes * CHAR_BIT); }
   /* ----------------------------------------------------------------------- */
   Memory &PcmDataGetLeft() { return mPcmL; }
-  const Memory &PcmDataGetLeftConst() const { return mPcmL; }
+  MemConst &PcmDataGetLeftConst() const { return mPcmL; }
   Memory &PcmDataGetRight() { return mPcmR; }
-  const Memory &PcmDataGetRightConst() const { return mPcmR; }
+  MemConst &PcmDataGetRightConst() const { return mPcmR; }
   /* ----------------------------------------------------------------------- */
   size_t PcmDataGetLeftSize() const
     { return PcmDataGetLeftConst().MemSize(); }

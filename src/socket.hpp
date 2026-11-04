@@ -100,7 +100,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   enum OpCode : unsigned               // Websocket packet op codes
   { /* --------------------------------------------------------------------- */
-    OC_NONE      = static_cast<unsigned>(-1),
+    OC_NONE      = StdUIntM1,          // Waiting for OpCode
     OC_FRAG      = 0x0,                // Fragmented packet
     OC_TEXT      = 0x1,                // UTF-8 Text packet
     OC_BINARY    = 0x2,                // Binary text packet
@@ -1827,14 +1827,14 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     bioPtr(nullptr),                   // Invalid bio (openssl)
     sslctxPtr(nullptr),                // Invalid ssl context (openssl)
     sslPtr(nullptr),                   // Invalid ssl (openssl)
-    aullRX(0), aullTX(0),              // No RX or TX bytes
-    aullRXp(0), aullTXp(0),            // No RX or TX packets
+    aullRX{ 0 }, aullTX{ 0 },          // No RX or TX bytes
+    aullRXp{ 0 }, aullTXp{ 0 },        // No RX or TX packets
     tReader{ STP_LOW },                // Low priority reader thread
     tWriter{ STP_LOW },                // Low priority writer thread
     bUnlock(false),                    // Block sock writer thread
     uPort(0),                          // No port
-    aiError(0),                        // No error
-    aiFd(-1),                          // Invalid file descriptor
+    aiError{ 0 },                      // No error
+    aiFd{ -1 },                        // Invalid file descriptor
     stRX(0), stTX(0)                   // No RX or TX packets in queue
     /* --------------------------------------------------------------------- */
     {}
@@ -1888,9 +1888,9 @@ CTOR_END(Sockets, Socket, SOCKET, InitSockets(), DeInitSockets(),,
   strRegVarRESPONSE{ "\255" "0" },     // " for http response string
   ssvCipherDefault{ "-" },             // Default cipher
   ssvRX{ "RX" }, ssvTX{ "TX" },        // RX and TX strings
-  aullRX(0), aullTX(0),                // Init received and sent bytes
-  aullRXp(0), aullTXp(0),              // Init received and sent packets
-  astConnected(0)                      // Init sockets connected
+  aullRX{ 0 }, aullTX{ 0 },            // Init received and sent bytes
+  aullRXp{ 0 }, aullTXp{ 0 },          // Init received and sent packets
+  astConnected{ 0 }                    // Init sockets connected
 ) /* ======================================================================= */
 static size_t SocketWaitAsync()
 { // No sockets? Ignore

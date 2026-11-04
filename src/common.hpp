@@ -32,15 +32,28 @@ class Common                           // Common variables class
     StdLocale       &lLocaleCurrent;   // Current locale
     StringStreamType sstSd,            // Blank string stream to copy defaults
                      sstSdi;           // " imbued
+    /* --------------------------------------------------------------------- */
+    // These next two functions store two ostringstream objects on each thread.
+    // One unimbued and one imbued with the current locale. We do this so we
+    // can reuse the classes without the overhead of recreating the class every
+    // time we use it. Unfortunately, it creates a exit time desturctor warning
+    // but we can safely ignore it. Just don't invoke these recursively or
+    // weird things will happen.
+    /* --------------------------------------------------------------------- */
+#if defined(__GNUC__) || defined(__clang__) // Using GCC or CLANG(-CL)?
+# pragma GCC diagnostic push                // Save the warning settings
+# pragma GCC diagnostic ignored "-Wexit-time-destructors" // Disable warning
+#endif                                      // GCC or CLANG(-CL) check
     /* -- Get a thread localised string stream ----------------------------- */
-    // Note that although using thread_local still has an overhead, it's still
-    // faster to use this then having to recreate stringstreams. Just remember
-    // not to mix the calls with manual use of OStringStream << usage.
     static StringStreamType &Stream()
       { static thread_local StringStreamType sstS; return sstS; }
     /* -- Get a thread localised imbued string stream ---------------------- */
     static StringStreamType &StreamImbued()
       { static thread_local StringStreamType sstSi; return sstSi; }
+    /* --------------------------------------------------------------------- */
+#if defined(__GNUC__) || defined(__clang__) // Using GCC or CLANG(-CL)?
+# pragma GCC diagnostic pop                 // Restore warnings
+#endif                                      // GCC or CLANG(-CL) check
     /* -- Partial init ----------------------------------------------------- */
     static StringStreamType &StreamPartialReInit(StringStreamType &sstDst,
       StringStreamType &sstDef)

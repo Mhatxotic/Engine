@@ -50,12 +50,33 @@ struct AgVariableFlags : public AgFlags<CVarFlagsConst> {
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Variable>(lS, cVariables))
 /* ========================================================================= */
-// $ Variable:Get
-// < Value:mixed=The engine cvar value.
+// $ Variable:GetBoolean
+// < Value:boolean=The engine cvar value as a boolean.
 // ? Retrieves the value of the specified cvar name. An exception is raised if
 // ? the specified cvar does not exist.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Get, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().Get()))
+LLFUNC(GetBoolean, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().GetBoolean()))
+/* ========================================================================= */
+// $ Variable:GetInteger
+// < Value:integer=The engine cvar value as an integer.
+// ? Retrieves the value of the specified cvar name. An exception is raised if
+// ? the specified cvar does not exist.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetInteger, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().GetInteger()))
+/* ========================================================================= */
+// $ Variable:GetNumber
+// < Value:number=The engine cvar value as a number.
+// ? Retrieves the value of the specified cvar name. An exception is raised if
+// ? the specified cvar does not exist.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetNumber, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().GetNumber()))
+/* ========================================================================= */
+// $ Variable:GetString
+// < Value:string=The engine cvar value.
+// ? Retrieves the value of the specified cvar name. An exception is raised if
+// ? the specified cvar does not exist.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetString, 1, LuaUtilPushVar(lS, AgVariable{lS, 1}().GetString()))
 /* ========================================================================= */
 // $ Variable:GetDefault
 // < Value:string=The engine default cvar value.
@@ -149,7 +170,8 @@ LLFUNC(SetString, 1,
 ** ========================================================================= */
 LLRSMFBEGIN                            // Variable:* methods begin
   LLRSFUNC(Destroy),    LLRSFUNC(IsDestroyed), LLRSFUNC(IsEmpty),
-  LLRSFUNC(IsNotEmpty), LLRSFUNC(Get),         LLRSFUNC(GetDefault),
+  LLRSFUNC(IsNotEmpty), LLRSFUNC(GetBoolean),  LLRSFUNC(GetInteger),
+  LLRSFUNC(GetNumber),  LLRSFUNC(GetString),   LLRSFUNC(GetDefault),
   LLRSFUNC(GetId),      LLRSFUNC(GetName),     LLRSFUNC(SetBoolean),
   LLRSFUNC(SetDefault), LLRSFUNC(SetEmpty),    LLRSFUNC(SetInteger),
   LLRSFUNC(SetNumber),  LLRSFUNC(SetString),

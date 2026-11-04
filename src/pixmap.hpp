@@ -61,8 +61,9 @@ class SysMap :
     if(SysMapGetSize())
     { // map the file in memory. This is automatically closed when stream is
       // closed
-      cpNewMem = StdMMap<char>(nullptr, SysMapGetSize(),
-        PROT_READ, MAP_PRIVATE, FStreamGetFdSafe(), 0);
+      cpNewMem =
+        StdMMap<char>(SysMapGetSize(), PROT_READ, MAP_PRIVATE,
+          FStreamGetFdSafe());
       if(cpNewMem == MAP_FAILED)
         XCS("Map view of file failed!", "File", NameGet());
     } // File is empty
