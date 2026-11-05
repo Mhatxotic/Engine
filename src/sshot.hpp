@@ -73,21 +73,19 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     const size_t stBytesPerPixel = bdBPP / 8;
     Memory mBuffer{ fboRef.DimGetWidth<size_t>() *
       fboRef.DimGetHeight<size_t>() * stBytesPerPixel };
-    // Bind the Fbo
+    // Select frame buffer object, its texture and read into it
     GL(cOgl->BindFbo(fboRef.gluFbo), "Failed to bind Fbo to dump!",
       "Name", fboRef.NameGet(), "Id", fboRef.gluFbo);
-    // Bind the texture in the Fbo
     GL(cOgl->BindTexture(fboRef.gluFbotex),
       "Failed to bind Fbo texture to dump!",
       "Name", fboRef.NameGet(), "Id", fboRef.gluFbotex);
-    // Read into buffer
     GL(cOgl->ReadTextureTT(ttMode, mBuffer.MemPtr<GLvoid>()),
       "Failed to read Fbo pixel data!",
       "Name", fboRef.NameGet(), "Mode", ImageGetPixelFormat(ttMode));
     // Get new filename or original filename
-    NameSet(ssvFile.empty() ?
+    NameSet(StrIsBlank(ssvFile,
       StrAppend(cMetadata->MetadataGetShortTitle(),
-        cmSys.FormatTime(cCommon->CommonFileTs().data())) : ssvFile);
+                cmSys.FormatTime(cCommon->CommonFileTs().data()))));
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
       fboRef.NameGet(), NameGet(), fboRef.DimGetWidth(),

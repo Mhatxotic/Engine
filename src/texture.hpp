@@ -14,8 +14,8 @@ namespace ITexture {                   // Start of private module namespace
 using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IFbo::P;
 using namespace IFboCmd::P;            using namespace IFboItem::P;
-using namespace IImage::P;             using namespace IImageData::P;
-using namespace IImageDef::P;          using namespace IJson::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IImageSlot::P;         using namespace IJson::P;
 using namespace ILog::P;               using namespace ILuaBase::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
@@ -521,7 +521,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         "Name", NameGet(), "Count", stExcess, "Size", gluvTiles.size());
     // Reserve memory for actual count
     CoordList &clFirst = clTiles.front();
-    clFirst.reserve(gluvTiles.size() / stValues);
+    clFirst.reserve(clFirst.size() + (gluvTiles.size() / stValues));
     // Save position to return
     const size_t stPosition = GetTileCount();
     // Shortcut to GLUIntVector const iterator

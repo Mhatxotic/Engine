@@ -1,4 +1,4 @@
-/* == IMAGEDATA.HPP ======================================================== **
+/* == IMGDATA.HPP ========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
@@ -10,31 +10,11 @@
 namespace IImageData {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IDim::P;               using namespace IFlags::P;
-using namespace IImageDef::P;          using namespace IMemory::P;
-using namespace IStd::P;               using namespace ITexDef::P;
+using namespace IImageDef::P;          using namespace IImageSlot::P;
+using namespace IMemory::P;            using namespace IStd::P;
+using namespace ITexDef::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-struct ImageSlot :                     // Members initially public
-  /* -- Initialisers ------------------------------------------------------- */
-  public Memory,                       // Memory data
-  public DimUInt                       // Bitmap dimensions
-{ /* -- Copy constructor --------------------------------------------------- */
-  ImageSlot(const Memory &mData, const unsigned uW, const unsigned uH) :
-    /* -- Initialisers ----------------------------------------------------- */
-    Memory{ mData },                   // Copy memory in place
-    DimUInt{ uW, uH }                  // Set dimensions
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Move constructor --------------------------------------------------- */
-  ImageSlot(Memory &&mData, const unsigned uW, const unsigned uH) :
-    /* -- Initialisers ----------------------------------------------------- */
-    Memory{ StdMove(mData) },          // Move memory in place
-    DimUInt{ uW, uH }                  // Set dimensions
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* ----------------------------------------------------------------------- */
-using SlotList = StdVector<ImageSlot>; // list of bitmaps
 /* ------------------------------------------------------------------------- */
 class ImageData :                      // Members initially private
   /* ----------------------------------------------------------------------- */

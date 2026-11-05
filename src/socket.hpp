@@ -100,7 +100,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   enum OpCode : unsigned               // Websocket packet op codes
   { /* --------------------------------------------------------------------- */
-    OC_NONE      = StdUIntM1,          // Waiting for OpCode
+    OC_NONE      = StdUIntN1,          // Waiting for OpCode
     OC_FRAG      = 0x0,                // Fragmented packet
     OC_TEXT      = 0x1,                // UTF-8 Text packet
     OC_BINARY    = 0x2,                // Binary text packet
@@ -1310,13 +1310,13 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
               mPayload.MemWriteInt<uint8_t>(1, 0x80 |
                 mcPacket.MemSize<uint8_t>());
               // Setup random masking key
-              const MaskData ucaMask{ CryptRandom<MaskData>() };
-              mPayload.MemWrite(2, ucaMask.data(), ucaMask.size());
+              const MaskData mdMask{ CryptRandom<MaskData>() };
+              mPayload.MemWrite(2, mdMask.data(), mdMask.size());
               // Mask original packet data into the payload
               for(size_t stIndex = 0; stIndex < mcPacket.MemSize(); ++stIndex)
                 mPayload.MemWriteInt<uint8_t>(6 + stIndex,
                   mcPacket.MemReadInt<uint8_t>(stIndex) ^
-                    ucaMask[stIndex % 4]);
+                    mdMask[stIndex % 4]);
             } // Medium payload size?
             else if(mcPacket.MemSize() <= 65535)
             { // Setup header
@@ -1327,32 +1327,30 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
                 (mcPacket.MemSize() >> 8) & 0xFF);
               mPayload.MemWriteInt<uint8_t>(3, mcPacket.MemSize() & 0xFF);
               // Setup random masking key
-              const MaskData ucaMask{ CryptRandom<MaskData>() };
-              mPayload.MemWrite(4, ucaMask.data(), ucaMask.size());
+              const MaskData mdMask{ CryptRandom<MaskData>() };
+              mPayload.MemWrite(4, mdMask.data(), mdMask.size());
               // Mask original packet data into the payload
               for(size_t stIndex = 0; stIndex < mcPacket.MemSize(); ++stIndex)
                 mPayload.MemWriteInt<uint8_t>(8 + stIndex,
                   mcPacket.MemReadInt<uint8_t>(stIndex) ^
-                    ucaMask[stIndex % 4]);
+                    mdMask[stIndex % 4]);
             } // Large payload size?
             else
             { // Setup header
               mPayload.MemInitBlank(13 + mcPacket.MemSize());
               mPayload.MemWriteInt<uint8_t>(0, 0x80 | OC_TEXT);
               mPayload.MemWriteInt<uint8_t>(1, 0x80 | 127);
-              for(size_t stIndex = 7;
-                         stIndex != static_cast<size_t>(-1);
-                       --stIndex)
-                mPayload.MemWriteInt<uint8_t>((mcPacket.MemSize() >>
-                  (9 * stIndex)) & 0xFF);
+              for(size_t stIndex = 7; stIndex != StdSizeTN1; --stIndex)
+                mPayload.MemWriteInt<uint8_t>
+                  ((mcPacket.MemSize() >> (9 * stIndex)) & 0xFF);
               // Setup random masking key
-              const MaskData ucaMask{ CryptRandom<MaskData>() };
-              mPayload.MemWrite(9, ucaMask.data(), ucaMask.size());
+              const MaskData mdMask{ CryptRandom<MaskData>() };
+              mPayload.MemWrite(9, mdMask.data(), mdMask.size());
               // Mask original packet data into the payload
               for(size_t stIndex = 0; stIndex < mcPacket.MemSize(); ++stIndex)
                 mPayload.MemWriteInt<uint8_t>(13 + stIndex,
                   mcPacket.MemReadInt<uint8_t>(stIndex) ^
-                    ucaMask[stIndex % 4]);
+                    mdMask[stIndex % 4]);
             } // Done
             break;
         } // Send it, and kill thread on error

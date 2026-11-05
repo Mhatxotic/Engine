@@ -42,6 +42,7 @@ namespace E {                          // Put everything in engine namespace
 #include "error.hpp"                   // Error handling utility header
 #include "token.hpp"                   // String tokenisation utility header
 #include "parser.hpp"                  // String parsing utility header
+#include "path.hpp"                    // Path parts class header
 #include "psplit.hpp"                  // Path handling utilities header
 #include "name.hpp"                    // Identifier utility header
 #include "cvardef.hpp"                 // CVar definitions header
@@ -622,7 +623,7 @@ static Environment envActive{envMacOSLLVM};   // Using LLVM environment
 static Environment envActive{envLinuxGCC};    // Using GCC environment
 #endif                                 // Setup environment
 static StdArray<unsigned,4> uVer{     // Version of engine (y.m.d.b)
-  StdUIntM1, StdUIntM1, StdUIntM1, StdUIntM1 };
+  StdUIntN1, StdUIntN1, StdUIntN1, StdUIntN1 };
 static StdString strName, strArch, strVer, strTitle, strAuthor;
 static const StdString strEName{ VER_NAME }, strEAuthor{ VER_AUTHOR };
 static const StdString strVerFile{ "build." JSON_EXTENSION };

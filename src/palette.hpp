@@ -11,7 +11,7 @@ namespace IPalette {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IColour::P;
 using namespace IError::P;             using namespace IImage::P;
-using namespace IImageData::P;         using namespace IImageDef::P;
+using namespace IImageDef::P;          using namespace IImageSlot::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IName::P;              using namespace ISerial::P;

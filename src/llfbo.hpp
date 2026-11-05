@@ -451,7 +451,8 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFbos->CollectorCount()))
 // ? Sets the console height normal without modifying the cvar. This function
 // ? is in Fbo because it only applies to opengl mode.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetConHeight, 0, cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
+LLFUNC(GetConHeight, 0,
+  cConGfx->ConGfxSetHeight(AgGLfloatLG{lS, 1, 0.0f, 1.0f}))
 /* ========================================================================= */
 // $ Fbo.GetMainSize
 // < Width:number=Current requested matrix width.

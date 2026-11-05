@@ -176,14 +176,14 @@ const LuaLibStaticArray llsaAPI{{
   LLFxx(Util, BASIC),                  LLFMC(Variable, BASIC, VARIABLE),
   LLFMC(Video, AUDIOVIDEO, VIDEO),
 }};/* -- Done with these macros -------------------------------------------- */
-#undef LLFMC
-#undef LLFxC
-#undef LLFMx
-#undef LLFxx
-#undef LLITEM
-#undef LLDF
-#undef LLAL
-#undef LLNS
+#undef LLFMC                           // Functions / methods / tables
+#undef LLFxC                           // Functions / no methods / tables
+#undef LLFMx                           // Functions / methods / no tables
+#undef LLFxx                           // Functions / no methods / no tables
+#undef LLITEM                          // Define API entry
+#undef LLDF                            // Destructor func builder helper macro
+#undef LLAL                            // Items in a table helper macro
+#undef LLNS                            // Namespace name builder helper macro
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

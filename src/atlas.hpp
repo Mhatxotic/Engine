@@ -11,8 +11,8 @@ namespace IAtlas {                     // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBin::P;               using namespace ICollector::P;
 using namespace ICoords::P;            using namespace IError::P;
-using namespace IFboCmd::P;            using namespace IImageData::P;
-using namespace IImageDef::P;          using namespace ILog::P;
+using namespace IFboCmd::P;            using namespace IImageDef::P;
+using namespace ILog::P;               using namespace IImageSlot::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ISysUtil::P;

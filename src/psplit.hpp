@@ -5,28 +5,14 @@
 ** ## This is a simple C++ wrapper for splitting components of a path     ## **
 ** ## name.                                                               ## **
 ** ######################################################################### **
-** ## UNIX PATH LAYOUT                                                    ## **
-** ######################################################################### **
-** ## Path      ## MAX_PATH   #### /Directory/SubDirectory/File.Extension ## **
-** ## Directory ## MAX_DIR    #### ^^^^^^^^^^^^^^^^^^^^^^^^-------------- ## **
-** ## FileMap   ## MAX_FNAME  #### ------------------------^^^^---------- ## **
-** ## Extension ## MAX_EXT    #### ----------------------------^^^^^^^^^^ ## **
-** ######################################################################### **
-** ## WIN32 PATH LAYOUT                                                   ## **
-** ######################################################################### **
-** ## Path      ## _MAX_PATH  ## C:\Directory\SubDirectory\File.Extension ## **
-** ## Drive     ## _MAX_DRIVE ## ^^-------------------------------------- ## **
-** ## Directory ## _MAX_DIR   ## --^^^^^^^^^^^^^^^^^^^^^^^^-------------- ## **
-** ## FileMap   ## _MAX_FNAME ## --------------------------^^^^---------- ## **
-** ## Extension ## _MAX_EXT   ## ------------------------------^^^^^^^^^^ ## **
-** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IPSplit {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICommon::P;            using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
+using namespace ICommon::P;            using namespace IPath::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert back slashes to forward slashes ------------------------------ */
@@ -36,51 +22,17 @@ template<class StrType>
   requires StdIsString<StrType>
 static StdString PSplitBackToForwardSlashes(const StrType &strIn)
   { StdString strOut{ strIn }; return PSplitBackToForwardSlashes(strOut); }
+/* -- Convert Windows widestring to UTF8 version --------------------------- */
 #if defined(WINDOWS)
 static StdString PSplitBackToForwardSlashes(const StdWideString &wstrName)
   { return PSplitBackToForwardSlashes(WS16toUTF(wstrName)); }
 #endif
-/* -- FileParts class ------------------------------------------------------ */
-class FileParts                        // Contains parts of a filename
-{ /* -- Variables -------------------------------------------------- */ public:
-  const StdString  strDrive,           // Drive part of path
-                   strDir,             // Directory part of path
-                   strFile,            // Filename part of path
-                   strExt,             // Extension part of path
-                   strFileExt,         // Filename plus extension
-                   strFull,            // Full path name
-                   strLoc;             // Drive+path name without file name
-  /* -- Initialise constructor --------------------------------------------- */
-  FileParts(StdString &&strDriveNew, StdString &&strDirNew,
-    StdString &&strFileNew, StdString &&strExtNew, StdString &&strFullNew) :
-    /* -- Initialisers ----------------------------------------------------- */
-    strDrive{ StdMove(strDriveNew) },
-    strDir{ StdMove(strDirNew) },
-    strFile{ StdMove(strFileNew) },
-    strExt{ strExtNew },
-    strFileExt{ strFile+strExt },
-    strFull{ StdMove(strFullNew) },
-    strLoc{ strDrive+strDir }
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- MOVE assign constructor on class creation -------------------------- */
-  FileParts(FileParts &&pspOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    strDrive{ StdMove(pspOther.strDrive) },
-    strDir{ StdMove(pspOther.strDir) },
-    strFile{ StdMove(pspOther.strFile) },
-    strExt{ StdMove(pspOther.strExt) },
-    strFileExt{ StdMove(pspOther.strFileExt) },
-    strFull{ StdMove(pspOther.strFull) },
-    strLoc{ StdMove(pspOther.strLoc) }
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};/* -- PathSplit class ---------------------------------------------------- */
+/* -- PathSplit class ------------------------------------------------------ */
 class PathSplit :
   /* -- Base classes ------------------------------------------------------- */
-  public FileParts                     // File parts
+  public Path                          // File parts
 { /* -- Constructors ---------------------------------------------- */ private:
-  FileParts Init(const StdStringView &ssvSrc, const bool bUseFullPath) const
+  Path Init(const StdStringView &ssvSrc, const bool bUseFullPath) const
   { // Windows?
 #if defined(WINDOWS)
     // Convert UTF8 string to UNICODE string
@@ -185,13 +137,13 @@ class PathSplit :
   explicit PathSplit(const StdStringView &ssvSrc,
                      const bool bUseFullPath = false) :
     /* -- Initialisers ----------------------------------------------------- */
-    FileParts{ Init(ssvSrc, bUseFullPath) }
+    Path{ Init(ssvSrc, bUseFullPath) }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- MOVE assign constructor on class creation -------------------------- */
   PathSplit(PathSplit &&psOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    FileParts{ StdMove(psOther) }
+    Path{ StdMove(psOther) }
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

@@ -31,6 +31,7 @@ namespace E {                          // Start of engine namespace
 #include "error.hpp"                   // Error handling utility header
 #include "token.hpp"                   // String tokenisation utility header
 #include "parser.hpp"                  // String parsing utility header
+#include "path.hpp"                    // Path parts class header
 #include "psplit.hpp"                  // Path handling utilities header
 #include "name.hpp"                    // Name utility header
 #include "lukarray.hpp"                // Safe lookup array utility header
@@ -116,12 +117,13 @@ namespace E {                          // Start of engine namespace
 #include "fboblend.hpp"                // FBO blending definition header
 #include "coords.hpp"                  // Co-ordinates class definition header
 #include "texdef.hpp"                  // Texture data definitions header
-#include "shaderdef.hpp"               // Shader attribute definitions header
+#include "shadedef.hpp"                // Shader attribute definitions header
 #include "colour.hpp"                  // Colour class definition header
 #include "ogl.hpp"                     // OpenGL graphics management header
-#include "imagedef.hpp"                // Image data definitions header
-#include "imagedata.hpp"               // Image metadata class header
-#include "imagelib.hpp"                // Image codecs handling header
+#include "imgdef.hpp"                  // Image data definitions header
+#include "imgslot.hpp"                 // Image data class header
+#include "imgdata.hpp"                 // Image metadata class header
+#include "imglib.hpp"                  // Image codecs handling header
 #include "ifmtdds.hpp"                 // ImageLib DDS file codec
 #include "ifmtgif.hpp"                 // ImageLib GIF file codec
 #include "ifmtpng.hpp"                 // ImageLib PNG file codec
@@ -145,7 +147,7 @@ namespace E {                          // Start of engine namespace
 #include "clip.hpp"                    // Clipboard class header
 #include "congfx.hpp"                  // Console graphics class header
 #include "joyaxis.hpp"                 // Joystick axis class header
-#include "joybutton.hpp"               // Joystick button class header
+#include "joybut.hpp"                  // Joystick button class header
 #include "joyinfo.hpp"                 // Joystick info class header
 #include "joystick.hpp"                // Joystick structure class header
 #include "input.hpp"                   // Input handling class header

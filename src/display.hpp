@@ -20,8 +20,8 @@ using namespace IFboCore::P;           using namespace IFlags::P;
 using namespace IFont::P;              using namespace IGlFW::P;
 using namespace IGlFWBase::P;          using namespace IGlFWCursor::P;
 using namespace IGlFWMonitor::P;       using namespace IHelper::P;
-using namespace IImage::P;             using namespace IImageData::P;
-using namespace IImageDef::P;          using namespace IInput::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IImageSlot::P;         using namespace IInput::P;
 using namespace ILog::P;               using namespace ILookupArray::P;
 using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
 using namespace IMetadata::P;          using namespace IMutex::P;
@@ -83,16 +83,12 @@ class Display :                        // Actual class body
                    dfWinScale;         // Active window scale dimensions
   GLfloat          fGamma;             // Monitor gamma setting
   CoordInt         ciPosition;         // Window position
+  struct { int iMajor, iMinor;              } sVersion; // Requested GL version
+  struct { int iRed, iGreen, iBlue, iAlpha; } sDepth;   // Requested bit-depth
   int              iApi,               // Selected API from GLFW
                    iProfile,           // Selected profile for the context
-                   iCtxMajor,          // Selected context major version
-                   iCtxMinor,          // Selected context minor version
                    iRobustness,        // Selected context robustness
                    iRelease,           // Selected context release behaviour
-                   iFBDepthR,          // Selected red bit depth mode
-                   iFBDepthG,          // Selected green bit depth mode
-                   iFBDepthB,          // Selected blue bit depth mode
-                   iFBDepthA,          // Selected alpha bit depth mode
                    iSamples;           // FSAA setting to use
   /* -- Icons -------------------------------------------------------------- */
   GlFWIconVector   gfwivIcons;         // Contiguous memory for glfw image data
@@ -963,23 +959,23 @@ class Display :                        // Actual class body
     // Inform main FBO class of our transparency setting
     cFboCore->FboCoreGetMain().FboSetTransparency(FlagIsSet(DF_TRANSPARENT));
     // Set context settings
-    cGlFW->GlFWSetAlphaBits(iFBDepthA);
+    cGlFW->GlFWSetAlphaBits(sDepth.iAlpha);
     cGlFW->GlFWSetAuxBuffers(0);
-    cGlFW->GlFWSetBlueBits(iFBDepthB);
+    cGlFW->GlFWSetBlueBits(sDepth.iBlue);
     cGlFW->GlFWSetClientAPI(iApi);
     cGlFW->GlFWSetCoreProfile(iProfile);
-    cGlFW->GlFWSetCtxMajor(iCtxMajor);
-    cGlFW->GlFWSetCtxMinor(iCtxMinor);
+    cGlFW->GlFWSetCtxMajor(sVersion.iMajor);
+    cGlFW->GlFWSetCtxMinor(sVersion.iMinor);
     cGlFW->GlFWSetDebug(FlagIsSet(DF_DEBUG));
     cGlFW->GlFWSetDepthBits(0);   // 2D framebuffer
     cGlFW->GlFWSetDoubleBuffer(FlagIsSet(DF_DOUBLEBUFFER));
     cGlFW->GlFWSetForwardCompat(FlagIsSet(DF_FORWARD));
     cGlFW->GlFWSetGPUSwitching(FlagIsSet(DF_GASWITCH));
-    cGlFW->GlFWSetGreenBits(iFBDepthG);
+    cGlFW->GlFWSetGreenBits(sDepth.iGreen);
     cGlFW->GlFWSetMaximised(FlagIsSet(DF_MAXIMISED));
     cGlFW->GlFWSetMultisamples(iSamples);
     cGlFW->GlFWSetNoErrors(FlagIsSet(DF_NOERRORS));
-    cGlFW->GlFWSetRedBits(iFBDepthR);
+    cGlFW->GlFWSetRedBits(sDepth.iRed);
     cGlFW->GlFWSetRefreshRate(DisplayGetRefreshRate());
     cGlFW->GlFWSetRelease(iRelease);
 #if defined(MACOS)
@@ -1099,16 +1095,16 @@ class Display :                        // Actual class body
     dfWinScale{ 1.0f, 1.0f },          // Window scale initialised later
     fGamma(0),                         // Gamma initialised by CVars
     ciPosition{ GLFW_DONT_CARE },      // Window position
+    sVersion{ GLFW_DONT_CARE,          // Context major version set by cvars
+              GLFW_DONT_CARE },        // Context minor version set by cvars
+    sDepth{ GLFW_DONT_CARE,            // Red bit depth set by cvars
+            GLFW_DONT_CARE,            // Green bit depth set by cvars
+            GLFW_DONT_CARE,            // Blue bit depth set by cvars
+            GLFW_DONT_CARE },          // Alpha bit depth set by cvars
     iApi(GLFW_DONT_CARE),              // Api type set by cvars
     iProfile(GLFW_DONT_CARE),          // Profile type set by cvars
-    iCtxMajor(GLFW_DONT_CARE),         // Context major version set by cvars
-    iCtxMinor(GLFW_DONT_CARE),         // Context major version set by cvars
     iRobustness(GLFW_DONT_CARE),       // Context robustness set by cvars
     iRelease(GLFW_DONT_CARE),          // Context release behaviour set by cvar
-    iFBDepthR(GLFW_DONT_CARE),         // Bit depth not selected yet
-    iFBDepthG(GLFW_DONT_CARE),         // Bit depth not selected yet
-    iFBDepthB(GLFW_DONT_CARE),         // Bit depth not selected yet
-    iFBDepthA(GLFW_DONT_CARE),         // Bit depth not selected yet
     iSamples(GLFW_DONT_CARE),          // No anti-aliasing samples specified
     lrFocused{ "OnWinFocused" },       // Setup window focus LUA event
     lrMoved{ "OnWinMoved" },           // Setup window move LUA event
@@ -1143,13 +1139,13 @@ class Display :                        // Actual class body
   CBCVARFLAG(DisplaySetMaximisedMode, DF_MAXIMISED)
   CBCVARFLAG(DisplaySetWindowTransparency, DF_TRANSPARENT)
   CBCVARFLAG(DisplaySizableChanged, DF_SIZABLE)
-  CBCVARRANGE(int, DisplayCtxMajorChanged, iCtxMajor, GLFW_DONT_CARE, 4)
-  CBCVARRANGE(int, DisplayCtxMinorChanged, iCtxMinor, GLFW_DONT_CARE, 6)
+  CBCVARRANGE(int, DisplayCtxMajorChanged, sVersion.iMajor, GLFW_DONT_CARE, 4)
+  CBCVARRANGE(int, DisplayCtxMinorChanged, sVersion.iMinor, GLFW_DONT_CARE, 6)
   CBCVARRANGE(int, DisplayFsaaChanged, iSamples, GLFW_DONT_CARE, 8)
-  CBCVARRANGE(int, DisplaySetForcedBitDepthA, iFBDepthA, GLFW_DONT_CARE, 16)
-  CBCVARRANGE(int, DisplaySetForcedBitDepthB, iFBDepthB, GLFW_DONT_CARE, 16)
-  CBCVARRANGE(int, DisplaySetForcedBitDepthG, iFBDepthG, GLFW_DONT_CARE, 16)
-  CBCVARRANGE(int, DisplaySetForcedBitDepthR, iFBDepthR, GLFW_DONT_CARE, 16)
+  CBCVARRANGE(int, DisplaySetAlphaBitDepth, sDepth.iAlpha, GLFW_DONT_CARE, 16)
+  CBCVARRANGE(int, DisplaySetBlueBitDepth, sDepth.iBlue, GLFW_DONT_CARE, 16)
+  CBCVARRANGE(int, DisplaySetGreenBitDepth, sDepth.iGreen, GLFW_DONT_CARE, 16)
+  CBCVARRANGE(int, DisplaySetRedBitDepth, sDepth.iRed, GLFW_DONT_CARE, 16)
   CBCVARRANGE(GLfloat, DisplaySetMatrixHeight, dfMatrixReq.DimGetHeightRef(),
     200.0f, 16384.0f)
   CBCVARRANGE(GLfloat, DisplaySetMatrixWidth, dfMatrixReq.DimGetWidthRef(),

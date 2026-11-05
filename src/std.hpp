@@ -126,9 +126,10 @@ constexpr static AnyTypeRR &&StdMove(AnyType &&atVar) noexcept
   { return static_cast<AnyTypeRR&&>(atVar); }
 /* -- Some frequently used integrals --------------------------------------- */
 constexpr const unsigned StdMaxUInt = StdLimits<unsigned>::max(),
-                         StdUIntM1 = static_cast<unsigned>(-1);
+                         StdUIntN1 = static_cast<unsigned>(-1);
 constexpr const uint64_t StdMaxUInt64 = StdLimits<uint64_t>::max();
 constexpr const size_t StdMaxSizeT = StdLimits<size_t>::max(),
+                       StdSizeTN1 = static_cast<size_t>(-1),
                        StdNPos = StdString::npos;
 /* -- Set error number ----------------------------------------------------- */
 static void StdSetError(const int iValue) { errno = iValue; }

@@ -12,7 +12,7 @@ namespace IMask {                      // Start of private module namespace
 using namespace IBit::P;               using namespace ICollector::P;
 using namespace IDim::P;               using namespace IDir::P;
 using namespace IError::P;             using namespace IImage::P;
-using namespace IImageData::P;         using namespace IImageDef::P;
+using namespace IImageDef::P;          using namespace IImageSlot::P;
 using namespace ILockable::P;          using namespace ILog::P;
 using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IName::P;

@@ -1395,7 +1395,7 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetForcedBitDepthA, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetAlphaBitDepth, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBBLUE
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1411,7 +1411,7 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetForcedBitDepthB, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetBlueBitDepth, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBGREEN
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1427,7 +1427,7 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetForcedBitDepthG, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetGreenBitDepth, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBRED
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1443,7 +1443,7 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetForcedBitDepthR, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetRedBitDepth, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_CTXMAJOR
 // ? Specifies the major context version to use. This is only used for

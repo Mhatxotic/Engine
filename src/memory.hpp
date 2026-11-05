@@ -16,11 +16,11 @@ using namespace IBit::P;               using namespace IEndian::P;
 using namespace IError::P;             using namespace IName::P;
 using namespace IStd::P;               using namespace IUtf::P;
 using namespace IUtil::P;
+/* -- Typedefs ------------------------------------------------------------- */
+using SpanByte   = StdSpan<uint8_t>;   // The type we're using
+using SpanByteIt = SpanByte::iterator; // Iterator type
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-using SpanByte        = StdSpan<uint8_t>;   // The type we're using
-using SpanByteIt      = SpanByte::iterator; // Iterator type
 /* == Read only data class ================================================= */
 class MemConst                         // Start of const MemBase Block Class
 { /* -- Private variables --------------------------------------- */ protected:
@@ -223,11 +223,11 @@ class MemConst                         // Start of const MemBase Block Class
   /* -- Default constructor ------------------------------------------------ */
   MemConst() = default;
 };/* ----------------------------------------------------------------------- */
-/* == Read and write data class ============================================ */
-class MemBase :
+/* == Read, write and allocation data class ================================ */
+class Memory :
   /* -- Base classes ------------------------------------------------------- */
   public MemConst                      // Start of MemBase Block Class
-{ /* -- Copy memory --------------------------------------------- */ protected:
+{ /* -- Copy memory -------------------------------------------------------- */
   void MemDoWrite(const size_t stPos,  // cppcheck-suppress functionStatic
                   const void*const vpSrc,
                   const size_t stBytes)
@@ -257,6 +257,16 @@ class MemBase :
           sbData[stIndex] = aPattern[stIndex % aPattern.size()];
         });
     }
+  }
+  /* -- Resize and preserve allocated memory ------------------------------- */
+  void MemDoResize(const size_t stBytes)
+  { // Realloc new amount of memory and if succeeded? Set new block and size
+    if(uint8_t*const ubpNPtr =
+      StdReAlloc(MemPtr<uint8_t>(),
+        UtilMaximum(stBytes, static_cast<size_t>(1))))
+          MemSetPtrSize(ubpNPtr, stBytes);
+    // Failed so throw error
+    else XC("Re-alloc failed!", "OldSize", MemSize(), "NewSize", stBytes);
   }
   /* -- Fill with specified character at specifed position --------- */ public:
   template<typename IntType = uint8_t>
@@ -403,45 +413,7 @@ class MemBase :
     // Do the invert
     *reinterpret_cast<IntType*const>(MemDoRead(stPos)) ^= itFlags;
   }
-  /* -- Assignment constructor (rvalue) ------------------------------------ */
-  MemBase(MemBase &&mbOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    MemConst{ StdMove(mbOther) }          // Move other data object
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Take ownership of pointer (rvalue) --------------------------------- */
-  explicit MemBase(MemConst &&mcRef) :
-    /* -- Initialisers ----------------------------------------------------- */
-    MemConst{ StdMove(mcRef) }         // Move other data const object
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Inherit an already allocated pointer ------------------------------- */
-  MemBase(const size_t stBytes, char*const ubpNPtr) :
-    MemConst{ stBytes, ubpNPtr } {}
-  MemBase(const size_t stBytes, void*const vpSrc) :
-    MemConst{ stBytes, vpSrc } {}
-  MemBase(const size_t stBytes, const char*const ubpNPtr) :
-    MemConst{ stBytes, ubpNPtr } {}
-  MemBase(const size_t stBytes, const void*const vpSrc) :
-    MemConst{ stBytes, vpSrc } {}
-  /* -- Uninitialised constructor -- pointer ------------------------------- */
-  MemBase() = default;
-};/* ----------------------------------------------------------------------- */
-/* == Read, write and allocation data class ================================ */
-class Memory :
-  /* -- Base classes ------------------------------------------------------- */
-  public MemBase                       // Start of Memory Block Class
-{ /* -- Resize and preserve allocated memory ---------------------- */ private:
-  void MemDoResize(const size_t stBytes)
-  { // Realloc new amount of memory and if succeeded? Set new block and size
-    if(uint8_t*const ubpNPtr =
-      StdReAlloc(MemPtr<uint8_t>(),
-        UtilMaximum(stBytes, static_cast<size_t>(1))))
-          MemSetPtrSize(ubpNPtr, stBytes);
-    // Failed so throw error
-    else XC("Re-alloc failed!", "OldSize", MemSize(), "NewSize", stBytes);
-  }
-  /* -- Swap memory with another memory block ---------------------- */ public:
+  /* -- Swap memory with another memory block ------------------------------ */
   void MemSwap(Memory &mOther) { MemConstSwap(mOther); }
   /* -- This one help with one liners (temporary variables) ---------------- */
   void MemSwap(Memory &&mOther) { MemConstSwap(mOther); }
@@ -614,13 +586,13 @@ class Memory :
   /* -- Inherit an already allocated pointer ------------------------------- */
   Memory(const size_t stBytes, const void*const vpSrc, const bool) :
     /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ stBytes, vpSrc }          // Take ownership of pointer
+    MemConst{ stBytes, vpSrc }         // Take ownership of pointer
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Alloc uninitialised ------------------------------------------------ */
   explicit Memory(const size_t stBytes) :
     /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ stBytes,                  // Initialise data base class
+    MemConst{ stBytes,                 // Initialise data base class
       StdAlloc<void>                   // Allocate memory (checked by CTOR)
         (UtilMaximum(stBytes,          // Allocate requested size
            static_cast<size_t>(1))) }  // Allocate even if zero so we get addr
@@ -653,19 +625,13 @@ class Memory :
   /* -- Move constructor from another Memory class ------------------------- */
   Memory(Memory &&mOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ StdMove(mOther) }         // Move other memory object
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Move constructor from another MemBase class ------------------------ */
-  explicit Memory(MemBase &&mbOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ StdMove(mbOther) }        // Move other data object
+    MemConst{ StdMove(mOther) }        // Move other memory object
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Move constructor from another MemConst class ----------------------- */
   explicit Memory(MemConst &&mcOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    MemBase{ StdMove(mcOther) }        // Move other read only memory object
+    MemConst{ StdMove(mcOther) }       // Move other data object
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor ------------------------------------------------ */

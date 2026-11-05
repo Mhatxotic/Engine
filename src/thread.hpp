@@ -16,7 +16,7 @@ using namespace ILookupMap::P;         using namespace ILuaIdent::P;
 using namespace ILuaLib::P;            using namespace IMutex::P;
 using namespace IName::P ;             using namespace ISerial::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ITime::P;        using namespace ISysUtil::P;
+using namespace ISysUtil::P;           using namespace ITime::P;
 using ::std::thread;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
@@ -30,7 +30,7 @@ enum ThreadStatus : int                // Thread status codes
   TS_STANDBY,                          // [+0] Thread is in stand-by mode
   TS_RUNNING,                          // [+1] Thread is running still
   TS_RETRY,                            // [+2] Thread will start again
-  TS_OK,                               // [+4] Thread will terminate cleanly
+  TS_OK,                               // [+3] Thread will terminate cleanly
 };/* == Thread collector class with global thread id counter =============== */
 CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
@@ -323,97 +323,6 @@ CTOR_END(Threads, Thread, THREAD,,,, astRunning{0}, imCodes{{
   IDMAPSTR(TS_FINISHED),               IDMAPSTR(TS_OK),
   /* ----------------------------------------------------------------------- */
 }});                                   // End of 'Threads' initialisation
-/* -- Thread sync helper --------------------------------------------------- */
-template<class Callbacks>class ThreadSyncHelper : private Callbacks
-{ /* -------------------------------------------------------------- */ private:
-  Thread            &tOwner;           // Reference to thread owner
-  AtomicBool         abUnlock;         // Synchronisation should occur?
-  bool               bAToB,            // Release lock for thread A?
-                     bBToA;            // Release lock for thread B?
-  MutexLock          mAToB,            // Thread A to Thread B mutex
-                     mBToA;            // Thread B to Thread A mutex
-  condition_variable cvAToB,           // Thread A to Thread B notification
-                     cvBToA;           // Thread B to Thread A notification
-  /* ----------------------------------------------------------------------- */
-  void SendNotification(MutexLock &mM, condition_variable &cvCV, bool &bUL)
-  { // Acquire unique lock
-    mM.MutexCall([&bUL, &cvCV](){
-      // Modify the unlock boolean
-      bUL = true;
-      // Send notification
-      cvCV.notify_one();
-    });
-  }
-  /* ----------------------------------------------------------------------- */
-  void WaitForThreadNotification(MutexLock &mM, condition_variable &cvCV,
-    bool &bUL)
-  { // Setup lock for condition variable
-    mM.MutexUniqueCall([this, &cvCV, &bUL](UniqueLock &ulLock){
-      // Wait for Thread A to notify us to continue.
-      cvCV.wait(ulLock,
-        [this, &bUL]{ return bUL || tOwner.ThreadShouldExit(); });
-      // Reset locked boolean
-      bUL = false;
-    });
-  }
-  /* ----------------------------------------------------------------------- */
-  void SendNotificationToThreadA()
-    { SendNotification(mBToA, cvBToA, bBToA); }
-  void WaitForThreadANotification()
-    { WaitForThreadNotification(mAToB, cvAToB, bAToB); }
-  void SendNotificationToThreadB()
-    { SendNotification(mAToB, cvAToB, bAToB); }
-  void WaitForThreadBNotification()
-    { WaitForThreadNotification(mBToA, cvBToA, bBToA); }
-  /* --------------------------------------------------------------- */ public:
-  void CheckStateInThreadA()
-  { // Ignore if other thread doesn't need action
-    if(!abUnlock) return;
-    // Unlock progressing
-    abUnlock = false;
-    // Perform starting callback from 'Callbacks' class
-    this->StartThreadACallback();
-    // Send notification to Thread B to say we're done initial processing
-    SendNotificationToThreadB();
-    // Wait for thread B to finish processing
-    WaitForThreadBNotification();
-    // Perform finishing callback from 'Callbacks' class
-    this->FinishThreadACallback();
-    // Tell thread B we've finished with the procedure
-    SendNotificationToThreadB();
-  }
-  /* -- End notification to Thread A from Thread B ------------------------- */
-  void FinishNotifyThreadA()
-  { // Ignore if render thread isn't running
-    if(tOwner.ThreadIsNotJoinable()) return;
-    // Call final Thread B callback
-    this->FinishThreadBCallback();
-    // Send notification to Thread A
-    SendNotificationToThreadA();
-    // Wait for Thread A to send notification back to us in Thread B
-    WaitForThreadANotification();
-  }
-  /* -- Begin notification to Thread A from Thread B ----------------------- */
-  void StartNotifyThreadA()
-  { // Ignore if render thread isn't running
-    if(tOwner.ThreadIsNotJoinable()) return;
-    // Set state so Thread A thread knows to proceed
-    abUnlock = true;
-    // Wait for Thread A to send notification back to us in Thread B
-    WaitForThreadANotification();
-    // Now processing Thread B start procedure
-    this->StartThreadBCallback();
-  }
-  /* -- Constructor -------------------------------------------------------- */
-  explicit ThreadSyncHelper(Thread &tO) : // Thread being used
-    /* -- Initialisers ----------------------------------------------------- */
-    tOwner(tO),                        // Set thread owner
-    abUnlock(false),                   // Initially unlocked
-    bAToB(false),                      // Not sending msg from Thread A to B
-    bBToA(false)                       // Not sending msg from Thread B to A
-    /* -- No code ---------------------------------------------------------- */
-    {}
-};
 /* ------------------------------------------------------------------------- */
 static size_t ThreadGetRunning() { return cThreads->astRunning; }
 /* ------------------------------------------------------------------------- */

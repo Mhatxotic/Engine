@@ -77,7 +77,8 @@ LLFUNC(GetCPUFPS, 1, LuaUtilPushVar(lS, cFrame->FrameGetFPS()))
 // ? Returns the engine CPU load. It is hard-coded to only update once a
 // ? a second so constant calls won't stress the kernel.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetCPUProcUsage, 1, LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsage()))
+LLFUNC(GetCPUProcUsage, 1,
+  LuaUtilPushVar(lS, cSystem->SysUpdateAndGetCPUUsage()))
 /* ========================================================================= */
 // $ Core.GetCPUSysUsage
 // < Percent:number=Percentage system.
@@ -464,10 +465,10 @@ LLFUNC(Restart, 0, cEvtMain->Add(EMC_QUIT_RESTART))
 /* ------------------------------------------------------------------------- */
 LLFUNC(RestartNP, 0, cEvtMain->Add(EMC_QUIT_RESTARTNP))
 /* ========================================================================= */
-// $ Core.RestoreDelay
+// $ Core.SetDefaultDelay
 // ? Restores the frame thread suspend value set via cvars
 /* ------------------------------------------------------------------------- */
-LLFUNC(RestoreDelay, 0, cFrame->FrameRestoreDelay())
+LLFUNC(SetDefaultDelay, 0, cFrame->FrameRestoreDelay())
 /* ========================================================================= */
 // $ Core.SetDelay
 // > Millisecs:integer=Milliseconds to delay by each tick
@@ -571,7 +572,7 @@ LLRSBEGIN                              // Core.* non-member functions begin
   LLRSFUNC(OnTick),          LLRSFUNC(Pause),
   LLRSFUNC(Quit),            LLRSFUNC(Reset),
   LLRSFUNC(Restart),         LLRSFUNC(RestartNP),
-  LLRSFUNC(RestoreDelay),    LLRSFUNC(SetDelay),
+  LLRSFUNC(SetDefaultDelay), LLRSFUNC(SetDelay),
   LLRSFUNC(SetDone),         LLRSFUNC(SetIcon),
   LLRSFUNC(SetStatusLeft),   LLRSFUNC(SetStatusRight),
   LLRSFUNC(Suspend),         LLRSFUNC(WaitAsync),

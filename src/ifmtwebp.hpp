@@ -11,9 +11,9 @@ namespace ICodecWEBP {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IFileMap::P;
 using namespace IImageData::P;         using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace IMemory::P;
-using namespace IStd::P;               using namespace ITexDef::P;
-using namespace Lib::WebP;
+using namespace IImageLib::P;          using namespace IImageSlot::P;
+using namespace IMemory::P;            using namespace IStd::P;
+using namespace ITexDef::P;            using namespace Lib::WebP;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
