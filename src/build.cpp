@@ -6,7 +6,7 @@
 ** ## helps build and maintain the components of the Mhatxotic engine. Of ## **
 ** ## course, you need to use the 'scripts/build-*' scripts to compile it ## **
 ** ## from scratch or if a problem occurs recompiling it with 'build S'.  ## **
-** ## This utility originally existed becuase of the miniscule amount of  ## **
+** ## This utility originally existed because of the miniscule amount of  ## **
 ** ## CLI support from Windows XP in 2006 but is still used to manage the ## **
 ** ## engine on all of Windows, Linux and MacOS because it's the only     ## **
 ** ## clean way to support all platforms.                                 ## **

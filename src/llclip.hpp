@@ -45,13 +45,13 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Clip>(lS, cClips))
 LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgClip{lS, 1}().Serial()))
 /* ========================================================================= */
 // $ Clip:GetName
-// < Name:string = The identifier given at creation.
+// < Name:string=The identifier given at creation.
 // ? Returns the identifier of this request given at creation.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetName, 1, AgClip{lS, 1}().NameGet())
 /* ========================================================================= */
 // $ Clip:GetValue
-// < Value:string = The value retrieved from or sent to the Clip.
+// < Value:string=The value retrieved from or sent to the Clip.
 // ? Returns the value sent with Clip.Set or the value retrieved with
 // ? Clip.Get.
 /* ------------------------------------------------------------------------- */
