@@ -200,7 +200,7 @@ template<class MemberType, class ColType>class AsyncLoader :
       // Report that we write data
       cLog->LogInfoExSafe("Async pipe wrote $ bytes to stdin of pid $ in $!",
         stPosition, spProcess.GetPid(),
-        TimeToShortDuration(chExecute.CCDeltaToDouble()));
+        durShort.Parse(chExecute.CCDeltaToDouble()));
       // Clear the memory to re-use for output
       MemDeInit();
     } // List of output
@@ -223,7 +223,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     cLog->LogInfoExSafe(
       "Async pipe returned $ bytes and exit code $ from pid $ in $!",
       stTotalRead, spProcess.SysPipeBaseGetStatus(), spProcess.GetPid(),
-      TimeToShortDuration(chExecute.CCDeltaToDouble()));
+      durShort.Parse(chExecute.CCDeltaToDouble()));
     // If we have no memory stored? Return exit code
     if(!stTotalRead) return spProcess.SysPipeBaseGetStatus();
     // Initialise memory for program output data block

@@ -83,7 +83,37 @@ class Duration
                    strDay,   strDays,   // Day (singular) Days (plural)
                    strHour,  strHours,  // Hour (singular) Hours (plural)
                    strMin,   strMins,   // Minute (singular) Minutes (plural)
-                   strSec,   strSecs;   // Second (singular) Seconds (plural)
+                   strSec,   strSecs,   // Second (singular) Seconds (plural)
+                   strMSec,  strMSecs,  // Millisecond and milliseconds
+                   strUSec,  strUSecs,  // Microsecond and microseconds
+                   strNSec,  strNSecs,  // Nanosecond and nanoseconds
+                   strPSec,  strPSecs;  // Picosecond and picoseconds
+  /* -- Add a space if specified string stream is not empty ---------------- */
+  static void Format(StdOStringStream &osS, const auto aValue,
+    const StrType &strSingular, const StrType &strPlural)
+  { // Add a space if we already wrote something
+    osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
+        // Add the value
+        << aValue
+        // Then add singular or plural depending on if it is a 1 or not
+        << StrPluraliseRef(aValue, strSingular, strPlural);
+  }
+  /* -- Helper function for Parse(integer) --------------------------------- */
+  static void Cell(StdOStringStream &osS, const int iValue,
+    unsigned &uCompMax, const StrType &strSingular, const StrType &strPlural)
+  { // Format integral
+    Format(osS, iValue, strSingular, strPlural);
+    // Reduce allowed number of components
+    --uCompMax;
+  }
+  /* -- Helper function for Parse(double) ---------------------------------- */
+  static void Cell(StdOStringStream &osS, const double dDuration,
+    const double dPrecision, const StrType &strSingular,
+    const StrType &strPlural)
+  { // Format into string stream
+    Format(osS, static_cast<StdTimeT>(floor(dDuration * dPrecision)),
+      strSingular, strPlural);
+  }
   /* -- Convert time to long duration ------------------------------ */ public:
   StdString Parse(const StdTimeT strDuration, unsigned uCompMax = StdMaxUInt)
     const
@@ -107,37 +137,44 @@ class Duration
     else tD.tm_year -= 70;
     // Add years?
     if(tD.tm_year && uCompMax > 0)
-    { // Do add years
-      osS << tD.tm_year << StrPluraliseRef(tD.tm_year, strYear, strYears);
-      --uCompMax;
-    } // Add months?
+      Cell(osS, tD.tm_year, uCompMax, strYear, strYears);
+    // Add months?
     if(tD.tm_mon && uCompMax > 0)
-    { // Do add months
-      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-          << tD.tm_mon << StrPluraliseRef(tD.tm_mon, strMonth, strMonths);
-      --uCompMax;
-    } // Add days? (removing the added 1)
+      Cell(osS, tD.tm_mon, uCompMax, strMonth, strMonths);
+    // Add days? (removing the added 1)
     if(--tD.tm_mday && uCompMax > 0)
-    { // Do add days
-      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-          << tD.tm_mday << StrPluraliseRef(tD.tm_mday, strDay, strDays);
-      --uCompMax;
-    } // Add hours?
+      Cell(osS, tD.tm_mday, uCompMax, strDay, strDays);
+    // Add hours?
     if(tD.tm_hour && uCompMax > 0)
-    { // Do add hours
-      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-          << tD.tm_hour << StrPluraliseRef(tD.tm_hour, strHour, strHours);
-      --uCompMax;
-    } // Add Minutes?
+      Cell(osS, tD.tm_hour, uCompMax, strHour, strHours);
+    // Add Minutes?
     if(tD.tm_min && uCompMax > 0)
-    { // Do add minutes
-      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-          << tD.tm_min << StrPluraliseRef(tD.tm_min, strMin, strMins);
-      --uCompMax;
-    } // Check seconds
+      Cell(osS, tD.tm_min, uCompMax, strMin, strMins);
+    // Check seconds
     if((tD.tm_sec || !strDuration) && uCompMax > 0)
-      osS << (osS.tellp() ? cCommon->CommonSpace() : cCommon->CommonBlank())
-          << tD.tm_sec << StrPluraliseRef(tD.tm_sec, strSec, strSecs);
+      Cell(osS, tD.tm_sec, uCompMax, strSec, strSecs);
+    // Return string
+    return osS.str();
+  }
+  /* -- Convert double time to long duration ------------------------------ */
+  StdString Parse(const double dDuration, unsigned uCompMax = StdMaxUInt) const
+  { // Output string
+    StdOStringStream &osS = cCommon->o.StreamReset();
+    // Precision not important?
+    if(dDuration >= 60.0)
+      return Parse(static_cast<StdTimeT>(dDuration), uCompMax);
+    // Add milliseconds?
+    if(dDuration >= 0.001)
+      Cell(osS, dDuration, 1000.0, strMSec, strMSecs);
+    // Add microseconds?
+    else if(dDuration >= 0.000001)
+      Cell(osS, dDuration, 1000000.0, strUSec, strUSecs);
+    // Add nanoseconds?
+    else if(dDuration >= 0.000000001)
+      Cell(osS, dDuration, 1000000000.0, strNSec, strNSecs);
+    // Add picoseconds?
+    else if(dDuration >= 0.000000000001)
+      Cell(osS, dDuration, 1000000000000.0, strPSec, strPSecs);
     // Return string
     return osS.str();
   }
@@ -146,22 +183,37 @@ class Duration
     const StrType &strNMonth, const StrType &strNMonths,
     const StrType &strNDay, const StrType &strNDays, const StrType &strNHour,
     const StrType &strNHours, const StrType &strNMin, const StrType &strNMins,
-    const StrType &strNSec, const StrType &strNSecs) :
+    const StrType &strNSec, const StrType &strNSecs, const StrType &strNMSec,
+    const StrType &strNMSecs, const StrType &strNUSec,
+    const StrType &strNUSecs, const StrType &strNNSec,
+    const StrType &strNNSecs, const StrType &strNPSec,
+    const StrType &strNPSecs) :
       strYear{ strNYear }, strYears{ strNYears }, strMonth{ strNMonth },
       strMonths{ strNMonths }, strDay{ strNDay }, strDays{ strNDays },
       strHour{ strNHour }, strHours{ strNHours }, strMin{ strNMin },
-      strMins{ strNMins }, strSec{ strNSec }, strSecs{ strNSecs } {}
+      strMins{ strNMins }, strSec{ strNSec }, strSecs{ strNSecs },
+      strMSec{ strNMSec }, strMSecs{ strNMSecs }, strUSec{ strNUSec },
+      strUSecs{ strNUSecs }, strNSec{ strNNSec }, strNSecs{ strNNSecs },
+      strPSec{ strNPSec }, strPSecs{ strNPSecs }
+  /* ----------------------------------------------------------------------- */
+  {}
   /* ----------------------------------------------------------------------- */
   Duration(const StrType &strNYear, const StrType &strNMonth,
     const StrType &strNDay, const StrType &strNHour, const StrType &strNMin,
-    const StrType &strNSec) :
+    const StrType &strNSec, const StrType &strNMSec, const StrType &strNUSec,
+    const StrType &strNNSec, const StrType &strNPSec) :
       Duration{ strNYear, strNYear, strNMonth, strNMonth, strNDay, strNDay,
-        strNHour, strNHour, strNMin, strNMin, strNSec, strNSec } {}
+        strNHour, strNHour, strNMin, strNMin, strNSec, strNSec, strNMSec,
+        strNMSec, strNUSec, strNUSec, strNNSec, strNNSec, strNPSec, strNPSec }
+  /* ----------------------------------------------------------------------- */
+  {}
 };/* ----------------------------------------------------------------------- */
 const Duration<> durLong{ " year", " years", " month", " months", " day",
-  " days", " hour", " hours", " minute", " minutes", " second", " seconds" },
+  " days", " hour", " hours", " minute", " minutes", " second", " seconds",
+  " millisecond", " milliseconds", " microsecond", " microseconds",
+  " nanosecond", " nanoseconds ", " picosecond", " picoseconds" },
 /* ------------------------------------------------------------------------- */
-durShort{ "y", "mo", "d", "h", "m", "s" };
+durShort{ "y", "mo", "d", "h", "m", "s", "ms", "µs", "ns", "ps" };
 /* -- Do convert the specified structure to string ------------------------= */
 static StdString TimeTMToStr(const StdTMStruct &tmsData,
   const char*const cpFormat)

@@ -259,9 +259,9 @@ class Lua :                            // Actual class body
     // Print result
     return slResults.empty() ?
       StrFormat("Request took $.",
-        TimeToShortDuration(chExecute.CCDeltaToDouble())) :
+        durLong.Parse(chExecute.CCDeltaToDouble())) :
       StrFormat("Request took $ returning $: $.",
-        TimeToShortDuration(chExecute.CCDeltaToDouble()),
+        durLong.Parse(chExecute.CCDeltaToDouble()),
         StrPluraliseNum(slResults.size(), "result", "results"),
         StrImplode(slResults, ", "));
   }
@@ -473,8 +473,8 @@ class Lua :                            // Actual class body
       LuaBaseSetHookCb(LuaGetState(),
         LuaOnInstructionCount, iOperations);
       // Log that it was enabled
-      cLog->LogDebugExSafe("Lua timeout set to $ sec for every $ operations.",
-        TimeToShortDuration(cFrame->FrameGetTimeOut(), 1), iOperations);
+      cLog->LogDebugExSafe("Lua timeout set to $ for every $ operations.",
+        durShort.Parse(cFrame->FrameGetTimeOut(), 1), iOperations);
     } // Show a warning to say the timeout hook is disabled
     else cLog->LogWarningSafe("Lua timeout hook disabled so use at own risk!");
     // Resume garbage collector
@@ -499,8 +499,8 @@ class Lua :                            // Actual class body
   { // Return if class already initialised
     if(LuaStateIsNotSet()) return;
     // Report execution time
-    cLog->LogInfoExSafe("Lua execution took $ seconds.",
-      TimeToShortDuration(CCDeltaToDouble()));
+    cLog->LogInfoExSafe("Lua execution took $.",
+      durLong.Parse(CCDeltaToDouble()));
     // Report progress
     cLog->LogDebugSafe("Lua sandbox de-initialising...");
     // Disable garbage collector

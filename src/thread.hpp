@@ -101,8 +101,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     --ctParent.astRunning;
     // Log if thread didn't signal to exit
     cLog->LogDebugExSafe("Thread $<$> finished in $ with $.",
-      Serial(), NameGet(),
-      TimeToShortDuration(ClockTimePointRangeToClampedDouble(
+      Serial(), NameGet(), durShort.Parse(ClockTimePointRangeToClampedDouble(
         ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString());
     // Reset exit code to waiting for acknowledgement by engine thread
     ThreadSetExitCode(TS_FINISHED);
@@ -114,8 +113,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     scdEnd = cmHiRes.GetEpochTime();
     // Log if thread didn't signal to exit
     cLog->LogErrorExSafe("Thread $<$> finished in $ due to exception: $!",
-      Serial(), NameGet(),
-      TimeToShortDuration(ClockTimePointRangeToClampedDouble(
+      Serial(), NameGet(), durShort.Parse(ClockTimePointRangeToClampedDouble(
         ThreadGetEndTime(), ThreadGetStartTime())), eReason);
     // Return error and set thread to exit
     ThreadSetExitCode(TS_EXCEPTION);

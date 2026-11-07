@@ -2029,10 +2029,10 @@ cConsole->ConsoleAddLine(llChange ?
   StrFormat("UDB changed $B ($; $$$%) to $B ($) from $B ($) in $.",
     llChange, StrToBytes(-llChange,0), StdIOSSetPrecision(2), StdIOSFixed, dPC,
     ullAfter, StrToBytes(ullAfter, 0), ullBefore, StrToBytes(ullBefore, 0),
-    TimeToShortDuration(dT)) :
+    durShort.Parse(dT)) :
   // Udb did not change so show the result
   StrFormat("UDB unchanged at $B ($) in $.",
-    ullAfter, StrToBytes(ullAfter, 0), TimeToShortDuration(dT)));
+    ullAfter, StrToBytes(ullAfter, 0), durShort.Parse(dT)));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sqldefrag' function
 /* ========================================================================= */

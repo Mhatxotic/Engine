@@ -63,8 +63,8 @@ class Audio :                          // Audio manager class
       ctfThSysEvts : ctfThNoSysEvts, this);
     // Log completion of thread startup
     cLog->LogDebugExSafe("Audio monitoring thread initialised (D:$;C:$)!",
-      TimeToShortDuration(ClockDurationToDouble(acdThreadDelay)),
-      TimeToShortDuration(ClockDurationToDouble(acdCheckRate)));
+      durShort.Parse(ClockDurationToDouble(acdThreadDelay)),
+      durShort.Parse(ClockDurationToDouble(acdCheckRate)));
   }
   /* -- DeInit thread ------------------------------------------------------ */
   void AudioDeInitThread()

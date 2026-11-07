@@ -734,7 +734,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     } // Get end query time to get total execution duration
     cdQuery = ivStart.CIDelta();
     // Log result
-    cLog->LogDebugExSafe("- Total: $; Code: $<$>; RTT: $ sec.",
+    cLog->LogDebugExSafe("- Total: $; Code: $<$>; RTT: $.",
       iParam - iStartParam, SqlResultToString(SqlGetError()), SqlGetError(),
       SqlTimeStr());
     // Return error status
@@ -819,7 +819,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     cLog->LogDebugExSafe("Sql executing '$'<$>...",
       strQuery, strQuery.size());
     SqlDoExecute(strQuery, StdForward<VarArgs>(vaArgs)...);
-    cLog->LogDebugExSafe("- Total: $; Code: $<$>; RTT: $ sec.",
+    cLog->LogDebugExSafe("- Total: $; Code: $<$>; RTT: $.",
       stCount, SqlResultToString(SqlGetError()), SqlGetError(), SqlTimeStr());
     // Return error status
     return SqlGetError();
@@ -890,7 +890,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Return duration of last query -------------------------------------- */
   double SqlTime() const { return ClockDurationToDouble(cdQuery); }
   /* -- Return formatted query time ---------------------------------------- */
-  StdString SqlTimeStr() const { return TimeToShortDuration(SqlTime()); }
+  StdString SqlTimeStr() const { return durShort.Parse(SqlTime()); }
   /* -- Returns if sql is in a transaction --------------------------------- */
   bool SqlNotActive() const { return sqlite3_get_autocommit(sqlDB) != 0; }
   bool SqlActive() const { return !SqlNotActive(); }

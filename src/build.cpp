@@ -2022,7 +2022,7 @@ static int SpecialExecute(const StdString strCmd, const size_t stML,
   if(iR) cout << "with status " << iR;
     else cout << "successfully";
   cout << " in " <<
-    TimeToShortDuration(cmHiRes.TimePointToDouble(tpBegin), 6) << " sec!\n";
+    durShort.Parse(cmHiRes.TimePointToDouble(tpBegin), 6) << " sec!\n";
   // Return result
   return iR;
 }
