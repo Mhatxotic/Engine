@@ -787,13 +787,15 @@ const function ShowFontInfo{ [](Statistic &sTable, const Font &fRef)
             { fRef.FlagIsSet(FF_CEILADVANCE),  'C' },
             { fRef.FlagIsSet(FF_ROUNDADVANCE), 'R' }
           })
+          .DataN(fRef.ftflExtras.size())
           .DataN(fRef.GetCharScale(), 6)
           .DataN(fRef.GetTexOccupancy(), 6)
           .DataN(fRef.GetCharCount()).Data(fRef.NameGet()); }
 }; // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("FLAG").Header("SCALE").Header("TEXOCPCY")
-      .Header("CC").Header("NAME", false).Reserve(1 + cFonts->size());
+sTable.Header("ID").Header("FLAG").Header("SUB").Header("SCALE")
+      .Header("TEXOCPCY").Header("CC").Header("NAME", false)
+      .Reserve(1 + cFonts->size());
 // Include console font
 ShowFontInfo(sTable, cConGfx->ConGfxGetFontRef());
 // Walk through font classes

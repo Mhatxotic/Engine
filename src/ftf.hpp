@@ -168,7 +168,8 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
   void DeInit() { DoDeInit(); ftsStroker = nullptr; ftfFace = nullptr; }
   /* ----------------------------------------------------------------------- */
   void SwapFtf(Ftf &ftfOther)
-  { // Copy variables over from source class
+  { // Move variables over from source class
+    NameSwap(ftfOther);
     DimSwap(ftfOther);
     duDPI.DimSwap(ftfOther.duDPI);
     StdSwap(fOutline, ftfOther.fOutline);

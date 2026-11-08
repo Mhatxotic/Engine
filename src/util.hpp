@@ -114,6 +114,40 @@ static void UtilStretchToInner(double &dOW, double &dOH, double &dIW,
     dOW = dOH = 0.0;
   }
 }
+/* -- Expand dimensions to cover the whole rectangle keeping aspect -------- */
+static void UtilStretchToCover(double &dOW, double &dOH, double &dIW,
+  double &dIH)
+{ // Get aspect ratio of inner and outer dimensions
+  const double dOuterAspect = dOW / dOH, dInnerAspect = dIW / dIH;
+  // If the aspect ratios are the same then the screen rectangle will do,
+  // otherwise we need to calculate the new rectangle
+  if(dInnerAspect < dOuterAspect)
+  { // Calculate new height and centring factor
+    const double dNewHeight = dOW / dIW * dIH,
+                 dCentringFactor = (dOH - dNewHeight) / 2.0;
+    // Set new bounds. We'll use the original vars to set the values
+    dIH = dNewHeight + dCentringFactor;
+    dIW = dOW;
+    dOW = 0.0;
+    dOH = dCentringFactor;
+  } // Otherwise
+  else if(dInnerAspect > dOuterAspect)
+  { // Calculate new width and centring factor
+    const double dNewWidth = dOH / dIH * dIW,
+                 dCentringFactor = (dOW - dNewWidth) / 2.0;
+    // Set new bounds. We'll use the original vars to set the values
+    dIW = dNewWidth + dCentringFactor;
+    dIH = dOH;
+    dOW = dCentringFactor;
+    dOH = 0.0;
+  } // No change?
+  else
+  { // Keep original values
+    dIW = dOW;
+    dIH = dOH;
+    dOW = dOH = 0.0;
+  }
+}
 /* -- Try to reserve items in a list --------------------------------------- */
 template<class ListType>
   requires StdIsClass<ListType>

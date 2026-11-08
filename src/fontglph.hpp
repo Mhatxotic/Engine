@@ -234,6 +234,28 @@ void DoSelectOutlineType(FT_GlyphSlot &ftgsRef, const Codepoint coCharOutline,
 }
 /* ------------------------------------------------------------------------- */
 template<class StrokerCheckFuncType, class RoundCheckFuncType>
+  bool DoHandleFTGlyph(Ftf &ftfSrc, const Codepoint coChar,
+    const Codepoint coCharOutline)
+{ // Convert the character to glyph and if successful?
+  if(const FT_UInt uGl = ftfSrc.CharToGlyph(static_cast<FT_ULong>(coChar)))
+  { // Load glyph and return glyph on success else throw exception
+    cFreeType->FreeTypeCheckError(ftfSrc.LoadGlyph(uGl),
+      "Failed to load glyph!", "Name", NameGet(), "Index", coChar);
+    // Get glyph slot handle and get advance width.
+    FT_GlyphSlot ftgsRef = ftfSrc.GetGlyphData();
+    // Compare type of border required
+    const GLfloat glfAdvance = RoundCheckFuncType(*this,
+      static_cast<GLfloat>(ftgsRef->metrics.horiAdvance) / 64).Result();
+    // Begin initialisation of char by checking stroker setting. This can
+    // either be a pre-calculated or calculated right now.
+    StrokerCheckFuncType{ this, ftgsRef, coCharOutline, coChar, glfAdvance };
+    // Success
+    return true;
+  } // Failed
+  return false;
+}
+/* ------------------------------------------------------------------------- */
+template<class StrokerCheckFuncType, class RoundCheckFuncType>
   size_t DoHandleFTGlyph(const Codepoint coChar, const Codepoint coCharOutline)
 { // If position is not allocated?
   if(coCharOutline >= gvData.size())
@@ -248,21 +270,13 @@ template<class StrokerCheckFuncType, class RoundCheckFuncType>
   } // Return the position if already loaded
   else if(gvData[coCharOutline].GlyphIsLoaded()) return coCharOutline;
   // Translate character to glyph and if succeeded?
-  if(const FT_UInt uGl = ftfData.CharToGlyph(static_cast<FT_ULong>(coChar)))
-  { // Load glyph and return glyph on success else throw exception
-    cFreeType->FreeTypeCheckError(ftfData.LoadGlyph(uGl),
-      "Failed to load glyph!", "Name", NameGet(), "Index", coChar);
-    // Get glyph slot handle and get advance width.
-    FT_GlyphSlot ftgsRef = ftfData.GetGlyphData();
-    // Compare type of border required
-    const GLfloat glfAdvance = RoundCheckFuncType(*this,
-      static_cast<GLfloat>(ftgsRef->metrics.horiAdvance) / 64).Result();
-    // Begin initialisation of char by checking stroker setting. This can
-    // either be a pre-calculated or calculated right now.
-    StrokerCheckFuncType{ this, ftgsRef, coCharOutline, coChar, glfAdvance };
-    // Return position
-    return coCharOutline;
-  } // Show error if we couldn't load the default character
+  if(DoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(ftfData,
+     coChar, coCharOutline)) return coCharOutline;
+  // Try alternate fonts
+  for(Ftf &ftfExtra : ftflExtras)
+    if(DoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(ftfExtra,
+       coChar, coCharOutline)) return coCharOutline;
+  // Show error if we couldn't load the default character
   if(coChar == fulDefaultChar)
     XC("Default character not available!",
       "Name", NameGet(), "Index", coChar, "Position", coCharOutline);

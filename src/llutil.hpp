@@ -211,6 +211,98 @@ LLFUNC(CountOf, 1,
                  aWhat{lS, 2};
   LuaUtilPushVar(lS, StrCountOccurences(aSource, aWhat)))
 /* ========================================================================= */
+// $ Util.DuraIntLong
+// > Seconds:integer=The number of seconds.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds into a human readable duration
+// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraIntLong, 1, LuaUtilPushVar(lS, durLong.Parse(AgTimeT{lS, 1})))
+/* ========================================================================= */
+// $ Util.DuraIntLongEx
+// > Seconds:integer=The number of seconds.
+// > Components:integer=The maximum number of components
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds into a human readable duration
+// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraIntLongEx, 1,
+  const AgTimeT aTimestamp{lS, 1};
+  const AgUInt aComponents{lS, 2};
+  LuaUtilPushVar(lS, durLong.Parse(aTimestamp, aComponents)))
+/* ========================================================================= */
+// $ Util.DuraIntShort
+// > Seconds:integer=The number of seconds.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds into a human readable duration
+// ? string in the format of e.g. 0y0w0d0h0m0s.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraIntShort, 1, LuaUtilPushVar(lS, durShort.Parse(AgTimeT{lS, 1})))
+/* ========================================================================= */
+// $ Util.DuraIntShortEx
+// > Seconds:integer=The number of seconds.
+// > Components:integer=The maximum number of components
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds as an integer into a human
+// ? readable duration string in the format of e.g. 0y0w0d0h0m0s. The number
+// ? of components limits to the leftmost components.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraIntShortEx, 1,
+  const AgTimeT aTimestamp{lS, 1};
+  const AgUInt aComponents{lS, 2};
+  LuaUtilPushVar(lS, durShort.Parse(aTimestamp, aComponents)))
+/* ========================================================================= */
+// $ Util.DuraNumLong
+// > Seconds:number=The number of seconds.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds as a number into a human readable
+// ? duration string in the format of e.g. 0y0w0d0h0m0s. If the
+// ? duration is under 1 second, it only shows the fractional part as a whole
+// ? number (e.g. 0 milliseconds (microseconds, nanoseconds or picoseconds)).
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraNumLong, 1, LuaUtilPushVar(lS, durLong.Parse(AgDouble{lS, 1})))
+/* ========================================================================= */
+// $ Util.DuraNumLongEx
+// > Seconds:number=The number of seconds.
+// > Components:integer=The maximum number of components.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds as a number into a human
+// ? readable duration string in the format of (e.g. 0 years 0 weeks 0 days
+// ? 0 hours 0 minutes 0 seconds). If the duration is under 1 second, it only
+// ? shows the fractional part as a whole number (e.g. 0 milliseconds (or
+// ? microseconds, nanoseconds, picoseconds)). The number of components limits
+// ? to the leftmost components when the duration is over 1 second.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraNumLongEx, 1,
+  const AgDouble aDuration{lS, 1};
+  const AgUInt aComponents{lS, 2};
+  LuaUtilPushVar(lS, durLong.Parse(aDuration, aComponents)))
+/* ========================================================================= */
+// $ Util.DuraNumShort
+// > Seconds:number=The number of seconds.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds as a number into a human readable
+// ? duration string in the format of e.g. 0y0w0d0h0m0s. If the
+// ? duration is under 1 second, it only shows the fractional part as a whole
+// ? number (e.g. 0ms (or µs, ns, ps)).
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraNumShort, 1, LuaUtilPushVar(lS, durShort.Parse(AgDouble{lS, 1})))
+/* ========================================================================= */
+// $ Util.DuraNumShortEx
+// > Seconds:number=The number of seconds.
+// > Components:integer=The maximum number of components.
+// < Result:string=The human readable duration string.
+// ? Converts the specified number of seconds as a number into a human
+// ? readable duration string in the format of (e.g. 0y0w0d0h0m0s). If the
+// ? duration is under 1 second, it only shows the fractional part as a whole
+// ? number (e.g. 0ms (or µs, ns, ps)). The number of components limits to the
+// ? leftmost components when the duration is over 1 second.
+/* ------------------------------------------------------------------------- */
+LLFUNC(DuraNumShortEx, 1,
+  const AgDouble aDuration{lS, 1};
+  const AgUInt aComponents{lS, 2};
+  LuaUtilPushVar(lS, durShort.Parse(aDuration, aComponents)))
+/* ========================================================================= */
 // $ Util.Duration
 // > Seconds:number=The number of seconds.
 // > Precision:integer=The maximum number of floating point digits.
@@ -222,98 +314,6 @@ LLFUNC(Duration, 1,
   const AgDouble aSeconds{lS, 1};
   const AgInt aPrecision{lS, 2};
   LuaUtilPushVar(lS, TimeToShortDuration(aSeconds, aPrecision)))
-/* ========================================================================= */
-// $ Util.DurationLI
-// > Seconds:integer=The number of seconds.
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds into a human readable duration
-// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationLI, 1, LuaUtilPushVar(lS, durLong.Parse(AgTimeT{lS, 1})))
-/* ========================================================================= */
-// $ Util.DurationLIEx
-// > Seconds:integer=The number of seconds.
-// > Components:integer=The maximum number of components
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds into a human readable duration
-// ? string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationLIEx, 1,
-  const AgTimeT aTimestamp{lS, 1};
-  const AgUInt aComponents{lS, 2};
-  LuaUtilPushVar(lS, durLong.Parse(aTimestamp, aComponents)))
-/* ========================================================================= */
-// $ Util.DurationLNEx
-// > Seconds:number=The number of seconds.
-// > Components:integer=The maximum number of components.
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds as a number into a human
-// ? readable duration string in the format of (e.g. 0 years 0 weeks 0 days
-// ? 0 hours 0 minutes 0 seconds). If the duration is under 1 second, it only
-// ? shows the fractional part as a whole number (e.g. 0 milliseconds (or
-// ? microseconds, nanoseconds, picoseconds)). The number of components limits
-// ? to the leftmost components when the duration is over 1 second.
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationLNEx, 1,
-  const AgDouble aDuration{lS, 1};
-  const AgUInt aComponents{lS, 2};
-  LuaUtilPushVar(lS, durLong.Parse(aDuration, aComponents)))
-/* ========================================================================= */
-// $ Util.DurationLN
-// > Seconds:number=The number of seconds.
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds as a number into a human readable
-// ? duration string in the format of e.g. 0y0w0d0h0m0s. If the
-// ? duration is under 1 second, it only shows the fractional part as a whole
-// ? number (e.g. 0 milliseconds (microseconds, nanoseconds or picoseconds)).
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationLN, 1, LuaUtilPushVar(lS, durLong.Parse(AgDouble{lS, 1})))
-/* ========================================================================= */
-// $ Util.DurationS
-// > Seconds:integer=The number of seconds.
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds into a human readable duration
-// ? string in the format of e.g. 0y0w0d0h0m0s.
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationSI, 1, LuaUtilPushVar(lS, durShort.Parse(AgTimeT{lS, 1})))
-/* ========================================================================= */
-// $ Util.DurationSEx
-// > Seconds:integer=The number of seconds.
-// > Components:integer=The maximum number of components
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds as an integer into a human
-// ? readable duration string in the format of e.g. 0y0w0d0h0m0s. The number
-// ? of components limits to the leftmost components.
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationSIEx, 1,
-  const AgTimeT aTimestamp{lS, 1};
-  const AgUInt aComponents{lS, 2};
-  LuaUtilPushVar(lS, durShort.Parse(aTimestamp, aComponents)))
-/* ========================================================================= */
-// $ Util.DurationSNEx
-// > Seconds:number=The number of seconds.
-// > Components:integer=The maximum number of components.
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds as a number into a human
-// ? readable duration string in the format of (e.g. 0y0w0d0h0m0s). If the
-// ? duration is under 1 second, it only shows the fractional part as a whole
-// ? number (e.g. 0ms (or µs, ns, ps)). The number of components limits to the
-// ? leftmost components when the duration is over 1 second.
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationSNEx, 1,
-  const AgDouble aDuration{lS, 1};
-  const AgUInt aComponents{lS, 2};
-  LuaUtilPushVar(lS, durShort.Parse(aDuration, aComponents)))
-/* ========================================================================= */
-// $ Util.DurationSN
-// > Seconds:number=The number of seconds.
-// < Result:string=The human readable duration string.
-// ? Converts the specified number of seconds as a number into a human readable
-// ? duration string in the format of e.g. 0y0w0d0h0m0s. If the
-// ? duration is under 1 second, it only shows the fractional part as a whole
-// ? number (e.g. 0ms (or µs, ns, ps)).
-/* ------------------------------------------------------------------------- */
-LLFUNC(DurationSN, 1, LuaUtilPushVar(lS, durShort.Parse(AgDouble{lS, 1})))
 /* ========================================================================= */
 // $ Util.EntDecode
 // > Text:string=The URL string to remove HTML entities from.
@@ -421,14 +421,14 @@ LLFUNC(FormatNumber, 1,
   const AgInt aDigits{lS, 2};
   LuaUtilPushVar(lS, StrReadableFromNum(aValue(), aDigits)))
 /* ========================================================================= */
-// $ Util.FormatNumberI
+// $ Util.FormatInt
 // > Value:integer=A integer value, it will be converted to a string.
 // > Precision:integer=Maximum number of floating point digits
 // < Value:string=The formatted string.
 // ? Uses the current OS locale settings to cleanly format a number with
 // ? thousand separators.
 /* ------------------------------------------------------------------------- */
-LLFUNC(FormatNumberI, 1,
+LLFUNC(FormatInt, 1,
   LuaUtilPushVar(lS, StrReadableFromNum(AgUInt64{lS, 1}(), 0)))
 /* ========================================================================= */
 // $ Util.FormatTime
@@ -1092,6 +1092,26 @@ LLFUNC(ShortenEx, 1,
   LuaUtilPushVar(lS, UtfShorten(AgString{lS, 1}(), AgSizeT{lS, 2}(),
     AgString{lS, 3}())))
 /* ========================================================================= */
+// $ Util.StretchCover
+// > OuterWidth:number=Outer width of the rectangle to adjust
+// > OuterHeight:number=Outer height of the rectangle to adjust
+// > InnerWidth:number=Inner width of the rectangle to adjust
+// > InnerHeight:number=Inner height of the rectangle to adjust
+// < OuterWidth:number=Outer width of the rectangle to adjust
+// < OuterHeight:number=Outer height of the rectangle to adjust
+// < InnerWidth:number=Inner width of the rectangle to adjust
+// < InnerHeight:number=Inner height of the rectangle to adjust
+// ? Scales the specified 2D inner rectangle to either outer bounds based while
+// ? on the given size preserving aspect ratio.
+/* ------------------------------------------------------------------------- */
+LLFUNC(StretchCover, 4,
+  double dOW = LuaUtilGetNum<decltype(dOW)>(lS, 1),
+         dOH = LuaUtilGetNum<decltype(dOH)>(lS, 2),
+         dIW = LuaUtilGetNum<decltype(dIW)>(lS, 3),
+         dIH = LuaUtilGetNum<decltype(dIH)>(lS, 4);
+  UtilStretchToCover(dOW, dOH, dIW, dIH);
+  LuaUtilPushVar(lS, dOW, dOH, dIW, dIH))
+/* ========================================================================= */
 // $ Util.StretchInner
 // > OuterWidth:number=Outer width of the rectangle to adjust
 // > OuterHeight:number=Outer height of the rectangle to adjust
@@ -1244,18 +1264,18 @@ LLRSBEGIN                              // Util.* non-member functions begin
   LLRSFUNC(Chop),                      LLRSFUNC(Clamp),
   LLRSFUNC(ClampInt),                  LLRSFUNC(Compact),
   LLRSFUNC(CountOf),                   LLRSFUNC(CRC),
-  LLRSFUNC(CRCA),                      LLRSFUNC(Duration),
-  LLRSFUNC(DurationLI),                LLRSFUNC(DurationLIEx),
-  LLRSFUNC(DurationLN),                LLRSFUNC(DurationLNEx),
-  LLRSFUNC(DurationSI),                LLRSFUNC(DurationSIEx),
-  LLRSFUNC(DurationSN),                LLRSFUNC(DurationSNEx),
+  LLRSFUNC(CRCA),                      LLRSFUNC(DuraIntLong),
+  LLRSFUNC(DuraIntLongEx),             LLRSFUNC(DuraIntShort),
+  LLRSFUNC(DuraIntShortEx),            LLRSFUNC(DuraNumLong),
+  LLRSFUNC(DuraNumLongEx),             LLRSFUNC(DuraNumShort),
+  LLRSFUNC(DuraNumShortEx),            LLRSFUNC(Duration),
   LLRSFUNC(EntDecode),                 LLRSFUNC(EntEncode),
   LLRSFUNC(Explode),                   LLRSFUNC(ExplodeEx),
   LLRSFUNC(FlushArray),                LLRSFUNC(FlushObject),
   LLRSFUNC(FlushTable),                LLRSFUNC(FlushArrays),
   LLRSFUNC(FlushObjects),              LLRSFUNC(FlushTables),
-  LLRSFUNC(FormatNTime),               LLRSFUNC(FormatNTimeUTC),
-  LLRSFUNC(FormatNumber),              LLRSFUNC(FormatNumberI),
+  LLRSFUNC(FormatInt),                 LLRSFUNC(FormatNTime),
+  LLRSFUNC(FormatNTimeUTC),            LLRSFUNC(FormatNumber),
   LLRSFUNC(FormatTime),                LLRSFUNC(FormatTimeUTC),
   LLRSFUNC(Grouped),                   LLRSFUNC(Hex),
   LLRSFUNC(HexDecode),                 LLRSFUNC(HexDecodeA),
@@ -1315,12 +1335,13 @@ LLRSBEGIN                              // Util.* non-member functions begin
   LLRSFUNC(SHA512SSA),                 LLRSFUNC(SHA512SSS),
   LLRSFUNC(Sanitise),                  LLRSFUNC(Sign),
   LLRSFUNC(Shorten),                   LLRSFUNC(ShortenEx),
-  LLRSFUNC(StretchInner),              LLRSFUNC(StretchOuter),
-  LLRSFUNC(TableCopy),                 LLRSFUNC(TableSize),
-  LLRSFUNC(Trim),                      LLRSFUNC(UrlDecode),
-  LLRSFUNC(UrlEncode),                 LLRSFUNC(UTF8Char),
-  LLRSFUNC(UUIDDecode),                LLRSFUNC(UUIDEncode),
-  LLRSFUNC(UUIDRandom),                LLRSFUNC(WordWrap),
+  LLRSFUNC(StretchCover),              LLRSFUNC(StretchInner),
+  LLRSFUNC(StretchOuter),              LLRSFUNC(TableCopy),
+  LLRSFUNC(TableSize),                 LLRSFUNC(Trim),
+  LLRSFUNC(UrlDecode),                 LLRSFUNC(UrlEncode),
+  LLRSFUNC(UTF8Char),                  LLRSFUNC(UUIDDecode),
+  LLRSFUNC(UUIDEncode),                LLRSFUNC(UUIDRandom),
+  LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

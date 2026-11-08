@@ -101,6 +101,8 @@ class FontBase :                       // Members initially private
   FboItem          fiOutline;          // Outline colour
   /* -- Freetype handles --------------------------------------------------- */
   Ftf              ftfData;            // FT font data
+  using FtfList = StdList<Ftf>;        // List of extra fonts typedef
+  FtfList          ftflExtras;         // Extra fonts if character not found
   FT_ULong         fulDefaultChar;     // Default fallback character
   /* -- Default constructor ------------------------------------------------ */
   explicit FontBase(const ImageFlagsConst ifcPurpose = IP_FONT) :
@@ -196,6 +198,18 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
   }
+  /* -- Do initialise an extra freetype font ------------------------------- */
+  void InitFontExtraFtf(Ftf &ftfSrc)
+  {  // Show that we're loading the file
+    cLog->LogDebugExSafe("Font '$' loading '$' as fallback at index $...",
+      NameGet(), ftfSrc.NameGet(), ftflExtras.size());
+    // Move ftf font to list and set filename of it
+    ftflExtras.emplace_back(StdMove(ftfSrc));
+    // Show that we've loaded the file
+    cLog->LogInfoExSafe(
+      "Font '$' loaded '$' as extra fall-back font.",
+      NameGet(), ftfSrc.NameGet());
+  }
   /* -- Do initialise freetype font ---------------------------------------- */
   void InitFontFtf(Ftf &ftfSrc, const GLuint gluISize,
     const GLuint gluNPadding, const OglFilterEnum ofeNFilter,
@@ -207,9 +221,8 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // If source and destination ftf class are not the same?
     if(&ftfData != &ftfSrc)
     { // Take ownership of specified freetype identifier and handles
-      NameSwap(ftfSrc);
       ftfData.SwapFtf(ftfSrc);
-      ftfData.NameSet(NameGet());
+      NameSet(ftfData.NameGet());
     } // Initialise load flags
     FlagSet(ifcFlags);
     SetFontFreeType();

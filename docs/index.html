@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.11.7.25 -->
-<!-- Automatically built at Sat Nov 07 23:40:45 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.11.7.25 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.8.60 -->
+<!-- Automatically built at Sun Nov 08 23:35:37 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.8.60 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright Â© 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.7.25">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.8.60">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.7.25">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.8.60">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.7.25">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.8.60">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.11.7.25 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.8.60 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.11.7.25 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.8.60 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.11.7.25 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.8.60 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 951 functions (419 members, 532 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 953 functions (421 members, 532 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -707,8 +707,9 @@
 						<OL>
 							<LI><P>The font class allows dynamic creation from font files using the FREETYPE library.</P></LI>
 							<LI>
-								<B>Members</B> <I>(5 members)</I>
+								<B>Members</B> <I>(6 members)</I>
 								<OL>
+									<LI><A href="#Font.Add">Add</A></LI>
 									<LI><A href="#Font.Console">Console</A></LI>
 									<LI><A href="#Font.Ftf">Ftf</A></LI>
 									<LI><A href="#Font.GetClasses">GetClasses</A></LI>
@@ -1593,7 +1594,7 @@
 						<OL>
 							<LI><P>This contains miscellaneous utility functions such as crypto, string, number integer and time manipulation functions.</P></LI>
 							<LI>
-								<B>Members</B> <I>(113 members)</I>
+								<B>Members</B> <I>(114 members)</I>
 								<OL>
 									<LI><A href="#Util.AscNTime">AscNTime</A></LI>
 									<LI><A href="#Util.AscNTimeUTC">AscNTimeUTC</A></LI>
@@ -1614,15 +1615,15 @@
 									<LI><A href="#Util.ClampInt">ClampInt</A></LI>
 									<LI><A href="#Util.Compact">Compact</A></LI>
 									<LI><A href="#Util.CountOf">CountOf</A></LI>
+									<LI><A href="#Util.DuraIntLong">DuraIntLong</A></LI>
+									<LI><A href="#Util.DuraIntLongEx">DuraIntLongEx</A></LI>
+									<LI><A href="#Util.DuraIntShort">DuraIntShort</A></LI>
+									<LI><A href="#Util.DuraIntShortEx">DuraIntShortEx</A></LI>
+									<LI><A href="#Util.DuraNumLong">DuraNumLong</A></LI>
+									<LI><A href="#Util.DuraNumLongEx">DuraNumLongEx</A></LI>
+									<LI><A href="#Util.DuraNumShort">DuraNumShort</A></LI>
+									<LI><A href="#Util.DuraNumShortEx">DuraNumShortEx</A></LI>
 									<LI><A href="#Util.Duration">Duration</A></LI>
-									<LI><A href="#Util.DurationLI">DurationLI</A></LI>
-									<LI><A href="#Util.DurationLIEx">DurationLIEx</A></LI>
-									<LI><A href="#Util.DurationLN">DurationLN</A></LI>
-									<LI><A href="#Util.DurationLNEx">DurationLNEx</A></LI>
-									<LI><A href="#Util.DurationS">DurationS</A></LI>
-									<LI><A href="#Util.DurationSEx">DurationSEx</A></LI>
-									<LI><A href="#Util.DurationSN">DurationSN</A></LI>
-									<LI><A href="#Util.DurationSNEx">DurationSNEx</A></LI>
 									<LI><A href="#Util.EntDecode">EntDecode</A></LI>
 									<LI><A href="#Util.EntEncode">EntEncode</A></LI>
 									<LI><A href="#Util.Explode">Explode</A></LI>
@@ -1633,10 +1634,10 @@
 									<LI><A href="#Util.FlushObjects">FlushObjects</A></LI>
 									<LI><A href="#Util.FlushTable">FlushTable</A></LI>
 									<LI><A href="#Util.FlushTables">FlushTables</A></LI>
+									<LI><A href="#Util.FormatInt">FormatInt</A></LI>
 									<LI><A href="#Util.FormatNTime">FormatNTime</A></LI>
 									<LI><A href="#Util.FormatNTimeUTC">FormatNTimeUTC</A></LI>
 									<LI><A href="#Util.FormatNumber">FormatNumber</A></LI>
-									<LI><A href="#Util.FormatNumberI">FormatNumberI</A></LI>
 									<LI><A href="#Util.FormatTime">FormatTime</A></LI>
 									<LI><A href="#Util.FormatTimeUTC">FormatTimeUTC</A></LI>
 									<LI><A href="#Util.Grouped">Grouped</A></LI>
@@ -1696,6 +1697,7 @@
 									<LI><A href="#Util.Shorten">Shorten</A></LI>
 									<LI><A href="#Util.ShortenEx">ShortenEx</A></LI>
 									<LI><A href="#Util.Sign">Sign</A></LI>
+									<LI><A href="#Util.StretchCover">StretchCover</A></LI>
 									<LI><A href="#Util.StretchInner">StretchInner</A></LI>
 									<LI><A href="#Util.StretchOuter">StretchOuter</A></LI>
 									<LI><A href="#Util.TableCopy">TableCopy</A></LI>
@@ -5299,6 +5301,16 @@
 		<H4>Synopsis:-</H4>
 		<PRE>A table containing all the possible file open modes available...<BR>ID    Keyname  FOpen  Operation ====  =======  =====  ==================================================== [00]  R_T      "rt"   Read  + Exists + Text [01]  W_T      "wt"   Write + New    + Truncate + Text [02]  A_T      "at"   Write + Append + New      + Text [03]  R_P_T    "r+t"  Read  + Write  + Exists   + Text [04]  W_P_T    "w+t"  Read  + Write  + New      + Truncate + Text [05]  A_P_T    "a+t"  Read  + Write  + Append   + New      + Text [06]  R_B      "rb"   Read  + Exists + Binary [07]  W_B      "wb"   Write + New    + Truncate + Binary [08]  A_B      "ab"   Write + Append + New      + Binary [09]  R_P_B    "r+b"  Read  + Write  + Exists   + Binary [10]  W_P_B    "w+b"  Read  + Write  + New      + Truncate + Binary [11]  A_P_B    "a+b"  Read  + Append + New      + Binary ====  =======  =====  ==================================================== Read     = File must have permission to read.<BR>Write    = File must have permission to write.<BR>Exists   = File must exist.<BR>New      = Create file if it does not exist.<BR>Truncate = Truncate size to zero.<BR>Append   = Place the file pointer at the end of file.<BR>Binary   = Open in binary mode with no line ending conversions.<BR>Text     = Open in text mode and convert to OS specific line endings.<BR></PRE>
 		<H4><A href="#idx:File">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Font.Add" style="display:none">
+		<H3>Font.Add</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Font.Add(<I><U>Handle</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Handle</U> <I>(Ftf)</I> = An ftf object of a loaded freetype font.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Adds an extra freetype font to the list as a backup if any of the characters in the main font do not load. This is useful to add alternate fonts in a foreign language. This function consumes the given 'Ftf' font handle and the given 'Font' class is responsible for destroying it.<BR></PRE>
+		<H4><A href="#idx:Font">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Font.Console" style="display:none">
 		<H3>Font.Console</H3>
@@ -10536,6 +10548,102 @@
 		<PRE>A fast way of counting the number of occurences in a string.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.DuraIntLong" style="display:none">
+		<H3>Util.DuraIntLong</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraIntLong(<I><U>Seconds</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DuraIntLongEx" style="display:none">
+		<H3>Util.DuraIntLongEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraIntLongEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DuraIntShort" style="display:none">
+		<H3>Util.DuraIntShort</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraIntShort(<I><U>Seconds</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0y0w0d0h0m0s.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DuraIntShortEx" style="display:none">
+		<H3>Util.DuraIntShortEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraIntShortEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds as an integer into a human readable duration string in the format of e.g. 0y0w0d0h0m0s. The number of components limits to the leftmost components.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DuraNumLong" style="display:none">
+		<H3>Util.DuraNumLong</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraNumLong(<I><U>Seconds</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of e.g. 0y0w0d0h0m0s. If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0 milliseconds (microseconds, nanoseconds or picoseconds)).<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DuraNumLongEx" style="display:none">
+		<H3>Util.DuraNumLongEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraNumLongEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of (e.g. 0 years 0 weeks 0 days 0 hours 0 minutes 0 seconds). If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0 milliseconds (or microseconds, nanoseconds, picoseconds)). The number of components limits to the leftmost components when the duration is over 1 second.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DuraNumShort" style="display:none">
+		<H3>Util.DuraNumShort</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraNumShort(<I><U>Seconds</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of e.g. 0y0w0d0h0m0s. If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0ms (or µs, ns, ps)).<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.DuraNumShortEx" style="display:none">
+		<H3>Util.DuraNumShortEx</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Result</U> = Util.DuraNumShortEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components.<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of (e.g. 0y0w0d0h0m0s). If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0ms (or µs, ns, ps)). The number of components limits to the leftmost components when the duration is over 1 second.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.Duration" style="display:none">
 		<H3>Util.Duration</H3>
 		<H4>Syntax:-</H4>
@@ -10546,102 +10654,6 @@
 		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Converts the specified number of seconds into a human readable duration string in the format of 000:00:00:00.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationLI" style="display:none">
-		<H3>Util.DurationLI</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationLI(<I><U>Seconds</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationLIEx" style="display:none">
-		<H3>Util.DurationLIEx</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationLIEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0 years 0 weeks 0 days 0 hours 0 mins 0 secs.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationLN" style="display:none">
-		<H3>Util.DurationLN</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationLN(<I><U>Seconds</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of e.g. 0y0w0d0h0m0s. If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0 milliseconds (microseconds, nanoseconds or picoseconds)).<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationLNEx" style="display:none">
-		<H3>Util.DurationLNEx</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationLNEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of (e.g. 0 years 0 weeks 0 days 0 hours 0 minutes 0 seconds). If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0 milliseconds (or microseconds, nanoseconds, picoseconds)). The number of components limits to the leftmost components when the duration is over 1 second.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationS" style="display:none">
-		<H3>Util.DurationS</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationS(<I><U>Seconds</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds into a human readable duration string in the format of e.g. 0y0w0d0h0m0s.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationSEx" style="display:none">
-		<H3>Util.DurationSEx</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationSEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(integer)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds as an integer into a human readable duration string in the format of e.g. 0y0w0d0h0m0s. The number of components limits to the leftmost components.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationSN" style="display:none">
-		<H3>Util.DurationSN</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationSN(<I><U>Seconds</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of e.g. 0y0w0d0h0m0s. If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0ms (or µs, ns, ps)).<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.DurationSNEx" style="display:none">
-		<H3>Util.DurationSNEx</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Result</U> = Util.DurationSNEx(<I><U>Seconds</U>, <U>Components</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Seconds</U> <I>(number)</I> = The number of seconds.<BR><U>Components</U> <I>(integer)</I> = The maximum number of components.<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Result</U> <I>(string)</I> = The human readable duration string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Converts the specified number of seconds as a number into a human readable duration string in the format of (e.g. 0y0w0d0h0m0s). If the duration is under 1 second, it only shows the fractional part as a whole number (e.g. 0ms (or µs, ns, ps)). The number of components limits to the leftmost components when the duration is over 1 second.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.EntDecode" style="display:none">
@@ -10752,6 +10764,18 @@
 		<PRE>Clears the multiple specified hybrid tables of both indices first and then key pairs.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Util.FormatInt" style="display:none">
+		<H3>Util.FormatInt</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Value</U> = Util.FormatInt(<I><U>Value</U>, <U>Precision</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Value</U> <I>(integer)</I> = A integer value, it will be converted to a string.<BR><U>Precision</U> <I>(integer)</I> = Maximum number of floating point digits<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Value</U> <I>(string)</I> = The formatted string.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Uses the current OS locale settings to cleanly format a number with thousand separators.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Util.FormatNTime" style="display:none">
 		<H3>Util.FormatNTime</H3>
 		<H4>Syntax:-</H4>
@@ -10782,18 +10806,6 @@
 		<PRE><U>Value</U> = Util.FormatNumber(<I><U>Value</U>, <U>Precision</U></I>)</PRE>
 		<H4>Function Parameters:-</H4>
 		<PRE><U>Value</U> <I>(number)</I> = A number value, it will be converted to a string.<BR><U>Precision</U> <I>(integer)</I> = Maximum number of floating point digits<BR></PRE>
-		<H4>Return Parameters:-</H4>
-		<PRE><U>Value</U> <I>(string)</I> = The formatted string.<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Uses the current OS locale settings to cleanly format a number with thousand separators.<BR></PRE>
-		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Util.FormatNumberI" style="display:none">
-		<H3>Util.FormatNumberI</H3>
-		<H4>Syntax:-</H4>
-		<PRE><U>Value</U> = Util.FormatNumberI(<I><U>Value</U>, <U>Precision</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Value</U> <I>(integer)</I> = A integer value, it will be converted to a string.<BR><U>Precision</U> <I>(integer)</I> = Maximum number of floating point digits<BR></PRE>
 		<H4>Return Parameters:-</H4>
 		<PRE><U>Value</U> <I>(string)</I> = The formatted string.<BR></PRE>
 		<H4>Synopsis:-</H4>
@@ -11504,6 +11516,18 @@
 		<PRE><U>Value</U> <I>(integer)</I> = The value returned.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns 1 or -1, indicating the sign of the number passed as argument. If the input is 0 or -0, it will be returned as-is.<BR></PRE>
+		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Util.StretchCover" style="display:none">
+		<H3>Util.StretchCover</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>OuterWidth</U>, <U>OuterHeight</U>, <U>InnerWidth</U>, <U>InnerHeight</U> = Util.StretchCover(<I><U>OuterWidth</U>, <U>OuterHeight</U>, <U>InnerWidth</U>, <U>InnerHeight</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>OuterWidth</U> <I>(number)</I> = Outer width of the rectangle to adjust<BR><U>OuterHeight</U> <I>(number)</I> = Outer height of the rectangle to adjust<BR><U>InnerWidth</U> <I>(number)</I> = Inner width of the rectangle to adjust<BR><U>InnerHeight</U> <I>(number)</I> = Inner height of the rectangle to adjust<BR></PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>OuterWidth</U> <I>(number)</I> = Outer width of the rectangle to adjust<BR><U>OuterHeight</U> <I>(number)</I> = Outer height of the rectangle to adjust<BR><U>InnerWidth</U> <I>(number)</I> = Inner width of the rectangle to adjust<BR><U>InnerHeight</U> <I>(number)</I> = Inner height of the rectangle to adjust<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Scales the specified 2D inner rectangle to either outer bounds based while on the given size preserving aspect ratio.<BR></PRE>
 		<H4><A href="#idx:Util">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Util.StretchInner" style="display:none">
@@ -13932,6 +13956,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Sat Nov 07 23:40:45 2026 +0000</ADDRESS>
+	This document was generated at Sun Nov 08 23:35:37 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

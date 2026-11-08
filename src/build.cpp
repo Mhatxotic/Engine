@@ -536,7 +536,7 @@ envLinuxGCC =                          // GCC on Linux
                    LINUX_GCCDIR64 "crtendS.o "
                    LINUX_GCCDIR64 "../../../" LINUX_ARCH64 "/crtn.o",
   /* LDL        */ "-lsqlite3 -lz -lvorbis -lvorbisfile -logg -ltheora "
-                   "-ltheoradec -lfreetype -lpng -lcrypt -lssl "
+                   "-ltheoradec -lfreetype -lpng -lcrypt -lssl -ljpeg "
                    "-lopenal -lrt -ldl -lX11 -lncursesw -lpthread -lstdc++ "
                    "-lm -lgcc_s -lgcc -lc -lgcc_s -lgcc",
   /* LDMAP      */ "-Wl",
@@ -2022,7 +2022,7 @@ static int SpecialExecute(const StdString strCmd, const size_t stML,
   if(iR) cout << "with status " << iR;
     else cout << "successfully";
   cout << " in " <<
-    durShort.Parse(cmHiRes.TimePointToDouble(tpBegin), 6) << " sec!\n";
+    durLong.Parse(cmHiRes.TimePointToDouble(tpBegin), 6) << "!\n";
   // Return result
   return iR;
 }
@@ -3211,11 +3211,10 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // We need to activate cmake once to build openal config and other things
     System("rm -rf CMakeFiles *.cmake CMakeCache.txt");
     // Cmake flags
-    const StdString strCMakeExtra{ "-DENABLE_SHARED=0 "
-                                   "-DWITH_TOOLS=0 "
-                                   "-DWITH_TESTS=0 "
-                                   "." };
-    // Windows?
+    const StdString strCMakeExtra{
+      "-DENABLE_SHARED=0 " "-DWITH_TOOLS=0 "
+      "-DWITH_TESTS=0 "    "."
+    }; // Windows?
 # if defined(WINDOWS)
     // One time only build
     SystemF("$ $", strCMakeBase, strCMakeExtra);
@@ -3228,6 +3227,15 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     });
     // Do the make
     System("ninja");
+    // Remove Z-lib because we already have it and it's complicated to remove
+    // without using CMake and theres no options for it right now.
+    SystemF("$ turbojpeg-static.lib "
+      "/REMOVE:adler32.c.obj "  "/REMOVE:compress.c.obj "
+      "/REMOVE:crc32.c.obj "    "/REMOVE:deflate.c.obj "
+      "/REMOVE:inffast.c.obj "  "/REMOVE:inflate.c.obj "
+      "/REMOVE:inftrees.c.obj " "/REMOVE:trees.c.obj "
+      "/REMOVE:zutil.c.obj",
+      envActive.cpAR);
     // Move the generated library into position
     RenameFileSafe("turbojpeg-static.lib",
       StrFormat("../jpeg64.lib", strPrefix));
@@ -3248,6 +3256,11 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
         strCMakeExtra);
       // Do the make
       System("make");
+      // Remove Z-lib because we already have it and it's complicated to remove
+      // without using CMake and theres no options for it right now.
+      SystemF("$ -d libturbojpeg.a adler32.c.o compress.c.o crc32.c.o "
+                   "deflate.c.o inffast.c.o inflate.c.o inftrees.c.o "
+                   "trees.c.o zutil.c.o", envActive.cpAR);
       // Move the generated library into position
       RenameFileSafe("libturbojpeg.a",
         StrFormat("../$$.a", strPrefix, itProc.iBits));

@@ -56,6 +56,18 @@ using AgGLuintLG = AgIntegerLG<GLuint>;
 ** ## Font:* methods                                                      ## **
 ** ######################################################################### **
 ** ========================================================================= */
+// $ Font.Add
+// > Handle:Ftf=An ftf object of a loaded freetype font.
+// ? Adds an extra freetype font to the list as a backup if any of the
+// ? characters in the main font do not load. This is useful to add alternate
+// ? fonts in a foreign language. This function consumes the given 'Ftf' font
+// ? handle and the given 'Font' class is responsible for destroying it.
+/* ========================================================================= */
+LLFUNC(Add, 0,
+  const AgFont aFont{lS, 1};
+  const AgFtf aFtf{lS, 2};
+  aFont().InitFontExtraFtf(aFtf))
+/* ========================================================================= */
 // $ Font:Destroy
 // ? Destroys the font and frees all the memory associated with it. The OpenGL
 // ? handles and VRAM allocated by it are freed after the main FBO has has been
@@ -712,23 +724,24 @@ LLFUNC(SetSpacing, 0,
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Font:* methods begin
-  LLRSFUNC(Destroy),     LLRSFUNC(Dump),        LLRSFUNC(GetHeight),
-  LLRSFUNC(GetFlags),    LLRSFUNC(GetId),       LLRSFUNC(GetName),
-  LLRSFUNC(GetWidth),    LLRSFUNC(IsDestroyed), LLRSFUNC(LoadChars),
-  LLRSFUNC(LoadRange),   LLRSFUNC(Print),       LLRSFUNC(PrintC),
-  LLRSFUNC(PrintCT),     LLRSFUNC(PrintM),      LLRSFUNC(PrintMT),
-  LLRSFUNC(PrintR),      LLRSFUNC(PrintRT),     LLRSFUNC(PrintS),
-  LLRSFUNC(PrintT),      LLRSFUNC(PrintTS),     LLRSFUNC(PrintU),
-  LLRSFUNC(PrintUC),     LLRSFUNC(PrintUCT),    LLRSFUNC(PrintUR),
-  LLRSFUNC(PrintURT),    LLRSFUNC(PrintUS),     LLRSFUNC(PrintW),
-  LLRSFUNC(PrintWS),     LLRSFUNC(PrintWT),     LLRSFUNC(PrintWTS),
-  LLRSFUNC(PrintWU),     LLRSFUNC(PrintWUT),    LLRSFUNC(SetCA),
-  LLRSFUNC(SetCB),       LLRSFUNC(SetCG),       LLRSFUNC(SetCOA),
-  LLRSFUNC(SetCOB),      LLRSFUNC(SetCOG),      LLRSFUNC(SetCOR),
-  LLRSFUNC(SetCORGB),    LLRSFUNC(SetCORGBA),   LLRSFUNC(SetCORGBAI),
-  LLRSFUNC(SetCR),       LLRSFUNC(SetCRGBAI),   LLRSFUNC(SetCRGB),
-  LLRSFUNC(SetCRGBA),    LLRSFUNC(SetGPad),     LLRSFUNC(SetGSize),
-  LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),     LLRSFUNC(SetSpacing),
+  LLRSFUNC(Add),         LLRSFUNC(Destroy),     LLRSFUNC(Dump),
+  LLRSFUNC(GetHeight),   LLRSFUNC(GetFlags),    LLRSFUNC(GetId),
+  LLRSFUNC(GetName),     LLRSFUNC(GetWidth),    LLRSFUNC(IsDestroyed),
+  LLRSFUNC(LoadChars),   LLRSFUNC(LoadRange),   LLRSFUNC(Print),
+  LLRSFUNC(PrintC),      LLRSFUNC(PrintCT),     LLRSFUNC(PrintM),
+  LLRSFUNC(PrintMT),     LLRSFUNC(PrintR),      LLRSFUNC(PrintRT),
+  LLRSFUNC(PrintS),      LLRSFUNC(PrintT),      LLRSFUNC(PrintTS),
+  LLRSFUNC(PrintU),      LLRSFUNC(PrintUC),     LLRSFUNC(PrintUCT),
+  LLRSFUNC(PrintUR),     LLRSFUNC(PrintURT),    LLRSFUNC(PrintUS),
+  LLRSFUNC(PrintW),      LLRSFUNC(PrintWS),     LLRSFUNC(PrintWT),
+  LLRSFUNC(PrintWTS),    LLRSFUNC(PrintWU),     LLRSFUNC(PrintWUT),
+  LLRSFUNC(SetCA),       LLRSFUNC(SetCB),       LLRSFUNC(SetCG),
+  LLRSFUNC(SetCOA),      LLRSFUNC(SetCOB),      LLRSFUNC(SetCOG),
+  LLRSFUNC(SetCOR),      LLRSFUNC(SetCORGB),    LLRSFUNC(SetCORGBA),
+  LLRSFUNC(SetCORGBAI),  LLRSFUNC(SetCR),       LLRSFUNC(SetCRGBAI),
+  LLRSFUNC(SetCRGB),     LLRSFUNC(SetCRGBA),    LLRSFUNC(SetGPad),
+  LLRSFUNC(SetGSize),    LLRSFUNC(SetLSpacing), LLRSFUNC(SetSize),
+  LLRSFUNC(SetSpacing),
 LLRSEND                                // Font:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
