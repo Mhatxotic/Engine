@@ -12,12 +12,11 @@ namespace IPalette {                   // Start of private module namespace
 using namespace ICollector::P;         using namespace IColour::P;
 using namespace IError::P;             using namespace IImage::P;
 using namespace IImageDef::P;          using namespace IImageSlot::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IShaders::P;           using namespace IStd::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
-using Lib::GlFW::GLfloat;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IShaders::P;
+using namespace IStd::P;               using namespace ITexDef::P;
+using namespace IUtil::P;              using Lib::GlFW::GLfloat;
 /* ------------------------------------------------------------------------- */
 using PalData = StdArray<Colour, 256>; // Palette data
 /* ------------------------------------------------------------------------- */
@@ -147,7 +146,6 @@ CTOR_BEGIN(Palettes, Palette, CLHelperUnsafe, const Pal palDefault;)
 /* ------------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Lockable,                     // Lua garbage collector instruction
   public Pal                           // Base Palette class
 { /* -- Init name only --------------------------------------------- */ public:
   void Init(const StdStringView &ssvName) { NameSet(ssvName); }

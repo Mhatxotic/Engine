@@ -121,7 +121,7 @@ struct CVars :                         // Start of vars class
     return cvmciIt != cvmActive.cend() ? cvmciIt->second.GetValue() :
       cCommon->CommonBlankStr();
   }
-  /* -- Return the cvar id's value as a string ----------------------------- */
+  /* -- Return the cvar id's value as a C-string --------------------------- */
   const char *GetCStrInternal(const CVarEnums cveId)
     { return GetStrInternal(cveId).data(); }
   /* ----------------------------------------------------------------------- */

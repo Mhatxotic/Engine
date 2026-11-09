@@ -377,7 +377,7 @@ static StrList UtfWordWrap(const StdStringView &ssvText, const size_t stWidth,
 template<typename StrType>
   requires StdIsClass<StrType>
 static StdString UtfShorten(const StrType &strStr, const size_t stLimit,
-  const StdStringView &strvEllipsis = cCommon->CommonEllipsis())
+  const StdStringView &ssvEllipsis = cCommon->CommonEllipsis())
 { // Return current string if empty
   if(strStr.empty()) return {};
   // Create and reserve output string
@@ -385,7 +385,7 @@ static StdString UtfShorten(const StrType &strStr, const size_t stLimit,
   // If no limit specified then return an ellipsis
   if(!stLimit)
   { // Suffix the ellipsis character
-    Ellipsis: strOut.append(strvEllipsis);
+    Ellipsis: strOut.append(ssvEllipsis);
     // Finish string memory as it could be more than we created
     strOut.shrink_to_fit();
     // Done. Return the string

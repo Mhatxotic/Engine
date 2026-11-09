@@ -27,7 +27,7 @@ class FreeType :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   bool FreeTypeDoDeInit()
   { // Return failed if library not available
-    if(!FreeTypeIsLibraryAvailable()) return false;
+    if(FreeTypeIsLibraryNotAvailable()) return false;
     // Unload freetype library
     cLog->LogDebugSafe("FreeType subsystem deinitialising...");
     FT_Done_Library(ftlContext);
@@ -55,12 +55,18 @@ class FreeType :                       // Members initially private
   FT_Error FreeTypeNewStroker(FT_Stroker &ftsDst) const
     { return FT_Stroker_New(ftlContext, &ftsDst); }
   /* ----------------------------------------------------------------------- */
-  bool FreeTypeIsLibraryAvailable() { return ftlContext != nullptr; }
+  static void FreeTypeDestroyStroker(FT_Stroker &ftsStroker)
+    { return FT_Stroker_Done(ftsStroker); }
+  /* ----------------------------------------------------------------------- */
+  bool FreeTypeIsLibraryAvailable() const
+    { return ftlContext != nullptr; }
+  bool FreeTypeIsLibraryNotAvailable() const
+    { return !FreeTypeIsLibraryAvailable(); }
   /* ----------------------------------------------------------------------- */
   FT_Error FreeTypeNewFont(const MemConst &mcSrc, FT_Face &ftfDst)
   { // Lock a mutex to protect FT_Library.
     // > freetype.org/freetype2/docs/reference/ft2-base_interface.html
-    return MutexCall([this,&mcSrc,&ftfDst](){
+    return MutexCall([this, &mcSrc, &ftfDst]()->FT_Error{
       // Create the font, throw exception on error
       return FT_New_Memory_Face(ftlContext, mcSrc.MemPtr<FT_Byte>(),
         mcSrc.MemSize<FT_Long>(), 0, &ftfDst);
@@ -70,7 +76,7 @@ class FreeType :                       // Members initially private
   void FreeTypeDestroyFont(FT_Face ftfFace)
   { // Lock a mutex to protect FT_Library and destroy the font context.
     // > freetype.org/freetype2/docs/reference/ft2-base_interface.html
-    MutexCall([ftfFace](){FT_Done_Face(ftfFace);});
+    MutexCall([ftfFace](){ FT_Done_Face(ftfFace); });
   }
   /* -- Error checker with custom error details ---------------------------- */
   template<typename ...VarArgs>

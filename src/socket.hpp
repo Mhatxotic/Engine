@@ -14,18 +14,18 @@ using namespace ICollector::P;         using namespace ICommon::P;
 using namespace ICrypt::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaBase::P;
-using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IMetadata::P;
-using namespace IMutex::P;             using namespace IName::P;
-using namespace IParser::P;            using namespace IRefCtr::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IToken::P;             using namespace IUtil::P;
-using namespace IUtf::P;               using namespace Lib::OpenSSL;
+using namespace IFlags::P;             using namespace ILog::P;
+using namespace ILuaBase::P;           using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IMetadata::P;          using namespace IMutex::P;
+using namespace IName::P;              using namespace IParser::P;
+using namespace IRefCtr::P;            using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace IToken::P;
+using namespace IUtil::P;              using namespace IUtf::P;
+using namespace Lib::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -69,7 +69,6 @@ const StdStringView ssvRX;             // "RX" string
 const StdStringView ssvTX;             // "TX" string
 StdStringView      ssvCipher12;        // Ciphers for TLSv1.2 from CVar
 StdStringView      ssvCipher13;        // Ciphers for TLSv1.3+ from CVar
-StdStringView      ssvUserAgent;       // User agent string from CVar
 AtomicInt          aiOCSP;             // Use OCSP (0=Off;1=On;2=Strict)
 AtomicSizeT        astBufferSize;      // Default recv/send buffer size
 AtomicDouble       adRecvTimeout;      // Receive packet timeout
@@ -86,7 +85,6 @@ private LuaEvtMaster<Socket,LuaEvtTypeAsync<Socket>>);
 CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public LuaEvtSlave<Socket,2>,        // Need to store two references
-  public Lockable,                     // Lua garbage collector instruction
   public RefCtrMaster<>,               // Ref counter to protect LUA callbacks
   public SocketFlags,                  // Socket flags
   private MutexLock                    // Reader mutex
@@ -1762,7 +1760,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     psvRegistry.ParserReInit(StdString{ ssvHeaders },
       cCommon->CommonLf(), ':');
     // Push default user agent if not specified already
-    psvRegistry.ParserPushIfNotExist("User-Agent", cSockets->ssvUserAgent);
+    psvRegistry.ParserPushIfNotExist("User-Agent",
+      cCVars->GetStrInternal(NET_USERAGENT));
     // Chosen method
     StdStringView ssvChosenMethod;
     // Check for websocket method
@@ -1948,8 +1947,6 @@ static CVarReturn SocketAgentModified(const StdString &strN, StdString &strV)
       cMetadata->MetadataGetShortTitle(), cMetadata->MetadataGetVersion());
   // Not empty to use user value instead
   else strV = strN;
-  // Set string view
-  cSockets->ssvUserAgent = strV;
   // We changed the value so return that
   return ACCEPT_HANDLED;
 }

@@ -1372,14 +1372,14 @@ CVarItemStaticList{{
 // ? <AppName>/<AppVersion>".
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "net_useragent", "",
-  CBSTR(SocketAgentModified), TSTRING|MTRIM|PNOUI },
+  CBSTR(SocketAgentModified), TSTRING|MTRIM|PANY },
 /* == Video cvars ========================================================== */
 // ! VID_API
 // ? Specifies the API to use. This is only used for troubleshooting purposes
 // ? only and serves no other purpose. Select 0 (default) for GLFW_OPENGL_API,
 // ? 1 for GLFW_OPENGL_ES_API or 2 for GLFW_NO_API.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_api",  "0",
+{ CFL_VIDEO, "vid_api", "0",
   CB(cDisplay->DisplayApiChanged, size_t), TUINTEGER|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBALPHA

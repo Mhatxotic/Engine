@@ -10,11 +10,11 @@
 namespace IUrl {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICommon::P;
-using namespace ICrypt::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IName::P;
-using namespace IParser::P;            using namespace IStd::P;
-using namespace ISerial::P;            using namespace IString::P;
+using namespace ICrypt::P;             using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IName::P;              using namespace IParser::P;
+using namespace IStd::P;               using namespace ISerial::P;
+using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -234,7 +234,6 @@ struct UrlBase :
 };/* == Url collector and member class ===================================== */
 CTOR_BEGIN_DUO(Urls, Url, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Lockable,                     // Lua garbage collector instruction
   public UrlBase<>                     // Url class
 { /* -- Default constructor with no init --------------------------- */ public:
   Url() :

@@ -55,7 +55,7 @@ class ConGfx :                         // Members initially private
     // it manually. If we init cvars after, then destructor will crash because
     // the cvars havn't been initialised
     Ftf fFTFont;
-    fFTFont.InitFile(cCVars->GetStrInternal(CON_FONT), glfFontWidth,
+    fFTFont.FtfInitFile(cCVars->GetStrInternal(CON_FONT), glfFontWidth,
       glfFontHeight, 96, 96, 0.0f);
     ConGfxGetFontRef().InitFontFtf(fFTFont,
       cCVars->CVarsGetInternal<GLuint>(CON_FONTTEXSIZE),
@@ -339,7 +339,7 @@ class ConGfx :                         // Members initially private
     // Unload console texture and font.
     ConGfxDeInitTextureAndFont();
     // Remove font ftf
-    ConGfxGetFontRef().ftfData.DeInit();
+    ConGfxGetFontRef().FtfDeInit();
     // Log progress
     cLog->LogInfoSafe("ConGraph de-initialised.");
   }
@@ -357,8 +357,8 @@ class ConGfx :                         // Members initially private
     glfLineSpacing(0.0f),              // No text line spacing
     glfFontWidth(0.0f),                // No text width
     glfFontHeight(0.0f),               // No text height
-    texConsole{ IP_TEXTURE },          // Console texture on stand-by
-    fonConsole{ IP_FONT },             // Console font on stand-by
+    texConsole{ IP_TEXTURE, true },    // Console texture on stand-by
+    fonConsole{ IP_FONT, true },       // Console font on stand-by
     cCursor('|')                       // Cursor shape
     /* -- Set global pointer to static class ------------------------------- */
     { cConGfx = this; }

@@ -743,10 +743,9 @@ template<class ClassType, class ParentType = decltype(ClassType::cParent)>
   requires StdIsClass<ClassType>
 static ClassType *LuaUtilGetClassPtr(lua_State*const lS, const int iParam,
   const ParentType*const ptParent)
-{ // Get reference to class and return pointer if valid
+{ // Get reference to class and return pointer if allocated else throw error
   const LuaUtilClass &lcR = *LuaUtilGetCheckedBasePtr(lS, iParam, *ptParent);
   if(lcR.vpPtr) return reinterpret_cast<ClassType*>(lcR.vpPtr);
-  // Actual class pointer has already been freed so error occured
   XC("Unallocated class parameter!",
     "Parameter", iParam, "Type", ptParent->LuaIdentStr());
 }
@@ -756,6 +755,16 @@ template<class ClassType, class ParentType = decltype(ClassType::cParent)>
 static ClassType &LuaUtilGetClassRef(lua_State*const lS, const int iParam,
   const ParentType*const ptParent)
 { return *LuaUtilGetClassPtr<ClassType>(lS, iParam, ptParent); }
+/* -- Check that a class isn't locked (i.e. a built-in class) -------------- */
+template<class ClassType, class ParentType = decltype(ClassType::cParent)>
+  requires StdIsClass<ClassType>
+static ClassType &LuaUtilGetClassUnlockedRef(lua_State*const lS,
+  const int iParam, const ParentType*const ptParent)
+{ // Get pointer to class and return if isn't locked else throw error
+  ClassType &ctRef = LuaUtilGetClassRef<ClassType>(lS, iParam, ptParent);
+  if(ctRef.LockIsNotSet()) return ctRef;
+  XC("Call not allowed on this class!", "Name", ctRef.NameGet());
+}
 /* -- Do clear and free the object ----------------------------------------- */
 static void LuaUtilDoClassDestroy(LuaUtilClass*const lucPtr, auto*const ctPtr)
 { // Clear the pointer to the class
@@ -856,17 +865,6 @@ static ClassType *LuaUtilClassCreateStaticPtr(lua_State*const lS,
   lucPtr->vpPtr = reinterpret_cast<void*>(ctPtr);
   // Return pointer to memory
   return ctPtr;
-}
-/* -- Check that a class isn't locked (i.e. a built-in class) -------------- */
-template<class ClassType>
-  requires StdIsClass<ClassType>
-static ClassType *LuaUtilGetUnlockedPtr[[maybe_unused]]
-  (lua_State*const lS, const int iParam)
-{ // Get pointer to class and return if isn't locked (a built-in class)
-  ClassType*const ctPtr = LuaUtilGetClassPtr<ClassType>(lS, iParam);
-  if(ctPtr->LockIsNotSet()) return ctPtr;
-  // Throw error
-  XC("Call not allowed on this class!", "Name", ctPtr->NameGet());
 }
 /* -- Garbage collection control ------------------------------------------- */
 static int LuaUtilGCParam(lua_State*const lS, const int iParam, const int iVal)

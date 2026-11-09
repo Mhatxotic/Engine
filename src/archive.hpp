@@ -15,15 +15,14 @@ using namespace ICommon::P;            using namespace ICollector::P;
 using namespace ICrypt::P;             using namespace ICVarDef::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
-using namespace IFlags::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IPSplit::P;
-using namespace IMemory::P;            using namespace IMutex::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace Lib::SevenZip;
+using namespace IFlags::P;             using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IPSplit::P;            using namespace IMemory::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IUtf::P;               using namespace Lib::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -49,7 +48,6 @@ BUILD_FLAGS(Archive,                   // Archive flags
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public AsyncLoaderArchive,           // Async manager for off-thread loading
-  public Lockable,                     // Lua garbage collect instruction
   public ArchiveFlags,                 // Archive initialisation flags
   private MutexLock,                   // Mutex for condition variable
   private condition_variable           // Waiting for async ops to complete

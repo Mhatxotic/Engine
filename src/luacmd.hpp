@@ -11,12 +11,12 @@ namespace ILuaCommand {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace ICollector::P;
 using namespace ICommon::P;            using namespace IConsole::P;
-using namespace IError::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaBase::P;
-using namespace ILuaFunc::P;           using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IError::P;             using namespace ILog::P;
+using namespace ILuaBase::P;           using namespace ILuaFunc::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -27,9 +27,7 @@ CTOR_BEGIN(Commands, Command, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
   LuaCmdMap        lcmMap;             // Lua console command list
 );/* -- Lua command collector and member class ----------------------------- */
-CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe),
-  /* -- Base classes ------------------------------------------------------- */
-  public Lockable                      // Lua garbage collector instruction
+CTOR_MEM_BEGIN_CSLAVE(Commands, Command, ICHelperUnsafe)
 { /* -- Private variables -------------------------------------------------- */
   LuaCmdMapIt      lcmiIt;             // Iterator to command Console gives us
   /* -- Returns the lua command list --------------------------------------- */

@@ -16,15 +16,15 @@ using namespace ICollector::P;         using namespace ICrypt::P;
 using namespace ICVarDef::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IFlags::P;
 using namespace IFrame::P;             using namespace IInterval::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILookupArray::P;       using namespace ILuaBase::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IPSplit::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITime::P;
-using namespace IUtil::P;              using namespace Lib::Sqlite;
+using namespace ILog::P;               using namespace ILookupArray::P;
+using namespace ILuaBase::P;           using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IPSplit::P;            using namespace IMemory::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITime::P;              using namespace IUtil::P;
+using namespace Lib::Sqlite;
 /* -- Replacement for SQLITE_TRANSIENT which cases warnings ---------------- */
 static sqlite3_destructor_type fcbSqliteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);
@@ -131,8 +131,7 @@ enum CreateTableResult                 // Create table result
 };/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public SqlFlags,                     // Flags for this database
-  public Lockable                      // Lua garbage collector instruction
+  public SqlFlags                      // Flags for this database
 { /* -- Schema version ----------------------------------------------------- */
   constexpr static const sqlite3_int64 llVersion = 1; // Expected schema ver
   /* -- Variables ---------------------------------------------------------- */
@@ -1412,12 +1411,11 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     return true;
   }
   /* -- Constructor without registration --------------------------- */ public:
-  explicit Sql(bool bLocked = false) : // Default unlocked
+  explicit Sql() :
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSql{ cSqls, this },        // Register the object in collector
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
     SqlFlags{ ctParent.sFlags },       // Copy global sql flags
-    Lockable{ bLocked },               // Set locked by LUA flag
     sqlDB(nullptr),                    // No sql database handle yet
     iError(SQLITE_OK)                  // Initialise sqlite and store error
   /* -- No code ------------------------------------------------------------ */

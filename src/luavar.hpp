@@ -12,13 +12,12 @@ namespace ILuaVariable {               // Start of private module namespace
 using namespace ICollector::P;         using namespace ICommon::P;
 using namespace IConsole::P;           using namespace ICVarDef::P;
 using namespace ICVar::P;              using namespace ICVarLib::P;
-using namespace IError::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace ILuaBase::P;           using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace ILuaFunc::P;           using namespace ISerial::P;
-using namespace IString::P;            using namespace IStat::P;
-using namespace IStd::P;
+using namespace IError::P;             using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace ILuaFunc::P;
+using namespace ISerial::P;            using namespace IString::P;
+using namespace IStat::P;              using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 using LumCvEnums = LookupMap<CVarFlagsType>;
 /* ------------------------------------------------------------------------- */
@@ -37,9 +36,7 @@ CTOR_BEGIN(Variables, Variable, CLHelperSafe,
   const LumCvEnums lceSources;         // Load reason flags
   const LumCvEnums lceOther;,          // Misc flags
 );/* -- Lua variables collector and member class --------------------------- */
-CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe),
-  /* -- Base classes ------------------------------------------------------- */
-  public Lockable                      // Lua garbage collector instruction
+CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
 { /* -- Private variables -------------------------------------------------- */
   LuaCVarMapIt     lcvmiIt;            // Iterator to command Console gives us
   /* -- Returns the lua console command list ------------------------------- */

@@ -857,7 +857,7 @@ class Core final :                     // Members initially private
   /* -- Default constructor ------------------------------------------------ */
   Core() :
     /* -- Initialisers ----------------------------------------------------- */
-    Sql{ true },                       // Main database is locked
+    Lockable{ true },                  // Static virtual objects can't be GC'd
 #include "cvarlib.hpp"                 // Defines cvar list
     CVars{ static_cast<CVarItemStaticList&>(*this) },
 #include "conlib.hpp"                  // Defines console command list

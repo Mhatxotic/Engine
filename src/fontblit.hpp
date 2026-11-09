@@ -116,7 +116,7 @@ bool PrintGetWord(UtfDecoder &udStr, size_t &stPos, GLfloat glfX,
 /* -- Handle actual printing of characters --------------------------------- */
 void PrintDraw(GLfloat &glfX, const GLfloat glfY, const size_t stPos)
 { // Blit outline character?
-  if(ftfData.IsStrokerLoaded())
+  if(FtfIsStrokerLoaded())
   { // Get outline character info and print the outline glyph
     const Glyph &gOData = gvData[stPos + 1];
     BlitLTRBC(0, stPos + 1,
@@ -428,7 +428,7 @@ void DoPrintM(GLfloat glfX, GLfloat glfY, const GLfloat glfL,
     { // Get character
       const size_t stPos = CheckGlyph(coChar);
       // Draw outline glyph first, don't care about return status
-      if(ftfData.IsStrokerLoaded())
+      if(FtfIsStrokerLoaded())
         DrawPartialGlyph(false, stPos+1, glfXO, glfX, glfY, glfL, glfR,
           fiOutline.FboItemGetCData());
       // Draw main glyph, and if we don't need to draw anymore? Do not

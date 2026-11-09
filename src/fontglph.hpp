@@ -166,7 +166,7 @@ template<class StrokerFuncType>
   if(GlyphPtr gPtr{ gData, FT_Done_Glyph })
   { // Apply glyph border if requested
     cFreeType->FreeTypeCheckError(
-      StrokerFuncType{ gData, ftfData.GetStroker() }.Result(),
+      StrokerFuncType{ gData, FtfGetStroker() }.Result(),
       "Failed to apply outline to glyph!", "Name", NameGet(), "Glyph", coChar);
     // Convert The Glyph To A Image.
     cFreeType->FreeTypeCheckError(FT_Glyph_To_Bitmap(&gData,
@@ -220,7 +220,7 @@ template<class StrokerFuncNormalType, class StrokerFuncOutlineType>
 void DoSelectOutlineType(FT_GlyphSlot &ftgsRef, const Codepoint coCharOutline,
     const Codepoint coChar, const GLfloat glfAdvance)
 { // Stroker loaded?
-  if(ftfData.IsStrokerLoaded())
+  if(FtfIsStrokerLoaded())
   { // Stroke inside and outside border?
     if(FlagIsSet(FF_STROKETYPE2))
       InitCharFunc::Outline2{ this,
@@ -237,12 +237,12 @@ template<class StrokerCheckFuncType, class RoundCheckFuncType>
   bool DoHandleFTGlyph(Ftf &ftfSrc, const Codepoint coChar,
     const Codepoint coCharOutline)
 { // Convert the character to glyph and if successful?
-  if(const FT_UInt uGl = ftfSrc.CharToGlyph(static_cast<FT_ULong>(coChar)))
+  if(const FT_UInt uGl = ftfSrc.FtfCharToGlyph(static_cast<FT_ULong>(coChar)))
   { // Load glyph and return glyph on success else throw exception
-    cFreeType->FreeTypeCheckError(ftfSrc.LoadGlyph(uGl),
+    cFreeType->FreeTypeCheckError(ftfSrc.FtfLoadGlyph(uGl),
       "Failed to load glyph!", "Name", NameGet(), "Index", coChar);
     // Get glyph slot handle and get advance width.
-    FT_GlyphSlot ftgsRef = ftfSrc.GetGlyphData();
+    FT_GlyphSlot ftgsRef = ftfSrc.FtfGetGlyphData();
     // Compare type of border required
     const GLfloat glfAdvance = RoundCheckFuncType(*this,
       static_cast<GLfloat>(ftgsRef->metrics.horiAdvance) / 64).Result();
@@ -270,7 +270,7 @@ template<class StrokerCheckFuncType, class RoundCheckFuncType>
   } // Return the position if already loaded
   else if(gvData[coCharOutline].GlyphIsLoaded()) return coCharOutline;
   // Translate character to glyph and if succeeded?
-  if(DoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(ftfData,
+  if(DoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(*this,
      coChar, coCharOutline)) return coCharOutline;
   // Try alternate fonts
   for(Ftf &ftfExtra : ftflExtras)
@@ -307,7 +307,7 @@ size_t DoHandleStaticGlyph(const Codepoint coChar,
 template<class StrokerCheckFuncType, class RoundCheckFuncType>
   size_t DoSelectFontType(const Codepoint coChar,
   const Codepoint coCharOutline)
-{ return ftfData.IsLoaded() ?
+{ return FtfIsLoaded() ?
     DoHandleFTGlyph<StrokerCheckFuncType,
       RoundCheckFuncType>(coChar, coCharOutline) :
     DoHandleStaticGlyph(coChar, coCharOutline); }
@@ -351,7 +351,7 @@ template<class HandleGlyphFuncType>
   void DoInitFTCharRangeApplyStroker(const Codepoint coStart,
     const Codepoint coEnd)
 { // Stroker requested
-  if(ftfData.IsStrokerLoaded())
+  if(FtfIsStrokerLoaded())
   { // Load entire stroker?
     if(FlagIsSet(FF_STROKETYPE2))
       DoInitFTCharRangeApplyRound<HandleGlyphFuncType,
@@ -402,7 +402,7 @@ template<class HandleGlyphFuncType, class InitCharFuncType>
 template<class HandleGlyphFuncType>
   void DoInitFTCharStringApplyStroker(const StdStringView &ssvStr)
 { // If stroker is loaded?
-  if(ftfData.IsStrokerLoaded())
+  if(FtfIsStrokerLoaded())
   { // Load entire stroker outline?
     if(FlagIsSet(FF_STROKETYPE2))
       DoInitFTCharStringApplyRound<HandleGlyphFuncType,

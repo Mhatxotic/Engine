@@ -5,9 +5,7 @@
 ** ## This module defines a class that can be used to play and manage     ## **
 ** ## buffers in OpenAL. All sources are managed here too so we will      ## **
 ** ## manage the collector list with concurrency locks instead of the     ## **
-** ## ICHelper class. The Lockable class is also used for a different     ## **
-** ## reason to all the other interfaces to stop the source from being    ## **
-** ## deleted while it is in use by the engine and not OpenAL.            ## **
+** ## ICHelper class.                                                     ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
@@ -15,13 +13,12 @@
 namespace ISource {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace IFlags::P;             using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IName::P;              using namespace IOal::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::OpenAL::Types;
+using namespace IFlags::P;             using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IName::P;
+using namespace IOal::P;               using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -35,7 +32,6 @@ CTOR_BEGIN(Sources, Source, CLHelperSafe, size_t stSources;);
 /* ------------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Lockable,                     // Lua garbage collector instruction
   public SourceFlags                   // Source flags
 { /* -- Private variables -------------------------------------------------- */
   ALuint           aluId;              // Source id

@@ -34,6 +34,10 @@ struct AgFont : public ArClass<Font> {
 struct AcFont : public ArClass<Font> {
   explicit AcFont(lua_State*const lS) :
     ArClass{LuaUtilClassCreateRef<Font>(lS, cFonts)}{} };
+/* -- Get unlocked Ftf object ---------------------------------------------- */
+struct AgFtfUnlocked : public ArClass<Ftf>
+  { explicit AgFtfUnlocked(lua_State*const lS, const int iArg) :
+    ArClass{LuaUtilGetClassUnlockedRef<Ftf>(lS, iArg, cFtfs)}{} };
 /* -- Get a positive number value ------------------------------------------ */
 struct AgPositive : public AgNumberL<GLfloat> {
   explicit AgPositive(lua_State*const lS, const int iArg) :
@@ -65,7 +69,7 @@ using AgGLuintLG = AgIntegerLG<GLuint>;
 /* ========================================================================= */
 LLFUNC(Add, 0,
   const AgFont aFont{lS, 1};
-  const AgFtf aFtf{lS, 2};
+  const AgFtfUnlocked aFtf{lS, 2};
   aFont().InitFontExtraFtf(aFtf))
 /* ========================================================================= */
 // $ Font:Destroy
@@ -105,7 +109,7 @@ LLFUNC(GetFlags, 1, LuaUtilPushVar(lS, AgFont{lS, 1}().FlagGet()))
 // < Id:integer=The id number of the Font object.
 // ? Returns the unique id of the Font object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFont{lS, 1}().Serial()))
+LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFont{lS, 1}().Atlas::Serial()))
 /* ========================================================================= */
 // $ Font:GetName
 // < Name:string=Name of the font.
@@ -768,7 +772,7 @@ LLFUNC(Console, 1,
 // ? private ownership of it.
 /* ========================================================================= */
 LLFUNC(Ftf, 1,
-  const AgFtf aFtf{lS, 1};
+  const AgFtfUnlocked aFtf{lS, 1};
   const AgGLuintLG aSize{lS, 2, 0, cOgl->MaxTexSize()},
                    aPadding{lS, 3, 0, 16};
   const AgFilterId aFilterId{lS, 4};
@@ -796,7 +800,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFonts->CollectorCount()))
 // ? Creates a texture as a font tileset.
 /* ========================================================================= */
 LLFUNC(Image, 1,
-  const AgImage aImage{lS, 1};
+  const AgImageUnlocked aImage{lS, 1};
   const AgGLuintLG aTileWidth{lS, 2, 0, cOgl->MaxTexSize()},
                    aTileHeight{lS, 3, 0, cOgl->MaxTexSize()},
                    aPaddingWidth{lS, 4, 0, cOgl->MaxTexSize()},
@@ -830,7 +834,7 @@ LLFUNC(Image, 1,
 // ? Widths:Array = The widths of each character from value 'rangestart'
 /* ========================================================================= */
 LLFUNC(Manifest, 1,
-  const AgImage aImage{lS, 1};
+  const AgImageUnlocked aImage{lS, 1};
   const AgJson aJson{lS, 2};
   AcFont{lS}().InitFontImageManifest(aImage, aJson))
 /* ========================================================================= **

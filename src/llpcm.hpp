@@ -18,7 +18,8 @@
 /* ========================================================================= */
 namespace LLPcm {                      // Pcm namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IPcmDef::P;            using namespace Common;
+using namespace IPcm::P;               using namespace IPcmDef::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Pcm common helper classes                                           ## **
@@ -27,6 +28,10 @@ using namespace IPcmDef::P;            using namespace Common;
 struct AcPcm : public ArClass<Pcm> {
   explicit AcPcm(lua_State*const lS) :
     ArClass{LuaUtilClassCreateRef<Pcm>(lS, cPcms)}{} };
+/* -- Get Pcm object ------------------------------------------------------- */
+struct AgPcm : public ArClass<Pcm> {
+  explicit AgPcm(lua_State*const lS, const int iArg) :
+    ArClass{LuaUtilGetClassRef<Pcm>(lS, iArg, cPcms)}{} };
 /* -- Read Pcm loading flags ----------------------------------------------- */
 struct AgPcmFlags : public AgFlags<PcmFlagsConst> {
   explicit AgPcmFlags(lua_State*const lS, const int iArg) :

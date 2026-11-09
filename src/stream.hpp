@@ -19,15 +19,15 @@ using namespace ICodecOGG::P;          using namespace ICollector::P;
 using namespace ICVarDef::P;           using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
 using namespace ILog::P;               using namespace ILookupArray::P;
-using namespace ILockable::P;          using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IMixer::P;             using namespace IMutex::P;
-using namespace IName::P;              using namespace IOal::P;
-using namespace ISerial::P;            using namespace ISource::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::Ogg;              using namespace Lib::OpenAL::Types;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IMixer::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace IOal::P;               using namespace ISerial::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::Ogg;
+using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -71,7 +71,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   /* -- Base classes ------------------------------------------------------- */
   public AsyncLoaderStream,            // Asynchronous loading of Streams
   public LuaEvtSlave<Stream>,          // Lua event system for Stream
-  public Lockable,                     // Lua garbage collector instruction
   protected MutexLock                  // Mutex helper object
 { /* -- Variables ---------------------------------------------------------- */
   FileMap          fmFile;             // FileMap class

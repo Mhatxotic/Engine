@@ -776,7 +776,7 @@ cConsole->FindText(StrImplode(aArgs, cCommon->CommonSpace(), 1));
 { "fonts", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
 const function ShowFontInfo{ [](Statistic &sTable, const Font &fRef)
-  { sTable.DataN(fRef.Serial())
+  { sTable.DataN(fRef.Atlas::Serial())
           .DataE({
             { fRef.LockIsSet(),                'L' },
             { fRef.IsFontBitmap(),             'B' },
@@ -816,17 +816,22 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 const LockGuard lgFtfsSync{ cFtfs->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("GLYPH").Header("FW").Header("FH").Header("DW")
-      .Header("DH").Header("STYLE", false).Header("FAMILY", false)
+sTable.Header("ID").Header("FLAG").Header("GLYPH").Header("FW").Header("FH")
+      .Header("DW").Header("DH").Header("STYLE", false).Header("FAMILY", false)
       .Header("FILENAME", false).Reserve(cFtfs->size());
 // Walk through ftf classes
 for(const Ftf*const fPtr : *cFtfs)
 { // Get reference to class and write its data to the table
   const Ftf &fRef = *fPtr;
-  sTable.DataN(fRef.Serial()).DataN(fRef.GetGlyphCount())
+  sTable.DataN(fRef.Serial())
+        .DataE({
+          { fRef.FtfIsLoaded(),  'I' }, { fRef.LockIsSet(),          'L' },
+          { fRef.FtfIsOutline(), 'O' }, { fRef.FtfIsStrokerLoaded(), 'S' },
+        })
+        .DataN(fRef.FtfGetGlyphCount())
         .DataN(fRef.DimGetWidth(),0).DataN(fRef.DimGetHeight(),0)
         .DataN(fRef.duDPI.DimGetWidth()).DataN(fRef.duDPI.DimGetHeight())
-        .Data(fRef.GetStyle()).Data(fRef.GetFamily())
+        .Data(fRef.FtfGetStyle()).Data(fRef.FtfGetFamily())
         .Data(fRef.NameGet());
 } // Log counts
 cConsole->ConsoleAddLineA(sTable.Finish(),

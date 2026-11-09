@@ -331,14 +331,14 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       NameGet(), fDivisor, DimGetWidth(), DimGetHeight());
   }
   /* -- Initialise the atlas --------------------------------------- */ public:
-  template<class ImageType>void AtlasInit(const StdString &strId,
+  template<class ImageType>void AtlasInit(const StdStringView &ssvIdent,
     const GLuint uTWidth, const GLuint uTHeight, const GLuint uISize,
     const GLuint uTPadding, const OglFilterEnum ofeTFilter)
   { // Make sure padding isn't negative. We use int because it is optimal for
     // use with the BinPack routines.
     if(UtilIntWillOverflow<int>(uPadding))
       XC("Atlas padding size overflows signed integer range!",
-        "Name", strId, "Requested", uTPadding);
+        "Name", ssvIdent, "Requested", uTPadding);
     // Initialise base size, padding and opengl filter
     uPadding = uTPadding;
     ofeFilter = ofeTFilter;
@@ -351,10 +351,10 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // Check if texture size is valid
     if(DimGetWidth() > cOgl->MaxTexSize() || uTWidth > cOgl->MaxTexSize())
       XC("Atlas dimensions not supported by graphics processor!",
-        "Name", strId,               "Requested",  uISize,
-        "Width",      DimGetWidth(),       "Height",     DimGetHeight(),
-        "TileWidth",  uTWidth,            "TileHeight", uTHeight,
-        "Maximum",    cOgl->MaxTexSize());
+        "Name",      ssvIdent,      "Requested",  uISize,
+        "Width",     DimGetWidth(), "Height",     DimGetHeight(),
+        "TileWidth", uTWidth,       "TileHeight", uTHeight,
+        "Maximum",   cOgl->MaxTexSize());
     // Estimate how many glyphs we're fitting in here to prevent unnecessary
     // alocations
     const size_t stGColumns = DimGetWidth() / uTWidth,
@@ -369,7 +369,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // Clear it with uniformed transparent pixels
     itData.Init(mPixels);
      // Initialise the 'Image' class.
-    InitRaw(strId, mPixels, DimGetWidth(), DimGetHeight(), itData.biDepth);
+    InitRaw(ssvIdent, mPixels, DimGetWidth(), DimGetHeight(), itData.biDepth);
     // Initialise the 'Texture' class.
     InitTextureImage(*this,
       uTWidth, uTHeight, uPadding, uPadding, ofeFilter, false);

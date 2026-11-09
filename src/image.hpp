@@ -16,13 +16,13 @@ using namespace IDim::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
 using namespace IImageData::P;         using namespace IImageDef::P;
 using namespace IImageLib::P;          using namespace IImageSlot::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILookupMap::P;         using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IName::P;              using namespace IOgl::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace IOgl::P;               using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Image collector and member class ===================================== */
@@ -37,7 +37,6 @@ template<typename IntType>             // Prototype
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public AsyncLoaderImage,             // For loading images off main thread
-  public Lockable,                     // Lua garbage collector instruction
   public ImageData                     // Raw image data
 { /* -- Swap image data  ------------------------------------------- */ public:
   void ImageSwap(Image &imRef)

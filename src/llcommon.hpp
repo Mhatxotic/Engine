@@ -165,12 +165,6 @@ struct AgAsset : public ArClass<Asset> {
 struct AcAsset : public ArClass<Asset> {
   explicit AcAsset(lua_State*const lS) :
     ArClass{LuaUtilClassCreateRef<Asset>(lS, cAssets)}{} };
-/* -- Get Ftf object ------------------------------------------------------- */
-using IFtf::P::Ftf;
-using IFtf::P::cFtfs;
-struct AgFtf : public ArClass<Ftf>
-  { explicit AgFtf(lua_State*const lS, const int iArg) :
-    ArClass{LuaUtilGetClassRef<Ftf>(lS, iArg, cFtfs)}{} };
 /* -- Get Texture object --------------------------------------------------- */
 using ITexture::P::Texture;
 using ITexture::P::cTextures;
@@ -183,18 +177,16 @@ using IFbo::P::cFbos;
 struct AgFbo : public ArClass<Fbo>
   { explicit AgFbo(lua_State*const lS, const int iArg) :
       ArClass{LuaUtilGetClassRef<Fbo>(lS, iArg, cFbos)}{} };
-/* -- Get Pcm object ------------------------------------------------------- */
-using IPcm::P::Pcm;
-using IPcm::P::cPcms;
-struct AgPcm : public ArClass<Pcm>
-  { explicit AgPcm(lua_State*const lS, const int iArg) :
-      ArClass{LuaUtilGetClassRef<Pcm>(lS, iArg, cPcms)}{} };
 /* -- Get Image object ----------------------------------------------------- */
 using IImage::P::Image;
 using IImage::P::cImages;
 struct AgImage : public ArClass<Image>
   { explicit AgImage(lua_State*const lS, const int iArg) :
       ArClass{LuaUtilGetClassRef<Image>(lS, iArg, cImages)}{} };
+/* -- Get Image object that is not locked ---------------------------------- */
+struct AgImageUnlocked : public ArClass<Image>
+  { explicit AgImageUnlocked(lua_State*const lS, const int iArg) :
+      ArClass{LuaUtilGetClassUnlockedRef<Image>(lS, iArg, cImages)}{} };
 /* -- Get Json object ------------------------------------------------------ */
 using IJson::P::Json;
 using IJson::P::cJsons;

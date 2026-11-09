@@ -14,14 +14,13 @@ using namespace ICVarDef::P;           using namespace IError::P;
 using namespace IFboBlend::P;          using namespace IColour::P;
 using namespace IFboCmd::P;            using namespace ICoords::P;
 using namespace IFboItem::P;           using namespace IFrame::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IName::P;              using namespace IOgl::P;
-using namespace ISerial::P;            using namespace IShader::P;
-using namespace IShaderDef::P;         using namespace IShaders::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::GlFW::Types;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace IOgl::P;               using namespace ISerial::P;
+using namespace IShader::P;            using namespace IShaderDef::P;
+using namespace IShaders::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo collector class for collector data and custom variables ========== */
@@ -41,8 +40,7 @@ class FboBase :                        // Fbo base class
   public Colour,                       // Clear colour of the Fbo
   public FboBlend,                     // Blend mode of the Fbo
   public CoordsGLFloat,                // Matrix co-ordinates of the Fbo
-  public DimGLSizei,                   // Fbo dimensions
-  public Lockable                      // Lua lockable class
+  public DimGLSizei                    // Fbo dimensions
 { /* --------------------------------------------------------------- */ public:
   bool             bClear;             // Clear the Fbo?
   GLenum           glePolyMode;        // Frame buffer polygon mode
@@ -66,18 +64,17 @@ class FboBase :                        // Fbo base class
   uint64_t         ullActive,          // Frame the Fbo was activated
                    ullFinish;          // Frame the Fbo was finished
   /* -- Constructor -------------------------------------------------------- */
-  explicit FboBase(const GLint iPixFmt, const bool bLockable) :
+  explicit FboBase(const GLint iPixFmt) :
     /* -- Initialisers ----------------------------------------------------- */
-    Lockable{ bLockable },             bClear(true),
-    glePolyMode(GL_FILL),              gliMagFilter(GL_NEAREST),
-    gliMinFilter(GL_NEAREST),          gliPixFormat(iPixFmt),
-    gliWrapMode(GL_CLAMP_TO_EDGE),     ofeFilterId(OF_N_N),
-    stCommandsFrame(0),                stGLArrayOff(0),
-    stTrianglesFrame(0),               stTrianglesLast(0),
-    gluFbo(0),                         gluFbotex(0),
-    gluTextureCache(0),                gluTexUnitCache(0),
-    gluShaderCache(0),                 ullActive(StdMaxUInt64),
-    ullFinish(ullActive)
+    bClear(true),                      glePolyMode(GL_FILL),
+    gliMagFilter(GL_NEAREST),          gliMinFilter(GL_NEAREST),
+    gliPixFormat(iPixFmt),             gliWrapMode(GL_CLAMP_TO_EDGE),
+    ofeFilterId(OF_N_N),               stCommandsFrame(0),
+    stGLArrayOff(0),                   stTrianglesFrame(0),
+    stTrianglesLast(0),                gluFbo(0),
+    gluFbotex(0),                      gluTextureCache(0),
+    gluTexUnitCache(0),                gluShaderCache(0),
+    ullActive(StdMaxUInt64),           ullFinish(ullActive)
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -443,16 +440,17 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperFbo{ cFbos, this },        // Initially registered
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
-    FboBase{ GL_RGBA8, false }         // Has alpha channel and not protected
+    FboBase{ GL_RGBA8 }                // Has alpha channel and not protected
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor WITHOUT registration (used for core Fbos)--------------- */
   Fbo(const GLint iPixFmt,             // Pixel format requested
       const bool bLocked) :            // Locked from garbage collector
     /* -- Initialisers ----------------------------------------------------- */
+    Lockable{ bLocked },               // Initialised locked status
     ICHelperFbo{ cFbos },              // Initially unregistered
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
-    FboBase{ iPixFmt, bLocked }        // Init alpha channel and lua protect
+    FboBase{ iPixFmt }                 // Init alpha channel and lua protect
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */

@@ -992,8 +992,10 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (No registration, base class of Font class) ------------ */
-  explicit Texture(const ImageFlagsConst ifcPurpose) :
+  explicit Texture(const ImageFlagsConst ifcPurpose,
+    const bool bLocked = false) :
     /* -- Initialisers ----------------------------------------------------- */
+    Lockable{ bLocked },               // Set Lua GC lock status
     ICHelperTexture{ cTextures },      // Initially unregistered
     TextureBase{ ifcPurpose }          // Purpose is specified by caller
     /* -- No code ---------------------------------------------------------- */

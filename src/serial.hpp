@@ -16,12 +16,14 @@ namespace P {                          // Start of public module namespace
 template<typename IntType = const uint64_t> // Default uint64_t
   requires StdIsIntegral<IntType>           // *or* must be integral
 struct SerialSlave                          // Members initially public
-{ /* -- Public functions --------------------------------------------------- */
+{ /* -- Get serial number -------------------------------------------------- */
   IntType Serial() const { return itSerial; }
   /* -- Protected variables ------------------------------------- */ protected:
   IntType          itSerial;           // IntTypehe counter
   /* -- Constructor that initialises counter ------------------------------- */
   explicit SerialSlave(const IntType itId) : itSerial(itId) {}
+  /* -- Copy constructor --------------------------------------------------- */
+  SerialSlave(const SerialSlave &ssOther) : itSerial(ssOther.Serial()) {}
 };/* -- The master class usually goes in the collector class --------------- */
 template<typename IntType = uint64_t,      // Serial int type (non-const)
   class SlaveClass = SerialSlave<IntType>> // Slave class type

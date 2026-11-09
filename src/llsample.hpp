@@ -31,6 +31,10 @@ struct AgSample : public ArClass<Sample> {
 struct AcSample : public ArClass<Sample> {
   explicit AcSample(lua_State*const lS) :
     ArClass{LuaUtilClassCreateRef<Sample>(lS, cSamples)}{} };
+/* -- Get Pcm object that is not locked ------------------------------------ */
+struct AgPcmUnlocked : public ArClass<Pcm>
+  { explicit AgPcmUnlocked(lua_State*const lS, const int iArg) :
+      ArClass{LuaUtilGetClassUnlockedRef<Pcm>(lS, iArg, cPcms)}{} };
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Sample:* methods                                                    ## **
@@ -143,7 +147,7 @@ LLRSEND                                // Sample:* methods end
 // ? Loads the specified number of samples and returns a handle.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
-  const AgPcm aPcm{lS,1};
+  const AgPcmUnlocked aPcm{lS,1};
   AcSample{lS}().InitSample(aPcm))
 /* ========================================================================= */
 // $ Sample.GetClasses

@@ -12,9 +12,10 @@
 namespace ICollector {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICVarDef::P;           using namespace IError::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace IMutex::P;             using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
+using namespace IHelper::P;            using namespace ILockable::P;
+using namespace ILog::P;               using namespace IMutex::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Static class try/catch helpers ======================================= **
@@ -112,7 +113,7 @@ namespace P {                          // Start of public module namespace
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN(p,m,s,...) \
   CTOR_MEM_BEGIN_EX(p,m,p ## It,s,ICHelper ## m,## __VA_ARGS__)
-/* -- Start building a member class for a collector ------------------------ */
+/* -- Same as above but adds a serial counter class ------------------------ */
 #define CTOR_MEM_BEGIN_CSLAVE(p,m,s) \
   CTOR_MEM_BEGIN(p,m,s,,public SerialSlave<>)
 /* -- All in one collector and member builder ------------------------------ */
@@ -129,7 +130,7 @@ namespace P {                          // Start of public module namespace
 #define CTOR_MEM_BEGIN_ASYNC(p,m,s,...) \
   CTOR_MEM_BEGIN_ASYNC_EX(p,m,p ## It,s,ICHelper ## m, \
     AsyncLoader ## m,## __VA_ARGS__)
-/* -- Start building a member class for a collector ------------------------ */
+/* -- Same as above but adds a serial counter class ------------------------ */
 #define CTOR_MEM_BEGIN_ASYNC_CSLAVE(p,m,s) \
   CTOR_MEM_BEGIN_ASYNC(p,m,s,,         /* Use expanded macro                */\
     public SerialSlave<>)              /* Counter id slave class             */
@@ -142,8 +143,11 @@ namespace P {                          // Start of public module namespace
 ** ## Derive this class into the main class to allow collection of child  ## **
 ** ## classes.                                                            ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
-template<class MemberType, class ListType, class IteratorType>
+** -- Template types ------------------------------------------------------- */
+template<class MemberType,             // The member type
+         class ListType,               // The array list type to hold members
+         class IteratorType>           // The array list iterator type
+/* -- Class body ----------------------------------------------------------- */
 class CLHelperBase :
   /* -- Base classes ------------------------------------------------------- */
   public SerialMaster<>,               // Counter master class
@@ -186,8 +190,10 @@ class CLHelperBase :
       NameGet());
   }
   /* -- Constructor -------------------------------------------------------- */
-  explicit CLHelperBase(const StdStringView &ssvName) :
-    /* -- Initialisers ----------------------------------------------------- */
+  explicit CLHelperBase(
+    /* -- Parameters ------------------------------------------------------- */
+    const StdStringView &ssvName       // The name to call the lock
+    ): /* -- Initialisers -------------------------------------------------- */
     InitHelper{ ssvName },             // Set initialisation helper name
     stMaximum(StdMaxSizeT)             // Initialise maximum objects
     /* -- No code ---------------------------------------------------------- */
@@ -196,8 +202,15 @@ class CLHelperBase :
   CVarReturn CLBaseSetLimitUnsafe(const size_t stLimit)
     { return CVarSimpleSetInt(stMaximum, stLimit); }
 };/* ----------------------------------------------------- Collector::End -- */
-template<class MemberType, class ListType, class IteratorType,
-         class BaseType = CLHelperBase<MemberType, ListType, IteratorType>>
+/* -- Safe collector access with mutex locking ----------------------------- */
+template<class MemberType,             // The member type
+         class ListType,               // The array list type to hold members
+         class IteratorType,           // The array list iterator type
+         class BaseType =              // The base CLHelper class type
+           CLHelperBase<MemberType,    // The member type
+                        ListType,      // The array list type to hold members
+                        IteratorType>> // The array list iterator type
+/* -- Class body ----------------------------------------------------------- */
 class CLHelperSafe :
   /* -- Base classes ------------------------------------------------------- */
   public BaseType,                     // The collector base type
@@ -220,9 +233,11 @@ class CLHelperSafe :
     { return MutexCall([this, &itObj](){
         return this->CLBaseEraseUnsafe(itObj);}); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit CLHelperSafe(const char*const cpT) :
-    /* -- Initialisers ----------------------------------------------------- */
-    BaseType{ cpT }                    // Initialise base type with name
+  explicit CLHelperSafe(
+    /* -- Parameters ------------------------------------------------------- */
+    const StdStringView &ssvName       // The name to call the lock
+    ): /* -- Initialisers -------------------------------------------------- */
+    BaseType{ ssvName }                // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Lock the mutex and return the removed iterator --------------------- */
@@ -230,8 +245,15 @@ class CLHelperSafe :
     { return MutexCall([this, stLimit](){
         return this->CLBaseSetLimitUnsafe(stLimit);}); }
 };/* ----------------------------------------------------------------------- */
-template<class MemberType, class ListType, class IteratorType,
-         class BaseType = CLHelperBase<MemberType, ListType, IteratorType>>
+/* -- Unsafe collector access with no locking ------------------------------ */
+template<class MemberType,             // The member type
+         class ListType,               // The array list type to hold members
+         class IteratorType,           // The array list iterator type
+         class BaseType =              // The base CLHelper class type
+           CLHelperBase<MemberType,    // The member type
+                        ListType,      // The array list type to hold members
+                        IteratorType>> // The array list iterator type
+/* -- Class body ----------------------------------------------------------- */
 class CLHelperUnsafe :                 // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // The collector base type
@@ -247,16 +269,23 @@ class CLHelperUnsafe :                 // Members initially private
   IteratorType CLErase(IteratorType &itObj)
     { return this->CLBaseEraseUnsafe(itObj); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit CLHelperUnsafe(const char*const cpT) :
-    /* -- Initialisers ----------------------------------------------------- */
-    BaseType{ cpT }                    // Initialise base type with name
+  explicit CLHelperUnsafe(
+    /* -- Parameters ------------------------------------------------------- */
+    const StdStringView &ssvName       // The name to call the lock
+    ): /* -- Initialisers -------------------------------------------------- */
+    BaseType{ ssvName }                // Initialise base type with name
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Set maximum objects ------------------------------------------------ */
   CVarReturn CLSetLimit(const size_t stLimit)
     { return this->CLBaseSetLimitUnsafe(stLimit); }
 };/* ----------------------------------------------------------------------- */
-template<class MemberType, class LockType, class ListType, class IteratorType>
+/* -- Collector helper class ----------------------------------------------- */
+template<class MemberType,             // The member type
+         class LockType,               // The access locking type
+         class ListType,               // The array list type to hold members
+         class IteratorType>           // The iterator type to the above list
+/* -- Class body ----------------------------------------------------------- */
 struct CLHelper :                      // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public LockType                      // CLHelperSafe or CLHelperUnsafe
@@ -285,9 +314,11 @@ struct CLHelper :                      // Members initially public
   IteratorType CollectorErase(IteratorType &itObj)
     { return this->CLErase(itObj); }
   /* -- Constructor -------------------------------------------------------- */
-  explicit CLHelper(const char*const cpT) :
-    /* -- Initialisers ----------------------------------------------------- */
-    LockType{ cpT }                    // Initialise lock type with name
+  explicit CLHelper(
+    /* -- Parameters ------------------------------------------------------- */
+    const StdStringView &ssvName       // The name to call the lock
+    ): /* -- Initialisers -------------------------------------------------- */
+    LockType{ ssvName }                // Initialise lock type with name
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
@@ -302,8 +333,11 @@ struct CLHelper :                      // Members initially public
 ** ## register and unregister themselves in the collector and other       ## **
 ** ## neat things.                                                        ## **
 ** ######################################################################### **
-** == Parent class helper ================================================== */
-template<class CollectorType, class MemberType, class IteratorType>
+** -- Template types ------------------------------------------------------- */
+template<class CollectorType,          // The parent collector type
+         class MemberType,             // The member type
+         class IteratorType>           // The member iterator type
+/* -- Class body ----------------------------------------------------------- */
 class ICHelperBase                     // Members initially private
 { /* -- Protected variables ------------------------------------------------ */
   IteratorType     cIterator;          // Iterator to this object in parent
@@ -382,8 +416,11 @@ class ICHelperBase                     // Members initially private
     mtObjRef.cIterator = ctParent.CollectorGetLastItemUnsafe();
   }
   /* ----------------------------------------------------------------------- */
-  explicit ICHelperBase(CollectorType*const ctPtr, IteratorType &&itObj) :
-    /* -- Initialisers ----------------------------------------------------- */
+  explicit ICHelperBase(
+    /* -- Parameters ------------------------------------------------------- */
+    CollectorType*const ctPtr,         // Pointer to collector class
+    IteratorType &&itObj               // The iterator to initialise with
+    ): /* -- Initialisers -------------------------------------------------- */
     cIterator{ StdMove(itObj) },       // Initialise iterator
     ctParent{ *ctPtr }                 // Initialise pointer to collector class
     /* -- No code ---------------------------------------------------------- */
@@ -396,9 +433,15 @@ class ICHelperBase                     // Members initially private
 ** ## objects need this because the list can be accessed and manipulated  ## **
 ** ## in the audio processing thread.                                     ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
-template<class CollectorType, class MemberType, class IteratorType,
-  class BaseType = ICHelperBase<CollectorType, MemberType, IteratorType>>
+** -- Template types ------------------------------------------------------- */
+template<class CollectorType,          // The parent collector type
+         class MemberType,             // The member type
+         class IteratorType,           // The member iterator type
+         class BaseType =              // The base ICHelper class type
+           ICHelperBase<CollectorType, // The parent collector type
+                        MemberType,    // The member type
+                        IteratorType>> // The member iterator type
+/* -- Class body ----------------------------------------------------------- */
 class ICHelperSafe :                   // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // ICHelper base class
@@ -426,11 +469,22 @@ class ICHelperSafe :                   // Members initially private
     { this->ctParent.MutexCall([this, &mtObj](){
         this->ICHelperBaseCopyRegistration(mtObj);}); }
   /* -- Constructor with registration -------------------------------------- */
-  explicit ICHelperSafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
-    BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) } {}
+  explicit ICHelperSafe(
+    /* -- Parameters ------------------------------------------------------- */
+    CollectorType*const ctPtr,         // Pointer to collector class
+    MemberType*const mtPtr             // Pointer to member class
+    ): /* -- Initialisers -------------------------------------------------- */
+    BaseType{ ctPtr, ICHelperInit(ctPtr, mtPtr) }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Constructor without registration ----------------------------------- */
-  explicit ICHelperSafe(CollectorType*const ctPtr) :
-    BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr)) } {}
+  explicit ICHelperSafe(
+    /* -- Parameters ------------------------------------------------------- */
+    CollectorType*const ctPtr          // Pointer to collector class
+    ): /* -- Initialisers -------------------------------------------------- */
+    BaseType{ ctPtr, ICHelperInit(ctPtr) }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 /* == Collector class helper without locks ================================= **
 ** ######################################################################### **
@@ -439,9 +493,15 @@ class ICHelperSafe :                   // Members initially private
 ** ## know the objects are not going to modify or access the list in a    ## **
 ** ## thread other than the engine thread.                                ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
-template<class CollectorType, class MemberType, class IteratorType,
-  class BaseType = ICHelperBase<CollectorType, MemberType, IteratorType>>
+** -- Template types ------------------------------------------------------- */
+template<class CollectorType,          // The parent collector type
+         class MemberType,             // The member type
+         class IteratorType,           // The member iterator type
+         class BaseType =              // The base ICHelper class type
+           ICHelperBase<CollectorType, // The parent collector type
+                        MemberType,    // The member type
+                        IteratorType>> // The member iterator type
+/* -- Class body ----------------------------------------------------------- */
 class ICHelperUnsafe :                 // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   public BaseType                      // ICHelper base class
@@ -465,15 +525,20 @@ class ICHelperUnsafe :                 // Members initially private
   void ICHelperCopy(const MemberType &mtObj)
     { this->ICHelperBaseCopyRegistration(mtObj); }
   /* -- Constructors without registration ---------------------------------- */
-  explicit ICHelperUnsafe(CollectorType*const ctPtr) :
-    /* -- Initialisers ----------------------------------------------------- */
-    BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr)) }
+  explicit ICHelperUnsafe(
+    /* -- Parameters ------------------------------------------------------- */
+    CollectorType*const ctPtr          // Pointer to collector class
+    ): /* -- Initialisers -------------------------------------------------- */
+    BaseType{ ctPtr, ICHelperInit(ctPtr) }
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with registration -------------------------------------- */
-  explicit ICHelperUnsafe(CollectorType*const ctPtr, MemberType*const mtPtr) :
-    /* -- Initialisers ----------------------------------------------------- */
-    BaseType{ ctPtr, StdMove(ICHelperInit(ctPtr, mtPtr)) }
+  explicit ICHelperUnsafe(
+    /* -- Parameters ------------------------------------------------------- */
+    CollectorType*const ctPtr,         // Pointer to collector class
+    MemberType*const mtPtr             // Pointer to member class
+    ): /* -- Initialisers -------------------------------------------------- */
+    BaseType{ ctPtr, ICHelperInit(ctPtr, mtPtr) }
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -485,12 +550,16 @@ class ICHelperUnsafe :                 // Members initially private
 ** ## as fast as possible. Also members can freely use 'cParent' to       ## **
 ** ## access the collector.                                               ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
-template<class CollectorType, class MemberType, class LockType,
-  class IteratorType>
+** -- Template types ------------------------------------------------------- */
+template<class CollectorType,          // The parent collector type
+         class MemberType,             // The member type
+         class LockType,               // The member access locking type
+         class IteratorType>           // The member iterator type
+/* -- Class body ----------------------------------------------------------- */
 struct ICHelper :                      // Members initially public
   /* -- Base classes ------------------------------------------------------- */
   public LockType,                     // ICHelperSafe or ICHelperUnSafe
+  public virtual Lockable,             // Prevent Lua GC from destroying?
   public virtual NameStr               // Name of object (possibly shared)
 { /* -- Value type --------------------------------------------------------- */
   using ParentType = CollectorType;    // For some LuaUtil* functions
@@ -506,38 +575,25 @@ struct ICHelper :                      // Members initially public
   void CollectorUnregister() { this->ICHelperErase(); }
   /* -- Destructor (unregister if registered) ------------------- */ protected:
   DTORHELPER(~ICHelper, CollectorUnregister())
-  /* -- Constructor (move) ------------------------------------------------- */
-  explicit ICHelper(ICHelper &&icOther) :
-    /* -- Initialisers ----------------------------------------------------- */
-    Name{ StdMove(icOther) },          // Move other identifier
-    LockType{ StdMove(icOther) }       // Move base class members
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Constructor (manual registration) ---------------------------------- */
-  explicit ICHelper(const StdString &strN, CollectorType*const ctPtr) :
-    /* -- Initialisers ----------------------------------------------------- */
-    Name{ strN },                      // Initialise identifier
-    LockType{ ctPtr }                  // Initialise with other collector
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Constructor (manual registration, virtual) ------------------------- */
-  explicit ICHelper(CollectorType*const ctPtr) :
-    /* -- Initialisers ----------------------------------------------------- */
+  /* -- Move other member constructor -------------------------------------- */
+  explicit ICHelper(
+    /* -- Parameters ------------------------------------------------------- */
+    MemberType &&mOther                // Other member object to swap with
+    ): /* -- Initialisers -------------------------------------------------- */
+    Lockable{ StdMove(mOther) },       // Move lock status
+    Name{ StdMove(mOther) },           // Move other identifier
+    LockType{ &mOther.ctParent }       // Initialise base ICHelper
+    /* -- Swap registration if registered ---------------------------------- */
+    { CollectorSwapRegistration(mOther); }
+  /* -- Constructor with manual registration ------------------------------- */
+  explicit ICHelper(
+    /* -- Parameters ------------------------------------------------------- */
+    CollectorType*const ctPtr          // Pointer to collector class
+    ): /* -- Initialisers -------------------------------------------------- */
     LockType{ ctPtr }                  // Initialise with other collector
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor with automatic registration ---------------------------- */
-  explicit ICHelper(
-    /* -- Parameters ------------------------------------------------------- */
-    const StdString &strN,             // Set object identifier
-    CollectorType*const ctPtr,         // Pointer to collector class
-    MemberType*const mtPtr             // Pointer to member class
-    ): /* -- Initialisers -------------------------------------------------- */
-    Name{ strN },                      // Initialise identifier
-    LockType{ ctPtr, mtPtr }           // Initialise lock type
-    /* -- No code ---------------------------------------------------------- */
-    {}
-  /* -- Constructor with automatic registration (virtual) ------------------ */
   explicit ICHelper(
     /* -- Parameters ------------------------------------------------------- */
     CollectorType*const ctPtr,         // Pointer to collector class

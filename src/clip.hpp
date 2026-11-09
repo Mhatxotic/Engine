@@ -14,12 +14,12 @@ namespace IClipboard {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
-using namespace IGlFW::P;              using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IName::P ;
-using namespace IRefCtr::P;            using namespace ISerial::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IGlFW::P;              using namespace ILog::P;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IName::P ;             using namespace IRefCtr::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Clipboard collector and lua interface class -------------------------- */
@@ -31,8 +31,7 @@ CTOR_BEGIN(Clips, Clip, CLHelperUnsafe,,,
 CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public LuaEvtSlave<Clip, 2>,         // Need to store callback and class
-  public RefCtrMaster<>,               // Ref counter to protect from destructs
-  public Lockable                      // Lua garbage collector instruction
+  public RefCtrMaster<>                // Ref counter to protect from destructs
 { /* -- Private variables -------------------------------------------------- */
   StdString        strClipboard;       // Clipboard string
   /* -- Window set clipboard request --------------------------------------- */

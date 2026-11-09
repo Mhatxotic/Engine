@@ -38,7 +38,8 @@ CTOR_BEGIN_NOBB(Fonts, Font, CLHelperUnsafe)
 /* ------------------------------------------------------------------------- */
 class FontBase :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  public Atlas                         // Atlas class
+  public Atlas,                        // Atlas class
+  public Ftf                           // Freetype font class
 { /* -- Protected typedefs -------------------------------------- */ protected:
   class Glyph :                        // Members initially private
     /* -- Dependencies ----------------------------------------------------- */
@@ -100,7 +101,6 @@ class FontBase :                       // Members initially private
   Texture         *tGlyphs;            // Texture for print calls only
   FboItem          fiOutline;          // Outline colour
   /* -- Freetype handles --------------------------------------------------- */
-  Ftf              ftfData;            // FT font data
   using FtfList = StdList<Ftf>;        // List of extra fonts typedef
   FtfList          ftflExtras;         // Extra fonts if character not found
   FT_ULong         fulDefaultChar;     // Default fallback character
@@ -176,7 +176,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   /* -- Do initialise specified freetype character range ------------------- */
   void InitFTCharRange(const Codepoint cStart, const Codepoint cEnd)
   { // Ignore if not a freetype font.
-    if(!ftfData.IsLoaded()) return;
+    if(FtfIsNotLoaded()) return;
     // Log pre-cache progress
     cLog->LogDebugExSafe("Font '$' pre-caching character range $ to $...",
       NameGet(), cStart, cEnd);
@@ -192,7 +192,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   /* -- Do initialise all freetype characters in specified string ---------- */
   void InitFTCharString(const StdStringView ssvString)
   { // Ignore if string not valid or font not loaded
-    if(ssvString.empty() || !ftfData.IsLoaded()) return;
+    if(ssvString.empty() || FtfIsNotLoaded()) return;
     // Do load string characters
     DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(ssvString);
     // Check if any textures need reloading
@@ -219,27 +219,24 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       ftfSrc.NameGet(), gluISize, gluNPadding, ofeNFilter, StdIOSHex,
       ifcFlags.FlagGet());
     // If source and destination ftf class are not the same?
-    if(&ftfData != &ftfSrc)
-    { // Take ownership of specified freetype identifier and handles
-      ftfData.SwapFtf(ftfSrc);
-      NameSet(ftfData.NameGet());
-    } // Initialise load flags
+    if(this != &ftfSrc) FtfSwap(ftfSrc);
+    // Initialise load flags
     FlagSet(ifcFlags);
     SetFontFreeType();
     // Outline characters will be stored one after the opaque characters
     // thus doubling the size of the glyph data/texture coord lists. The
     // multiplier is already 1 by default so this just makes it equal 2.
-    if(ftfData.IsOutline()) stMultiplier = 2;
+    if(FtfIsOutline()) stMultiplier = 2;
     // Initialise the atlas texture
-    AtlasInit<ImageTypeGrayAlpha>(NameGet(),
-      static_cast<GLuint>(ceil(ftfData.DimGetWidth())),
-      static_cast<GLuint>(ceil(ftfData.DimGetHeight())),
+    AtlasInit<ImageTypeGrayAlpha>(ftfSrc.NameGet(),
+      static_cast<GLuint>(ceil(Ftf::DimGetWidth())),
+      static_cast<GLuint>(ceil(Ftf::DimGetHeight())),
       gluISize, gluNPadding, ofeNFilter);
     // Set requested font size for opengl
-    gldfFont.DimSet(ftfData);
+    gldfFont.DimSet(*this);
     // Set default scaled font size and line spacing adjust
     SetSize(1.0f);
-    glfLSpacingHeight = ftfData.DimGetHeight();
+    glfLSpacingHeight = Ftf::DimGetHeight();
     // Update tile size as GLfloat for opengl
     dglfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
     // Make enough space for initial tex coords set
@@ -446,8 +443,9 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (without registration) --------------------------------- */
-  explicit Font(const ImageFlagsConst ifcPurpose) :
+  explicit Font(const ImageFlagsConst ifcPurpose, const bool bLocked = false) :
     /* -- Initialisers ----------------------------------------------------- */
+    Lockable{ bLocked },               // Initialise Lua GC lock status
     ICHelperFont{ cFonts },            // Initially unregistered
     FontBase{ ifcPurpose }             // Set purpose
     /* -- No code ---------------------------------------------------------- */

@@ -12,12 +12,12 @@ namespace IShader {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICollector::P;
 using namespace IError::P;             using namespace ICoords::P;
-using namespace ILockable::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IName::P;              using namespace IOgl::P;
-using namespace ISerial::P;            using namespace IShaderDef::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace Lib::GlFW::Types;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace IOgl::P;               using namespace ISerial::P;
+using namespace IShaderDef::P;         using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Shader list class ---------------------------------------------------- */
@@ -55,7 +55,6 @@ using ShaderList = StdList<ShaderCell>; // Shader cell list
 /* ------------------------------------------------------------------------- */
 CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
-  public Lockable,                     // Lua garbage collector instruction
   public ShaderList                    // List of shader data in this program
 { /* -- Private typedefs --------------------------------------------------- */
   using UniList = StdArray<GLint, U_MAX>; // Uniform array list

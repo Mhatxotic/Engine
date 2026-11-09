@@ -27,6 +27,10 @@ using namespace IStd::P;               using namespace Common;
 struct AcFtf : public ArClass<Ftf> {
   explicit AcFtf(lua_State*const lS) :
     ArClass{LuaUtilClassCreateRef<Ftf>(lS, cFtfs)}{} };
+/* -- Get Ftf object ------------------------------------------------------- */
+struct AgFtf : public ArClass<Ftf> {
+  explicit AgFtf(lua_State*const lS, const int iArg) :
+    ArClass{LuaUtilGetClassRef<Ftf>(lS, iArg, cFtfs)}{} };
 /* -- Read a font dimension argument --------------------------------------- */
 struct AgDimension : public AgGLfloatLG
   { explicit AgDimension(lua_State*const lS, const int iArg) :
@@ -55,7 +59,7 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Ftf>(lS, cFtfs))
 // < Name:string=The internal name of the freetype font
 // ? Returns the internal name of the actual freetype font. (e.g. Arial)
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetFamily, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetFamily()))
+LLFUNC(GetFamily, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().FtfGetFamily()))
 /* ========================================================================= */
 // $ Ftf:GetId
 // < Id:integer=The id number of the Ftf object.
@@ -67,7 +71,7 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().Serial()))
 // < Count:integer=Number of glyphs available.
 // ? Returns the internal number of glyphs supported by this freetype font.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetGlyphs, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetGlyphCount()))
+LLFUNC(GetGlyphs, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().FtfGetGlyphCount()))
 /* ========================================================================= */
 // $ Ftf:GetName
 // < Name:string=The name of the freetype font
@@ -79,7 +83,7 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().NameGet()))
 // < Name:string=The internal style name of the freetype font
 // ? Returns the internal name of the actual freetype font. (e.g. Bold)
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetStyle, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().GetStyle()))
+LLFUNC(GetStyle, 1, LuaUtilPushVar(lS, AgFtf{lS, 1}().FtfGetStyle()))
 /* ========================================================================= */
 // $ Ftf:IsDestroyed
 // < Destroyed:boolean=If the Ftf class is destroyed
@@ -121,7 +125,7 @@ LLFUNC(Asset, 1,
   const AgDpiDimension aDpiWidth{lS, 5},
                        aDpiHeight{lS, 6};
   const AgOutline aOutline{lS, 7};
-  AcFtf{lS}().InitArray(aName(), aAsset, aWidth, aHeight, aDpiWidth,
+  AcFtf{lS}().FtfInitArray(aName(), aAsset, aWidth, aHeight, aDpiWidth,
     aDpiHeight, aOutline))
 /* ========================================================================= */
 // $ Ftf.AssetAsync
@@ -149,7 +153,7 @@ LLFUNC(AssetAsync, 0,
                        aDpiHeight{lS, 6};
   const AgOutline aOutline{lS, 7};
   LuaUtilCheckFunc(lS, 8, 9, 10);
-  AcFtf{lS}().InitAsyncArray(lS, aName(), aAsset, aWidth, aHeight,
+  AcFtf{lS}().FtfInitAsyncArray(lS, aName(), aAsset, aWidth, aHeight,
     aDpiWidth, aDpiHeight, aOutline))
 /* ========================================================================= */
 // $ Ftf.File
@@ -170,7 +174,7 @@ LLFUNC(File, 1,
   const AgDpiDimension aDpiWidth{lS, 4},
                        aDpiHeight{lS, 5};
   const AgOutline aOutline{lS, 6};
-  AcFtf{lS}().InitFile(aFilename, aWidth, aHeight, aDpiWidth, aDpiHeight,
+  AcFtf{lS}().FtfInitFile(aFilename, aWidth, aHeight, aDpiWidth, aDpiHeight,
     aOutline))
 /* ========================================================================= */
 // $ Ftf.FileAsync
@@ -195,7 +199,7 @@ LLFUNC(FileAsync, 0,
                        aDpiHeight{lS, 5};
   const AgOutline aOutline{lS, 6};
   LuaUtilCheckFunc(lS, 7, 8, 9);
-  AcFtf{lS}().InitAsyncFile(lS, aFilename, aWidth, aHeight, aDpiWidth,
+  AcFtf{lS}().FtfInitAsyncFile(lS, aFilename, aWidth, aHeight, aDpiWidth,
     aDpiHeight, aOutline))
 /* ========================================================================= */
 // $ Ftf.GetClasses

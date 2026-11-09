@@ -1100,7 +1100,7 @@ LLFUNC(Console, 1,
 // ? memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
-  const AgImage aImage{lS, 1};
+  const AgImageUnlocked aImage{lS, 1};
   const AgFilterId aFilterId{lS, 2};
   AcTexture{lS}().InitTextureImage(aImage, 0, 0, 0, 0, aFilterId))
 /* ========================================================================= */
@@ -1120,7 +1120,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cTextures->CollectorCount()))
 // ? class and drains all the memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Manifest, 1,
-  const AgImage aImage{lS, 1};
+  const AgImageUnlocked aImage{lS, 1};
   const AgJson aJson{lS, 2};
   AcTexture{lS}().InitTextureImageManifest(aImage, aJson))
 /* ========================================================================= */
@@ -1144,7 +1144,7 @@ LLFUNC(MaxSize, 1, LuaUtilPushVar(lS, cOgl->MaxTexSize()))
 // ? memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(CreateTS, 1,
-  const AgImage aImage{lS, 1};
+  const AgImageUnlocked aImage{lS, 1};
   const AgUIntLG aTW{lS, 2, 0, UINT_MAX}, aTH{lS, 3, 0, UINT_MAX},
                  aPW{lS, 4, 0, UINT_MAX}, aPH{lS, 5, 0, UINT_MAX};
   const AgFilterId aFilterId{lS, 6};
@@ -1161,7 +1161,7 @@ LLFUNC(CreateTS, 1,
 // ? specified 'Image' class and drains all the memory from it.
 /* ------------------------------------------------------------------------- */
 LLFUNC(ImageUT, 1,
-  const AgImage aImage{lS, 1};
+  const AgImageUnlocked aImage{lS, 1};
   const AgFilterId aFilterId{lS, 2};
   const AgIntegerVector<GLuint> aTiles{lS, 3};
   AcTexture{lS}().InitTextureImageTiles(aImage, aFilterId, aTiles))
