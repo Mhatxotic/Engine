@@ -11,13 +11,14 @@
 namespace IThread {                    // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICollector::P;
-using namespace IError::P;             using namespace ILog::P;
-using namespace ILookupMap::P;         using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMutex::P;
-using namespace IName::P ;             using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace ITime::P;
-using ::std::thread;
+using namespace IDuration::P;          using namespace IError::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+/* -- Typedefs ------------------------------------------------------------- */
+using StdThread = ::std::thread;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -49,29 +50,28 @@ class ThreadBase                       // Thread variables class
   AtomicBool       abShouldExit;       // Thread should exit
   AtomicClkDuration acdStart,          // Thread start time
                    scdEnd;             // Thread end time
-  const SysThread  stPerf;             // Thread is high performance?
+  const SysThread  sytPerf;            // Thread is high performance?
   /* -- Constructor -------------------------------------------------------- */
-  ThreadBase(const SysThread stNPerf,  // Thread is high performance?
-             void*const vpNParam,      // Thread user parameter
-             const CbThFunc &ctfNFunc) : // Thread callback function
+  ThreadBase(const SysThread sytNPerf,             // Thread is high perf?
+             void*const vpNParam      = nullptr,   // Thread user parameter
+             const CbThFunc &ctfNFunc = nullptr) : // Thread callback function
     /* -- Initialisers ----------------------------------------------------- */
     atsCode{TS_STANDBY},               // Set exit code to standby
     vpParam(vpNParam),                 // Set user thread parameter
     ctfFunc{ ctfNFunc },               // Set thread callback function
     abShouldExit(false),               // Should never exit at first
-    stPerf(stNPerf)                    // Set thread high performance
+    sytPerf(sytNPerf)                  // Set thread high performance
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public ThreadBase,                   // Thread variables class
-  private thread                       // The C++11 thread
+  private StdThread                    // The C++11 thread
 { /* -- Put in place a new thread ------------------------------------------ */
   template<typename ...VarArgs>void ThreadNew(VarArgs &&...vaArgs)
-  { // Start the thread
-    thread tNewThread{ StdForward<VarArgs>(vaArgs)... };
-    // Set to this thread
+  { // Start the thread and set it to this thread
+    StdThread tNewThread{ StdForward<VarArgs>(vaArgs)... };
     this->swap(tNewThread);
   }
   /* -- Thread handler function -------------------------------------------- */
@@ -100,9 +100,10 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Reduce thread count
     --ctParent.astRunning;
     // Log if thread didn't signal to exit
-    cLog->LogDebugExSafe("Thread $<$> finished in $ with $.",
+    cLog->LogDebugExSafe("Thread $<$> finished in $ with $<$>.",
       Serial(), NameGet(), durShort.Parse(ClockTimePointRangeToClampedDouble(
-        ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString());
+        ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString(),
+        ThreadGetExitCode());
     // Reset exit code to waiting for acknowledgement by engine thread
     ThreadSetExitCode(TS_FINISHED);
   } // exception occurred in thread so handle it
@@ -123,7 +124,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   { // Get pointer to thread class and if valid?
     if(Thread*const tPtr = reinterpret_cast<Thread*>(vpPtr))
     { // Set thread name and priority in system
-      if(!SysInitThread(tPtr->NameGetData(), tPtr->stPerf))
+      if(!SysInitThread(tPtr->NameGetData(), tPtr->sytPerf))
         cLog->LogWarningExSafe("Thread '$' update priority to $ failed: $!",
           tPtr->NameGet(), tPtr->ThreadGetPerf(), StrFromErrNo());
       // Run the thread callback
@@ -215,7 +216,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   bool ThreadIsCurrent() const { return StdThreadId() == get_id(); }
   bool ThreadIsNotCurrent() const { return !ThreadIsCurrent(); }
   /* ----------------------------------------------------------------------- */
-  unsigned ThreadGetPerf() const { return static_cast<unsigned>(stPerf); }
+  unsigned ThreadGetPerf() const { return static_cast<unsigned>(sytPerf); }
   /* ----------------------------------------------------------------------- */
   bool ThreadShouldExit() const { return abShouldExit; }
   bool ThreadShouldNotExit() const { return !ThreadShouldExit(); }
@@ -244,58 +245,58 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   void ThreadDeInit()
     { ThreadStop(); this->CollectorUnregister(); }
   /* -- Initialise with callback only and register ------------------------- */
-  void ThreadInit(const CbThFunc &cbfC)
-    { ctfFunc = cbfC; this->CollectorRegister(); }
+  void ThreadInit(const CbThFunc &cbfCb)
+    { ctfFunc = cbfCb; this->CollectorRegister(); }
   /* -- Initialise with name and callback ---------------------------------- */
-  void ThreadInit(const StdStringView &ssvN, const CbThFunc &cbfC)
-    { NameSet(ssvN); ThreadInit(cbfC); }
+  void ThreadInit(const StdStringView &ssvIdent, const CbThFunc &cbfCb)
+    { NameSet(ssvIdent); ThreadInit(cbfCb); }
   /* -- Initialise with name, callback, parameter and start execute -------- */
-  void ThreadInit(const StdStringView &ssvN, const CbThFunc &cbfC,
+  void ThreadInit(const StdStringView &ssvIdent, const CbThFunc &cbfCb,
     void*const vpPtr)
-  { ThreadInit(ssvN, cbfC); ThreadStart(vpPtr); }
+  { ThreadInit(ssvIdent, cbfCb); ThreadStart(vpPtr); }
   /* -- Initialise with callback, parameter and start execute -------------- */
-  void ThreadInit(const CbThFunc &cbfC, void*const vpPtr)
-    { ThreadInit(cbfC); ThreadStart(vpPtr); }
+  void ThreadInit(const CbThFunc &cbfCb, void*const vpPtr)
+    { ThreadInit(cbfCb); ThreadStart(vpPtr); }
   /* -- Full initialise and execute constructor ---------------------------- */
-  Thread(const StdStringView &ssvN,    // Requested Thread name
-         const SysThread sP,           // Thread needs high performance?
-         const CbThFunc &cbfC,         // Requested callback function
+  Thread(const StdStringView &ssvIdent,// Requested Thread name
+         const SysThread sytPf,        // Thread needs high performance?
+         const CbThFunc &cbfCb,        // Requested callback function
          void*const vpPtr) :           // User parameter to store
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvN },                      // Initialise requested thread name
+    Name{ ssvIdent },                  // Initialise requested thread name
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
-    ThreadBase{ sP, vpPtr, cbfC },     // Set perf, parameter and callback
-    thread{ ThreadMain, this }         // Start the thread straight away
+    ThreadBase{ sytPf, vpPtr, cbfCb }, // Set perf, parameter and callback
+    StdThread{ ThreadMain, this }      // Start the thread straight away
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Standby constructor (set everything except user parameter) --------- */
-  Thread(const StdStringView &ssvN,    // Requested Thread name
-         const SysThread sP,           // Thread needs high performance?
-         const CbThFunc &cbfC) :       // Requested callback function
+  Thread(const StdStringView &ssvIdent,// Requested Thread name
+         const SysThread sytPf,        // Thread needs high performance?
+         const CbThFunc &cbfCb) :      // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvN },                      // Set requested identifier
+    Name{ ssvIdent },                  // Set requested identifier
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
-    ThreadBase{ sP, nullptr, cbfC }    // Just set callback function
+    ThreadBase{ sytPf, nullptr, cbfCb }// Just set callback function
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Standby constructor ------------------------------------------------ */
-  Thread(const StdStringView &ssvN,    // Requested Thread name
-         const SysThread sP) :         // Thread needs high performance?
+  Thread(const StdStringView &ssvIdent,// Requested Thread name
+         const SysThread sytPf) :      // Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvN },                      // Set requested identifer
+    Name{ ssvIdent },                  // Set requested identifer
     ICHelperThread{ cThreads },        // No automatic registration
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
-    ThreadBase{ sP, nullptr, nullptr } // Initialise nothing else
+    ThreadBase{ sytPf }                // Initialise nothing else
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Standby constructor ------------------------------------------------ */
-  explicit Thread(const SysThread sP) :// Thread needs high performance?
+  explicit Thread(const SysThread sytPf) :// Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads },        // No automatic registration
-    SerialSlave{ ctParent.Serial() } , // Initialise identification number
-    ThreadBase{ sP, nullptr, nullptr } // Initialise only thread priority
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
+    ThreadBase{ sytPf }                // Initialise only thread priority
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */

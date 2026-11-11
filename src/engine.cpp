@@ -23,11 +23,13 @@ namespace E {                          // Start of engine namespace
 #include "common.hpp"                  // Common constant variables header
 #include "endian.hpp"                  // Endian functions header
 #include "std.hpp"                     // Standard utility functions header
+#include "utfenc.hpp"                  // UTF encoder utility header
 #include "utf.hpp"                     // UTF strings utility header
 #include "stdlib.hpp"                  // X platform C funcs header
 #include "flags.hpp"                   // Flags helper utility header
 #include "string.hpp"                  // String utilities header
 #include "time.hpp"                    // String time utilities header
+#include "duration.hpp"                // Duration class header
 #include "error.hpp"                   // Error handling utility header
 #include "token.hpp"                   // String tokenisation utility header
 #include "parser.hpp"                  // String parsing utility header

@@ -14,16 +14,16 @@ using namespace IAsset::P;             using namespace IClock::P;
 using namespace ICmdLine::P;           using namespace ICommon::P;
 using namespace ICollector::P;         using namespace ICrypt::P;
 using namespace ICVarDef::P;           using namespace IDir::P;
-using namespace IError::P;             using namespace IFlags::P;
-using namespace IFrame::P;             using namespace IInterval::P;
-using namespace ILog::P;               using namespace ILookupArray::P;
-using namespace ILuaBase::P;           using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IPSplit::P;            using namespace IMemory::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITime::P;              using namespace IUtil::P;
+using namespace IDuration::P;          using namespace IError::P;
+using namespace IFlags::P;             using namespace IFrame::P;
+using namespace IInterval::P;          using namespace ILog::P;
+using namespace ILookupArray::P;       using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IPSplit::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
 using namespace Lib::Sqlite;
 /* -- Replacement for SQLITE_TRANSIENT which cases warnings ---------------- */
 static sqlite3_destructor_type fcbSqliteTransient =

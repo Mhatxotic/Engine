@@ -11,14 +11,14 @@ namespace IAudio {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICVar::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace ILuaFunc::P;           using namespace IMixer::P;
-using namespace IOal::P;               using namespace ISample::P;
-using namespace ISource::P;            using namespace IStd::P;
-using namespace IStream::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace ITime::P;              using namespace IVideo::P;
+using namespace IDuration::P;          using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IHelper::P;
+using namespace ILog::P;               using namespace ILuaFunc::P;
+using namespace IMixer::P;             using namespace IOal::P;
+using namespace ISample::P;            using namespace ISource::P;
+using namespace IStd::P;               using namespace IStream::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace IVideo::P;
 using namespace Lib::OpenAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -28,9 +28,9 @@ static Audio *cAudio = nullptr;        // Pointer to global class
 class Audio :                          // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper class
-  private EvtMainRegAuto               // Frequently used events
+  private EvtMainRegAuto,              // Frequently used events
+  protected Thread                     // Audio thread class
 { /* -- Monitoring thread timers ------------------------------------------- */
-  Thread           tAudThread;         // Audio monitoring thread
   ClkTimePoint     ctpNextCheck;       // Next check for hardware changes
   AtomicClkDuration acdCheckRate,      // Check rate
                    acdThreadDelay;     // Thread sleep time
@@ -50,7 +50,7 @@ class Audio :                          // Audio manager class
   { // Clear and re-enumerate capture devices
     svCTDevices.clear();
     AudioEnumCaptureDevices();
-    // Send Lua event with isplaybackdevice set to true
+    // Send Lua event with isplaybackdevice set to false
     lfOnUpdate.LuaFuncDispatch(false);
   }
   /* -- Init thread -------------------------------------------------------- */
@@ -59,7 +59,7 @@ class Audio :                          // Audio manager class
     cLog->LogDebugSafe("Audio monitoring thread initialising...");
     // Reset the check time and start the minimal thread
     AudioResetCheckTime();
-    tAudThread.ThreadInit(cOal->FlagIsSet(AFL_HAVESEPBDDC) ?
+    ThreadInit(cOal->FlagIsSet(AFL_HAVESEPBDDC) ?
       ctfThSysEvts : ctfThNoSysEvts, this);
     // Log completion of thread startup
     cLog->LogDebugExSafe("Audio monitoring thread initialised (D:$;C:$)!",
@@ -70,7 +70,7 @@ class Audio :                          // Audio manager class
   void AudioDeInitThread()
   { // Stop and de-init the thread and log progress
     cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
-    tAudThread.ThreadDeInit();
+    ThreadDeInit();
     ctpNextCheck = std::chrono::high_resolution_clock::time_point::max();
     cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
   }
@@ -120,7 +120,7 @@ class Audio :                          // Audio manager class
   /* -- Thread main function with system events support -------------------- */
   ThreadStatus AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
-    while(tAudThread.ThreadShouldNotExit())
+    while(ThreadShouldNotExit())
     { // Manage stream classes
       StreamManage();
       // Suspend thread for the user requested time
@@ -201,7 +201,7 @@ class Audio :                          // Audio manager class
   ThreadStatus AudioThreadMainNoSysEvents(Thread &) try
   { // Enumerate...
     for(AudioResetCheckTime();             // Reset device list check time
-        tAudThread.ThreadShouldNotExit();  // Enum until thread exit signalled
+        ThreadShouldNotExit();             // Enum until thread exit signalled
         StdSuspend(acdThreadDelay.load())) // Suspend thread pecified time
     { // Manage all streams audio.
       StreamManage();
@@ -210,16 +210,15 @@ class Audio :                          // Audio manager class
       if(AudioVerify()) continue;
       // Put in infinite loop and wait for the reinit function to request
       // termination of this thread
-      while(tAudThread.ThreadShouldNotExit()) StdSuspend(cdDiscWait);
+      while(ThreadShouldNotExit()) StdSuspend(cdDiscWait);
       // Thread terminate request recieved, now break the loop.
       break;
     } // Terminate thread
     return TS_OK;
   } // exception occured in this thread
   catch(const StdException &eReason)
-  { // Report error
+  { // Report error and restart the thread
     cLog->LogErrorExSafe("(AUDIO NSE THREAD EXCEPTION) $", eReason);
-    // Restart the thread
     return TS_RETRY;
   }
   /* -- Event function (switch to this call) ------------------------------- */
@@ -273,9 +272,8 @@ class Audio :                          // Audio manager class
         stDevice = 0;
       } // Set device
       strDevice = AudioGetPbkDeviceById(stDevice);
-    } // Get pointer to device name
+    } // Get pointer to device name and log device being used
     const char*const cpDevice = strDevice.empty() ? nullptr : strDevice.data();
-    // Say device being used
     cLog->LogDebugExSafe("Audio trying to initialise playback device '$'...",
       cpDevice ? cpDevice : "<Default>");
     // Open the device
@@ -287,8 +285,6 @@ class Audio :                          // Audio manager class
     // Create the context
     ALC(cOal->InitContext(), "Failed to create al context!",
       "Name", strDevice, "Index", stDevice);
-    // Have the context
-    cOal->Init();
     // Allocate sources data and log error if invalid
     if(!SourceAlloc(cSources->stSources))
       cLog->LogWarningExSafe(
@@ -309,10 +305,10 @@ class Audio :                          // Audio manager class
   }
   /* -- Enumerate devices generic ------------------------------------------ */
   template<class ListType> requires StdHasDataSize<ListType>
-    void AudioEnumDevices(const StdStringView &svType, const ALenum eQueryType,
-      ListType &ltDevices)
+    void AudioEnumDevices(const StdStringView &ssvType,
+      const ALenum eQueryType, ListType &ltDevices)
   { // Log enumerations
-    cLog->LogDebugExSafe("Audio enumerating $ devices...", svType);
+    cLog->LogDebugExSafe("Audio enumerating $ devices...", ssvType);
     // For some reason, this call is sometimes failing, probably because
     // another process is enumerating the list, so we'll do a retry loop.
     // Try to grab list of playback devices three times before failing.
@@ -334,13 +330,13 @@ class Audio :                          // Audio manager class
         ltDevices.shrink_to_fit();
         // Log enumerations and return
         return cLog->LogDebugExSafe("Audio found $ $ devices.",
-          ltDevices.size(), svType);
+          ltDevices.size(), ssvType);
       } // Report that the attempt failed
       cLog->LogWarningExSafe(
         "Audio attempt $ failed on $ device enumeration, retrying...",
-        stIndex + 1, svType);
+        stIndex + 1, ssvType);
     } // Problems, problems
-    cLog->LogWarningExSafe("Audio failed to access $ devices list.", svType);
+    cLog->LogWarningExSafe("Audio failed to access $ devices list.", ssvType);
   }
   /* -- Enumerate capture devices ------------------------------------------ */
   void AudioEnumCaptureDevices()
@@ -379,12 +375,10 @@ class Audio :                          // Audio manager class
   }
   /* -- Get current playback device ---------------------------------------- */
   const StdString AudioGetPbkDeviceById(const size_t stId) const
-  { // bail if value out of range
-    if(stId >= AudioGetNumPbkDevices())
-      XC("Specified audio playback device id out of range!",
-        "Index", stId, "Count", AudioGetNumPbkDevices());
-    // Return device
-    return svPBDevices[stId];
+  { // Return device name if in range else report error
+    if(stId < AudioGetNumPbkDevices()) return svPBDevices[stId];
+    XC("Specified audio playback device id out of range!",
+      "Index", stId, "Count", AudioGetNumPbkDevices());
   }
   /* -- Return devices ----------------------------------------------------- */
   const StrVector &AudioGetPbkDevices() const { return svPBDevices; }
@@ -393,12 +387,10 @@ class Audio :                          // Audio manager class
   size_t AudioGetNumPbkDevices() const { return svPBDevices.size(); }
   /* -- Get device information --------------------------------------------- */
   StdString AudioGetCapDevice(const size_t stId) const
-  { // bail if value out of range
-    if(stId >= AudioGetNumCapDevices())
-      XC("Specified audio capture device id out of range!",
-        "Index", stId, "Count", AudioGetNumCapDevices());
-    // Return device
-    return svCTDevices[stId];
+  { // Return device name if in range else report error
+    if(stId < AudioGetNumCapDevices()) return svCTDevices[stId];
+    XC("Specified audio capture device id out of range!",
+      "Index", stId, "Count", AudioGetNumCapDevices());
   }
   /* -- Get device information --------------------------------------------- */
   size_t AudioGetNumCapDevices() const { return svCTDevices.size(); }
@@ -461,7 +453,7 @@ class Audio :                          // Audio manager class
       { EMC_AUD_PDUPDATED, bind(&Audio::AudioOnPbkDeviceUpdated, this, _1) },
       { EMC_AUD_CDUPDATED, bind(&Audio::AudioOnCapDeviceUpdated, this, _1) }
     } },
-    tAudThread{ "audio", STP_AUDIO },  // Initialise thread priority level
+    Thread{ "audio", STP_AUDIO },      // Initialise thread priority level
     cdDiscWait{ cd100MS },             // Initialise discrepency sleep time
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
     ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },

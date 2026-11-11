@@ -38,9 +38,9 @@ class JoyInfo :                        // Joystick class
   /* -- Return type of joystick -------------------------------------------- */
   const StdStringView &JoyGetGamepadOrJoystickString() const
   { // Return if it is a gamepad or a joystick
-    static const StdStringView svGamepad{ "gamepad" },
-                             svJoystick{ "joystick" };
-    return FlagIsSet(JF_GAMEPAD) ? svGamepad : svJoystick;
+    static const StdStringView ssvGamepad{ "gamepad" },
+                               ssvJoystick{ "joystick" };
+    return FlagIsSet(JF_GAMEPAD) ? ssvGamepad : ssvJoystick;
   }
   /* -- Refresh data ------------------------------------------------------- */
   void JoyRefreshData()

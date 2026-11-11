@@ -8,13 +8,11 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace IUtf {                       // Start of module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
-using namespace IEndian::P;
+using namespace IEndian::P;            using namespace IUtfEncoder::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-using Codepoint = size_t;              // Type of a UTF-8 character
 /* -- Check if C-string is nullptr or blank -------------------------------- */
 template<typename CharType>
   requires (!StdIsPointer<CharType>)
@@ -25,37 +23,6 @@ template<typename CharType>
   requires (!StdIsPointer<CharType>)
 static bool UtfIsCStringNotValid(const CharType*const ctStr)
   { return !UtfIsCStringValid<CharType>(ctStr); }
-/* -- Structure for utf size and character code ---------------------------- */
-struct UtfEncoderEx final { const size_t l;
-  const union { const uint8_t u8[5]; const char c[5]; } u; };
-/* -- Encode specified code and return string and size --------------------- */
-static UtfEncoderEx UtfEncodeEx(const Codepoint coChar)
-{ // Macro to extract bits from a codepoint (shift, and, or)
-#define X(s,a,o) static_cast<uint8_t>(((coChar >> s) & a) | o)
-  // Normal ASCII character?
-  if(coChar < 0x80)
-    return { 1, {{ X(0,0x7F,0), 0, 0, 0, 0 }}};
-  // ASCII/Unicode character between 128-2047?
-  else if(coChar < 0x800)
-    return { 2, {{ X(6,0x1F,0xC0), X(0,0x3F,0x80), 0, 0, 0 }}};
-  // Unicode character between 2048-65535?
-  else if(coChar < 0x10000)
-    return { 3, {{ X(12,0x0F,0xE0), X(6,0x3F,0x80), X(0,0x3F,0x80), 0, 0 }}};
-  // Unicode character between 65536-1114111?
-  else if(coChar < 0x110000)
-    return { 4, {{ X(18,0x07,0xF0), X(12,0x3F,0x80), X(6,0x3F,0x80),
-                   X(0,0x3F,0x80), 0 }}};
-  // Done with this macro
-#undef X
-  // This shouldn't happen, but just incase
-  return { 0, {{ 0, 0, 0, 0, 0 }} };
-}
-/* -- Encode specified code and append it to the specified string ---------- */
-static void UtfAppend(const Codepoint coChar, StdString &strDest)
-{ // Encoded UTF8 and append to string
-  const UtfEncoderEx ueeCode{ UtfEncodeEx(coChar) };
-  strDest.append(ueeCode.u.c, ueeCode.l);
-}
 /* ------------------------------------------------------------------------- */
 template<typename IntType = unsigned>
   requires StdIsIntegral<IntType> && (sizeof(IntType) >= sizeof(uint32_t))
@@ -166,11 +133,8 @@ template<typename StrType>
 static StdString UtfFromWide(const StrType &strStr)
 { // Enumerate string and convert all characters to UTF8
   StdString strOut;
-  for(auto aChar : strStr)
-  { // Encode byte and append it to string
-    const UtfEncoderEx ueeCode{ UtfEncodeEx(static_cast<Codepoint>(aChar)) };
-    strOut.append(ueeCode.u.c, ueeCode.l);
-  } // Return string
+  for(auto aChar : strStr) UtfAppend(static_cast<Codepoint>(aChar), strOut);
+  // Return string
   return strOut;
 }
 /* -- UTF8 decoder helper class -------------------------------------------- */
@@ -397,8 +361,7 @@ static StdString UtfShorten(const StrType &strStr, const size_t stLimit,
   // Enumerate through the entire string
   while(const Codepoint coChar = udStr.UtfNext())
   { // Reencode the character and add it to the string
-    const UtfEncoderEx ueeCode{ UtfEncodeEx(coChar) };
-    strOut.append(ueeCode.u.c, ueeCode.l);
+    UtfAppend(coChar, strOut);
     // Keep adding UTF characters until we're done
     if(++stChars < stLimit) continue;
     // Return if we're at the end of the string

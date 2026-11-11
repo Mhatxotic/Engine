@@ -36,13 +36,13 @@ namespace IASync {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace IClock::P;
 using namespace IChrono::P;            using namespace ICollector::P;
-using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFileMap::P;           using namespace ILog::P;
-using namespace ILuaBase::P;           using namespace ILuaEvt::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IName::P;              using namespace IRefCtr::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ITime::P;              using namespace ISysPipe::P;
+using namespace IDuration::P;          using namespace IError::P;
+using namespace IEvtMain::P;           using namespace IFileMap::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaEvt::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace IRefCtr::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysPipe::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace IThread::P;
 /* ------------------------------------------------------------------------- */

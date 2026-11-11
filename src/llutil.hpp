@@ -19,11 +19,12 @@ namespace LLUtil {                     // Util namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace IAsset::P;
 using namespace IClock::P;             using namespace ICrypt::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ITime::P;              using namespace IUrl::P;
-using namespace IUtf::P;               using namespace IUtil::P;
-using namespace IUuId::P;              using namespace Common;
+using namespace IDuration::P;          using namespace IMemory::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ITime::P;
+using namespace IUrl::P;               using namespace IUtf::P;
+using namespace IUtil::P;              using namespace IUuId::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Util common helper classes                                          ## **

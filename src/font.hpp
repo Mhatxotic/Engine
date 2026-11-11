@@ -25,8 +25,8 @@ using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace ITexture::P;           using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::FreeType;
-using namespace Lib::GlFW::Types;
+using namespace IUtfEncoder::P;        using namespace IUtil::P;
+using namespace Lib::FreeType;         using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */

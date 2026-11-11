@@ -35,6 +35,7 @@ namespace E {                          // Put everything in engine namespace
 #include "common.hpp"                  // Common constant variables header
 #include "endian.hpp"                  // Endian functions utility header
 #include "std.hpp"                     // Pre UTF standard functions
+#include "utfenc.hpp"                  // UTF encoder utility header
 #include "utf.hpp"                     // UTF strings utility header
 #include "stdlib.hpp"                  // Post UTF standard functions
 #include "flags.hpp"                   // Flags helper utility header
@@ -52,6 +53,7 @@ namespace E {                          // Put everything in engine namespace
 #include "util.hpp"                    // Miscellenious utilities header
 #include "sysutil.hpp"                 // System utilities header
 #include "time.hpp"                    // Time utilities header
+#include "duration.hpp"                // Duration class header
 #include "clock.hpp"                   // Clock base header
 #include "chrono.hpp"                  // Clock chronometer header
 #include "interval.hpp"                // Clock interval header
@@ -66,8 +68,8 @@ namespace E {                          // Put everything in engine namespace
 #include "log.hpp"                     // Logging helper class header
 #include "ifillcon.hpp"                // Init filled contianers header
 #include "luadef.hpp"                  // Lua definitions header
+#include "lockable.hpp"                // Lockable class header
 #include "collect.hpp"                 // Class collector utility header
-#include "lockable.hpp"                // Lockable collector utility header
 #include "luaident.hpp"                // Lua ident helper class header
 #include "stat.hpp"                    // Statistic utility class header
 #include "lukmap.hpp"                  // Lookup map class header
@@ -105,18 +107,19 @@ namespace E {                          // Put everything in engine namespace
 using namespace IClock::P;             using namespace IChrono::P;
 using namespace ICmdLine::P;           using namespace ICommon::P;
 using namespace ICrypt::P;             using namespace ICodec::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IFStream::P;           using namespace IHelper::P;
-using namespace IJson::P;              using namespace ILockable::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IParser::P;            using namespace IPSplit::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysMod::P;            using namespace ISysInfo::P;
-using namespace ISysPipe::P;           using namespace ISysCon::P;
-using namespace ISysUtil::P;           using namespace ITime::P;
-using namespace IToken::P;             using namespace IUtf::P;
+using namespace IDir::P;               using namespace IDuration::P;
+using namespace IError::P;             using namespace IFStream::P;
+using namespace IHelper::P;            using namespace IJson::P;
+using namespace ILockable::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IParser::P;
+using namespace IPSplit::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysMod::P;
+using namespace ISysInfo::P;           using namespace ISysPipe::P;
+using namespace ISysCon::P;            using namespace ISysUtil::P;
+using namespace ITime::P;              using namespace IToken::P;
+using namespace IUtf::P;               using namespace IUtfEncoder::P;
 using namespace IUtil::P;              using namespace IUuId::P;
 /* ========================================================================= */
 #define WINVER32   0x0501              // Windows version minimum (X86)

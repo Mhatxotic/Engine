@@ -18,7 +18,8 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFormat::P;            using namespace IHelper::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace ISysBase::P;           using namespace ISysMod::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtfEncoder::P;
+using namespace IUtil::P;
 /* -- Includes ------------------------------------------------------------- **
 ** Because ncurses shares function names with STL, we need to put it all the **
 ** Curses API in it's own namespace to prevent ambiguity problems.           **

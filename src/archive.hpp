@@ -252,7 +252,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         { // Open new archive and throw error if it failed
           if(const int iCode = ArchiveOpenFile(&cfisData2.file))
             XC("Failed to open archive!",
-              "Archive", NameGet(),      "Index", suimciIt->second,
+              "Archive", NameGet(),       "Index", suimciIt->second,
               "File",    suimciIt->first, "Code",  iCode,
               "Reason",  CodecGetLzmaErrString(iCode));
           // Custom start position specified
@@ -260,7 +260,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
              cSystem->SeekFile(ArchiveCFISToOSHandle(cfisData),
                ullArchPos) != ullArchPos)
             XC("Failed to seek in archive!",
-              "Archive", NameGet(),      "Index",    suimciIt->second,
+              "Archive", NameGet(),       "Index",    suimciIt->second,
               "File",    suimciIt->first, "Position", ullArchPos);
           // Load archive
           ArchiveSetupLookToRead(cfisData2, cltrData2);
@@ -270,7 +270,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
           if(const int iCode = SzArEx_Open(&csaeData2,
             &cltrData2.vt, &ctParent.isaData, &ctParent.isaData))
               XC("Failed to load archive!",
-                "Archive", NameGet(),      "Index", suimciIt->second,
+                "Archive", NameGet(),       "Index", suimciIt->second,
                 "File",    suimciIt->first, "Code",  iCode,
                 "Reason",  CodecGetLzmaErrString(iCode));
           // Decompress the buffer using our duplicated handles
@@ -341,8 +341,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // Initialise archive database and if failed, just log it
     if(const int iCode = SzArEx_Open(&csaeData, &cltrData.vt,
        &ctParent.isaData, &ctParent.isaData))
-      return cLog->LogWarningExSafe("Archive '$' not opened with code $ ($)!",
-        NameGet(), iCode, CodecGetLzmaErrString(iCode));
+      return cLog->LogWarningExSafe("Archive '$' not opened with $<$>!",
+        NameGet(), CodecGetLzmaErrString(iCode), iCode);
     // Alocate memory for quick access via index vector. 7-zip won't tell us
     // how many files and directories there are individually so we'll reserve
     // memory for the maximum amount of entries in the 7-zip file. We'll shrink

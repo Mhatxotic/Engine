@@ -24,7 +24,8 @@ using namespace IStd::P;               using namespace IString::P;
 using namespace ISocket::P;            using namespace ISysCon::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace ITime::P;              using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IUtf::P;               using namespace IUtfEncoder::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* -- Public typedefs ------------------------------------------------------ */

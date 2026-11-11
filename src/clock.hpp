@@ -10,8 +10,9 @@
 /* ------------------------------------------------------------------------- */
 namespace IClock {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace ITime::P;              using namespace IUtil::P;
+using namespace IDuration::P;          using namespace IStd::P;
+using namespace IStdLib::P;            using namespace ITime::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 using CoreClock = ::std::chrono::high_resolution_clock; // Default clock is HRC
 /* ------------------------------------------------------------------------- */

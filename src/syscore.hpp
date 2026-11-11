@@ -38,12 +38,12 @@ namespace ISystem {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICmdLine::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
-using namespace IDir::P;               using namespace IError::P;
-using namespace IInterval::P;          using namespace ILog::P;
-using namespace IMemory::P;            using namespace IPSplit::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace ISysCore::P;
-using namespace ISysUtil::P;           using namespace ITime::P;
+using namespace IDir::P;               using namespace IDuration::P;
+using namespace IError::P;             using namespace IInterval::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IPSplit::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISysCore::P;           using namespace ISysUtil::P;
 using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 using ::std::terminate_handler;        using ::std::set_terminate;
@@ -170,7 +170,7 @@ class System :                         // The main system class
       { // Try to allocate the memory. Take away current process memory usage.
         // We'll do a underflow check because utilities like valgrind can mess
         // with this.
-        Memory{}.MemInitSafe(RAMProcUse() > stMemory ?
+        Memory{}.MemInitBlank(RAMProcUse() > stMemory ?
           stMemory : stMemory - RAMProcUse());
       } // Allocation failed?
       catch(const StdException &eReason)

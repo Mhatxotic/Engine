@@ -203,17 +203,17 @@ struct ShaderCore                      // Actual body
   /* ----------------------------------------------------------------------- */
   void Init3DYCbCrShaders()
   { // No colour keying (no transparency)
-    const StdStringView svNoKey = "texture(texCr,vec2(texcoordout)).a",
+    const StdStringView ssvNoKey = "texture(texCr,vec2(texcoordout)).a",
     // Colour keying code
-    svKey = "abs(colourout.r-rgb.r)<=colourout.a&&"
-            "abs(colourout.g-rgb.g)<=colourout.a&&"
-            "abs(colourout.b-rgb.b)<=colourout.a?0:1",
+    ssvKey = "abs(colourout.r-rgb.r)<=colourout.a&&"
+             "abs(colourout.g-rgb.g)<=colourout.a&&"
+             "abs(colourout.b-rgb.b)<=colourout.a?0:1",
     // BT.601 matrix code
-    sv601 = "1,1,1,0,-0.344,1.77,1.403,-0.714,0",
+    ssv601 = "1,1,1,0,-0.344,1.77,1.403,-0.714,0",
     // BT.709 matrix code
-    sv709 = "1.0,1.0,1.0,0.0,-0.18732,1.8556,1.5748,-0.46812,0.0",
+    ssv709 = "1.0,1.0,1.0,0.0,-0.18732,1.8556,1.5748,-0.46812,0.0",
     // Full-dynamic range code
-    svFull =
+    ssvFull =
       // Sample the Y, Cb, and Cr components from textures
       "ycbcr.x=texture(texY,vec2(texcoordout)).r*255.0;"
       "ycbcr.y=texture(texCb,vec2(texcoordout)).r*255.0;"
@@ -223,7 +223,7 @@ struct ShaderCore                      // Actual body
       "ycbcr.y=(ycbcr.y-128.0)/224.0;"
       "ycbcr.z=(ycbcr.z-128.0)/224.0;",
     // Partial-dynamic range code
-    svPartial =
+    ssvPartial =
       // Sample the Y, Cb, and Cr components from textures
       "ycbcr.x=texture(texY,vec2(texcoordout)).r;"
       "ycbcr.y=texture(texCb,vec2(texcoordout)).r-0.5;"
@@ -232,7 +232,7 @@ struct ShaderCore                      // Actual body
 #define SHDR(r,rn,c,k,kn) \
     Init3DYCbCrTemplate(sh3DYCbCr ## k ## c ## r ## R, \
       "FRAG-3D YCbCr>" STR(r) STR(c) ">RGB" STR(k), \
-      sv ## rn, sv ## c, sv ## kn)
+      ssv ## rn, ssv ## c, ssv ## kn)
     // Initialise the YCbCr to RGBA conversion shaders
     SHDR(F, Full,    601,  , NoKey);   // BT.601 (Full 0-255) unkeyed
     SHDR(P, Partial, 601,  , NoKey);   // BT.601 (Partial 16-235) unkeyed

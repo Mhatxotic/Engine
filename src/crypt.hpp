@@ -16,8 +16,8 @@ using namespace ILog::P;               using namespace IMemory::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtil::P;              using namespace Lib::OpenSSL;
-using namespace Lib::SevenZip;
+using namespace IUtfEncoder::P;        using namespace IUtil::P;
+using namespace Lib::OpenSSL;          using namespace Lib::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
@@ -754,12 +754,8 @@ class Crypt :                          // Actual class body
           cVal = StrToNum<unsigned>(strEnt.substr(1, StdNPos));
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
-        // Encoder character
-        const UtfEncoderEx ueeCode{ UtfEncodeEx(cVal) };
-        // Insert utf-8 string
-        strOut.insert(stAPos, ueeCode.u.c);
-        // Go forward the number of unicode bytes written
-        stAPos += ueeCode.l;
+        // Encoder character and insert it into the string and increase pos
+        stAPos += UtfEncoder{ cVal }.UtfAppendRetSize(strOut);
         // Find another entity
         continue;
       } // Find string to decode, ignore further insertation if no match

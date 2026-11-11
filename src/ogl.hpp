@@ -388,7 +388,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Done with this
 #undef GETPTR
     // Log functions initialised
-    cLog->LogDebugExSafe("OGL loaded $ function addresses.",
+    cLog->LogDebugExSafe("Ogl loaded $ function addresses.",
       sizeof(sAPI) / sizeof(void*));
   }
   /* == OpenGL features ============================================ */ public:
@@ -943,7 +943,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void DeleteMarkedFboHandles()
   { // Delete the Fbo's
     IGLL(DeleteFbo(static_cast<GLsizei>(gluivFbos.size()), gluivFbos.data()),
-      "OGL failed to destroy $ Fbo handles!", gluivFbos.size());
+      "Ogl failed to destroy $ Fbo handles!", gluivFbos.size());
     // Clear the list
     gluivFbos.clear();
   }
@@ -951,7 +951,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   void DeleteMarkedTextureHandles()
   { // Delete the marked textures
     IGLL(DeleteTexture(static_cast<GLsizei>(gluivTextures.size()),
-      gluivTextures.data()), "OGL failed to destroy $ texture handles!",
+      gluivTextures.data()), "Ogl failed to destroy $ texture handles!",
       gluivTextures.size());
     // Clear the list
     gluivTextures.clear();
@@ -970,7 +970,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     IGL(sAPI.glEnable(gleExtension), "Enable extension failed!",
       "Extension",   gleExtension,
       "ExtensionId", glemExtensions.Get(gleExtension));
-    cLog->LogDebugExSafe("OGL enabled extension $<0x$$>.",
+    cLog->LogDebugExSafe("Ogl enabled extension $<0x$$>.",
       glemExtensions.Get(gleExtension), StdIOSHex, gleExtension);
   }
   /* -- Disable an extension ----------------------------------------------- */
@@ -980,7 +980,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Disable the extension and log result
     IGL(sAPI.glDisable(gleExtension), "Disable extension failed!",
       "Key", gleExtension, "KeyId", glemExtensions.Get(gleExtension));
-    cLog->LogDebugExSafe("OGL disabled extension $<0x$$>.",
+    cLog->LogDebugExSafe("Ogl disabled extension $<0x$$>.",
       glemExtensions.Get(gleExtension), StdIOSHex, gleExtension);
   }
   /* -- Commit blending algorithms ----------------------------------------- */
@@ -1004,7 +1004,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     IGL(sAPI.glHint(gleTarget, gleMode), "Failed to set hint!",
       "Target", glemHintTargets.Get(gleTarget), "TargetId", gleTarget,
       "Mode",   glemHintModes.Get(gleMode),     "ModeId",   gleMode);
-    cLog->LogDebugExSafe("OGL set hint $<0x$$> to $<0x$>.",
+    cLog->LogDebugExSafe("Ogl set hint $<0x$$> to $<0x$>.",
       glemHintTargets.Get(gleTarget), StdIOSHex, gleTarget,
       glemHintModes.Get(gleMode), gleMode);
   }
@@ -1019,18 +1019,18 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       { // Only destructor allowed to continue
         if(bForce) return;
         // Show error
-        XC("OGL is not initialised!");
+        XC("Ogl is not initialised!");
       } // Log as de-initialised
-      cLog->LogInfoSafe("OGL set to de-initialised.");
+      cLog->LogInfoSafe("Ogl set to de-initialised.");
       // Return cleared flag
       return FlagClear(GFL_INITIALISED);
     } // Initialised and already initialised? Throw error
-    if(!bForce && IsGLInitialised()) XC("OGL was already initialised!");
+    if(!bForce && IsGLInitialised()) XC("Ogl was already initialised!");
     // Detect GL capabilities
     DetectCapabilities();
     // Show change in state
     cLog->LogInfoExSafe(
-      "OGL set initialised with capabilities 0x$$...\n"
+      "Ogl set initialised with capabilities 0x$$...\n"
       "- Renderer: $.\n"
       "- Version: $.\n"
       "- Vendor: $.",
@@ -1242,7 +1242,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   { // Class initialised
     if(!bForce) IHInitialise();
     // Log class initialising
-    cLog->LogDebugSafe("OGL subsystem initialising...");
+    cLog->LogDebugSafe("Ogl subsystem initialising...");
     // Set opengl context to engine thread
     cGlFW->WinSetContext();
     // Load GL functions and throw exception with reason if not all loaded
@@ -1299,7 +1299,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     IGL(BindStaticVertexBuffer(gluVboGlobal),
       "Bind global Vbo failed!", "Index", gluVboGlobal);
     // Log class initialising
-    cLog->LogInfoSafe("OGL subsystem initialised.");
+    cLog->LogInfoSafe("Ogl subsystem initialised.");
   }
   /* -- DeInitialise ------------------------------------------------------- */
   void OglDeInit(const bool bForce=false)
@@ -1308,45 +1308,45 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // OpenGL is now de-initialised
     SetInitialised(false, bForce);
     // Log class initialising
-    cLog->LogDebugSafe("OGL subsystem de-initialising...");
+    cLog->LogDebugSafe("Ogl subsystem de-initialising...");
     // Reset all binds
     OglResetBinds();
     // Have textures to delete?
     if(!gluivTextures.empty())
     { // Delete the texture handles
-      cLog->LogDebugExSafe("OGL deleting $ marked texture handles...",
+      cLog->LogDebugExSafe("Ogl deleting $ marked texture handles...",
         gluivTextures.size());
       DeleteMarkedTextureHandles();
-      cLog->LogInfoSafe("OGL deleted marked texture handles.");
+      cLog->LogInfoSafe("Ogl deleted marked texture handles.");
     } // Have Fbo's to delete?
     if(!gluivFbos.empty())
     { // Delete the Fbo handles
-      cLog->LogDebugExSafe("OGL deleting $ marked Fbo handles...",
+      cLog->LogDebugExSafe("Ogl deleting $ marked Fbo handles...",
         gluivFbos.size());
       DeleteMarkedFboHandles();
-      cLog->LogInfoSafe("OGL deleted marked Fbo handles.");
+      cLog->LogInfoSafe("Ogl deleted marked Fbo handles.");
     } // Vertex buffer object created?
     if(gluVboGlobal && gluVboMain)
     { // Delete vertex buffer object
-      cLog->LogDebugExSafe("OGL deleting $ vertex buffer objects $ and $...",
+      cLog->LogDebugExSafe("Ogl deleting $ vertex buffer objects $ and $...",
         ovhVbo.size(), gluVboGlobal, gluVboMain);
       IGLL(DeleteVertexBuffers(
         static_cast<GLsizei>(ovhVbo.size()), ovhVbo.data()),
           "Failed to delete vertex buffer objects!",
           "Global", gluVboGlobal, "Main", gluVboMain);
       StdFill(seq, ovhVbo.begin(), ovhVbo.end(), 0);
-      cLog->LogInfoExSafe("OGL deleted $ vertex buffer objects.",
+      cLog->LogInfoExSafe("Ogl deleted $ vertex buffer objects.",
         ovhVbo.size());
     } // Vertex array object created?
     if(gluVaoGlobal && gluVaoMain)
     { // Delete vertex array object
-      cLog->LogDebugExSafe("OGL deleting $ vertex array objects $ and $...",
+      cLog->LogDebugExSafe("Ogl deleting $ vertex array objects $ and $...",
         ovhVao.size(), gluVaoGlobal, gluVaoMain);
       IGLL(DeleteVertexArrays(
         static_cast<GLsizei>(ovhVao.size()), ovhVao.data()),
           "Failed to delete vertex array object!", "Index", gluVaoGlobal);
       StdFill(seq, ovhVao.begin(), ovhVao.end(), 0);
-      cLog->LogInfoExSafe("OGL deleted $ vertex array objects.",
+      cLog->LogInfoExSafe("Ogl deleted $ vertex array objects.",
         ovhVao.size());
     } // Release opengl context from engine thread
     GlFWSetContext();
@@ -1362,7 +1362,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     ssvVersion = cCommon->CommonNull();
     ssvRenderer = cCommon->CommonNull();
     // Log class initialising
-    cLog->LogInfoSafe("OGL subsystem de-initialised.");
+    cLog->LogInfoSafe("Ogl subsystem de-initialised.");
   }
   /* -- Constructor --------------------------------------------- */ protected:
   Ogl() :

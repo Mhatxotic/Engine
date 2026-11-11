@@ -589,40 +589,81 @@ class Oal :                            // Actual class body
           "DeviceType", eciItem.aleDeviceType,
           "Result",     aleResult);
       }
-    } // Log context initialisation
-    cLog->LogDebugExSafe(
-      "Oal playback device initialised with capabilities 0x$$.",
-      GetVersion(), StdIOSHex, FlagGet());
-    // Return if debug logging not enabled
-    if(cLog->LogNotHasLevel(LH_DEBUG)) return;
-    // Build sorted list of extensions and log them all
-    using Pair = StdPair<const StdStringView, const size_t>;
-    using Map = StdMap<Pair::first_type, Pair::second_type>;
-    Map mExts;
-    // Build context extensions list
-    size_t stCount = 0;
-    Tokeniser<StdStringView>(GetCString(ALC_EXTENSIONS),
-      cCommon->CommonSpace(), [&mExts, &stCount](const StdStringView &ssvExt)
-        { mExts.insert({ StdMove(ssvExt), stCount++ }); });
+    }// Update playback device name
+    UpdatePlaybackDeviceName();
     // Log context initialisation
-    cLog->LogNLCDebugExSafe(
-      "- Maximum mono sources: $.\n"
-      "- Maximum stereo sources: $.\n"
-      "- Playback events: !$ +$ -$.\n"
-      "- Capture events: !$ +$ -$.\n"
-      "- Context extensions count: $...",
-      stMaxMonoSources, stMaxStereoSources,
-      StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDDC)),
-      StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDA)),
-      StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDR)),
-      StrFromBoolTF(FlagIsSet(AFL_HAVESECADDC)),
-      StrFromBoolTF(FlagIsSet(AFL_HAVESECADA)),
-      StrFromBoolTF(FlagIsSet(AFL_HAVESECADR)),
-      mExts.size());
-    // Log extensions if debug is enabled
-    for(const Pair &pExt : mExts)
-      cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
-        pExt.first, pExt.second);
+    cLog->LogInfoExSafe("Oal context initialised on device '$'.",
+      GetPlaybackDevice());
+    // Extension logging types
+    using ExtPair = StdPair<const StdStringView, const size_t>;
+    using ExtMap = StdMap<ExtPair::first_type, ExtPair::second_type>;
+    // Return if debug logging not enabled
+    if(cLog->LogHasLevel(LH_DEBUG))
+    { // Build sorted list of extensions and log them all
+      ExtMap emExts;
+      // Build context extensions list
+      size_t stCount = 0;
+      Tokeniser<StdStringView>(GetCString(ALC_EXTENSIONS),
+        cCommon->CommonSpace(),
+        [&emExts, &stCount](const StdStringView &ssvExt)
+          { emExts.insert({ StdMove(ssvExt), stCount++ }); });
+      // Log context initialisation
+      cLog->LogNLCDebugExSafe(
+        "- Maximum mono sources: $.\n"
+        "- Maximum stereo sources: $.\n"
+        "- Playback events: !$ +$ -$.\n"
+        "- Capture events: !$ +$ -$.\n"
+        "- Have ext.device enumerator: $.\n"
+        "- Head related transfer function: $.\n"
+        "- Context extensions count: $...",
+        stMaxMonoSources, stMaxStereoSources,
+        StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDDC)),
+        StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDA)),
+        StrFromBoolTF(FlagIsSet(AFL_HAVESEPBDR)),
+        StrFromBoolTF(FlagIsSet(AFL_HAVESECADDC)),
+        StrFromBoolTF(FlagIsSet(AFL_HAVESECADA)),
+        StrFromBoolTF(FlagIsSet(AFL_HAVESECADR)),
+        StrFromBoolTF(FlagIsSet(AFL_HAVEENUMEXT)),
+        StrFromBoolTF(FlagIsSet(AFL_HRTFREQ)),
+        emExts.size());
+      // Log extensions if debug is enabled
+      for(const ExtPair &epExt : emExts)
+        cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
+          epExt.first, epExt.second);
+    } // Return if context already set current
+    if(FlagIsSet(AFL_INITIALISED)) XC("OpenAL was already initialised!");
+    // Activate the context (We can use alGetError() from now on)
+    IALC(alcMakeContextCurrent(alcContext),
+      "Failed to make OpenAL context current!");
+    FlagSet(AFL_CONTEXTCURRENT);
+    // Set if we have 32-bit floating-point playback
+    FlagSetOrClear(AFL_HAVE32FPPB, alIsExtensionPresent("AL_EXT_FLOAT32"));
+    // This is a thread safe version of this bool since the audio thread will
+    // need access to this processing Stream objects.
+    bHave32FPPB = FlagIsSet(AFL_HAVE32FPPB);
+    // Set the flag
+    FlagSet(AFL_INITIALISED);
+    // Return if debug logging not enabled
+    if(cLog->LogHasLevel(LH_DEBUG))
+    { // Build sorted list of extensions and log them all
+      ExtMap emExts;
+      // Build extensions list
+      size_t stCount = 0;
+      Tokeniser<StdStringView>(GetString(AL_EXTENSIONS),
+        cCommon->CommonSpace(),
+        [&emExts, &stCount](const StdStringView &ssvExt)
+          { emExts.insert({ StdMove(ssvExt), stCount++ }); });
+      // Log device info and basic capabilities
+      cLog->LogNLCDebugExSafe(
+        "- Floating-point playback: $.\n"
+        "- Device extensions count: $...",
+        StrFromBoolTF(Have32FPPB()),
+        emExts.size());
+      // Log extensions if debug is enabled
+      for(const ExtPair &epExt : emExts)
+        cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
+          epExt.first, epExt.second);
+    }
   }
   /* -- DeInitialise context ----------------------------------------------- */
   bool DeInitContext()
@@ -638,51 +679,6 @@ class Oal :                            // Actual class body
     ssvPlayback = cCommon->CommonNull();
     // Succeeded
     return true;
-  }
-  /* -- Initialise after the context has been set -------------------------- */
-  void Init()
-  { // Make sure not initialised already
-    if(FlagIsSet(AFL_INITIALISED)) XC("OpenAL was already initialised!");
-    // Activate the context (We can use alGetError() from now on)
-    IALC(alcMakeContextCurrent(alcContext),
-      "Failed to make OpenAL context current!");
-    FlagSet(AFL_CONTEXTCURRENT);
-    // Update playback device name
-    UpdatePlaybackDeviceName();
-    // Set if we have 32-bit floating-point playback
-    FlagSetOrClear(AFL_HAVE32FPPB, alIsExtensionPresent("AL_EXT_FLOAT32"));
-    // This is a thread safe version of this bool since the audio thread will
-    // need access to this processing Stream objects.
-    bHave32FPPB = FlagIsSet(AFL_HAVE32FPPB);
-    // Show change in state
-    cLog->LogInfoExSafe("Oal using playback device '$'.", GetPlaybackDevice());
-    // Set the flag
-    FlagSet(AFL_INITIALISED);
-    // Return if debug logging not enabled
-    if(cLog->LogNotHasLevel(LH_DEBUG)) return;
-    // Build sorted list of extensions and log them all
-    using Pair = StdPair<const StdStringView, const size_t>;
-    using Map = StdMap<Pair::first_type, Pair::second_type>;
-    Map mExts;
-    // Build extensions list
-    size_t stCount = 0;
-    Tokeniser<StdStringView>(GetString(AL_EXTENSIONS), cCommon->CommonSpace(),
-      [&mExts, &stCount](const StdStringView &ssvExt)
-        { mExts.insert({ StdMove(ssvExt), stCount++ }); });
-    // Log device info and basic capabilities
-    cLog->LogNLCDebugExSafe(
-      "- Head related transfer function: $.\n"
-      "- Floating-point playback: $.\n"
-      "- Have ext.device enumerator: $.\n"
-      "- Device extensions count: $...",
-      StrFromBoolTF(FlagIsSet(AFL_HRTFREQ)),
-      StrFromBoolTF(Have32FPPB()),
-      StrFromBoolTF(FlagIsSet(AFL_HAVEENUMEXT)),
-      mExts.size());
-    // Log extensions if debug is enabled
-    for(const Pair &pExt : mExts)
-      cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
-        pExt.first, pExt.second);
   }
   /* -- DeInitialise ------------------------------------------------------- */
   void DeInit()
