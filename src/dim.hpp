@@ -8,7 +8,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IDim {                       // Start of module namespace
+namespace IDim {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IIntPair::P;           using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
@@ -94,5 +94,5 @@ using DimUInt    = Dimensions<unsigned>; // Dimension of unsigned ints
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

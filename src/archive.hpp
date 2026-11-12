@@ -22,7 +22,7 @@ using namespace IMutex::P;             using namespace IName::P;
 using namespace ISerial::P;            using namespace IStd::P;
 using namespace IStdLib::P;            using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IUtf::P;               using namespace Lib::SevenZip;
+using namespace IUtfDecoder::P;        using namespace Lib::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

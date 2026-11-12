@@ -10,9 +10,19 @@
 namespace IStdLib {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
-using namespace IUtf::P;
+using namespace IUtfDecoder::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
+/* -- Check if C-string is nullptr or blank -------------------------------- */
+template<typename CharType>
+  requires (!StdIsPointer<CharType>)
+static bool StdIsCStringValid(const CharType*const ctStr)
+  { return ctStr && *ctStr; }
+/* -- Opposite of above ---------------------------------------------------- */
+template<typename CharType>
+  requires (!StdIsPointer<CharType>)
+static bool StdIsCStringNotValid(const CharType*const ctStr)
+  { return !StdIsCStringValid<CharType>(ctStr); }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using Windows?
 /* -- These don't exist on Windows so we'll make it easier ----------------- */

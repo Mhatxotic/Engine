@@ -14,7 +14,7 @@ using namespace ICommon::P;            using namespace IDir::P;
 using namespace IError::P;             using namespace IStd::P;
 using namespace IStdLib::P;            using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

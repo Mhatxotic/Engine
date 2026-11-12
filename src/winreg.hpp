@@ -12,7 +12,6 @@
 namespace ISysReg {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

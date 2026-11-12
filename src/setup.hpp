@@ -36,7 +36,8 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 # else                                         // Windows or Linux
 #  pragma GCC diagnostic ignored "-Wall"       // Disable ALL warnings
 # endif                                        // OS check
-# define DISABLED_ALL_WARNINGS                 // A lot of third-party software
+#elif defined(_MSC_VER)                        // Using Microsoft compiler?
+# pragma warning(push, 0)                      // Disable all warnings
 #endif                                         // ...doesn't write strict code.
 /* == Compiled type setup ================================================== */
 #if !defined(__cplusplus)              // Must be compiling in C++ mode
@@ -581,11 +582,6 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #undef RAPIDJSON_NAMESPACE_BEGIN       // Done with this define
 #undef RAPIDJSON_NOEXCEPT              // Done with this define
 #undef RAPIDJSON_HAS_STDSTRING         // Done with this define
-/* -- End of system inclusions --------------------------------------------- */
-#if defined(DISABLED_ALL_WARNINGS)     // We disabled all warnings?
-# pragma GCC diagnostic pop            // Restore original compiler warnings
-# undef DISABLED_ALL_WARNINGS          // Done with this define
-#endif                                 // Disabled all warnings?
 /* == Main() configuration. So engine.cpp's main() declaration is tidy ===== */
 #if defined(WINDOWS)                   // Targeting Windows?
 using ssize_t = ptrdiff_t;             // Because Windows doesn't have this.
@@ -604,4 +600,30 @@ using ArgType = char;                  // Set main argument type
 #  define ENTRYFUNC int main(int __argc, ArgType**__wargv, ArgType**_wenviron)
 # endif                                // PMU/Engine check
 #endif                                 // Target check
+/* == End of system inclusions and setup warnings ========================== */
+#if defined(__GNUC__) || defined(__clang__)    // Using GCC or CLANG(-CL)?
+# pragma GCC diagnostic pop            // Restore original compiler warnings
+# if defined(MACOS)                    // Compiling on MacOS/XCode?
+#  pragma GCC diagnostic warning "-Weverything"
+#  pragma GCC diagnostic ignored "-Wc++98-compat"
+#  pragma GCC diagnostic ignored "-Wc++98-compat-pedantic"
+#  pragma GCC diagnostic ignored "-Wreserved-identifier"
+#  pragma GCC diagnostic ignored "-Wweak-vtables"
+#  pragma GCC diagnostic ignored "-Wcovered-switch-default"
+#  pragma GCC diagnostic ignored "-Wallocator-wrappers"
+# else                                 // Windows or Linux?
+#  pragma GCC diagnostic warning "-Wall"
+#  if defined(LINUX)                   // Linux?
+#   pragma GCC diagnostic ignored "-Wno-inaccessible-base"
+#  endif
+# endif                                // OS check
+# pragma GCC diagnostic ignored "-Wpadded"
+# pragma GCC diagnostic ignored "-Wglobal-constructors"
+# pragma GCC diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+# pragma GCC diagnostic ignored "-Wswitch-enum"
+# pragma GCC diagnostic ignored "-Wexit-time-destructors"
+#else                                  // Using Microsoft compiler?
+# pragma warning(pop)                  // Restore all warnings
+# pragma warning(push, 4)              // Enable all warnings
+#endif                                 // Compiler check
 /* == EoF =========================================================== EoF == */

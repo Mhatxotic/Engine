@@ -7,9 +7,9 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IUtfEncoder {                // Start of module namespace
+namespace IUtfEncoder {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;
+using namespace IStd::P;               using namespace IUtfCodepoint::P;
 /* -- Private typedefs ----------------------------------------------------- */
 using Array = StdArray<uint8_t, 5>;    // The array to store byte sequence
 /* ------------------------------------------------------------------------- */
@@ -18,8 +18,8 @@ struct UtfResult
   const size_t     stBytes;            // Number of bytes in sequence
   const Array      aBytes;             // UTF-8 byte sequence
   /* -- Constructor -------------------------------------------------------- */
-  constexpr UtfResult(
-    /* -- itialisers ------------------------------------------------------- */
+  constexpr explicit UtfResult(
+    /* -- Arguments -------------------------------------------------------- */
     const size_t   stNBytes = 0,       // Number of bytes in sequence
     const uint8_t  ub1 = '\0',         // First byte
     const uint8_t  ub2 = '\0',         // Second byte
@@ -27,22 +27,20 @@ struct UtfResult
     const uint8_t  ub4 = '\0'          // Fourth byte
     ): /* -- Initialisers -------------------------------------------------- */
     stBytes{ stNBytes },               // Set number of bytes in sequence
-    aBytes{ ub1,ub2,ub3,ub4,'\0' }     // Set byte sequence (last always null)
+    aBytes{ ub1,ub2,ub3,ub4, '\0' }    // Set byte sequence (last always null)
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-using Codepoint = size_t;              // Type of a UTF-8 character
-/* ------------------------------------------------------------------------- */
 class UtfEncoder final :
   /* -- Base classes ------------------------------------------------------- */
   private UtfResult                    // Containing the byte sequence
 { /* -- Initialise a byte -------------------------------------------------- */
-  constexpr static uint8_t UtfInit(const Codepoint coChar,
+  constexpr static uint8_t UtfInit(const UtfCodepoint utcChar,
     const unsigned uShift, const unsigned uAndFlags, const unsigned uOrFlags)
   { return static_cast<uint8_t>(static_cast<uint8_t>
-      (((coChar >> uShift) & uAndFlags) | uOrFlags)); }
+      (((utcChar >> uShift) & uAndFlags) | uOrFlags)); }
   /* -- Get bytes -------------------------------------------------- */ public:
   const char *UtfBytes() const
     { return reinterpret_cast<const char*>(aBytes.data()); }
@@ -58,34 +56,41 @@ class UtfEncoder final :
   void UtfAppend(StdString &strDest, const size_t stPos) const
     { strDest.insert(stPos, UtfBytes()); }
   /* -- Constructor to encode the codepoint efficiently. ------------------- */
-  constexpr explicit UtfEncoder(const Codepoint coChar) :
+  constexpr explicit UtfEncoder(const UtfCodepoint utcChar) :
     /* -- Initialisers ----------------------------------------------------- */
-    UtfResult{ [coChar]() constexpr->UtfResult
+    UtfResult{ [utcChar]() constexpr->UtfResult
     { // Check if the codepoint represents a standard ASCII character
-      if(coChar < 0x80) return { 1, UtfInit(coChar,  0, 0x7F, 0x00) };
+      if(utcChar < 0x000080)
+        return UtfResult{ 1, UtfInit(utcChar,  0, 0x7F, 0x00) };
       // Check if the codepoint requires 2 bytes in UTF-8 encoding.
-      if(coChar < 0x800) return { 2, UtfInit(coChar,  6, 0x1F, 0xC0),
-                                     UtfInit(coChar,  0, 0x3F, 0x80) };
+      if(utcChar < 0x000800)
+        return UtfResult{ 2, UtfInit(utcChar,  6, 0x1F, 0xC0),
+                             UtfInit(utcChar,  0, 0x3F, 0x80) };
       // Check if the codepoint requires 3 bytes in UTF-8 encoding.
-      if(coChar < 0x10000) return { 3, UtfInit(coChar, 12, 0x0F, 0xE0),
-                                       UtfInit(coChar,  6, 0x3F, 0x80),
-                                       UtfInit(coChar,  0, 0x3F, 0x80) };
+      if(utcChar < 0x010000)
+        return UtfResult{ 3, UtfInit(utcChar, 12, 0x0F, 0xE0),
+                             UtfInit(utcChar,  6, 0x3F, 0x80),
+                             UtfInit(utcChar,  0, 0x3F, 0x80) };
       // Check if the codepoint requires 4 bytes in UTF-8 encoding.
-      if(coChar < 0x110000) return { 4, UtfInit(coChar, 18, 0x07, 0xF0),
-                                        UtfInit(coChar, 12, 0x3F, 0x80),
-                                        UtfInit(coChar,  6, 0x3F, 0x80),
-                                        UtfInit(coChar,  0, 0x3F, 0x80) };
+      if(utcChar < 0x110000)
+        return UtfResult{ 4, UtfInit(utcChar, 18, 0x07, 0xF0),
+                             UtfInit(utcChar, 12, 0x3F, 0x80),
+                             UtfInit(utcChar,  6, 0x3F, 0x80),
+                             UtfInit(utcChar,  0, 0x3F, 0x80) };
       // Fallback for invalid codepoints that exceed the valid Unicode range.
-      return {};
+      return UtfResult{};
     }() }
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
 /* -- Encode specified code and append it to the specified string ---------- */
-static void UtfAppend(const Codepoint coChar, StdString &strDest)
-  { UtfEncoder{ coChar }.UtfAppend(strDest); }
+static void UtfAppend(const UtfCodepoint utcChar, StdString &strDest)
+  { UtfEncoder{ utcChar }.UtfAppend(strDest); }
+/* -- Same as above function but returns the size of it -------------------- */
+static size_t UtfAppendRetSize(const UtfCodepoint utcChar, StdString &strDest)
+  { return UtfEncoder{ utcChar }.UtfAppendRetSize(strDest); }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

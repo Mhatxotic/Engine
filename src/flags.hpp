@@ -9,7 +9,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IFlags {                     // Start of module namespace
+namespace IFlags {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
@@ -246,5 +246,5 @@ constexpr static uint64_t Flag(const size_t stIndex)
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

@@ -214,6 +214,11 @@ struct AgFilterId : public AgIntegerLGE<IOgl::P::OglFilterEnum> {
 struct AgTextureDimension : public AgIntegerLG<GLsizei>
   { explicit AgTextureDimension(lua_State*const lS, const int iArg) :
       AgIntegerLG{lS, iArg, 1, IOgl::P::cOgl->MaxTexSize<GLsizei>()}{} };
+/* -- Read valid UTF-8 codepoint integer ----------------------------------- */
+using IUtfCodepoint::P::UtfCodepoint;
+struct AgCodepoint : public AgIntegerLGE<UtfCodepoint> {
+  explicit AgCodepoint(lua_State*const lS, const int iArg) :
+    AgIntegerLGE{ lS, iArg, 0, 0x110000 }{} };
 /* ------------------------------------------------------------------------- */
 }                                      // End of common namespace
 /* == EoF =========================================================== EoF == */

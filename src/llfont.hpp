@@ -21,7 +21,8 @@ using namespace IConGraph::P;          using namespace IConsole::P;
 using namespace IFont::P;              using namespace IFtf::P;
 using namespace IImage::P;             using namespace IImageDef::P;
 using namespace IJson::P;              using namespace IOgl::P;
-using namespace ITexture::P;           using namespace Common;
+using namespace ITexture::P;           using namespace IUtfCodepoint::P;
+using namespace Common;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Font common helper classes                                          ## **
@@ -152,8 +153,8 @@ LLFUNC(LoadChars, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(LoadRange, 0,
   const AgFont aFont{lS, 1};
-  const AgSizeT aStart{lS, 2},
-                aEnd{lS, 3};
+  const AgCodepoint aStart{lS, 2};
+  const AgIntegerLGE<UtfCodepoint> aEnd{lS, 3, aStart, 0x110000};
   aFont().InitFTCharRange(aStart, aEnd))
 /* ========================================================================= */
 // $ Font:Print
@@ -806,9 +807,10 @@ LLFUNC(Image, 1,
                    aPaddingWidth{lS, 4, 0, cOgl->MaxTexSize()},
                    aPaddingHeight{lS, 5, 0, cOgl->MaxTexSize()};
   const AgFilterId aFilterId{lS, 6};
-  const AgSizeTL aCharCount{lS, 7, 1},
-                 aCharBegin{lS, 8, 0};
-  const AgSizeTLGE aCharDef{lS, 9, aCharBegin(), aCharBegin() + aCharCount()};
+  const AgCodepoint aCharCount{lS, 7},
+                    aCharBegin{lS, 8};
+  const AgIntegerLG<UtfCodepoint> aCharDef{lS, 9, aCharBegin(),
+    aCharBegin() + aCharCount()};
   const AgNumberVector<GLfloat> aWidths{lS, 10};
   AcFont{lS}().InitFontImage(aImage, aTileWidth(), aTileHeight(),
     aPaddingWidth(), aPaddingHeight(), aFilterId(), aCharCount(), aCharBegin(),

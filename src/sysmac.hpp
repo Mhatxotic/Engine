@@ -19,7 +19,7 @@ using namespace IString::P;            using namespace ISysCon::P;
 using namespace ISysInfo::P;           using namespace ISysMod::P;
 using namespace ISysMutex::P;          using namespace ISysPosix::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -452,11 +452,11 @@ class SysCore :
       // it into the returned structure. I don't believe this will ever be
       // nullptr but we will check just incase.
       const char*const cpFullPath = _dyld_get_image_name(ulIndex);
-      if(UtfIsCStringNotValid(cpFullPath)) continue;
+      if(StdIsCStringNotValid(cpFullPath)) continue;
       StdString strFullPath{ cpFullPath };
       // Get filename. Again, this should never be null but just incase
       const char*const cpBaseName = basename(const_cast<char*>(cpFullPath));
-      if(UtfIsCStringNotValid(cpBaseName)) continue;
+      if(StdIsCStringNotValid(cpBaseName)) continue;
       const StdString strBaseName{ cpBaseName };
       // Id name to lookup and add to to the returned structure
       StdString strPathName;

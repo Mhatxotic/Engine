@@ -18,7 +18,7 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFormat::P;            using namespace IHelper::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace ISysBase::P;           using namespace ISysMod::P;
-using namespace IUtf::P;               using namespace IUtfEncoder::P;
+using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
 using namespace IUtil::P;
 /* -- Includes ------------------------------------------------------------- **
 ** Because ncurses shares function names with STL, we need to put it all the **
@@ -59,10 +59,10 @@ class SysCon :                         // All members initially private
   ColourTable      ctPalette;          // Saved colour palette
   PairTable        ptPairs;            // Saved colour pairs
   /* -- Do set a character at the current position ------------------------- */
-  void DoSetChar(const Codepoint coChar)
+  void DoSetChar(const UtfCodepoint utcChar)
   { // Include curses namespace
     using namespace ICurses;
-    const cchar_t ccChar{ aColour, { static_cast<wchar_t>(coChar) }, 0 };
+    const cchar_t ccChar{ aColour, { static_cast<wchar_t>(utcChar) }, 0 };
     // Print character and get result
     switch(const int iResult = add_wch(&ccChar))
     { // If failed?
@@ -74,8 +74,8 @@ class SysCon :                         // All members initially private
            CoordGetY() != diSizeM1.DimGetHeight())
           cLog->LogWarningExSafe(
             "SysCon set character failed! (C:$<$$>;A:$$<$$>;P:$$x$;R:$)",
-            coChar, StdIOSHex, coChar, StdIOSDec, aColour, StdIOSHex, aColour,
-            StdIOSDec, CoordGetX(), CoordGetY(), iResult);
+            utcChar, StdIOSHex, utcChar, StdIOSDec, aColour, StdIOSHex,
+            aColour, StdIOSDec, CoordGetX(), CoordGetY(), iResult);
         // Fall through to break
         [[fallthrough]];
       // Succeeded?
@@ -274,7 +274,7 @@ class SysCon :                         // All members initially private
     CommitScreen();
   }
   /* -- Set a character at the current position ---------------------------- */
-  void SetChar(const Codepoint coChar=' ')
+  void SetChar(const UtfCodepoint utcChar = ' ')
   { // Include curses namespace
     using namespace ICurses;
     switch(const int iResult = move(CoordGetY(), CoordGetX()))
@@ -282,16 +282,16 @@ class SysCon :                         // All members initially private
       case OK:
         // If size of unsigned isn't equal to wchar_t? We will need to
         // check for overflow and print a '?' if so.
-        if constexpr(sizeof(coChar) != sizeof(wchar_t))
-          DoSetChar(coChar > StdLimits<wchar_t>::max() ? '?' : coChar);
+        if constexpr(sizeof(utcChar) != sizeof(wchar_t))
+          DoSetChar(utcChar > StdLimits<wchar_t>::max() ? '?' : utcChar);
         // Size is equal to wchar_t?
-        else DoSetChar(coChar);
+        else DoSetChar(utcChar);
         // Done
         break;
       // Failed so write error to log
       default: cLog->LogWarningExSafe(
         "SysCon move cursor failed! (C:$<$$>;A:$$<$$>;P:$$x$;R:$)",
-          coChar, StdIOSHex, coChar, StdIOSDec, aColour, StdIOSHex, aColour,
+          utcChar, StdIOSHex, utcChar, StdIOSDec, aColour, StdIOSHex, aColour,
           StdIOSDec, CoordGetX(), CoordGetY(), iResult);
         // Done
         break;
@@ -444,7 +444,7 @@ class SysCon :                         // All members initially private
     // Record original X and Y position
     const int iXO = CoordGetX() + iIndent;
     // Until null character, which character?
-    NextCharacter2: switch(const Codepoint coChar = udStr.UtfNext())
+    NextCharacter2: switch(const UtfCodepoint utcChar = udStr.UtfNext())
     { // End of string?
       case '\0':
         // Clear the rest of the line
@@ -460,7 +460,7 @@ class SysCon :                         // All members initially private
       // Whitespace character?
       case ' ':
         // Do the print if we can
-        if(ValidY(CoordGetY())) SetChar(coChar);
+        if(ValidY(CoordGetY())) SetChar(utcChar);
         // Move the next X position
         CoordIncX();
         // Ignore if the space character processed went over the limit OR
@@ -478,9 +478,9 @@ class SysCon :                         // All members initially private
         { // Handle the wrapping
           HandleReturn(udStr, iXO);
           // If we can print the character? Print the character
-          if(ValidY(CoordGetY())) SetChar(coChar);
+          if(ValidY(CoordGetY())) SetChar(utcChar);
         } // Wouldn't wrap so if we can print the character? Print the char
-        else if(ValidY(CoordGetY())) SetChar(coChar);
+        else if(ValidY(CoordGetY())) SetChar(utcChar);
         // Move along the X position
         CoordIncX();
         // Done
@@ -491,7 +491,7 @@ class SysCon :                         // All members initially private
   /* -- Write data --------------------------------------------------------- */
   void WriteLine(UtfDecoder &udStr, const int iMax, const bool bClrEOL)
   { // For each character index in the buffer
-    NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+    NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
     { // End of string?
       case '\0': goto Done;
       // Carriage return? (impossible).
@@ -499,7 +499,7 @@ class SysCon :                         // All members initially private
       // Is a control character?
       case '\r': HandlePrintControl(udStr, false); break;
       // Get pointer to character ata
-      default: SetChar(coChar); CoordIncX(); break;
+      default: SetChar(utcChar); CoordIncX(); break;
     } // Increase position in screen buffer and finish if at end of string/buf
     if(CoordGetX() >= iMax) goto Done;
     // Enumerate to next character again if we can

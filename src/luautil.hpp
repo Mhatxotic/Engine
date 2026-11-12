@@ -15,7 +15,7 @@ using namespace ILuaBase::P;           using namespace ILuaIdent::P;
 using namespace IMemory::P;            using namespace IRefCtr::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
@@ -489,13 +489,13 @@ static auto LuaUtilGetHostname(lua_State*const lS, const int iParam)
   using StrTypeIt = typename StrType::const_iterator;
   for(StrTypeIt stciIt{ strType.begin() }; stciIt != strType.end(); ++stciIt)
   { // Dereference character and check characters
-    const char coChar = *stciIt;
+    const char cChar = *stciIt;
     const size_t stPos = StdDistance<size_t>(strType.begin(), stciIt);
-    if(StdIsNotAlpha(coChar) && StdIsNotDigit(coChar) &&
-       coChar != '.' && coChar != '-' && coChar != '_')
+    if(StdIsNotAlpha(cChar) && StdIsNotDigit(cChar) &&
+       cChar != '.' && cChar != '-' && cChar != '_')
       return FuncsClass{}.Char(iParam, stPos);
     // Domain separator?
-    if(coChar == '.')
+    if(cChar == '.')
     { // Two periods cant be together
       const size_t stNextPos = stPos + 1;
       if(stFirstDot == stPos || stNextPos >= strType.size())

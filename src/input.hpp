@@ -18,8 +18,8 @@ using namespace IGlFW::P;              using namespace IGlFWUtil::P;
 using namespace IHelper::P;            using namespace IJoystick::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtfEncoder::P;        using namespace IUtil::P;
+using namespace ISysUtil::P;           using namespace IUtfCodepoint::P;
+using namespace IUtfDecoder::P;        using namespace IUtil::P;
 using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -56,12 +56,12 @@ class Input :                          // Handles keyboard, mouse & controllers
                    lfOnDragDrop;       // Drag and dropped files
   /* -- Filtered key pressed ----------------------------------------------- */
   void InputOnFilteredKey(const EvtMainEvent &emeEvent)
-  { // Get key pressed (Codepoint defined in 'utf.hpp' is same as size_t)
-    const Codepoint coChar = emeEvent.eaArgs[1].SizeT();
+  { // Get key pressed (UtfCodepoint in 'utfcp.hpp' is same as 'unsigned')
+    const UtfCodepoint utcChar = emeEvent.eaArgs[1].UInt();
     // If console is enabled, send it to console instead
-    if(cConsole->IsVisible()) return cConsole->OnCharPress(coChar);
+    if(cConsole->IsVisible()) return cConsole->OnCharPress(utcChar);
     // Else send the key to lua callbacks
-    lfOnChar.LuaFuncDispatch(coChar);
+    lfOnChar.LuaFuncDispatch(utcChar);
   }
   /* -- Mouse moved -------------------------------------------------------- */
   void InputOnMouseMove(const EvtMainEvent &emeEvent)
@@ -214,8 +214,8 @@ class Input :                          // Handles keyboard, mouse & controllers
   { // Get text in clipboard
     UtfDecoder udStr{ cGlFW->WinGetClipboard() };
     // For each character, ddd the character to queue if valid
-    while(const Codepoint coChar = udStr.UtfNext())
-      if(coChar >= 32) cConsole->OnCharPress(coChar);
+    while(const UtfCodepoint utcChar = udStr.UtfNext())
+      if(utcChar >= 32) cConsole->OnCharPress(utcChar);
   }
   /* -- Get guest function callbacks ------------------------------- */ public:
   LuaFunc &InputGetMouseClickFunc() { return lfOnMouseClick; }

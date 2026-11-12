@@ -88,7 +88,7 @@ bool PrintGetWord(UtfDecoder &udStr, size_t &stPos, GLfloat glfX,
 { // Save position because we're not drawing anything
   const StringViewConstIt svciPtr{ udStr.UtfGetPos() };
   // Get and compare character
-  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
   { // End, carriage return or space char? Restore position and return no wrap
     case '\0': case '\n': case ' ':
       udStr.UtfSetPos(svciPtr); return false;
@@ -97,7 +97,7 @@ bool PrintGetWord(UtfDecoder &udStr, size_t &stPos, GLfloat glfX,
     // Normal character
     default:
       // Get character
-      stPos = CheckGlyph(coChar);
+      stPos = CheckGlyph(utcChar);
       // Get character width
       const GLfloat glfWidth = GetCharWidth(stPos);
       // Printing next character would exceed wrap width?
@@ -157,10 +157,10 @@ void PushQuadColourAndGlyphs(Texture &tNGlyphs)
   tNGlyphs.FboItemSetQuadAlpha(FboItemGetCData(0)[3]);
 }
 /* -- Handle space character ----------------------------------------------- */
-void HandleSpace(const Codepoint coChar, GLfloat &glfX, GLfloat &glfY,
+void HandleSpace(const UtfCodepoint utcChar, GLfloat &glfX, GLfloat &glfY,
   const GLfloat glfW, const GLfloat glfI, UtfDecoder &udStr)
 { // Get first character as normal
-  size_t stPos = CheckGlyph(coChar);
+  size_t stPos = CheckGlyph(utcChar);
   // Get character width
   const GLfloat glfWidth = GetCharWidth(stPos);
   // Just move the X position forward as we don't need to draw it.
@@ -176,7 +176,7 @@ GLfloat DoPrintW(GLfloat glfX, GLfloat glfY, const GLfloat glfW,
 { // Record original X and Y position and maximum X position
   const GLfloat glfXO = glfX + glfI, fYO = glfY;
   // Until null character, which character?
-  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
   { // End of string? Return height
     case '\0': return (glfY - fYO) + GetLineSpacingHeight();
     // Carriage return?
@@ -186,11 +186,11 @@ GLfloat DoPrintW(GLfloat glfX, GLfloat glfY, const GLfloat glfW,
                  glfXO, glfW, glfI);
                break;
     // Whitespace character?
-    case ' ': HandleSpace(coChar, glfX, glfY, glfW, glfXO, udStr); break;
+    case ' ': HandleSpace(utcChar, glfX, glfY, glfW, glfXO, udStr); break;
     // Normal character?
     default:
     { // Character storage
-      const size_t stPos = CheckGlyph(coChar);
+      const size_t stPos = CheckGlyph(utcChar);
       // Printing next character would exceed wrap width? Handle return
       if(glfX + GetCharWidth(stPos) >= glfW)
         HandleReturn(udStr, glfX, glfY, glfXO);
@@ -207,7 +207,7 @@ GLfloat DoPrintWS(const GLfloat glfW, const GLfloat glfI, UtfDecoder &udStr)
 { // Record original X and Y position and maximum X position
   GLfloat glfX = 0.0f, glfY = GetLineSpacingHeight();
   // Until null character, which character?
-  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
   { // End of string? Return height
     case '\0': return glfY;
     // Carriage return?
@@ -219,11 +219,11 @@ GLfloat DoPrintWS(const GLfloat glfW, const GLfloat glfI, UtfDecoder &udStr)
       // Done
       break;
     } // Whitespace character?
-    case ' ': HandleSpace(coChar, glfX, glfY, glfW, glfI, udStr); break;
+    case ' ': HandleSpace(utcChar, glfX, glfY, glfW, glfI, udStr); break;
     // Normal character?
     default:
     { // Get width
-      const GLfloat glfWidth = GetCharWidth(CheckGlyph(coChar));
+      const GLfloat glfWidth = GetCharWidth(CheckGlyph(utcChar));
       // Printing next character would exceed wrap width? Wrap and indent
       if(glfWidth + glfX >= glfW) HandleReturn(udStr, glfX, glfY, glfI);
       // No exceed, move X position forward
@@ -238,7 +238,7 @@ GLfloat DoPrintWS(const GLfloat glfW, const GLfloat glfI, UtfDecoder &udStr)
 void DoPrint(GLfloat glfX, GLfloat glfY, const GLfloat glfXO,
   UtfDecoder &udStr)
 { // Until null character. Do printing of characters
-  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
   { // End of string? Done
     case '\0': return;
     // Carriage return?
@@ -246,7 +246,7 @@ void DoPrint(GLfloat glfX, GLfloat glfY, const GLfloat glfXO,
     // Other control character? Handle print control characters
     case '\r': HandlePrintControl(glfX, glfY, udStr, false); break;
     // Normal character? Print character
-    default: PrintDraw(glfX, glfY, CheckGlyph(coChar)); break;
+    default: PrintDraw(glfX, glfY, CheckGlyph(utcChar)); break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
@@ -257,7 +257,7 @@ void DoPrintR(GLfloat glfX, GLfloat glfY, UtfDecoder &udStr)
   // Save position
   StringViewConstIt svciSavedIt{ udStr.UtfGetPos() };
   // The first character is already assumed as valid
-  NextCharacter: switch(Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(UtfCodepoint utcChar = udStr.UtfNext())
   { // Carriage return?
     case '\n':
     { // Slice the string we want to draw and draw it
@@ -282,7 +282,7 @@ void DoPrintR(GLfloat glfX, GLfloat glfY, UtfDecoder &udStr)
       // Handle the return character
       return HandleReturn(udStr, glfX, glfY, glfXO);
     } // Normal character? Get width and go backwards
-    default: glfX -= GetCharWidth(CheckGlyph(coChar)); break;
+    default: glfX -= GetCharWidth(CheckGlyph(utcChar)); break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
@@ -295,7 +295,7 @@ void DoPrintC(GLfloat glfX, GLfloat glfY, UtfDecoder &udStr)
   // Save position
   StringViewConstIt svciSavedIt = udStr.UtfGetPos();
   // Until null character move the X axis
-  NextCharacter: switch(Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(UtfCodepoint utcChar = udStr.UtfNext())
   { // Carriage return?
     case '\n':
     { // Slice the string we want to draw and draw it
@@ -324,7 +324,7 @@ void DoPrintC(GLfloat glfX, GLfloat glfY, UtfDecoder &udStr)
       // Set new string
       return HandleReturn(udStr, glfX, glfY, glfXO);
     } // Normal character? Get width and go backwards
-    default: glfX -= GetCharWidth(CheckGlyph(coChar)) / 2.0f; break;
+    default: glfX -= GetCharWidth(CheckGlyph(utcChar)) / 2.0f; break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
@@ -333,7 +333,7 @@ GLfloat DoPrintS(UtfDecoder &udStr)
 { // Width and highest width
   GLfloat glfW = 0.0f, fWH = 0.0f;
   // Increase width until end of string
-  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
   { // End of string? Return width
     case '\0': return glfW > fWH ? glfW : fWH;
     // Carriage return? Set highest width and reset width
@@ -341,7 +341,7 @@ GLfloat DoPrintS(UtfDecoder &udStr)
     // Other control character? Handle the character
     case '\r': HandlePrintControl(glfW, glfW, udStr, true); break;
     // Normal character? Go forth!
-    default: glfW += GetCharWidth(CheckGlyph(coChar)); break;
+    default: glfW += GetCharWidth(CheckGlyph(utcChar)); break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
@@ -352,7 +352,7 @@ GLfloat DoPrintSU(UtfDecoder &udStr)
   // We're going to print something
   glfY = GetLineSpacingHeight();
   // Increase width until end of string
-  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
   { // End of string? Return height
     case '\0': return glfY;
     // Carriage return? Handle it
@@ -360,7 +360,7 @@ GLfloat DoPrintSU(UtfDecoder &udStr)
     // Other control character? Handle it
     case '\r': HandlePrintControl(glfX, glfY, udStr, true); break;
     // Normal character? Go forward
-    default: glfX += GetCharWidth(CheckGlyph(coChar)); break;
+    default: glfX += GetCharWidth(CheckGlyph(utcChar)); break;
   } // Enumerate to next character again if we can
   goto NextCharacter;
 }
@@ -409,7 +409,7 @@ void DoPrintM(GLfloat glfX, GLfloat glfY, const GLfloat glfL,
   // Record original X position
   const GLfloat glfXO = glfX;
   // Until null character. Do printing of characters
-  NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+  NextCharacter: switch(const UtfCodepoint utcChar = udStr.UtfNext())
   { // End of string? We're done
     case '\0': break;
     // Carriage return? Set new co-ordinates.
@@ -426,7 +426,7 @@ void DoPrintM(GLfloat glfX, GLfloat glfY, const GLfloat glfL,
     } // Normal character
     default:
     { // Get character
-      const size_t stPos = CheckGlyph(coChar);
+      const size_t stPos = CheckGlyph(utcChar);
       // Draw outline glyph first, don't care about return status
       if(FtfIsStrokerLoaded())
         DrawPartialGlyph(false, stPos+1, glfXO, glfX, glfY, glfL, glfR,

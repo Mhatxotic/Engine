@@ -7,7 +7,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IGlFW {                      // Start of module namespace
+namespace IGlFW {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IEvtMain::P;

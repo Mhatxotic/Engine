@@ -1,142 +1,19 @@
-/* == UTF.HPP ============================================================== **
+/* == UTFDEC.HPP =========================================================== **
 ** ######################################################################### **
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
-** ## Our speedy UTF-8 character scanning and manipulation class.         ## **
+** ## Handles decoding of integers into UTF-8 byte sequences              ## **
 ** ######################################################################### **
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IUtf {                       // Start of module namespace
+namespace IUtfDecoder {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICommon::P;            using namespace IStd::P;
-using namespace IEndian::P;            using namespace IUtfEncoder::P;
+using namespace ICommon::P;            using namespace IEndian::P;
+using namespace IStd::P;               using namespace IUtfCodepoint::P;
+using namespace IUtfEncoder::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Check if C-string is nullptr or blank -------------------------------- */
-template<typename CharType>
-  requires (!StdIsPointer<CharType>)
-static bool UtfIsCStringValid(const CharType*const ctStr)
-  { return ctStr && *ctStr; }
-/* ------------------------------------------------------------------------- */
-template<typename CharType>
-  requires (!StdIsPointer<CharType>)
-static bool UtfIsCStringNotValid(const CharType*const ctStr)
-  { return !UtfIsCStringValid<CharType>(ctStr); }
-/* ------------------------------------------------------------------------- */
-template<typename IntType = unsigned>
-  requires StdIsIntegral<IntType> && (sizeof(IntType) >= sizeof(uint32_t))
-static StdString UtfDecodeNum(IntType itVal)
-{ // Unset the un-needed upper 8-bits. This will act as the nullptr character.
-  itVal &= 0xFFFFFF;
-  // If we have any of the lower 24-bits set? Keep shifting the bits until the
-  // bits are on the opposite end so we can cast it to a readable char pointer.
-  // We're not changing endian, just reversing each of the eight bits.
-  if(itVal) for(itVal = EndianSwap32(itVal); !(itVal & 0xFF); itVal >>= 8);
-  // Return the shifted value casted to a char pointer address.
-  return { reinterpret_cast<const char*>(&itVal) };
-}
-/* -- Decode UTF character ------------------------------------------------- */
-static void UtfDecode(Codepoint &coState, Codepoint &coChar,
-  const unsigned char ucByte)
-{ // No state?
-  if(coState == 0)
-  { // 1-byte sequence?
-    if((ucByte & 0x80) == 0) { coChar = ucByte; coState = 0; }
-    // 2-byte sequence?
-    else if((ucByte & 0xE0) == 0xC0) { coChar = ucByte & 0x1F; coState = 1; }
-    // 3-byte sequence?
-    else if((ucByte & 0xF0) == 0xE0) { coChar = ucByte & 0x0F; coState = 2; }
-    // 4-byte sequence?
-    else if((ucByte & 0xF8) == 0xF0) { coChar = ucByte & 0x07; coState = 3; }
-    // Invalid byte? Set error state
-    else coState = 12;
-    // Done
-    return;
-  } // State set so continuation byte?
-  if((ucByte & 0xC0) == 0x80)
-    { coChar = (coChar << 6) | (ucByte & 0x3F); --coState; }
-  // Invalid continuation byte? Set error state
-  else coState = 12;
-}
-/* -- Pop UTF character from start of string-------------------------------- */
-static bool UtfPopFront(StdString &strStr)
-{ // String is not empty?
-  if(strStr.empty()) [[unlikely]] return false;
-  // Starting iterator, state and code
-  StringConstIt sciIt{ strStr.cbegin() };
-  Codepoint coState = 0, coChar = 0;
-  // Repeat...
-  do { UtfDecode(coState, coChar, static_cast<unsigned char>(*sciIt)); }
-  // ...Until not end of string, not normal state or error state
-  while(++sciIt != strStr.cend() && coState != 0 && coState != 12);
-  // Return if we didn't process anything or UTF-8 code is in a error state
-  if(coState == 12) [[unlikely]] return false;
-  // Remove the raw bytes and return success
-  strStr.erase(strStr.cbegin(), sciIt);
-  return true;
-}
-/* -- Pop UTF character from end of string --------------------------------- */
-static bool UtfPopBack(StdString &strStr)
-{ // Return failure if string is empty
-  if(strStr.empty()) [[unlikely]] return false;
-  // Get beginning and end iterators
-  StringIt siIt{ strStr.end() };
-  // Move backward to find the start of the last UTF-8 code point and decrement
-  // iterator until we find a byte that is not a continuation byte.
-  // if (!(ucChar & 0x80) ||           // ASCII start byte (0xxxxxxx)
-  //      (ucChar & 0x40)) break;      // leading byte (11xxxxxx)
-  while((static_cast<unsigned char>(*(--siIt)) & 0xC0) == 0x80
-    && siIt != strStr.cbegin());
-  // Return if iterator didn't move
-  if(siIt == strStr.cend()) [[unlikely]] return false;
-  // Erase from that iterator to end and return success
-  strStr.erase(siIt, strStr.cend());
-  return true;
-}
-/* -- Move UTF character from back of one string to the front of another --- */
-static bool UtfMoveBackToFront(StdString &strSrc, StdString &strDst)
-{ // Failed if empty string
-  if(strSrc.empty()) [[unlikely]] return false;
-  // Start from the last character
-  StringIt siIt{ strSrc.end() };
-  // Move backward to find the start of the UTF-8 multibyte character. In UTF-8
-  // continuation bytes match the pattern 10xxxxxx. We stop when we hit a lead
-  // byte (0xxxxxxx or 11xxxxxx) or reach the beginning.
-  while(--siIt != strSrc.begin() && (*siIt & 0b11000000) == 0b10000000);
-  // Insert the char sequence from 'it' to the end into the front of strDst
-  strDst.insert(strDst.begin(), siIt, strSrc.end());
-  // Erase the moved characters from the source string and return success
-  strSrc.erase(siIt, strSrc.end());
-  return true;
-}
-/* -- Move UTF character from front of one string to the back of another --- */
-static bool UtfMoveFrontToBack(StdString &strSrc, StdString &strDst)
-{ // Failed if empty string
-  if(strSrc.empty()) [[unlikely]] return false;
-  // Starting iterator, state and code
-  StringIt siIt{ strSrc.begin() };
-  Codepoint coState = 0, coChar = 0;
-  // Decode bytes from the front...
-  do { UtfDecode(coState, coChar, static_cast<unsigned char>(*siIt)); }
-  // ...Until a full UTF-8 codepoint is processed or we hit the end of string.
-  while(++siIt != strSrc.cend() && coState != 0);
-  // Append the sequence from the front of strSrc to the back of strDst
-  strDst.insert(strDst.end(), strSrc.begin(), siIt);
-  // Erase the moved character sequence from the front of strSrc and return
-  strSrc.erase(strSrc.begin(), siIt);
-  return true;
-}
-/* == Convert a unicode or ansi string to UTF8 ----------------------------- */
-template<typename StrType>
-  requires StdIsClass<StrType>
-static StdString UtfFromWide(const StrType &strStr)
-{ // Enumerate string and convert all characters to UTF8
-  StdString strOut;
-  for(auto aChar : strStr) UtfAppend(static_cast<Codepoint>(aChar), strOut);
-  // Return string
-  return strOut;
-}
 /* -- UTF8 decoder helper class -------------------------------------------- */
 class UtfDecoder final :               // UTF8 string decoder helper
   /* ----------------------------------------------------------------------- */
@@ -146,24 +23,22 @@ class UtfDecoder final :               // UTF8 string decoder helper
   /* -- Test a custom condition on each character -------------------------- */
   template<class OpFunc>bool UtfIsType()
   { // For each character, test if it is a control character
-    while(const Codepoint coChar = UtfNext())
-      if(OpFunc{}.T(coChar)) return false;
+    while(const UtfCodepoint utcChar = UtfNext())
+      if(OpFunc{}.T(utcChar)) return false;
     // Is a displayable character
     return true;
   }
   /* -- Iterator --------------------------------------------------- */ public:
-  template<typename CharType = Codepoint>CharType UtfNext()
+  template<typename CharType = UtfCodepoint>CharType UtfNext()
   { // Walk through the string until we get to a null terminator
-    for(Codepoint coState = 0, coChar = 0; UtfGetPos() != cend(); ++svciIt)
-    { // Decode the specified character
-      UtfDecode(coState, coChar, UtfGetByte<unsigned char>());
-      // Ignore if we haven't got a valid UTF8 character yet.
-      if(coState) continue;
+    for(UtfDecodeChar udcCp; UtfGetPos() != cend(); ++svciIt)
+    { // Decode the specified character and ignore if no valid character
+      udcCp.UtfDecode(UtfGetByte<unsigned char>());
+      if(udcCp.UtfIsStateSet()) continue;
       // Move position onwards
       ++svciIt;
-      // Return the UTF8 character as requested type (limit to 0-2097151).
-      // UTF8 can only address 1,112,064 (0x10F800) total characters
-      return static_cast<CharType>(coChar & 0x1fffff);
+      // Return the codepoint
+      return static_cast<CharType>(udcCp.UtfGetCodepoint());
     } // Invald string. Return null character
     return 0;
   }
@@ -171,21 +46,21 @@ class UtfDecoder final :               // UTF8 string decoder helper
   bool UtfIsDisplayable()
   { // For each character, test if it is a control character
     struct Op{ Op() = default;
-      static bool T(const Codepoint coChar) { return coChar < 0x20; }};
+      static bool T(const UtfCodepoint utcChar) { return utcChar < 0x20; }};
     return UtfIsType<Op>();
   }
   /* -- Check if is ASCII compatible --------------------------------------- */
   bool UtfIsASCII()
   { // For each character, test if it is valid ASCII
     struct Op{ Op() = default;
-      static bool T(const Codepoint coChar) { return coChar > 0x7F; }};
+      static bool T(const UtfCodepoint utcChar) { return utcChar > 0x7F; }};
     return UtfIsType<Op>();
   }
   /* -- Check if is extended ASCII compatible ------------------------------ */
   bool UtfIsExtASCII()
   { // For each character, test if it is valid extended ASCII
     struct Op{ Op() = default;
-      static bool T(const Codepoint coChar) { return coChar > 0xFF; }};
+      static bool T(const UtfCodepoint utcChar) { return utcChar > 0xFF; }};
     return UtfIsType<Op>();
   }
   /* -- Length ------------------------------------------------------------- */
@@ -198,15 +73,15 @@ class UtfDecoder final :               // UTF8 string decoder helper
   /* -- Skip number of utf8 characters ------------------------------------- */
   void UtfSkip(size_t stAmount) { while(stAmount-- && UtfNext()); }
   /* -- Skip characters and return last position (Char::* needs this) ------ */
-  void UtfIgnore(const Codepoint coChar)
+  void UtfIgnore(const UtfCodepoint utcChar)
   { // Save position and keep recording the position until error or finish
     StringViewConstIt svciSavedIt{ UtfGetPos() };
-    while(UtfNext() == coChar) svciSavedIt = UtfGetPos();
+    while(UtfNext() == utcChar) svciSavedIt = UtfGetPos();
     // Return last position saved
     UtfSetPos(svciSavedIt);
   }
   /* -- Scan a value ------------------------------------------------------- */
-  template<typename IntType = Codepoint, size_t stMaximum = 8>
+  template<typename IntType = UtfCodepoint, size_t stMaximum = 8>
     size_t UtfScanValue(IntType &itOut)
   { // Ignore if at the end of the string or it is empty
     if(UtfFinished()) return 0;
@@ -255,8 +130,8 @@ class UtfDecoder final :               // UTF8 string decoder helper
   StdWideString UtfWide()
   { // Convert all UTF-8 characters to wchar_t (don't use StdReserve<>)
     StdWideString wstrOut; wstrOut.reserve(size());
-    while(const Codepoint coChar = UtfNext())
-      wstrOut += static_cast<wchar_t>(coChar);
+    while(const UtfCodepoint utcChar = UtfNext())
+      wstrOut += static_cast<wchar_t>(utcChar);
     wstrOut.shrink_to_fit();
     return wstrOut;
   }
@@ -303,11 +178,11 @@ static StrList UtfWordWrap(const StdStringView &ssvText, const size_t stWidth,
   }; // Current column
   size_t stColumn = 0;
   // Until we're out of valid UTF8 characters
-  while(const Codepoint coChar = udStr.UtfNext())
+  while(const UtfCodepoint utcChar = udStr.UtfNext())
   { // Character found
     ++stColumn;
     // Is it a space character? Mark the cut count and goto next character
-    if(coChar == ' ') { svciSpace = udStr.UtfGetPos(); continue; }
+    if(utcChar == ' ') { svciSpace = udStr.UtfGetPos(); continue; }
     // Is other character and we're not at the limit? Goto next character
     if(stColumn < stWidth) continue;
     // We already found where we can force a line break?
@@ -359,9 +234,9 @@ static StdString UtfShorten(const StrType &strStr, const size_t stLimit,
   // Wrap string in a UTF decoder.
   UtfDecoder udStr{ strStr };
   // Enumerate through the entire string
-  while(const Codepoint coChar = udStr.UtfNext())
+  while(const UtfCodepoint utcChar = udStr.UtfNext())
   { // Reencode the character and add it to the string
-    UtfAppend(coChar, strOut);
+    UtfAppend(utcChar, strOut);
     // Keep adding UTF characters until we're done
     if(++stChars < stLimit) continue;
     // Return if we're at the end of the string
@@ -374,8 +249,99 @@ static StdString UtfShorten(const StrType &strStr, const size_t stLimit,
   } // Return string
   return strOut;
 }
+/* -- Find the beginning byte sequence from the end of a string ------------ */
+static StringConstIt UtfFindByteSeqFromEnd(const StdString &strStr)
+{ // Return failure if string is empty
+  if(strStr.empty()) [[unlikely]] return strStr.cend();
+  // Get end of string
+  StringConstIt sciIt{ strStr.cend() };
+  // Move backward to find the start of the last UTF-8 code point and decrement
+  // iterator until we find a byte that is not a continuation byte.
+  while(--sciIt != strStr.cbegin() && (*sciIt & 0xC0) == 0x80);
+  // Return the position that we found
+  return sciIt;
+}
+/* -- Pop UTF character from end of string --------------------------------- */
+static bool UtfPopBack(StdString &strStr)
+{ // Find byte sequence from end and return if not found
+  StringConstIt sciIt{ UtfFindByteSeqFromEnd(strStr) };
+  if(sciIt == strStr.cend()) return false;
+  // Erase from that iterator to end and return success
+  strStr.erase(sciIt, strStr.cend());
+  return true;
+}
+/* -- Move UTF character from back of one string to the front of another --- */
+static bool UtfMoveBackToFront(StdString &strSrc, StdString &strDst)
+{ // Find byte sequence from end and return if not found
+  StringConstIt sciIt{ UtfFindByteSeqFromEnd(strSrc) };
+  if(sciIt == strSrc.cend()) return false;
+  // Insert the char sequence from 'it' to the end into the front of strDst
+  strDst.insert(strDst.cbegin(), sciIt, strSrc.cend());
+  // Erase the moved characters from the source string and return success
+  strSrc.erase(sciIt, strSrc.cend());
+  return true;
+}
+/* -- Find the second UTF8 character from the start of a string ------------ */
+static StringConstIt UtfFindByteSeqFromStart(const StdString &strStr)
+{ // String is not empty?
+  if(strStr.empty()) [[unlikely]] return strStr.cbegin();
+  // Starting iterator, state and code
+  StringConstIt sciIt{ strStr.cbegin() };
+  UtfDecodeChar udcCodepoint;
+  // Repeat...
+  do { udcCodepoint.UtfDecode(static_cast<unsigned char>(*sciIt)); }
+  // ...Until...
+  while(++sciIt != strStr.cend() &&            // ...end of string and
+        udcCodepoint.UtfIsStateSet() &&        // ...continuation bytes set and
+        udcCodepoint.UtfIsErrorStateNotSet()); // ...error not set
+  // Return position or beginning if failed
+  return udcCodepoint.UtfIsErrorStateNotSet() ? sciIt : strStr.cbegin();
+}
+/* -- Pop UTF character from start of string-------------------------------- */
+static bool UtfPopFront(StdString &strStr)
+{ // Starting iterator, state and code
+  StringConstIt sciIt{ UtfFindByteSeqFromStart(strStr) };
+  if(sciIt == strStr.cbegin()) return false;
+  // Remove the raw bytes and return success
+  strStr.erase(strStr.cbegin(), sciIt);
+  return true;
+}
+/* -- Move UTF character from front of one string to the back of another --- */
+static bool UtfMoveFrontToBack(StdString &strSrc, StdString &strDst)
+{ // Starting iterator, state and code
+  StringConstIt sciIt{ UtfFindByteSeqFromStart(strSrc) };
+  if(sciIt == strSrc.cbegin()) return false;
+  // Append the sequence from the front of strSrc to the back of strDst
+  strDst.insert(strDst.cend(), strSrc.cbegin(), sciIt);
+  // Erase the moved character sequence from the front of strSrc and return
+  strSrc.erase(strSrc.cbegin(), sciIt);
+  return true;
+}
+/* -- Convert a unicode or ansi string to UTF8 ----------------------------- */
+template<typename StrType>
+  requires StdIsClass<StrType>
+static StdString UtfFromWide(const StrType &strStr)
+{ // Enumerate string and convert all characters to UTF8
+  StdString strOut;
+  for(auto aChar : strStr) UtfAppend(static_cast<UtfCodepoint>(aChar), strOut);
+  // Return string
+  return strOut;
+}
+/* -- Convert an actual integer containing UTF8 byte sequence to char ------ */
+template<typename IntType = unsigned>
+  requires StdIsIntegral<IntType> && (sizeof(IntType) >= sizeof(uint32_t))
+static StdString UtfDecodeNum(IntType itVal)
+{ // Unset the un-needed upper 8-bits. This will act as the nullptr character.
+  if constexpr(sizeof(IntType) > sizeof(uint32_t)) itVal &= 0xFFFFFFFF;
+  // If we have any of the lower 24-bits set? Keep shifting the bits until the
+  // bits are on the opposite end so we can cast it to a readable char pointer.
+  // We're not changing endian, just reversing each of the eight bits.
+  if(itVal) for(itVal = EndianSwap32(itVal); !(itVal & 0xFF); itVal >>= 8);
+  // Return the shifted value casted to a char pointer address.
+  return { reinterpret_cast<const char*>(&itVal) };
+}
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

@@ -18,9 +18,9 @@ using namespace IFlags::P;             using namespace IGlFW::P;
 using namespace IGlFWBase::P;          using namespace IHelper::P;
 using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtf::P;               using namespace IUtil::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
 using namespace Lib::GlFW;
 /* ------------------------------------------------------------------------- */
 constexpr static const GLuint gluMax = StdLimits<GLuint>::max();
@@ -934,7 +934,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     const GLubyte*const ucpStr = sAPI.glGetString(gleId);
     IGLC("Get string failed!", "Index", gleId);
     // Sanity check actual string
-    if(!UtfIsCStringValid(ucpStr))
+    if(StdIsCStringNotValid(ucpStr))
       XC("Invalid string returned!", "Index", gleId, "String", ucpStr);
     // Return result
     return reinterpret_cast<const IntType*>(ucpStr);

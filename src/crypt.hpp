@@ -15,9 +15,10 @@ using namespace IError::P;             using namespace IHelper::P;
 using namespace ILog::P;               using namespace IMemory::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtf::P;
-using namespace IUtfEncoder::P;        using namespace IUtil::P;
-using namespace Lib::OpenSSL;          using namespace Lib::SevenZip;
+using namespace IToken::P;             using namespace IUtfCodepoint::P;
+using namespace IUtfDecoder::P;        using namespace IUtfEncoder::P;
+using namespace IUtil::P;              using namespace Lib::OpenSSL;
+using namespace Lib::SevenZip;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
@@ -429,32 +430,32 @@ static StdString CryptEntEncodePtr(const char*const cpPtr, const size_t stSize)
   // For each entity. Find it in the string
   // Until null character. Which control token?
   for(UtfDecoder udSrc{ cpPtr, stSize };
-      const Codepoint coChar = udSrc.UtfNext();)
+      const UtfCodepoint utcChar = udSrc.UtfNext();)
   { // If characters with special meaning in HTML that must be escaped in text
     // contexts? (ampersand, less-than, greater-than, quotation marks
     // (depending on context))?
-    if(coChar == static_cast<Codepoint>('&') || // (U+0026)
-       coChar == static_cast<Codepoint>('<') || // (U+003C)
-       coChar == static_cast<Codepoint>('>') || // (U+003E)
+    if(utcChar == static_cast<UtfCodepoint>('&') || // (U+0026)
+       utcChar == static_cast<UtfCodepoint>('<') || // (U+003C)
+       utcChar == static_cast<UtfCodepoint>('>') || // (U+003E)
        // Is control characters? (C0): U+0000..U+001F except allowed whitespace
        // (TAB U+0009, LF U+000A, CR U+000D)
-       (coChar <= 0x001f && coChar != 0x0009 &&
-        coChar != 0x000a && coChar != 0x000d) ||
+       (utcChar <= 0x001f && utcChar != 0x0009 &&
+        utcChar != 0x000a && utcChar != 0x000d) ||
        // Is DELETE control? (U+007F)
-       coChar == 0x007f ||
+       utcChar == 0x007f ||
        // Is C1 control characters? (U+0080..U+009F)
-       (coChar > 0x0080 && coChar <= 0x009f) ||
+       (utcChar > 0x0080 && utcChar <= 0x009f) ||
        // Is surrogate code points character? (never valid Unicode scalar
        // values -> U+D800..U+DFFF)
-       (coChar > 0xd800 && coChar <= 0xdfff) ||
+       (utcChar > 0xd800 && utcChar <= 0xdfff) ||
        // Noncharacters? (U+FDD0..U+FDEF)
-       (coChar > 0xfdd0 && coChar <= 0xfdef) ||
+       (utcChar > 0xfdd0 && utcChar <= 0xfdef) ||
        // Any code point where low 16 bits are 0xFFFE or 0xFFFF?
-       (coChar & 0xffff) >= 0xfffe)
+       (utcChar & 0xffff) >= 0xfffe)
       // Write the hexedecimal notation for the character instead
-      osS << cCommon->CommonEnt() << coChar << ';';
+      osS << cCommon->CommonEnt() << utcChar << ';';
     // Character is usable as is
-    else osS << static_cast<char>(coChar);
+    else osS << static_cast<char>(utcChar);
   } // Return string
   return osS.str();
 }
@@ -645,7 +646,7 @@ class Crypt :                          // Actual class body
   /* -- Base classes ------------------------------------------------------- */
   public InitHelper                    // The crypto manager class
 { /* -- Private typedefs --------------------------------------------------- */
-  MAPPACK_BUILD(CpCp, const Codepoint, const Codepoint)
+  MAPPACK_BUILD(CpCp, const UtfCodepoint, const UtfCodepoint)
   /* -- private variables -------------------------------------------------- */
   const StrVStrVMap svsvmEnt;          // Html entity decoding lookup table
   const CpCpMap    ccmLookalikeCodex;  // Homoglyph to ASCII char codex
@@ -745,17 +746,17 @@ class Crypt :                          // Actual class body
       { // Don't have at least two characters? Ignore, goto next entity
         if(strEnt.size() <= 1) continue;
         // Value to convert
-        Codepoint cVal;
+        UtfCodepoint utcChar;
         // Have more than 2 characters and hex character specified?
         if(strEnt.size() > 2 && (strEnt[1] == 'x' || strEnt[1] == 'X'))
-          cVal = StrHexToInt<unsigned>(strEnt.substr(2, StdNPos));
+          utcChar = StrHexToInt<unsigned>(strEnt.substr(2, StdNPos));
         // Not hex but is a number? Normal number
         else if(StdIsDigit(strEnt[1]))
-          cVal = StrToNum<unsigned>(strEnt.substr(1, StdNPos));
+          utcChar = StrToNum<unsigned>(strEnt.substr(1, StdNPos));
         // Shouldn't be anything else. Ignore insertations, goto next entity
         else continue;
         // Encoder character and insert it into the string and increase pos
-        stAPos += UtfEncoder{ cVal }.UtfAppendRetSize(strOut);
+        stAPos += UtfAppendRetSize(utcChar, strOut);
         // Find another entity
         continue;
       } // Find string to decode, ignore further insertation if no match
@@ -778,20 +779,20 @@ class Crypt :                          // Actual class body
   { // Reserve memory for new output string
     StdReserved<StdString> strOut{ udStr.UtfSize() };
     // Last codepoint detected
-    Codepoint coLast = 0;
+    UtfCodepoint utcLast = 0;
     // Number of repeating codepoints detect
     unsigned uCount = 0;
     // Walk the string
-    while(const Codepoint coChar = udStr.UtfNext())
+    while(const UtfCodepoint utcChar = udStr.UtfNext())
     { // Find character in codex
-      const CpCpMapConstIt ccmciIt{ ccmLookalikeCodex.find(coChar) };
+      const CpCpMapConstIt ccmciIt{ ccmLookalikeCodex.find(utcChar) };
       // If the character was found in the codex then use the codex value
-      const Codepoint coNew =
-        ccmciIt == ccmLookalikeCodex.cend() ? coChar : ccmciIt->second;
+      const UtfCodepoint coNew =
+        ccmciIt == ccmLookalikeCodex.cend() ? utcChar : ccmciIt->second;
       // If this is not repeated character?
-      if(coLast != coNew)
+      if(utcLast != coNew)
       { // Set new last character
-        coLast = coNew;
+        utcLast = coNew;
         // Reset counter
         uCount = 0;
         // Append character

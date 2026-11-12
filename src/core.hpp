@@ -57,10 +57,9 @@ using namespace IString::P;            using namespace ISysMod::P;
 using namespace ISysUtil::P;           using namespace ISystem::P;
 using namespace ITexture::P;           using namespace IThread::P;
 using namespace ITime::P;              using namespace IToken::P;
-using namespace IUrl::P;               using namespace IUtf::P;
-using namespace IUtil::P;              using namespace IVideo::P;
-using namespace Lib::GlFW::Types;      using namespace Lib::OpenAL::Types;
-using namespace Lib::Sqlite::Types;
+using namespace IUrl::P;               using namespace IUtil::P;
+using namespace IVideo::P;             using namespace Lib::GlFW::Types;
+using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

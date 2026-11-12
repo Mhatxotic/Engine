@@ -11,7 +11,7 @@
 namespace IString {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
-using namespace IUtf::P;
+using namespace IStdLib::P;
 /* -- Generic struct for human-readable formatted numbers ------------------ */
 template<typename IntType>
   requires StdIsIntegral<IntType>
@@ -1021,7 +1021,7 @@ static StdString &StrCompactRef(StdString &strStr)
 /* -- Compact a c-string removing duplicate spaces ------------------------- */
 static StdString StrCompact(const char*cpStr)
 { // Ignore if empty
-  if(UtfIsCStringNotValid(cpStr)) return {};
+  if(StdIsCStringNotValid(cpStr)) return {};
   // Convert to string, compact it and return it
   StdString strOut{ cpStr };
   StrCompactRef(strOut);

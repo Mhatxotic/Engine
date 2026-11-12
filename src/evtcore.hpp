@@ -12,8 +12,7 @@ namespace IEvtCore {                   // Start of private module namespace
 using namespace IError::P;             using namespace IFillCon::P;
 using namespace ILog::P;               using namespace ILookupArray::P;
 using namespace IMutex::P;             using namespace IName::P;
-using namespace IStd::P;               using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public public namespace
 /* ------------------------------------------------------------------------- */

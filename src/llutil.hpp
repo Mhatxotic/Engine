@@ -22,7 +22,7 @@ using namespace IClock::P;             using namespace ICrypt::P;
 using namespace IDuration::P;          using namespace IMemory::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ITime::P;
-using namespace IUrl::P;               using namespace IUtf::P;
+using namespace IUrl::P;               using namespace IUtfDecoder::P;
 using namespace IUtil::P;              using namespace IUuId::P;
 using namespace Common;
 /* ========================================================================= **
@@ -1192,7 +1192,8 @@ LLFUNC(Trim, 1,
 // ? different from 'utf8.char' as you specify the integer with the actual
 // ? utf8 encoded bytes in them.
 /* ------------------------------------------------------------------------- */
-LLFUNC(UTF8Char, 1, LuaUtilPushVar(lS, UtfDecodeNum(AgUInt{lS, 1}())))
+LLFUNC(UTF8Char, 1,
+  LuaUtilPushVar(lS, UtfDecodeNum(AgUIntLG{lS, 1, 0, 0xF48FBFBF}())))
 /* ========================================================================= */
 // $ Util.UUIDDecode
 // > High64:integer=The high-order 128-bit integer.

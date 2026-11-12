@@ -7,7 +7,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* -- Wrapper for STL character functions (can't put in std.hpp) ----------- */
-namespace IStd {                       // Start of module namespace
+namespace IStd {                       // Start of private module namespace
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Returns if character is hexadecimal (0-9A-Fa-f) ---------------------- */
@@ -412,5 +412,5 @@ constexpr static decltype(auto) StdAllOf(auto &&...aArgs)
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

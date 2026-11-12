@@ -7,7 +7,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* == LuaDef interface namespace =========================================== */
-namespace ILuaDef {                    // Start of module namespace
+namespace ILuaDef {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */

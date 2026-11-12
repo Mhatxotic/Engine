@@ -52,14 +52,16 @@ class ThreadBase                       // Thread variables class
                    scdEnd;             // Thread end time
   const SysThread  sytPerf;            // Thread is high performance?
   /* -- Constructor -------------------------------------------------------- */
-  ThreadBase(const SysThread sytNPerf,             // Thread is high perf?
-             void*const vpNParam      = nullptr,   // Thread user parameter
-             const CbThFunc &ctfNFunc = nullptr) : // Thread callback function
-    /* -- Initialisers ----------------------------------------------------- */
-    atsCode{TS_STANDBY},               // Set exit code to standby
+  explicit ThreadBase(
+    /* -- Arguments -------------------------------------------------------- */
+    const SysThread sytNPerf,          // Performance setting
+    void*const     vpNParam = nullptr, // User parameter
+    const CbThFunc &ctfNFunc = nullptr // Main callback function
+    ):/* -- Initialisers --------------------------------------------------- */
+    atsCode{ TS_STANDBY },             // Set exit code to standby
     vpParam(vpNParam),                 // Set user thread parameter
     ctfFunc{ ctfNFunc },               // Set thread callback function
-    abShouldExit(false),               // Should never exit at first
+    abShouldExit{ false },             // Should never exit at first
     sytPerf(sytNPerf)                  // Set thread high performance
     /* -- No code ---------------------------------------------------------- */
     {}

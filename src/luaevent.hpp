@@ -16,7 +16,6 @@ using namespace IEvtMain::P;           using namespace ILog::P;
 using namespace ILuaBase::P;           using namespace ILuaRef::P;
 using namespace ILuaUtil::P;           using namespace IMutex::P;
 using namespace IRefCtr::P;            using namespace IStd::P;
-using namespace IUtf::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

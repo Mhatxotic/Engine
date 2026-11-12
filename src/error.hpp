@@ -21,7 +21,7 @@
 namespace IError {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace IUtf::P;
+using namespace IString::P;            using namespace IUtfDecoder::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Helper plugin for C runtime errno checking --------------------------- */

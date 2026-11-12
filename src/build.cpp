@@ -20,10 +20,11 @@
 /* ------------------------------------------------------------------------- */
 #include "setup.hpp"                   // Environment configuration
 /* -- Disable unreferenced function warning -------------------------------- */
-#if defined(WINDOWS)                   // Compiling on Windows?
-# pragma warning(disable: 4505)
+#if defined(MSVC_VANILLA)              // Compiling on Windows?
+# pragma warning(disable: 4505)        // No dead code warnings
 #else                                  // Compiling on MacOS or Linux?
 # pragma GCC diagnostic ignored "-Wunused-function"
+# pragma GCC diagnostic ignored "-Wunused-template"
 #endif                                 // Operating system check
 /* ------------------------------------------------------------------------- */
 using std::cout;                       // Using this to print text
@@ -35,8 +36,9 @@ namespace E {                          // Put everything in engine namespace
 #include "common.hpp"                  // Common constant variables header
 #include "endian.hpp"                  // Endian functions utility header
 #include "std.hpp"                     // Pre UTF standard functions
-#include "utfenc.hpp"                  // UTF encoder utility header
-#include "utf.hpp"                     // UTF strings utility header
+#include "utfcp.hpp"                   // UTF codepoint class header
+#include "utfenc.hpp"                  // UTF encoder class header
+#include "utfdec.hpp"                  // UTF decoder class header
 #include "stdlib.hpp"                  // Post UTF standard functions
 #include "flags.hpp"                   // Flags helper utility header
 #include "string.hpp"                  // String utilities header
@@ -119,13 +121,15 @@ using namespace ISystem::P;            using namespace ISysMod::P;
 using namespace ISysInfo::P;           using namespace ISysPipe::P;
 using namespace ISysCon::P;            using namespace ISysUtil::P;
 using namespace ITime::P;              using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtfEncoder::P;
+using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
 using namespace IUtil::P;              using namespace IUuId::P;
 /* ========================================================================= */
-#define WINVER32   0x0501              // Windows version minimum (X86)
-#define WINVER32S  STR(WINVER32)       // ...as a string
-#define WINVER64   0x0502              // Windows version minimum (X86-64)
-#define WINVER64S  STR(WINVER64)       // ...as a string
+#if defined(WINDOWS)
+# define WINVER32   0x0501             // Windows version minimum (X86)
+# define WINVER32S  STR(WINVER32)      // ...as a string
+# define WINVER64   0x0502             // Windows version minimum (X86-64)
+# define WINVER64S  STR(WINVER64)      // ...as a string
+#endif
 #define MACOS32    "10.15"             // MacOS version minimum (X86-64)
 #define MACOS64    "11.0"              // MacOS version minimum (ARM64)
 #define STANDARD   "c++20"             // Current compilation standard used
@@ -180,7 +184,7 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
   /* ACB        */ "",
   /* CCX        */ "CL.EXE",
   /* CCM        */ "-nologo -c -MP4 -GA -Gy -GF -bigobj",
-  /* CCMX       */ "-utf-8 -W4 -I$ -I$/ft",
+  /* CCMX       */ "-utf-8 -I$ -I$/ft",
   /* CCLIB      */ "-DUNICODE -D_UNICODE -Zl",
   /* CCINCDBG   */ "-showIncludes",
   /* CCASM      */ "-Fa -WX",
@@ -252,14 +256,7 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
   /* CCLIB      */ envWindowsMSVC.cpCCLIB,
   /* CCINCDBG   */ envWindowsMSVC.cpCCIncDBG,
   /* CCASM      */ envWindowsMSVC.cpCCASM,
-  /* CCANAL     */ "-Weverything -Werror=all -Wno-c++98-compat "
-                   "-Wno-c++98-compat-pedantic -Wno-c++20-compat "
-                   "-Wno-documentation -Wno-documentation-unknown-command "
-                   "-Wno-gnu-zero-variadic-macro-arguments -Wno-weak-vtables "
-                   "-Wno-covered-switch-default -Wno-switch-enum "
-                   "-Wno-poison-system-directories -Wno-global-constructors "
-                   "-Wno-padded -Wno-reserved-identifier "
-                   "-Wno-allocator-wrappers",
+  /* CCANAL     */ "",
   /* CCAA       */ envWindowsMSVC.cpCCAA,
   /* CCAB       */ "-DBETA -MT -Z7 -O2 -GS- -Gw",
   /* CCAR       */ "-DRELEASE -MT -Ox -GS- -Gw",
@@ -319,7 +316,7 @@ envWindowsLLVM =                       // LLVM on Windows
   /* ACA        */ envWindowsMSVC.cpACA,
   /* ACB        */ envWindowsMSVC.cpACB,
   /* CCX        */ "CLANG++.EXE",      // -ftime-report
-  /* CCM        */ "-c -Wextra -static -Xclang -flto-visibility-public-std",
+  /* CCM        */ "-c -static -Xclang -flto-visibility-public-std",
   /* CCMX       */ "-I$ -I$/ft",
   /* CCLIB      */ "-DUNICODE -D_UNICODE -nodefaultlibs",
   /* CCINCDBG   */ "",
@@ -373,9 +370,6 @@ envWindowsLLVM =                       // LLVM on Windows
 },/* ----------------------------------------------------------------------- */
 envMacOSLLVM =                         // XCode/LLVM on MacOS
 { /* ----------------------------------------------------------------------- */
-#define MACOS_BASE "/Applications/Xcode.app/Contents/Developer/Platforms/" \
-                     "MacOSX.platform/Developer/SDKs/MacOSX.sdk"
-  /* ----------------------------------------------------------------------- */
   /* PERL       */ "/usr/bin/perl",
   /* CMAKE      */ "/opt/homebrew/bin/cmake",
   /* CPPCHECK   */ "cppcheck",
@@ -397,7 +391,7 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* ACB        */ envWindowsMSVC.cpACB,
   /* CCX        */ "gcc",
   /* CCM        */ "-c -ffast-math",
-  /* CCMX       */ "-Wextra -Wall -I$ -I" SRCDIR " -I$/curses -I$/ft",
+  /* CCMX       */ "-I$ -I" SRCDIR " -I$/curses -I$/ft",
   /* CCLIB      */ "-nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-S -D__ASMFILE__=",
@@ -453,8 +447,6 @@ envMacOSLLVM =                         // XCode/LLVM on MacOS
   /* ARM        */ "rcs",
   /* ARO        */ "\"$/$$\"",
   /* ARLIB      */ ".a",
-  /* ----------------------------------------------------------------------- */
-#undef MACOS_BASE
 },/* ----------------------------------------------------------------------- */
 envLinuxGCC =                          // GCC on Linux
 { /* ----------------------------------------------------------------------- */
@@ -485,7 +477,7 @@ envLinuxGCC =                          // GCC on Linux
   /* CCX        */ "gcc",
   /* CCM        */ "-c -shared-libgcc -mtune=generic -fmax-errors=1 "
                    "-funwind-tables",
-  /* CCMX       */ "-Wextra -Wno-inaccessible-base -I$ -I$/ft",
+  /* CCMX       */ "-I$ -I$/ft",
   /* CCLIB      */ "-nodefaultlibs",
   /* CCINCDBG   */ "",
   /* CCASM      */ "-Fa",
@@ -565,44 +557,44 @@ envLinuxGCC =                          // GCC on Linux
 #undef LINUX_ARCH64
 #undef LINUX_ARCH32
 };/* -- Configuration flags ------------------------------------------------ */
-#define PF_NONE     0x0000000000000000 // No flags
-#define PF_ALPHA    0x0000000000000001 // Alpha (Debug) compilation
-#define PF_BETA     0x0000000000000002 // Beta compilation
-#define PF_FINAL    0x0000000000000004 // Release (Final) compilation
-#define PF_X86      0x0000000000000008 // 32-bit compilation
-#define PF_X64      0x0000000000000010 // 64-bit compilation
-#define PF_NOMERGE  0x0000000000000020 // Don't merge output lines
-#define PF_EXEC     0x0000000000000040 // Perform execute after compilation
-#define PF_EXTLIB   0x0000000000000080 // Compile external library
-#define PF_USAGE    0x0000000000000100 // Show usage
-#define PF_ASSETS   0x0000000000000200 // Update assets
-#define PF_FASSETS  0x0000000000000400 // Complete rebuild of assets
-#define PF_DISTRO   0x0000000000000800 // Build distributable package
-#define PF_CHPROJ   0x0000000000001000 // Change project
-#define PF_CERT     0x0000000000002000 // Rebuild certificate
-#define PF_ANALYSE  0x0000000000004000 // Use -ANALYZE option (32-bit only)
-#define PF_CAGEN    0x0000000000008000 // Generate root certificate store
-#define PF_DOC      0x0000000000010000 // Generate documentation
-#define PF_MORE     0x0000000000020000 // Show more compiler log lines
-#define PF_ASM      0x0000000000040000 // Produce assembler output
-#define PF_CCINCS   0x0000000000080000 // Show include files
-#define PF_CPSELF   0x0000000000100000 // Rebuild self
-#define PF_MAP      0x0000000000200000 // Build map of executable
-#define PF_NPROJ    0x0000000000400000 // Setup a new project
-#define PF_CPPCHK   0x0000000000800000 // Perform CppCheck
-#define PF_RVER     0x0000000001000000 // Read version information
-#define PF_RPROJ    0x0000000002000000 // Read project information
-#define PF_SYSOUT   0x0000000004000000 // Show stdout output to system calls
-#define PF_SYSNOERR 0x0000000008000000 // Hide syserr output
-#define PF_CHECKSRC 0x0000000010000000 // Check source files
-#define PF_ENVWMSVC 0x0000000020000000 // Use MSVC environment
-#define PF_ENVWLLVM 0x0000000040000000 // Use LLVM environment
-#define PF_ENVWCLCP 0x0000000080000000 // Use LLVM environment
-#define PF_ENVXCODE 0x0000000100000000 // Use XCode environment
-#define PF_ENVGCC   0x0000000200000000 // Use GCC environment
-#define PF_VERSION  0x0000000400000000 // Show version information
-#define PF_BLICS    0x0000000800000000 // Build licenses
-#define PF_PREPROC  0x0000001000000000 // Preprocess
+#define PF_NONE     0x0000000000000000ULL // No flags
+#define PF_ALPHA    0x0000000000000001ULL // Alpha (Debug) compilation
+#define PF_BETA     0x0000000000000002ULL // Beta compilation
+#define PF_FINAL    0x0000000000000004ULL // Release (Final) compilation
+#define PF_X86      0x0000000000000008ULL // 32-bit compilation
+#define PF_X64      0x0000000000000010ULL // 64-bit compilation
+#define PF_NOMERGE  0x0000000000000020ULL // Don't merge output lines
+#define PF_EXEC     0x0000000000000040ULL // Perform execute after compilation
+#define PF_EXTLIB   0x0000000000000080ULL // Compile external library
+#define PF_USAGE    0x0000000000000100ULL // Show usage
+#define PF_ASSETS   0x0000000000000200ULL // Update assets
+#define PF_FASSETS  0x0000000000000400ULL // Complete rebuild of assets
+#define PF_DISTRO   0x0000000000000800ULL // Build distributable package
+#define PF_CHPROJ   0x0000000000001000ULL // Change project
+#define PF_CERT     0x0000000000002000ULL // Rebuild certificate
+#define PF_ANALYSE  0x0000000000004000ULL // Use -ANALYZE option (32-bit only)
+#define PF_CAGEN    0x0000000000008000ULL // Generate root certificate store
+#define PF_DOC      0x0000000000010000ULL // Generate documentation
+#define PF_MORE     0x0000000000020000ULL // Show more compiler log lines
+#define PF_ASM      0x0000000000040000ULL // Produce assembler output
+#define PF_CCINCS   0x0000000000080000ULL // Show include files
+#define PF_CPSELF   0x0000000000100000ULL // Rebuild self
+#define PF_MAP      0x0000000000200000ULL // Build map of executable
+#define PF_NPROJ    0x0000000000400000ULL // Setup a new project
+#define PF_CPPCHK   0x0000000000800000ULL // Perform CppCheck
+#define PF_RVER     0x0000000001000000ULL // Read version information
+#define PF_RPROJ    0x0000000002000000ULL // Read project information
+#define PF_SYSOUT   0x0000000004000000ULL // Show stdout output to system calls
+#define PF_SYSNOERR 0x0000000008000000ULL // Hide syserr output
+#define PF_CHECKSRC 0x0000000010000000ULL // Check source files
+#define PF_ENVWMSVC 0x0000000020000000ULL // Use MSVC environment
+#define PF_ENVWLLVM 0x0000000040000000ULL // Use LLVM environment
+#define PF_ENVWCLCP 0x0000000080000000ULL // Use LLVM environment
+#define PF_ENVXCODE 0x0000000100000000ULL // Use XCode environment
+#define PF_ENVGCC   0x0000000200000000ULL // Use GCC environment
+#define PF_VERSION  0x0000000400000000ULL // Show version information
+#define PF_BLICS    0x0000000800000000ULL // Build licenses
+#define PF_PREPROC  0x0000001000000000ULL // Preprocess
 /* -- All compiling related flags ------------------------------------------ */
 #define PF_COMPILE (PF_X86|PF_X64|PF_ANALYSE|PF_BETA|PF_ALPHA|PF_FINAL|\
                     PF_CCINCS|PF_MORE|PF_ASM|PF_ENVWMSVC|PF_ENVWLLVM|\
@@ -634,7 +626,7 @@ static const StdString strVerFile{ "build." JSON_EXTENSION };
 static const StrVUSet svusIgnore{ ARCDIR, BINDIR, CRTDIR, DBGDIR, DOCDIR,
   DRDDIR, DISDIR, INCDIR, LIBDIR, LICDIR, SRCDIR, UTLDIR, WINDIR };
 /* -- Base directory ------------------------------------------------------- */
-StdString strBaseDir;
+static StdString strBaseDir;
 /* ------------------------------------------------------------------------- */
 static int CheckSources()
 { // Number of warnings
@@ -1022,7 +1014,9 @@ static int GenDoc()
             afCurrent.lDescription.push_back(strPart);
           } // Not enough characters so treat as line break
           else afCurrent.lDescription.push_back("<BR>");
-        } // Unknown
+        } // fall through to break
+        [[fallthrough]];
+        // Unknown
         default: break;
       }
     } // exception occured
@@ -3232,13 +3226,16 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     System("ninja");
     // Remove Z-lib because we already have it and it's complicated to remove
     // without using CMake and theres no options for it right now.
+    const StdStringView
+      ssvDir{ "src\\spng\\CMakeFiles\\zlib-static.dir\\zlib\\" },
+      ssvExt{ ".c.obj" };
     SystemF("$ turbojpeg-static.lib "
-      "/REMOVE:adler32.c.obj "  "/REMOVE:compress.c.obj "
-      "/REMOVE:crc32.c.obj "    "/REMOVE:deflate.c.obj "
-      "/REMOVE:inffast.c.obj "  "/REMOVE:inflate.c.obj "
-      "/REMOVE:inftrees.c.obj " "/REMOVE:trees.c.obj "
-      "/REMOVE:zutil.c.obj",
-      envActive.cpAR);
+      "/REMOVE:$adler32$ "  "/REMOVE:$compress$ "  "/REMOVE:$crc32$ "
+      "/REMOVE:$deflate$ "  "/REMOVE:$inffast$ "   "/REMOVE:$inflate$ "
+      "/REMOVE:$inftrees$ " "/REMOVE:$trees$ "     "/REMOVE:$zutil$",
+      envActive.cpAR, ssvDir, ssvExt, ssvDir, ssvExt, ssvDir, ssvExt, ssvDir,
+        ssvExt, ssvDir, ssvExt, ssvDir, ssvExt, ssvDir, ssvExt, ssvDir, ssvExt,
+        ssvDir, ssvExt);
     // Move the generated library into position
     RenameFileSafe("turbojpeg-static.lib",
       StrFormat("../jpeg64.lib", strPrefix));
@@ -4093,7 +4090,7 @@ static int Compile(const bool bSelf)
     strMap = StrAppend(strDbgDir, '/', cSystem->ENGFile(), envActive.cpMAP);
     strPdb = StrAppend(strDbgDir, '/', cSystem->ENGFile(), envActive.cpPDB);
     strObj = StrAppend(strDbgDir, '/', cSystem->ENGFile(),
-      ullFlags & PF_PREPROC ? ".cpp" : envActive.cpOBJ),
+      ullFlags & PF_PREPROC ? ".cpp" : envActive.cpOBJ);
     strAsm = StrAppend(strDbgDir, '/', cSystem->ENGFile(), envActive.cpASM);
     strRc = StrFormat("$/$.rc", WINDIR, ENGINENAME);
     strRes = StrFormat("$/$.res", strDbgDir, ENGINENAME);
@@ -4174,8 +4171,10 @@ static int Compile(const bool bSelf)
       if(uVer[0] != static_cast<unsigned>(tD.tm_year) ||
          uVer[1] != static_cast<unsigned>(tD.tm_mon) ||
          uVer[2] != static_cast<unsigned>(tD.tm_mday))
-      { uVer[0] = tD.tm_year; uVer[1] = tD.tm_mon;
-        uVer[2] = tD.tm_mday; uVer[3] = 1; }
+      { uVer[0] = static_cast<unsigned int>(tD.tm_year);
+        uVer[1] = static_cast<unsigned int>(tD.tm_mon);
+        uVer[2] = static_cast<unsigned int>(tD.tm_mday);
+        uVer[3] = 1U; }
       // Update revision
       else uVer[3]++;
     } // Update version information
@@ -4217,10 +4216,13 @@ static int Compile(const bool bSelf)
   } // Check files are readable and writable
   CheckFiles({ strRc, strCpp },
              { strExe, strRes, strPdb, strObj, strAsm, strMap });
-  // Analyse flag specified? Add to compiler flags.
-  if((ullFlags & PF_ANALYSE) && !envActive.cpCCAnal.empty())
-    strCmdCC += StrAppend(envActive.cpCCAnal, ' ');
-  // Analyse includes flag specified? Add to compiler flags.
+  // Analyse flag specified?
+  if((ullFlags & PF_ANALYSE))
+  { // Add to compiler flags.
+    if(!envActive.cpCCAnal.empty())
+      strCmdCC += StrAppend(envActive.cpCCAnal, ' ');
+    strCmdCC += "-DPEDANTIC ";
+  } // Analyse includes flag specified? Add to compiler flags.
   if((ullFlags & PF_CCINCS) && !envActive.cpCCIncDBG.empty())
     strCmdCC += StrAppend(envActive.cpCCIncDBG, ' ');
   // Preprocess?
@@ -4291,7 +4293,7 @@ static int Compile(const bool bSelf)
     strCmdRC += StrAppend(envActive.cpCCRES, strRes, ' ', strRc);
     if(SpecialExecute(strCmdRC, 10)) return 1;
   } // Save executable size
-  const uint64_t ullOldSize = DirLocalFileExists(strExe) ?
+  const int64_t llOldSize = DirLocalFileExists(strExe) ?
     FStream{ strExe, FM_R_B }.FStreamSize() : 0;
   // Link sources and resources and if failed?
   if(SpecialExecute(strCmdLD, 10))
@@ -4302,19 +4304,19 @@ static int Compile(const bool bSelf)
   } // Clean up temporary files that MS likes leaving behind
   DoCleanCompilerTempFiles();
   // Show executable size
-  const uint64_t ullNewSize = FStream{ strExe, FM_R_B }.FStreamSize();
-  cout << "*** Executable size is " << ullNewSize << " bytes (" <<
-    StrToBytes(ullNewSize, 2) << ")." << StdIOSEndLine;
+  const int64_t llNewSize = FStream{ strExe, FM_R_B }.FStreamSize();
+  cout << "*** Executable size is " << llNewSize << " bytes (" <<
+    StrToBytes(llNewSize, 2) << ")." << StdIOSEndLine;
   // If the old executable had size?
-  if(ullOldSize && ullOldSize != ullNewSize)
+  if(llOldSize && llOldSize != llNewSize)
   { // Calculate and show changed size
-    const int64_t llChange = ullNewSize - ullOldSize;
+    const int64_t llChange = llNewSize - llOldSize;
     // Decreased?
     if(llChange < 0)
     { // Negate to positive
-      const uint64_t ullAdjChange = -llChange;
-      cout << "*** Executable size decreased " << ullAdjChange << " bytes (" <<
-        StrToBytes(ullAdjChange, 2) << ")." << StdIOSEndLine;
+      const int64_t llAdjChange = -llChange;
+      cout << "*** Executable size decreased " << llAdjChange << " bytes (" <<
+        StrToBytes(llAdjChange, 2) << ")." << StdIOSEndLine;
     } // Increqased?
     else cout << "*** Executable size increased " << llChange << " bytes (" <<
       StrToBytes(llChange, 2) << ")." << StdIOSEndLine;
@@ -4437,14 +4439,14 @@ static bool CheckCommandLine(StdString &strX1, StdString &strX2)
   /* ----------------------------------------------------------------------- */
   // Arguments needed
   unsigned uArgsRequired = 0;
-  unsigned char ucArgsNeededFor = '\0';
+  char cArgsNeededFor = '\0';
   // Iterate through the tokens we found in the string
-  for(const char ucP : strTokens)
+  for(const char cPtr : strTokens)
   { // Find the command and if we couldn't find it?
-    const FuncListMapConstIt flItem{ flData.find(StdString{ &ucP, 1 }) };
+    const FuncListMapConstIt flItem{ flData.find(StdString{ &cPtr, 1 }) };
     if(flItem == flData.end())
     { // Report invalid token and goto next token
-      cout << "Invalid token '" << ucP << "' ignored.\n";
+      cout << "Invalid token '" << cPtr << "' ignored.\n";
       continue;
     } // Get reference to flag data and if this token requires arguments?
     const FuncData &flD = flItem->second;
@@ -4452,20 +4454,20 @@ static bool CheckCommandLine(StdString &strX1, StdString &strX2)
     { // If the argument data has already been recorded? Throw error
       if(uArgsRequired)
         XC("Tokens incompatible!",
-           "Token1", ucArgsNeededFor,
-           "Token2", ucP,
+           "Token1", cArgsNeededFor,
+           "Token2", cPtr,
            "Args", cCmdLine->CmdLineGetArgList().size());
       // Not enough arguments specified? Throw Error
       if(cCmdLine->CmdLineGetArgList().size() <= 1)
         XC("Token requires extra argument!",
-           "Token", ucP, "Args", cCmdLine->CmdLineGetArgList().size());
+           "Token", cPtr, "Args", cCmdLine->CmdLineGetArgList().size());
       // Record the argument required
       strX1 = cCmdLine->CmdLineGetArgList()[1];
       // Record an optional argument if needed
       if(flD.uArg >= 2 && cCmdLine->CmdLineGetArgList().size() >= 3)
         strX2 = cCmdLine->CmdLineGetArgList()[2];
       // Update token data
-      ucArgsNeededFor = ucP;
+      cArgsNeededFor = cPtr;
       uArgsRequired = flD.uArg;
     } // We found it so set and remove flags as appropriate
     ullFlags = (ullFlags & ~flD.uRemove) | flD.uAdd;
@@ -4560,13 +4562,9 @@ static int Build(const int iArgC, ArgType**const saArgV,
   SysInitThread("main", STP_MAIN);
   // Dependencies required only in this scope
   using namespace IArchive::P;         using namespace IArgs::P;
-  using namespace IAsset::P;           using namespace ICmdLine::P;
-  using namespace IClock::P;           using namespace ICrypt::P;
-  using namespace IEvtMain::P;         using namespace IFile::P;
-  using namespace ILuaFunc::P;         using namespace IMemory::P;
-  using namespace IParser::P;          using namespace IStat::P;
-  using namespace IThread::P;          using namespace IUtil::P;
-  using namespace IUtf::P;
+  using namespace IAsset::P;           using namespace IEvtMain::P;
+  using namespace IFile::P;            using namespace ILuaFunc::P;
+  using namespace IStat::P;            using namespace IThread::P;
   // Initialise required subsystems
   const struct Engine : private Common, private DirBase, private CmdLine,
     private Log, private Stats, private Threads, private EvtMain,

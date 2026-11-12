@@ -7,7 +7,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace ICoord {                     // Start of module namespace
+namespace ICoord {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IIntPair::P;           using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
@@ -81,5 +81,5 @@ using CoordSizeT = Coord<size_t>;        // Cordinates size_t typedef
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

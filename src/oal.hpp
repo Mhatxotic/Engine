@@ -18,8 +18,8 @@ using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFlags::P;
 using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace IMemory::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtf::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
 using namespace Lib::OpenAL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -390,7 +390,7 @@ class Oal :                            // Actual class body
   { // Get the checked variable and return it
     const ALchar*const ucpStr = alGetString(aleId);
     IALNF("Get string failed!", "Index", aleId);
-    if(!UtfIsCStringValid(ucpStr))
+    if(StdIsCStringNotValid(ucpStr))
       XC("Invalid string returned!", "Index", aleId, "String", ucpStr);
     return reinterpret_cast<const IntType*>(ucpStr);
   }

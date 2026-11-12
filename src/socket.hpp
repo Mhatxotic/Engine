@@ -21,10 +21,10 @@ using namespace ILuaUtil::P;           using namespace IMemory::P;
 using namespace IMetadata::P;          using namespace IMutex::P;
 using namespace IName::P;              using namespace IParser::P;
 using namespace IRefCtr::P;            using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace IToken::P;
-using namespace IUtil::P;              using namespace IUtf::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IToken::P;             using namespace IUtil::P;
 using namespace Lib::OpenSSL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
@@ -530,7 +530,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // the response to not be nullptr too or there is no response
     const unsigned char *cpResp = nullptr;
     const long lLength = SSL_get_tlsext_status_ocsp_resp(sslCbPtr, &cpResp);
-    if(lLength != -1 && UtfIsCStringValid(cpResp))
+    if(lLength != -1 && StdIsCStringValid(cpResp))
     { // Got a response so make sure it is freed on leaving the scope
       using OcspResponsePtr = StdUniquePtr<ocsp_response_st,
         function<decltype(OCSP_RESPONSE_free)>>;

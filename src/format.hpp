@@ -16,7 +16,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IFormat {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IUtf::P;
+using namespace IUtfDecoder::P;
 /* -- Control levels ------------------------------------------------------- */
 static unsigned uBgLevel = 0,          // Background colour change level
                 uFgLevel = 0;          // Foreground colour change level

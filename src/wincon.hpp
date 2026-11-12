@@ -16,8 +16,8 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFormat::P;            using namespace ILog::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ISysBase::P;
-using namespace ISysUtil::P;           using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace ISysUtil::P;           using namespace IUtfCodepoint::P;
+using namespace IUtfDecoder::P;        using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 // -- Palette entry to WIN32 colour lookup --------------------------------- */
@@ -286,11 +286,11 @@ class SysCon :                         // Members initially private
       SysError());
   }
   /* -- Set a character at the specified screen buffer position ------------ */
-  void SetCharPos(const size_t stPos, const Codepoint coChar = ' ')
+  void SetCharPos(const size_t stPos, const UtfCodepoint utcChar = ' ')
   { // Get pointer to character ata
     CHAR_INFO &ciCell = civBuf[stPos];
     // Convert parameters to native format
-    WCHAR wcChar = static_cast<WCHAR>(coChar);
+    WCHAR wcChar = static_cast<WCHAR>(utcChar);
     // Character is the same?
     if(wcChar == ciCell.Char.UnicodeChar)
     { // Return if colour is the same
@@ -312,7 +312,8 @@ class SysCon :                         // Members initially private
     if(stCY > csBR.CoordGetY()) csBR.CoordSetY(stCY);
   }
   /* -- Set a character at the current position ---------------------------- */
-  void SetChar(const Codepoint coChar=' ') { SetCharPos(GetPos(), coChar); }
+  void SetChar(const UtfCodepoint utcChar = ' ')
+    { SetCharPos(GetPos(), utcChar); }
   /* -- Clear to end of line ----------------------------------------------- */
   void ClearLine()
   { // Get number of chars to write
@@ -378,7 +379,7 @@ class SysCon :                         // Members initially private
   { // Save position because we're not drawing anything
     StringViewConstIt svciPtr{ udStr.UtfGetPos() };
     // Until null character. Which control token?
-    NextCharacter: switch(const Codepoint coChar = udStr.UtfNext())
+    NextCharacter: switch(udStr.UtfNext())
     { // End of string, return or space char? Restore pos and return no wrap
       case '\0': case '\n': case ' ': udStr.UtfSetPos(svciPtr); return false;
       // Other control character? Handle print control characters
@@ -473,7 +474,7 @@ class SysCon :                         // Members initially private
     // Record original X and Y position
     const size_t stXO = CoordGetX() + stIndent;
     // Until null character, which character?
-    NextCharacter2: switch(const Codepoint coChar = udStr.UtfNext())
+    NextCharacter2: switch(const UtfCodepoint utcChar = udStr.UtfNext())
     { // End of string?
       case '\0':
         // Clear the rest of the line
@@ -489,7 +490,7 @@ class SysCon :                         // Members initially private
       // Whitespace character?
       case ' ':
         // Do the print if we can
-        if(ValidY(CoordGetY())) SetChar(coChar);
+        if(ValidY(CoordGetY())) SetChar(utcChar);
         // Move the next X position
         CoordIncX();
         // Ignore if the space character processed went over the limit OR
@@ -507,9 +508,9 @@ class SysCon :                         // Members initially private
         { // Handle the wrapping
           HandleReturn(udStr, stXO);
           // If we can print the character? Print the character
-          if(ValidY(CoordGetY())) SetChar(coChar);
+          if(ValidY(CoordGetY())) SetChar(utcChar);
         } // Wouldn't wrap so if we can print the character? Print the char
-        else if(ValidY(CoordGetY())) SetChar(coChar);
+        else if(ValidY(CoordGetY())) SetChar(utcChar);
         // Move along the X position
         CoordIncX();
         // Done
@@ -526,15 +527,15 @@ class SysCon :                         // Members initially private
     // Get absolute end position in screen buffer to protect from overrun
     const size_t stEnd = UtilMinimum(stPosEOL, SafeEnd(stPos + stMax));
     // For each character index in the buffer
-    while(const Codepoint coChar = udStr.UtfNext())
+    while(const UtfCodepoint utcChar = udStr.UtfNext())
     { // Compare character
-      switch(coChar)
+      switch(utcChar)
       { // Carriage return? (impossible).
         case '\n': break;
         // Is a control character?
         case '\r': HandlePrintControl(udStr, false); break;
         // Get pointer to character ata
-        default : SetCharPos(stPos++, coChar); break;
+        default : SetCharPos(stPos++, utcChar); break;
       } // Increase position in screen buffer and break if at end of string/buf
       if(stPos >= stEnd) break;
     } // Now we need to clear old characters up to the end of line

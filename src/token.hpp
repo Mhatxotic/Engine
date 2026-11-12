@@ -8,7 +8,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IToken {                     // Start of module namespace
+namespace IToken {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IStd::P;
 /* -- Picks the appropriate type for a string argument parameter ----------- */
@@ -112,5 +112,5 @@ using TokenStrConstIt     = TokenStr::const_iterator;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

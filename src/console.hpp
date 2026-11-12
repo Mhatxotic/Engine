@@ -24,8 +24,8 @@ using namespace IStd::P;               using namespace IString::P;
 using namespace ISocket::P;            using namespace ISysCon::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace ITime::P;              using namespace IToken::P;
-using namespace IUtf::P;               using namespace IUtfEncoder::P;
-using namespace IUtil::P;
+using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
+using namespace IUtfEncoder::P;        using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -252,13 +252,13 @@ struct Console :                       // Members initially private
     if(const Args aList{ strCmd }) ExecuteArguments(strCmd, aList);
   }
   /* -- OnCharPress --------------------------- Console character pressed -- */
-  void OnCharPress(const Codepoint coChar)
+  void OnCharPress(const UtfCodepoint utcChar)
   { // Ignore first key? Ignore it
     if(FlagIsSet(CF_IGNOREKEY)) return FlagClear(CF_IGNOREKEY);
     // Insert character if insert mode is on
-    if(FlagIsSet(CF_INSERT)) AddInputChar(coChar);
+    if(FlagIsSet(CF_INSERT)) AddInputChar(utcChar);
     // Repalce character in input buffer
-    else ReplaceInputChar(coChar);
+    else ReplaceInputChar(utcChar);
     // Reset autocomplete
     AutoCompleteReset();
   }
@@ -452,20 +452,20 @@ struct Console :                       // Members initially private
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void AddInputChar(const Codepoint coChar)
+  void AddInputChar(const UtfCodepoint utcChar)
   { // Make sure line is under max characters
     if(strConsoleBegin.size() + strConsoleEnd.size() >= stMaxInputLine) return;
     // Encode character to utf-8
-    UtfAppend(coChar, strConsoleBegin);
+    UtfAppend(utcChar, strConsoleBegin);
     // Redraw the buffer, it changed
     SetRedraw();
   }
   /* -- Input manipulation ------------------------------------------------- */
-  void ReplaceInputChar(const Codepoint coChar)
+  void ReplaceInputChar(const UtfCodepoint utcChar)
   { // Add character if we are at the end of the line input
-    if(strConsoleEnd.empty()) return AddInputChar(coChar);
+    if(strConsoleEnd.empty()) return AddInputChar(utcChar);
     // Encode character to utf-8
-    UtfAppend(coChar, strConsoleBegin);
+    UtfAppend(utcChar, strConsoleBegin);
     // Remove character from beginning of end of line input
     UtfPopFront(strConsoleEnd);
     // Redraw the buffer, it changed
@@ -763,7 +763,7 @@ struct Console :                       // Members initially private
     // Scan text as UTF-8
     UtfDecoder udLine{ clLine.strLine };
     // Get next character
-    NextChar: switch(const Codepoint coChar = udLine.UtfNext())
+    NextChar: switch(const UtfCodepoint utcChar = udLine.UtfNext())
     { // Carriage return or space char? Restore position and return no wrap
       case '\n': StdWcOut << StdIOSWEndLine; goto NextChar;
       // Other control character?
@@ -789,7 +789,7 @@ struct Console :                       // Members initially private
         // Finished
         goto NextChar;
       } // Other character?
-      default: StdWcOut << static_cast<wchar_t>(coChar); goto NextChar;
+      default: StdWcOut << static_cast<wchar_t>(utcChar); goto NextChar;
       // Finished
       case '\0': break;
     } // Finished so remove attributes in terminal if set

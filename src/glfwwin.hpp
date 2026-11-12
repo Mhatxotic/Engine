@@ -14,8 +14,8 @@ using namespace ICoord::P;             using namespace IDim::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IGlFWBase::P;          using namespace IGlFWUtil::P;
 using namespace ILog::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace IUtf::P;
-using namespace IUtfEncoder::P;        using namespace Lib::GlFW;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace IUtfCodepoint::P;      using namespace Lib::GlFW;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -45,7 +45,7 @@ class GlFWWindow :                     // GLFW window class
   { // Check if is our window, and check the pointer and return if empty or
     // invalid or a previous event has not been processed yet.
     if(glfwWindow != WinGetHandle() || cpaFiles == nullptr ||
-       UtfIsCStringNotValid(*cpaFiles) || !WinGetFiles().empty())
+       StdIsCStringNotValid(*cpaFiles) || !WinGetFiles().empty())
       return;
     // Because we're in the main thread, we need to tell the engine thread but
     // the problem is that glfw will free 'cpaFiles' after this function
@@ -63,7 +63,7 @@ class GlFWWindow :                     // GLFW window class
   /* -- Event handler for 'glfwSetCharCallback' ---------------------------- */
   static void WinOnInputChar(GLFWwindow*const glfwWindow, unsigned uChar)
     { cEvtMain->Add(EMC_INP_CHAR, reinterpret_cast<void*>(glfwWindow),
-        static_cast<Codepoint>(uChar)); }
+        static_cast<UtfCodepoint>(uChar)); }
   /* -- Event handler for 'glfwSetCursorEnterCallback' --------------------- */
   static void WinOnMouseFocus(GLFWwindow*const glfwWindow, int iOnStage)
     { cEvtMain->Add(EMC_INP_MOUSEFOCUS,

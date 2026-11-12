@@ -21,8 +21,7 @@ using namespace IImageDef::P;          using namespace ILog::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace IUtf::P;               using namespace IUtfEncoder::P;
-using namespace Lib::GlFW::Types;
+using namespace IUtfCodepoint::P;      using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ========================================================================= */
@@ -63,14 +62,14 @@ class ConGfx :                         // Members initially private
       cCVars->CVarsGetInternal<GLuint>(CON_FONTPADDING), OF_L_L_MM_L,
       ConGfxGetFontRef());
     // Get minimum precache range and if valid?
-    if(const Codepoint coCharMin =
+    if(const UtfCodepoint utcCharMin =
          cCVars->CVarsGetInternal<unsigned>(CON_FONTPCMIN))
       // Get maximum precache range and return if valid?
-      if(const Codepoint coCharMax =
+      if(const UtfCodepoint utcCharMax =
            cCVars->CVarsGetInternal<unsigned>(CON_FONTPCMAX))
         // If maximum is above the minimum? Pre-cache the characters range
-        if(coCharMax >= coCharMin)
-          ConGfxGetFontRef().InitFTCharRange(coCharMin, coCharMax);
+        if(utcCharMax >= utcCharMin)
+          ConGfxGetFontRef().InitFTCharRange(utcCharMin, utcCharMax);
     // Set default font parameters
     ConGfxRestoreDefaultProperties();
     // LUA not allowed to deallocate this font!

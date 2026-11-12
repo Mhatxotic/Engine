@@ -8,7 +8,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IArgs {                      // Start of module namespace
+namespace IArgs {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
@@ -105,5 +105,5 @@ static ArgsView ArgsBuildSafe(const StdStringView &ssvArgs)
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

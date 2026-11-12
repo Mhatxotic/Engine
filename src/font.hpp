@@ -24,8 +24,8 @@ using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace ITexture::P;           using namespace IUtf::P;
-using namespace IUtfEncoder::P;        using namespace IUtil::P;
+using namespace ITexture::P;           using namespace IUtfCodepoint::P;
+using namespace IUtfDecoder::P;        using namespace IUtil::P;
 using namespace Lib::FreeType;         using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
@@ -90,6 +90,8 @@ class FontBase :                       // Members initially private
   DimGLFloat       gldfScale,          // Scaled font width and height
                    gldfFont;           // Requested font size for OpenGL
   size_t           stMultiplier;       // 1 if no outline, 2 if outline
+  UtfCodepoint     utcMultiplier,      // Same as 'stMultipler' but 'uint'.
+                   utcDefaultChar;     // Default fallback character
   GLfloat          glfCSpacing,        // Character spacing adjustment
                    glfCSpacingScale,   // Character spacing scaled size
                    glfLSpacing,        // Text line spacing
@@ -103,17 +105,16 @@ class FontBase :                       // Members initially private
   /* -- Freetype handles --------------------------------------------------- */
   using FtfList = StdList<Ftf>;        // List of extra fonts typedef
   FtfList          ftflExtras;         // Extra fonts if character not found
-  FT_ULong         fulDefaultChar;     // Default fallback character
   /* -- Default constructor ------------------------------------------------ */
   explicit FontBase(const ImageFlagsConst ifcPurpose = IP_FONT) :
     /* --------------------------------------------------------------------- */
     Atlas{ ifcPurpose },               stMultiplier(1),
+    utcMultiplier(1),                  utcDefaultChar('?'),
     glfCSpacing(0.0f),                 glfCSpacingScale(0.0f),
     glfLSpacing(0.0f),                 glfLSpacingHeight(0.0f),
     glfGlyphSize(0.0f),                glfScale(0.0f),
     glfGPad(0.0f),                     glfGPadScaled(0.0f),
-    tGlyphs(nullptr),                  fiOutline{ 0xFF000000 },
-    fulDefaultChar('?')
+    tGlyphs(nullptr),                  fiOutline{ 0xFF000000 }
     /* --------------------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
@@ -144,9 +145,9 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   /* -- Get bin occupancy -------------------------------------------------- */
   double GetTexOccupancy() const { return ipData.Occupancy(); }
   /* -- Get below baseline height of specified character ------------------- */
-  GLfloat GetBaselineBelow(const Codepoint coChar)
+  GLfloat GetBaselineBelow(const UtfCodepoint utcChar)
   { // Now get character info and return data
-    const Glyph &gRef = gvData[CheckGlyph(coChar)];
+    const Glyph &gRef = gvData[CheckGlyph(utcChar)];
     return (gRef.CoordsGetY2() - gRef.DimGetHeight()) * glfScale;
   }
   /* -- Get/set line spacing ----------------------------------------------- */
@@ -174,20 +175,20 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     UpdateHeightPlusLineSpacing();
   }
   /* -- Do initialise specified freetype character range ------------------- */
-  void InitFTCharRange(const Codepoint cStart, const Codepoint cEnd)
+  void InitFTCharRange(const UtfCodepoint utcStart, const UtfCodepoint utcEnd)
   { // Ignore if not a freetype font.
     if(FtfIsNotLoaded()) return;
     // Log pre-cache progress
     cLog->LogDebugExSafe("Font '$' pre-caching character range $ to $...",
-      NameGet(), cStart, cEnd);
+      NameGet(), utcStart, utcEnd);
     // Load the specified character range
-    DoInitFTCharRangeApplyStroker<HandleGlyphFunc::FreeType>(cStart, cEnd);
+    DoInitFTCharRangeApplyStroker<HandleGlyphFunc::FreeType>(utcStart, utcEnd);
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
     // Log success
     cLog->LogDebugExSafe(
       "Font '$' finished pre-caching character range $ to $.",
-      NameGet(), cStart, cEnd);
+      NameGet(), utcStart, utcEnd);
   }
   /* -- Do initialise all freetype characters in specified string ---------- */
   void InitFTCharString(const StdStringView ssvString)
@@ -226,7 +227,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Outline characters will be stored one after the opaque characters
     // thus doubling the size of the glyph data/texture coord lists. The
     // multiplier is already 1 by default so this just makes it equal 2.
-    if(FtfIsOutline()) stMultiplier = 2;
+    if(FtfIsOutline()) { stMultiplier = 2; utcMultiplier = 2; }
     // Initialise the atlas texture
     AtlasInit<ImageTypeGrayAlpha>(ftfSrc.NameGet(),
       static_cast<GLuint>(ceil(Ftf::DimGetWidth())),
@@ -248,17 +249,20 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   /* -- Init a pre-rendered font directly ---------------------------------- */
   void InitFontImage(Image &imSrc, const GLuint gluTWidth,
     const GLuint gluTHeight, const GLuint gluPWidth, const GLuint gluPHeight,
-    const OglFilterEnum ofeNFilter, const size_t stCharCount,
-    const size_t stCharBegin, const size_t stCharDefault,
+    const OglFilterEnum ofeNFilter, const UtfCodepoint utcCharCount,
+    const UtfCodepoint utcCharBegin, const UtfCodepoint utcCharDefault,
     const GLFloatVector &vglfWidths)
   { // Show filename
     cLog->LogDebugExSafe("Font loading bitmap '$'...", imSrc.NameGet());
     // Set Font's role as a Bitmap font.
     SetFontBitmap();
-    // Set ending character
-    const size_t stCharEnd = stCharBegin + stCharCount;
+    // Set character ranges as size_t as we do array accesses
+    const size_t stCharCount = static_cast<size_t>(utcCharCount),
+                 stCharBegin = static_cast<size_t>(utcCharBegin),
+                 stCharDefault = static_cast<size_t>(utcCharDefault),
+                 stCharEnd = stCharBegin + stCharCount;
     // Set default character
-    fulDefaultChar = static_cast<decltype(fulDefaultChar)>(stCharDefault);
+    utcDefaultChar = utcCharDefault;
     // Set filter
     ofeFilter = ofeNFilter;
     // Convert tile width and height to float
@@ -349,11 +353,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Check if it's a literal number as prefixed by a hash sign? Convert as a
     // literal number else convert as an a literal character then verify it is
     // in the specified range.
-    fulDefaultChar = jsDoc.GetInteger("Default");
-    if(fulDefaultChar < stCharBegin || fulDefaultChar >= stCharEnd)
+    utcDefaultChar = jsDoc.GetInteger("Default");
+    if(utcDefaultChar < stCharBegin || utcDefaultChar >= stCharEnd)
       XC("Default character index out of range in manifest!",
         "Name",    imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
-        "Default", fulDefaultChar,  "Minimum",  stCharBegin,
+        "Default", utcDefaultChar,  "Minimum",  stCharBegin,
         "Maximum", stCharEnd,       "Count",    stCharCount);
     // Get filter
     ofeFilter = static_cast<decltype(ofeFilter)>(jsDoc.GetInteger("Filter"));
@@ -399,7 +403,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Calculate the beginning character minus one
     const size_t stCharBeginM1 = stCharBegin - 1;
     // Get the default character width data
-    const Glyph &gRef = gvData[fulDefaultChar];
+    const Glyph &gRef = gvData[utcDefaultChar];
     // Initialise the left uninitialised glyph widths
     GlyphVectorIt gviLeftEnd{ gvData.begin() };
     StdAdvance(gviLeftEnd, stCharBeginM1);
@@ -419,7 +423,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Init texture with custom parameters and generate tileset
     InitTextureImage(imSrc, uTW, uTH, uPX, uPY, ofeFilter);
     // Get the texture coords for the default character
-    const CoordData &cdRef = clFirst[fulDefaultChar];
+    const CoordData &cdRef = clFirst[utcDefaultChar];
     // Initialise the left uninitialised texcoords with the default character
     CoordListIt cliItLeftEnd{ clFirst.begin() };
     StdAdvance(cliItLeftEnd, stCharBeginM1);

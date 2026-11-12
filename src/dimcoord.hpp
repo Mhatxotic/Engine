@@ -7,7 +7,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace IDimCoord {                  // Start of module namespace
+namespace IDimCoord {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICoord::P;             using namespace IDim::P;
 /* ------------------------------------------------------------------------- */
@@ -49,5 +49,5 @@ using DimCoSizeT = DimCoords<size_t>;  // Dimension size_t coords typedef
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */
-}                                      // End of module namespace
+}                                      // End of private module namespace
 /* == EoF =========================================================== EoF == */

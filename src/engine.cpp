@@ -23,8 +23,9 @@ namespace E {                          // Start of engine namespace
 #include "common.hpp"                  // Common constant variables header
 #include "endian.hpp"                  // Endian functions header
 #include "std.hpp"                     // Standard utility functions header
-#include "utfenc.hpp"                  // UTF encoder utility header
-#include "utf.hpp"                     // UTF strings utility header
+#include "utfcp.hpp"                   // UTF codepoint class header
+#include "utfenc.hpp"                  // UTF encoder class header
+#include "utfdec.hpp"                  // UTF decoder class header
 #include "stdlib.hpp"                  // X platform C funcs header
 #include "flags.hpp"                   // Flags helper utility header
 #include "string.hpp"                  // String utilities header

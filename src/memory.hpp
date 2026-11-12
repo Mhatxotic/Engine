@@ -14,8 +14,7 @@ namespace IMemory {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBit::P;               using namespace IEndian::P;
 using namespace IError::P;             using namespace IName::P;
-using namespace IStd::P;               using namespace IUtf::P;
-using namespace IUtil::P;
+using namespace IStd::P;               using namespace IUtil::P;
 /* -- Typedefs ------------------------------------------------------------- */
 using SpanByte   = StdSpan<uint8_t>;   // The type we're using
 using SpanByteIt = SpanByte::iterator; // Iterator type
