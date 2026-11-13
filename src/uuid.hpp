@@ -16,9 +16,9 @@ namespace P {                          // Start of public module namespace
 /* == Universally unique identifier helper ================================= */
 class UuId                             // Members initially public
 { /* -- Private typedefs --------------------------------------------------- */
-  typedef StdArray<uint8_t, 6>  Sextuple;   // 6 bytes
-  typedef StdArray<uint8_t, 16> Sexdecuple; // 16 bytes
-  typedef StdArray<uint64_t, 2> Double;     // 2 quad words (16 bytes)
+  using Sextuple   = StdArray<uint8_t,  6>; // 6 bytes
+  using Sexdecuple = StdArray<uint8_t, 16>; // 16 bytes
+  using Double     = StdArray<uint64_t, 2>; // 2 quad words (16 bytes)
   /* -- Typedefs --------------------------------------------------- */ public:
   const union Struct                   // UUIDv4 structure
   { /* -- It's safe to use arrays in unions since C++11 -------------------- */

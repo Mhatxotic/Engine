@@ -9,11 +9,15 @@
 /* ------------------------------------------------------------------------- */
 namespace ICodecJPG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IError::P;             using namespace IFileMap::P;
-using namespace IFStream::P;           using namespace IImageData::P;
-using namespace IImageDef::P;          using namespace IImageLib::P;
-using namespace IImageSlot::P;         using namespace IMemory::P;
-using namespace ITexDef::P;            using namespace Lib::JpegTurbo;
+using namespace IClock::P;             using namespace IError::P;
+using namespace IFileMap::P;           using namespace IFStream::P;
+using namespace IImageData::P;         using namespace IImageDef::P;
+using namespace IImageLib::P;          using namespace IImageSlot::P;
+using namespace IMemory::P;            using namespace IMetadata::P;
+using namespace IOgl::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ITexDef::P;
+using namespace ITime::P;              using namespace IUtil::P;
+using namespace Lib::JpegTurbo;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -88,16 +92,102 @@ class CodecJPG :                       // JPEG codec object
     // will have no effect if you do. Then call other helper functions, here I
     // call the set quality. Then start the compression.
     jpeg_set_defaults(&ciData);
-    // Set the quality
+    // Set the quality to maximum
     jpeg_set_quality(&ciData, 100, static_cast<boolean>(true));
+    // Disable chrominance subsampling to prevent color degradation (4:4:4)
+    ciData.comp_info[0].h_samp_factor =
+      ciData.comp_info[0].v_samp_factor =
+      ciData.comp_info[1].h_samp_factor =
+      ciData.comp_info[1].v_samp_factor =
+      ciData.comp_info[2].h_samp_factor =
+      ciData.comp_info[2].v_samp_factor = 1;
     // We now start compressing
     jpeg_start_compress(&ciData, static_cast<boolean>(true));
+    // Set metadata
+    StdString strMetadata{
+      StrFormat("$ ($ $) exported image by $ created at $ from $ with "
+                "$ ($) v$.$.$.$ ($-bit $) by $ on $ ($ by $). $. $.",
+        cMetadata->MetadataGetTitle(), cMetadata->MetadataGetShortTitle(),
+        cMetadata->MetadataGetVersion(), cMetadata->MetadataGetAuthor(),
+        cmSys.FormatTime(), cMetadata->MetadataGetWebsite(),
+        cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
+        cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
+        cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor(),
+        cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor(),
+        cMetadata->MetadataGetDescription(), cMetadata->MetadataGetCopyright())
+    }; // Commit metadata
+    jpeg_write_marker(&ciData, JPEG_COM,
+      reinterpret_cast<const JOCTET*>(strMetadata.data()),
+      UtilIntOrMax<unsigned int>(strMetadata.size()));
+    // Begin XMP payload
+    StdString strXmpPayload{ StrFormat("http://ns.adobe.com/xap/1.0/\0"
+      "<?xpacket begin=\"\xef\xbb\xbf\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"
+        "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\">"
+          "<rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">"
+            "<rdf:Description rdf:about=\"\" "
+                             "xmlns:dc=\"http://purl.org/dc/elements/1.1/\">"
+              "<dc:title>"
+                "<rdf:Alt>"
+                  "<rdf:li xml:lang=\"x-default\">"
+                    "$ ($) Exported Image"
+                  "</rdf:li>"
+                "</rdf:Alt>"
+              "</dc:title>"
+              "<dc:description>"
+                "<rdf:Alt><rdf:li xml:lang=\"x-default\">$</rdf:li></rdf:Alt>"
+              "</dc:description>"
+              "<dc:rights>"
+                "<rdf:Alt><rdf:li xml:lang=\"x-default\">$</rdf:li></rdf:Alt>"
+              "</dc:rights>"
+              "<dc:creator>"
+                "<rdf:Seq><rdf:li>$</rdf:li></rdf:Seq>"
+              "</dc:creator>"
+              "<dc:publisher>"
+                "<rdf:Seq>"
+                  "<rdf:li>$ ($) v$.$.$.$ ($-bit $) by $</rdf:li>"
+                "</rdf:Seq>"
+              "</dc:publisher>"
+              "<dc:contributor>"
+                "<rdf:Seq><rdf:li>$ ($ by $)</rdf:li></rdf:Seq>"
+              "</dc:contributor>"
+              "<dc:subject>"
+                "<rdf:Bag><rdf:li>Technology</rdf:li></rdf:Bag>"
+              "</dc:subject>"
+              "<dc:type>Image</dc:type>"
+              "<dc:format>image/jpeg</dc:format>"
+              "<dc:language>"
+                "<rdf:Bag><rdf:li>$</rdf:li></rdf:Bag>"
+              "</dc:language>"
+              "<dc:date><rdf:Seq><rdf:li>$</rdf:li></rdf:Seq></dc:date>"
+              "<dc:identifier>$</dc:identifier>"
+              "<dc:source>$</dc:source>"
+              "<dc:coverage>Universal</dc:coverage>"
+            "</rdf:Description>"
+          "</rdf:RDF>"
+        "</x:xmpmeta>"
+      "<?xpacket end=\"w\"?>",
+      cMetadata->MetadataGetTitle(), cMetadata->MetadataGetVersion(),
+      cMetadata->MetadataGetDescription(),
+      cMetadata->MetadataGetCopyright(),
+      cMetadata->MetadataGetAuthor(),
+      cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
+        cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
+        cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor(),
+      cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor(),
+      cSystem->OSLocale(),
+      TimeLocalTTtoStr(cmSys.GetTimeS(), "%Y-%m-%dT%H:%M:%S%z"),
+      cMetadata->MetadataGetShortTitle(),
+      cMetadata->MetadataGetWebsite())
+    }; // Commit XMP metadata
+    jpeg_write_marker(&ciData, JPEG_APP0 + 1,
+      reinterpret_cast<const JOCTET*>(strXmpPayload.data()),
+      UtilIntOrMax<unsigned int>(strXmpPayload.size()));
     // Now we encode each can line
     while(ciData.next_scanline < ciData.image_height)
     { // Get scanline
       JSAMPROW rPtr = reinterpret_cast<JSAMPROW>
-        (isData.MemRead((ciData.image_height-1-ciData.next_scanline)*
-          static_cast<unsigned>(ciData.input_components)*
+        (isData.MemRead((ciData.image_height - 1 - ciData.next_scanline) *
+          static_cast<unsigned>(ciData.input_components) *
           ciData.image_width));
       // Write scanline to disk
       jpeg_write_scanlines(&ciData, &rPtr, 1);

@@ -787,18 +787,18 @@ class Crypt :                          // Actual class body
     { // Find character in codex
       const CpCpMapConstIt ccmciIt{ ccmLookalikeCodex.find(utcChar) };
       // If the character was found in the codex then use the codex value
-      const UtfCodepoint coNew =
+      const UtfCodepoint utcNew =
         ccmciIt == ccmLookalikeCodex.cend() ? utcChar : ccmciIt->second;
       // If this is not repeated character?
-      if(utcLast != coNew)
+      if(utcLast != utcNew)
       { // Set new last character
-        utcLast = coNew;
+        utcLast = utcNew;
         // Reset counter
         uCount = 0;
         // Append character
-        UtfAppend(coNew, strOut);
+        UtfAppend(utcNew, strOut);
       } // Increment repeat counter. Only two of the same character can exist
-      else if(++uCount <= 2) UtfAppend(coNew, strOut);
+      else if(++uCount <= 2) UtfAppend(utcNew, strOut);
     } // Trim string
     strOut.shrink_to_fit();
     // Implode words and return output

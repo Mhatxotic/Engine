@@ -15,7 +15,8 @@ using namespace ILuaBase::P;           using namespace ILuaIdent::P;
 using namespace IMemory::P;            using namespace IRefCtr::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace IToken::P;
-using namespace IUtil::P;
+using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
+using namespace IUtfEncoder::P;        using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
@@ -1444,6 +1445,39 @@ static void LuaUtilInitRNGSeed(lua_State*const lS, const lua_Integer liSeed)
   LuaBaseCall(lS, 1);
   // Removes the table 'math'
   LuaBaseRemove(lS, iTIndex);
+}
+/* -- Make a string safe for Lua's string.match regex ---------------------- */
+static StdString LuaUtikMakeSafeRegexStr(const StdStringView &ssvStr)
+{ // The string to return
+  StdString strOut;
+  // Pre-allocate memory to avoid reallocations. Worst case: every character is
+  // magic and needs escaping (input.size() * 2)
+  strOut.reserve(ssvStr.size() * 2);
+  // Direct iteration with branchless-friendly lookup
+  for(UtfDecoder udStr{ ssvStr }; const UtfCodepoint utcCp = udStr.UtfNext();)
+    // Which character?
+    switch(utcCp)
+    { // Is a special Lua regex character?
+      case 36: [[fallthrough]]; /* $ */ case 37: [[fallthrough]]; /* % */
+      case 40: [[fallthrough]]; /* ( */ case 41: [[fallthrough]]; /* ) */
+      case 42: [[fallthrough]]; /* * */ case 43: [[fallthrough]]; /* + */
+      case 45: [[fallthrough]]; /* - */ case 46: [[fallthrough]]; /* . */
+      case 63: [[fallthrough]]; /* ? */ case 91: [[fallthrough]]; /* [ */
+      case 93: [[fallthrough]]; /* ] */ case 94:                  /* ^ */
+        // Is this an important character? Add an escape character
+        strOut += '%';
+        // Fall through to add character
+        [[fallthrough]];
+      // Any other character?
+      default:
+        // Add the character
+        UtfAppend(utcCp, strOut);
+        // Done, next character
+        break;
+    } // Fix excess string memory
+  strOut.shrink_to_fit();
+  // Return properly escaped string
+  return strOut;
 }
 /* -- Push a true or false ------------------------------------------------- */
 static void LuaUtilPushTrue(lua_State*const lS)

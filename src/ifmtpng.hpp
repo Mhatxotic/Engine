@@ -15,9 +15,10 @@ using namespace IFStream::P;           using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
 using namespace IImageSlot::P;         using namespace ILog::P;
 using namespace IMemory::P;            using namespace IMetadata::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace Lib::Png;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ITexDef::P;            using namespace ITime::P;
+using namespace IUtil::P;              using namespace Lib::Png;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -76,7 +77,7 @@ class CodecPNG :                       // PNG codec object
       } // Write a metadata item
       void Meta(const char*const cpK, const char*cpV, const size_t stS)
       { // Create struct
-        png_text ptData{
+        const png_text ptData{
           PNG_TEXT_COMPRESSION_NONE,   // Compression
           const_cast<png_charp>(cpK),  // Key
           const_cast<png_charp>(cpV),  // Text
@@ -86,9 +87,7 @@ class CodecPNG :                       // PNG codec object
           nullptr                      // Lang Key
         }; // Set the header
         png_set_text(psData, piData, &ptData, 1);
-      }
-      void Meta(const char*const cpK, const char*cpV)
-        { Meta(cpK, cpV, strlen(cpV)); }
+      } // STL classes
       void Meta(const char*const cpK, const StdString &strV)
         { Meta(cpK, strV.data(), strV.size()); }
       void Meta(const char*const cpK, const StdStringView &ssvV)
@@ -115,23 +114,23 @@ class CodecPNG :                       // PNG codec object
     } // Send file stream to constructor
     pwC{ fmData };
     // Set system data in metadata
-    { using namespace ISystem::P;
-      pwC.Meta("Title", cMetadata->MetadataGetTitle());
-      pwC.Meta("Version", cMetadata->MetadataGetVersion());
-      pwC.Meta("Author", cMetadata->MetadataGetAuthor());
-      pwC.Meta("Copyright", cMetadata->MetadataGetCopyright());
-      pwC.Meta("Creation Time", cmSys.FormatTime());
-      pwC.Meta("Description", cSystem->ENGName() + " Exported Image");
-      pwC.Meta("Software", StrFormat("$ ($) v$.$.$.$ ($-bit $) by $",
-        cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
-        cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
-        cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor()));
-      pwC.Meta("Comment", cMetadata->MetadataGetWebsite());
-    } // Set renderer in metadata
-    { using namespace IOgl::P;
-      pwC.Meta("Source", StrFormat("$ ($ by $)",
-        cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor()));
-    }
+    pwC.Meta("Author", cMetadata->MetadataGetAuthor());
+    pwC.Meta("Title",
+      StrAppend(cMetadata->MetadataGetTitle(), " Exported Image" ));
+    pwC.Meta("Contributor", StrFormat("$ with $ ($ by $)",
+      cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor()));
+    pwC.Meta("Copyright", cMetadata->MetadataGetCopyright());
+    pwC.Meta("Creation Time",
+      TimeLocalTTtoStr(cmSys.GetTimeS(), "%Y-%m-%dT%H:%M:%S%z"));
+    pwC.Meta("Description", cMetadata->MetadataGetDescription());
+    pwC.Meta("Identifier", cMetadata->MetadataGetShortTitle());
+    pwC.Meta("Language", cSystem->OSLocale());
+    pwC.Meta("Publisher", StrFormat("$ ($) v$.$.$.$ ($-bit $)",
+      cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
+      cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
+      cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor()));
+    pwC.Meta("Source", cMetadata->MetadataGetWebsite());
+    pwC.Meta("Version", cMetadata->MetadataGetVersion());
     // Create vector array to hold pointers to each scanline
     PngPtrVec ppvList{ isData.DimGetHeight<size_t>() };
     // Bit depth and colour type of data
