@@ -55,7 +55,7 @@ class ConGfx :                         // Members initially private
     // it manually. If we init cvars after, then destructor will crash because
     // the cvars havn't been initialised
     Ftf fFTFont;
-    fFTFont.FtfInitFile(cCVars->GetStrInternal(CON_FONT), glfFontWidth,
+    fFTFont.FtfInitFile(cCVars->CVarsGetStrInternal(CON_FONT), glfFontWidth,
       glfFontHeight, 96, 96, 0.0f);
     ConGfxGetFontRef().InitFontFtf(fFTFont,
       cCVars->CVarsGetInternal<GLuint>(CON_FONTTEXSIZE),
@@ -78,7 +78,7 @@ class ConGfx :                         // Members initially private
   /* -- Init console texture ----------------------------------------------- */
   void ConGfxInitTexture()
   { // Get console texture filename, use a solid if not specified
-    const StdString strCT{ cCVars->GetStrInternal(CON_BGTEXTURE) };
+    const StdString strCT{ cCVars->CVarsGetStrInternal(CON_BGTEXTURE) };
     if(strCT.empty())
     { // Create simple image for solid colour and load it into a texture
       Image imgData{ 0xFFFFFFFF };

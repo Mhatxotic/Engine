@@ -397,12 +397,13 @@ struct Console :                       // Members initially private
   /* -- Set input buffer of specified cvar --------------------------------- */
   void SetVarInput(const StdString &strVar)
   { // Return if the cvar doesn't exist
-    const CVarMapIt cvmMapIt{ cCVars->FindVariable(strVar) };
-    if(cvmMapIt == cCVars->GetVarListEnd())
+    const CVarMapConstIt cvmcMapIt{ cCVars->CVarsFindVarConst(strVar) };
+    if(cvmcMapIt == cCVars->GetVarListEnd())
       return ConsoleAddLine("No such cvar!");
     // Get cvar item data and copy it to input buffer
-    const CVarItem &cviItem = cvmMapIt->second;
-    SetInput(StrFormat("$ \"$\"", cviItem.GetVar(), cviItem.GetValue()));
+    const CVarItem &cviItem = cvmcMapIt->second;
+    SetInput(StrFormat("$ \"$\"",
+      cviItem.CVarGetVar(), cviItem.CVarGetValue()));
   }
   /* -- OnLastItem event ---------------------- Selects last console item -- */
   void HistoryMoveBack()
@@ -551,25 +552,27 @@ struct Console :                       // Members initially private
     { // Output string
       StdOStringStream osS;
       // If the cvar exists?
-      const CVarMapIt cvmMapIt{ cCVars->FindVariable(strVarOrCmd) };
+      const CVarMapIt cvmMapIt{ cCVars->CVarsFindVar(strVarOrCmd) };
       if(cvmMapIt != cCVars->GetVarListEnd())
       { // Resulting message
         osS << "Variable '" << strVarOrCmd << "' ";
         // No value specified?
         if(aList.size() <= 1)
-        { // Show it
-          osS << "is currently " << cCVars->GetValueSafe(cvmMapIt) << "!";
+        { // Show current value of variable
+          osS << "is currently " << cCVars->CVarsGetReadableValue(cvmMapIt)
+              << '!';
           // Copy it to clipboard if requested
           if(FlagIsSet(CF_AUTOCOPYCVAR))
             cGlFW->WinSetClipboardString(StrFormat("$ \"$\"",
-              strVarOrCmd, cCVars->GetStr(cvmMapIt)));
+              strVarOrCmd, cCVars->CVarsGetStrIt(cvmMapIt)));
         } // Else set item and get return value
         else switch(aList[1] == "~" ?
-          cCVars->Reset(cvmMapIt, PCONSOLE, CCF_NOTHING) :
-          cCVars->Set(cvmMapIt, aList[1], PCONSOLE, CCF_NOTHING))
-        { // Success. Show result
+          cCVars->CVarsResetIt(cvmMapIt, PCONSOLE, CCF_NOTHING) :
+          cCVars->CVarsSetIt(cvmMapIt, aList[1], PCONSOLE, CCF_NOTHING))
+        { // Success? Show new value of variable
           case CVS_OK:
-            osS << "is now " << cCVars->GetValueSafe(cvmMapIt) << '!'; break;
+            osS << "is now " << cCVars->CVarsGetReadableValue(cvmMapIt)
+                << '!'; break;
           // Success. Show result
           case CVS_OKNOTCHANGED: osS << "not changed!"; break;
           // Cvar not found (THIS SHOULDNT HAPPEN!!!)
@@ -610,7 +613,7 @@ struct Console :                       // Members initially private
           default: osS << "not set due to unknown error!"; break;
         }
       } // Try to set initial var if it exists
-      else if(cCVars->InitialVarExists(strVarOrCmd))
+      else if(cCVars->CVarsIsInitialVarExist(strVarOrCmd))
       { // Resulting message
         osS << "Persistent variable '" << strVarOrCmd << "' ";
         // No value specified?

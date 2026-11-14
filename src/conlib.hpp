@@ -453,7 +453,7 @@ cConsole->ConsoleAddLine(VariablesMakeList(cCVars->GetVarList(),
 /* ========================================================================= */
 { "cvclr", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cConsole->ConsoleAddLineA(StrPluraliseNum(cCVars->Clean(),
+cConsole->ConsoleAddLineA(StrPluraliseNum(cCVars->CVarsClean(),
   "cvar", "cvars"), " purged.");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvclr' function

@@ -416,7 +416,7 @@ class Lua :                            // Actual class body
     LuaUtilPushObject(LuaGetState(), CVAR_MAX);
     const int iCTIndex = iTIndex + 1;
     // Enumerate cvars and if stored iterator is registered?
-    for(const CVarMapIt &cvmiIt : cCVars->GetInternalListConst())
+    for(const CVarMapIt &cvmiIt : cCVars->CVarsGetInternalListConst())
       if(cvmiIt != cCVars->GetVarListEnd())
       { // Push internal id value name and assign the id to the cvar name. Note
         // that these classes won't be registered in the 'cVariables' list so

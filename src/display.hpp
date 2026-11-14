@@ -991,7 +991,7 @@ class Display :                        // Actual class body
     // Set Apple operating system only settings
     // Get window name and use it for frame and instance name. It's assumed
     // that 'cpTitle' won't be freed while using it these two times.
-    const char*const cpTitle = cCVars->GetCStrInternal(APP_TITLE);
+    const char*const cpTitle = cCVars->CVarsGetCStrInternal(APP_TITLE);
     cGlFW->GlFWSetFrameName(cpTitle);
     // Initialise basic window. We will modify it after due to limitations in
     // this particular function. For example, this can't set the refresh rate.
@@ -1001,7 +1001,7 @@ class Display :                        // Actual class body
     // Re-adjust the window
     DisplayReInitWindow(FlagIsSet(DF_FULLSCREEN));
     // Set forced aspect ratio
-    cGlFW->WinSetAspectRatio(cCVars->GetStrInternal(WIN_ASPECT));
+    cGlFW->WinSetAspectRatio(cCVars->CVarsGetStrInternal(WIN_ASPECT));
     // Update icons if there are some loaded by the cvars callbacks
     DisplayUpdateIcons();
     // Set default gamma for selected monitor

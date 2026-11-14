@@ -1761,7 +1761,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       cCommon->CommonLf(), ':');
     // Push default user agent if not specified already
     psvRegistry.ParserPushIfNotExist("User-Agent",
-      cCVars->GetStrInternal(NET_USERAGENT));
+      cCVars->CVarsGetStrInternal(NET_USERAGENT));
     // Chosen method
     StdStringView ssvChosenMethod;
     // Check for websocket method

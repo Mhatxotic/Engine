@@ -68,45 +68,46 @@ BUILD_FLAGS(Core,                      // Engine mode flags
 );/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(CVar,                      // CVar flags
   /* -- Types (T) ---------------------------------------------------------- */
-  TSTRING                   {Flag(8)}, // Variable is a string?
-  TINTEGER                  {Flag(9)}, // Variable is a integer?
-  TFLOAT                   {Flag(10)}, // Variable is a float?
-  TBOOLEAN                 {Flag(11)}, // Variable is a boolean?
+  TSTRING                   {Flag(1)}, // Variable is a string?
+  TINTEGER                  {Flag(2)}, // Variable is a integer?
+  TFLOAT                    {Flag(3)}, // Variable is a float?
+  TBOOLEAN                  {Flag(4)}, // Variable is a boolean?
   /* -- Conditional (C) ---------------------------------------------------- */
-  CALPHA                   {Flag(16)}, // Var string can contain letters?
-  CNUMERIC                 {Flag(17)}, // Variable string can contain numerics?
-  CSAVEABLE                {Flag(18)}, // Variable is written to database?
-  CPROTECTED               {Flag(19)}, // Variable is protected?
-  CDEFLATE                 {Flag(20)}, // Variable is compressed?
-  CNOTEMPTY                {Flag(21)}, // Var can't be empty (str) or 0? (int)
-  CUNSIGNED                {Flag(22)}, // Variable must be unsigned?
-  CPOW2                    {Flag(23)}, // Variable integer must be power of 2?
-  CFILENAME                {Flag(24)}, // Variable must be a valid filename?
+  CALPHA                   {Flag(10)}, // Var string can contain letters?
+  CDEFLATE                 {Flag(11)}, // Variable is compressed?
+  CFILENAME                {Flag(12)}, // Variable must be a valid filename?
+  CNOTEMPTY                {Flag(13)}, // Var can't be empty (str) or 0? (int)
+  CNUMERIC                 {Flag(14)}, // Variable string can contain numerics?
+  CPOW2                    {Flag(15)}, // Variable integer must be power of 2?
+  CPROTECTED               {Flag(16)}, // Variable is protected?
+  CSAVEABLE                {Flag(17)}, // Variable is written to database?
+  CUNSIGNED                {Flag(18)}, // Variable must be unsigned?
   /* -- Manipulation (M) --------------------------------------------------- */
-  MTRIM                    {Flag(32)}, // Variable string should be trimmed?
-  MUPPER                   {Flag(33)}, // Variable string should be upcased?
-  MLOWER                   {Flag(34)}, // Variable string should be lowcased?
+  MLOWER                   {Flag(20)}, // Variable string should be lowcased?
+  MTRIM                    {Flag(21)}, // Variable string should be trimmed?
+  MUPPER                   {Flag(22)}, // Variable string should be upcased?
   /* -- Privates (Used internally) ----------------------------------------- */
-  TLUA                     {Flag(48)}, // Variable was created by LUA?
-  CTRUSTEDFN               {Flag(49)}, // Variable is a trusted filename?
-  LOCKED                   {Flag(50)}, // Cannot unreg this in callback?
-  COMMIT                   {Flag(51)}, // Variable should be committed to DB?
-  PURGE                    {Flag(52)}, // Var should be purged from DB?
-  CONFIDENTIAL             {Flag(53)}, // Variable not readable by lua?
-  LOADED                   {Flag(54)}, // Variable value was loaded from db?
-  COMMITNOCHECK            {Flag(55)}, // Commit even if default/value match?
+  COMMIT                   {Flag(30)}, // Variable should be committed to DB?
+  COMMITNOCHECK            {Flag(31)}, // Commit even if default/value match?
+  CONFIDENTIAL             {Flag(32)}, // Variable not readable by lua?
+  CTRUSTEDFN               {Flag(33)}, // Variable is a trusted filename?
+  LOADED                   {Flag(34)}, // Variable value was loaded from db?
+  LOCKED                   {Flag(35)}, // Cannot unreg this in callback?
+  PURGE                    {Flag(36)}, // Var should be purged from DB?
   /* -- Sources (S) [Private] ---------------------------------------------- */
-  SCMDLINE                 {Flag(57)}, // Set from command-line?
-  SUDB                     {Flag(58)}, // Set from database?
-  SAPPCFG                  {Flag(59)}, // Set from application manifest?
+  SAPPCFG                  {Flag(40)}, // Set from application manifest?
+  SCMDLINE                 {Flag(41)}, // Set from command-line?
+  SCONSOLE                 {Flag(42)}, // Set from console?
+  SLUA                     {Flag(43)}, // Set from lua?
+  SUDB                     {Flag(44)}, // Set from database?
   /* -- Permissions (P) [Private] ------------------------------------------ */
-  PCMDLINE                 {Flag(61)}, // Variable can be changed at boot?
-  PAPPCFG                  {Flag(62)}, // Variable can be changed by system?
-  PUDB                     {Flag(63)}, // Variable can be changed by udb?
-  PCONSOLE                 {Flag(64)}, // Variable can be changed by user?
+  PAPPCFG                  {Flag(50)}, // Variable can be changed by system?
+  PCMDLINE                 {Flag(51)}, // Variable can be changed at boot?
+  PCONSOLE                 {Flag(52)}, // Variable can be changed by console?
+  PLUA                     {Flag(53)}, // Variable can be changed by lua?
+  PUDB                     {Flag(54)}, // Variable can be changed by udb?
   /* -- Other -------------------------------------------------------------- */
   NONE                      {Flag(0)}, // No flags?
-  PRIVATE                    { TLUA }, // Private vars begin after here?
   /* -- Collections -------------------------------------------------------- */
   TUINTEGER{ TINTEGER|CUNSIGNED },     // Shortcut to unsigned type
   TUFLOAT{ TFLOAT|CUNSIGNED },         // Shortcut to 'unsigned float' type
@@ -117,10 +118,10 @@ BUILD_FLAGS(CVar,                      // CVar flags
   TSTRINGSAVE{ TSTRING|CSAVEABLE },    // Shortcut to string + saveable
   TBOOLEANSAVE{ TBOOLEAN|CSAVEABLE },  // Shortcut to boolean + saveable
   CALPHANUMERIC{ CALPHA|CNUMERIC },    // Only alphanumeric characeters
-  SANY{ SCMDLINE|SAPPCFG|SUDB },       // Any source
+  SANY{ SCMDLINE|SAPPCFG|SUDB|SCONSOLE|SLUA }, // Any source
   CVREGMASK{ COMMIT|SANY },            // Registration mask bits
   PNOUI{ PCMDLINE|PAPPCFG },           // Variable can't be changed running?
-  PANY{ PNOUI|PUDB|PCONSOLE },         // All perms granted to modify
+  PANY{ PNOUI|PUDB|PCONSOLE|PLUA },    // All perms granted to modify
   /* -- Allowed manipulation bits ------------------------------------------ */
   MMASK{ MTRIM|MUPPER|MLOWER },
   /* -- Allowed type bits -------------------------------------------------- */

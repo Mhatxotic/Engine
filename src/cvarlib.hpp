@@ -21,7 +21,7 @@
   { return f(StrToNum<t>(strV)); }
 /* -- Use this when cvar is a string (NoOp for no callback needed) --------- */
 #define CBSTR(f) [](CVarItem &cviItem, const StdString &strV)->CVarReturn \
-  { return f(strV, cviItem.GetModifyableValue()); }
+  { return f(strV, cviItem.CVarGetModifyableValue()); }
 /* -- Built-in CVar definition struct -------------------------------------- */
 CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */

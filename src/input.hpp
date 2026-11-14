@@ -159,7 +159,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       // Get inverted full-screen setting
       const bool bFullScreen = !cCVars->CVarsGetInternal<bool>(VID_FS);
       // Set full screen setting depending on current state
-      cCVars->SetInternal<bool>(VID_FS, bFullScreen);
+      cCVars->CVarsSetInternalNum<bool>(VID_FS, bFullScreen);
       // Send command to toggle full-screen
       InputRequestFSToggle(bFullScreen);
       // Don't send key to guest

@@ -29,6 +29,8 @@ MAPPACK_BUILD(LuaCVar, const StdString, LuaCVarPair)
 CTOR_BEGIN(Variables, Variable, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
   LuaCVarMap       lcvmMap;            // Lua cvar list
+  /* ----------------------------------------------------------------------- */
+  const StdStringView ssvCommaSpace;   // Command and space string
   /* -- Cvar flag type strings --------------------------------------------- */
   const LumCvEnums lceTypes;           // Types
   const LumCvEnums lceConditions;      // Conditional flags
@@ -50,13 +52,14 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
     // variable is initialising for the first time. We haven't added the
     // variable to cvmActive yet and we don't want to until the CVARS system
     // has created the variable.
-    const LuaCVarMapIt lcvmpIt{ GetLuaVarList().find(cviVar.GetVar()) };
+    const LuaCVarMapIt lcvmpIt{ GetLuaVarList().find(cviVar.CVarGetVar()) };
     if(lcvmpIt == GetLuaVarListEnd()) return ACCEPT;
     // Save stack position and restore it on exception or scope exit
     const LuaStackSaver lSS{ cLuaFuncs->LuaRefGetState() };
     // Call the Lua callback assigned. We're expecting one or two return values
     // but Lua will add nil's what wasn't specified.
-    lcvmpIt->second.first.LuaFuncProtectedDispatch(2, strVal, cviVar.GetVar());
+    lcvmpIt->second.first.LuaFuncProtectedDispatch(2,
+      strVal, cviVar.CVarGetVar());
     // Get location of success return value
     const int iBIndex = LuaBaseGetTop(cLuaFuncs->LuaRefGetState()) - 1;
     const bool bResult = LuaUtilGetBool(cLuaFuncs->LuaRefGetState(), iBIndex);
@@ -66,7 +69,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
     if(!LuaBaseIsStr(cLuaFuncs->LuaRefGetState(), iSIndex))
       return BoolToCVarReturn(bResult);
     // Replace the current value with the guest author specified value.
-    cviVar.GetModifyableValue() =
+    cviVar.CVarGetModifyableValue() =
       LuaUtilToCppString(cLuaFuncs->LuaRefGetState(), iSIndex);
     // Return result of how to handle the returned string
     return bResult ? ACCEPT_HANDLED_FORCECOMMIT : ACCEPT_HANDLED;
@@ -80,20 +83,21 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
   /* -- Get cvar data ------------------------------------------------------ */
   CVarItem &Data() const { return Iterator()->second; }
   /* -- Get current value as specified type -------------------------------- */
-  const StdString &GetString() const { return cCVars->GetStr(Iterator()); }
+  const StdString &GetString() const
+    { return cCVars->CVarsGetStrIt(Iterator()); }
   lua_Number GetNumber() const { return StrToNum<lua_Number>(GetString()); }
   lua_Integer GetInteger() const { return StrToNum<lua_Integer>(GetString()); }
   bool GetBoolean() const { return StrToNum<int>(GetString()) != 0; }
   /* -- Get default value as string ---------------------------------------- */
-  StdString Default() const { return cCVars->GetDefStr(Iterator()); }
+  StdString Default() const { return cCVars->CVarsGetDefStrIt(Iterator()); }
   /* -- Reset default value ------------------------------------------------ */
-  void Reset() const { cCVars->Reset(Iterator()); }
+  void Reset() const { cCVars->CVarsResetIt(Iterator()); }
   /* -- Returns if value is empty ------------------------------------------ */
   bool Empty() const { return GetString().empty(); }
   bool NotEmpty() const { return !Empty(); }
   /* -- Set value from different types ------------------------------------- */
   CVarSetEnums SetString(const StdStringView &ssvValue) const
-    { return cCVars->Set(Iterator(), ssvValue); }
+    { return cCVars->CVarsSetIt(Iterator(), ssvValue, PLUA); }
   CVarSetEnums Clear() const
     { return SetString(cCommon->CommonBlankStr()); }
   CVarSetEnums SetBoolean(const bool bState) const
@@ -107,12 +111,12 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
   void Init(lua_State*const lS, const StdStringView &ssvName,
     const StdStringView &ssvDefault, const CVarFlagsConst cvfcFlags)
   { // Check that the variable name is valid
-    if(!cCVars->IsValidVariableName(ssvName))
+    if(!cCVars->CVarsIsValidVarName(ssvName))
       XC("CVar name is not valid!",
         "Variable", ssvName, "Minimum", cCVars->stCVarMinLength,
         "Maximum",  cCVars->stCVarMaxLength);
     // Make sure cvar doesn't already exist
-    if(cCVars->VarExists(ssvName))
+    if(cCVars->CVarsIsVarExist(ssvName))
       XC("CVar already registered!", "Variable", ssvName);
     // Get all the flags in the types mask
     switch(cvfcFlags.FlagAnd(TMASK))
@@ -132,8 +136,8 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
       make_pair(LuaFunc{ StrAppend("CV:", ssvName), true },
         cCVars->GetVarListEnd())
     }); // Register the variable and set the iterator to the new cvar.
-    Pair().second = cCVars->RegisterVar(ssvName, ssvDefault,
-      LuaCallbackStatic, cvfcFlags|TLUA|PANY);
+    Pair().second = cCVars->CVarsRegister(ssvName, ssvDefault,
+      LuaCallbackStatic, cvfcFlags|SLUA|PANY);
     // Register the object in collector
     CollectorRegister();
   }
@@ -161,18 +165,19 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
     if(lcvmiIt == GetLuaVarListEnd()) return;
     // Unregister the cvar if valid and registered by Lua
     const CVarMapIt &cvmiIt = Iterator();
-    if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(TLUA))
-      cCVars->UnregisterVar(cvmiIt);
+    if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(SLUA))
+      cCVars->CVarsUnregister(cvmiIt);
     // Remove the lua var
     GetLuaVarList().erase(lcvmiIt);
   )
 };/* ----------------------------------------------------------------------- */
 CTOR_END(Variables, Variable, VARIABLE,,,, // Finish off collector class
 /* ------------------------------------------------------------------------- */
+ssvCommaSpace{ ", " },
+/* ------------------------------------------------------------------------- */
 lceTypes{{                             // Cvar types
   IDMAPSTR(TSTRING),                   IDMAPSTR(TINTEGER),
-  IDMAPSTR(TFLOAT),                    IDMAPSTR(TBOOLEAN),
-  IDMAPSTR(TLUA),
+  IDMAPSTR(TFLOAT),                    IDMAPSTR(TBOOLEAN)
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 lceConditions{{                        // Conditional flags
@@ -186,11 +191,13 @@ lceConditions{{                        // Conditional flags
 lcePermissions{{                       // Permission flags
   IDMAPSTR(PCMDLINE),                  IDMAPSTR(PAPPCFG),
   IDMAPSTR(PUDB),                      IDMAPSTR(PCONSOLE),
+  IDMAPSTR(PLUA),
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 lceSources{{                           // Load sources
   IDMAPSTR(SCMDLINE),                  IDMAPSTR(SAPPCFG),
-  IDMAPSTR(SUDB),
+  IDMAPSTR(SUDB),                      IDMAPSTR(SCONSOLE),
+  IDMAPSTR(SLUA),
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 lceOther{{                             // Misc flags
@@ -201,24 +208,32 @@ lceOther{{                             // Misc flags
 }, "NONE" }
 );/* -- Return human readable string about CVar ---------------------------- */
 static StdString VariablesMakeInformation(const CVarItem &cviVar)
-{ // Print data about the cvar
+{ // Comma
+  // Print data about the cvar
   return StrFormat("Status for '$'...\n"
     "- Callback: $.\n"                 "- Flags: 0x$$$.\n"
-    "- Types: $.\n"                    "- Conditions: $.\n"
+    "- Type: $.\n"                     "- Conditions: $.\n"
     "- Permissions: $.\n"              "- Source: $.\n"
     "- Other: $.\n"                    "- Default: [$/$] \"$\".\n"
     "- Modified: $.\n"                 "- Current: [$/$] \"$\".",
-      cviVar.GetVar(),
-      StrFromBoolTF(cviVar.IsTriggerSet()),
+      cviVar.CVarGetVar(),
+      StrFromBoolTF(cviVar.CVarIsTriggerSet()),
       StdIOSHex, cviVar, StdIOSDec,
-      StrImplode(cVariables->lceTypes.Test(cviVar), ", "),
-      StrImplode(cVariables->lceConditions.Test(cviVar), ", "),
-      StrImplode(cVariables->lcePermissions.Test(cviVar), ", "),
-      StrImplode(cVariables->lceSources.Test(cviVar), ", "),
-      StrImplode(cVariables->lceOther.Test(cviVar), ", "),
-      cviVar.GetDefLength(), cviVar.GetDefCapacity(), cviVar.GetDefValue(),
-      StrFromBoolTF(cviVar.IsValueChanged()),
-      cviVar.GetValueLength(), cviVar.GetValueCapacity(), cviVar.GetValue());
+      StrImplode(cVariables->lceTypes.Test(cviVar),
+        cVariables->ssvCommaSpace),
+      StrImplode(cVariables->lceConditions.Test(cviVar),
+        cVariables->ssvCommaSpace),
+      StrImplode(cVariables->lcePermissions.Test(cviVar),
+        cVariables->ssvCommaSpace),
+      StrImplode(cVariables->lceSources.Test(cviVar),
+        cVariables->ssvCommaSpace),
+      StrImplode(cVariables->lceOther.Test(cviVar),
+        cVariables->ssvCommaSpace),
+      cviVar.CVarGetDefLength(), cviVar.CVarGetDefCapacity(),
+        cviVar.CVarGetDefValue(),
+      StrFromBoolTF(cviVar.CVarIsValueChanged()),
+      cviVar.CVarGetValueLength(), cviVar.CVarGetValueCapacity(),
+        cviVar.CVarGetValue());
 }
 /* -- Return human readable tokenised string about CVar -------------==----- */
 static void VariablesMakeInformationTokens(Statistic &sTable,
@@ -234,30 +249,28 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
            (cviVar.FlagIsSet(CTRUSTEDFN) ? 'T' :
                                            '?'))))) },
     // Permissions
-    { cviVar.FlagIsSet(PCMDLINE),      '1' },
-    { cviVar.FlagIsSet(PAPPCFG),       '2' },
-    { cviVar.FlagIsSet(PUDB),          '3' },
-    { cviVar.FlagIsSet(PCONSOLE),      '4' },
+    { cviVar.FlagIsSet(PAPPCFG),  'A' }, { cviVar.FlagIsSet(PCMDLINE), 'C' },
+    { cviVar.FlagIsSet(PCONSOLE), 'O' }, { cviVar.FlagIsSet(PLUA),     'L' },
+    { cviVar.FlagIsSet(PUDB),     'U' },
     // Sources
-    { cviVar.FlagIsSet(SCMDLINE),      '6' },
-    { cviVar.FlagIsSet(SAPPCFG),       '7' },
-    { cviVar.FlagIsSet(SUDB) ,         '8' },
+    { cviVar.FlagIsSet(SAPPCFG),  'a' }, { cviVar.FlagIsSet(SCMDLINE), 'c' },
+    { cviVar.FlagIsSet(SCONSOLE), 'o' }, { cviVar.FlagIsSet(SLUA),     'l' },
+    { cviVar.FlagIsSet(SUDB),     'u' },
     // Conditions and operations
-    { cviVar.FlagIsSet(CONFIDENTIAL),  'C' },
     { cviVar.FlagIsSet(CDEFLATE),      'D' },
+    { cviVar.FlagIsSet(LOADED),        'E' },
+    { cviVar.FlagIsSet(CUNSIGNED),     'G' },
     { cviVar.FlagIsSet(COMMITNOCHECK), 'H' },
-    { cviVar.IsTriggerSet(),           'K' },
-    { cviVar.FlagIsSet(TLUA),          'L' },
+    { cviVar.CVarIsTriggerSet(),       'K' },
     { cviVar.FlagIsSet(COMMIT),        'M' },
-    { cviVar.FlagIsSet(LOADED),        'O' },
+    { cviVar.FlagIsSet(CONFIDENTIAL),  'N' },
     { cviVar.FlagIsSet(CPROTECTED),    'P' },
     { cviVar.FlagIsSet(MTRIM),         'R' },
-    { cviVar.FlagIsSet(CUNSIGNED),     'U' },
-    { cviVar.FlagIsSet(CSAVEABLE),     'V' },
-    { cviVar.FlagIsSet(CPOW2),         'W' },
+    { cviVar.FlagIsSet(CSAVEABLE),     'S' },
+    { cviVar.FlagIsSet(CPOW2),         'T' },
     { cviVar.FlagIsSet(CNOTEMPTY),     'Y' }
   // Name and value
-  })).Data(cviVar.GetVar()).Data(cviVar.GetValueSafe());
+  })).Data(cviVar.CVarGetVar()).Data(cviVar.CVarGetValueSafe());
 }
 /* -- Enumerate a list ----------------------------------------------------- */
 template<class MapType>

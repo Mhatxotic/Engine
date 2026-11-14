@@ -193,7 +193,8 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cVariables->CollectorCount()))
 // ? Returns if the specified console command is registered which includes
 // ? the built-in engine console commands too.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsExist, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS, 1})))
+LLFUNC(IsExist, 1,
+  LuaUtilPushVar(lS, cCVars->CVarsIsVarExist(AgNeString{lS, 1}())))
 /* ========================================================================= */
 // $ Variable.IsValid
 // > Var:string=Cvar name to test.
@@ -203,7 +204,7 @@ LLFUNC(IsExist, 1, LuaUtilPushVar(lS, cCVars->VarExists(AgNeString{lS, 1})))
 // ? numbers. The name must also be between 5 and 255 characters in length.
 /* ------------------------------------------------------------------------- */
 LLFUNC(IsValid, 1,
-  LuaUtilPushVar(lS, cCVars->IsValidVariableName(AgString{lS, 1})))
+  LuaUtilPushVar(lS, cCVars->CVarsIsValidVarName(AgString{lS, 1}())))
 /* ========================================================================= */
 // $ Variable.Register
 // > Name:string=The engine cvar name.

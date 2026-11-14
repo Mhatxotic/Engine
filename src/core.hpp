@@ -322,7 +322,7 @@ class Core final :                     // Members initially private
           // this to something different when they cleanly exit their loops.
           SetExitReason(EMC_LUA_ERROR);
           // Execute startup script
-          LuaCodeExecuteFile(lS, GetStrInternal(LUA_SCRIPT));
+          LuaCodeExecuteFile(lS, CVarsGetStrInternal(LUA_SCRIPT));
           // Done
           break;
       } // Terminal mode requested?
