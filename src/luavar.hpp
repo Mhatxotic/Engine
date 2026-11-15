@@ -11,13 +11,13 @@ namespace ILuaVariable {               // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICommon::P;
 using namespace IConsole::P;           using namespace ICVarDef::P;
-using namespace ICVar::P;              using namespace ICVarLib::P;
-using namespace IError::P;             using namespace ILog::P;
-using namespace ILookupMap::P;         using namespace ILuaBase::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace ILuaFunc::P;
-using namespace ISerial::P;            using namespace IString::P;
-using namespace IStat::P;              using namespace IStd::P;
+using namespace ICVars::P;             using namespace IError::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
+using namespace ILuaBase::P;           using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace ILuaFunc::P;           using namespace ISerial::P;
+using namespace IString::P;            using namespace IStat::P;
+using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 using LumCvEnums = LookupMap<CVarFlagsType>;
 /* ------------------------------------------------------------------------- */
@@ -134,7 +134,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
     lcvmiIt = ctParent.lcvmMap.insert(GetLuaVarListEnd(), {
       StdString{ ssvName },
       make_pair(LuaFunc{ StrAppend("CV:", ssvName), true },
-        cCVars->GetVarListEnd())
+        cCVars->CVarsGetVarListEnd())
     }); // Register the variable and set the iterator to the new cvar.
     Pair().second = cCVars->CVarsRegister(ssvName, ssvDefault,
       LuaCallbackStatic, cvfcFlags|SLUA|PANY);
@@ -143,11 +143,13 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
   }
   /* -- Register existing internal engine variable as a Lua variable ------- */
   void InitInternal(const CVarMapIt &cvmiIt)
-  { // Get cvar name
+  { // Get reference to cvar name
     const StdString &ssvName = cvmiIt->first;
     // Insert a new variable
     lcvmiIt = ctParent.lcvmMap.insert(GetLuaVarListEnd(), { ssvName,
-      make_pair(LuaFunc{ ssvName, false }, cCVars->GetVarListEnd()) });
+      make_pair(LuaFunc{ ssvName, false }, cCVars->CVarsGetVarListEnd()) });
+    // Lock the variable so Lua does not garbage collect it
+    LockSet();
     // Register the variable and set the iterator to the new cvar.
     Pair().second = cvmiIt;
   }
@@ -165,7 +167,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
     if(lcvmiIt == GetLuaVarListEnd()) return;
     // Unregister the cvar if valid and registered by Lua
     const CVarMapIt &cvmiIt = Iterator();
-    if(cvmiIt != cCVars->GetVarListEnd() && cvmiIt->second.FlagIsSet(SLUA))
+    if(cvmiIt != cCVars->CVarsGetVarListEnd() && cvmiIt->second.FlagIsSet(SLUA))
       cCVars->CVarsUnregister(cvmiIt);
     // Remove the lua var
     GetLuaVarList().erase(lcvmiIt);

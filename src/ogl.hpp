@@ -10,7 +10,7 @@
 namespace IOgl {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICommon::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
+using namespace ICVars::P;             using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IFboBlend::P;
 using namespace IFboCmd::P;            using namespace IColour::P;

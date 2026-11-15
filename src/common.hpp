@@ -26,7 +26,7 @@ class Common                           // Common variables class
     ssvPeriod, ssvPipe, ssvQuote, ssvSpace, ssvTimeout, ssvTrue, ssvUnknown,
     ssvUnresolved, ssvUnspec, ssvY, ssvZero;
   /* -- Cvar sources ------------------------------------------------------- */
-  const StdStringView ssvFromCmdLine, ssvFromConsole, ssvFromDatabase,
+  const StdStringView ssvByConsole, ssvByLua, ssvFromCmdLine, ssvFromDatabase,
     ssvFromManifest, ssvRegistered, ssvSet;
   /* -- StringStream manager class ----------------------------------------- */
   template<class StringStreamType>     // It sets up a permanent StringStream
@@ -130,7 +130,8 @@ class Common                           // Common variables class
   const StdStringView &CommonFromCmdLine() const { return ssvFromCmdLine; }
   const StdStringView &CommonFromDatabase() const { return ssvFromDatabase; }
   const StdStringView &CommonFromManifest() const { return ssvFromManifest; }
-  const StdStringView &CommonFromConsole() const { return ssvFromConsole; }
+  const StdStringView &CommonByConsole() const { return ssvByConsole; }
+  const StdStringView &CommonByLua() const { return ssvByLua; }
   const StdStringView &CommonRegistered() const { return ssvRegistered; }
   const StdStringView &CommonSet() const { return ssvSet; }
   /* -- Return string functions -------------------------------------------- */
@@ -166,9 +167,10 @@ class Common                           // Common variables class
     ssvUnresolved{ "<Unresolved>" },   ssvUnspec{ "<Unspecified>" },
     ssvY{ "Y" },                       ssvZero{ "0" },
     /* -- Initialise cvar set strings -------------------------------------- */
-    ssvFromCmdLine{ " from cmdline" },   ssvFromConsole{ " from console" },
-    ssvFromDatabase{ " from database" }, ssvFromManifest{ " from manifest" },
-    ssvRegistered{ "registered" },       ssvSet{ "set" },
+    ssvByConsole{ " by console" },       ssvByLua{ " by LUA" },
+    ssvFromCmdLine{ " from cmdline" },   ssvFromDatabase{ " from database" },
+    ssvFromManifest{ " from manifest" }, ssvRegistered{ "registered" },
+    ssvSet{ "set" },
     /* -- Locale and string stream initialisers ---------------------------- */
     lLocaleCurrent{ strBlank },        // Initialise locale
     i{ lLocaleCurrent },               // Initialise input string stream

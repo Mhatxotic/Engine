@@ -16,8 +16,8 @@ namespace ILua {                       // Start of private module namespace
 using namespace IChrono::P;            using namespace ICollector::P;
 using namespace ICommon::P;            using namespace IConGraph::P;
 using namespace IConsole::P;           using namespace ICrypt::P;
-using namespace ICVarDef::P;           using namespace ICVar::P;
-using namespace ICVarLib::P;           using namespace IDuration::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace ICVars::P;             using namespace IDuration::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags::P;             using namespace IFrame::P;
 using namespace ILog::P;               using namespace ILuaBase::P;
@@ -417,7 +417,7 @@ class Lua :                            // Actual class body
     const int iCTIndex = iTIndex + 1;
     // Enumerate cvars and if stored iterator is registered?
     for(const CVarMapIt &cvmiIt : cCVars->CVarsGetInternalListConst())
-      if(cvmiIt != cCVars->GetVarListEnd())
+      if(cvmiIt != cCVars->CVarsGetVarListEnd())
       { // Push internal id value name and assign the id to the cvar name. Note
         // that these classes won't be registered in the 'cVariables' list so
         // the guest/user doesn't see them (they can already see them in the
@@ -444,9 +444,10 @@ class Lua :                            // Actual class body
       stMembers, stTotalMembers,
       stTables, stTotalTables,
       stStatics, stTotalStatics,
-      cCVars->GetVarCount(), CVAR_MAX,
+      cCVars->CVarsGetVarCount(), CVAR_MAX,
       stMembers + stMethods, stTotalMembers + stTotalMethods,
-      stMembers + stMethods + stTables + stStatics + cCVars->GetVarCount(),
+      stMembers + stMethods + stTables + stStatics +
+        cCVars->CVarsGetVarCount(),
       stTotalMembers + stTotalMethods + stTotalTables + stTotalStatics +
         CVAR_MAX);
     // Load default libraries and log progress

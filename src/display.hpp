@@ -12,8 +12,8 @@ namespace IDisplay {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IConGraph::P;
 using namespace IConsole::P;           using namespace ICoord::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace IDim::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace ICVars::P;             using namespace IDim::P;
 using namespace IDimCoord::P;          using namespace IDir::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFboCore::P;           using namespace IFlags::P;

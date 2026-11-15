@@ -9,7 +9,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
-namespace ICVar {                      // Start of private module namespace
+namespace ICVars {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IAsset::P;             using namespace ICodec::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
@@ -55,17 +55,17 @@ struct CVars :                         // Start of vars class
   ArrayVars        avInternal;         // Quick lookup to internal vars
   StdString        strCBError;         // Callback error message
   /* ----------------------------------------------------------------------- */
-  struct CVarMapNameStruct             // Join initial with cvars
+  struct CVarsMapNameStruct            // Join initial with cvars
   { /* --------------------------------------------------------------------- */
     CVarMap       &cvmMap;             // Reference to variable list
     const StdStringView strName;       // Name of list
     /* --------------------------------------------------------------------- */
-    CVarMapNameStruct(CVarMap &cvmNMap, const StdStringView &strNName) :
+    CVarsMapNameStruct(CVarMap &cvmNMap, const StdStringView &strNName) :
       cvmMap(cvmNMap), strName{ strNName } {}
   };/* -- Holds pending and active lists ----------------------------------- */
-  using CVarMapNameStructArray = StdArray<const CVarMapNameStruct, 2>;
-  using CVarMapNameStructArrayIt = CVarMapNameStructArray::iterator;
-  const CVarMapNameStructArray cvmnsaList;
+  using CVarsMapNameStructArray = StdArray<const CVarsMapNameStruct, 2>;
+  using CVarsMapNameStructArrayIt = CVarsMapNameStructArray::iterator;
+  const CVarsMapNameStructArray cvmnsaList;
   /* -- Reference to default cvars ----------------------------------------- */
   const CVarItemStaticList &cvislList;
   /* ----------------------------------------------------------------------- */
@@ -239,13 +239,14 @@ struct CVars :                         // Start of vars class
     const CVarFlagsConst cvfcFlags,
     const CVarConditionFlagsConst cvcfcFlags = CCF_NOTHING)
   { // Calculate set permission based on source
-    auto fSourceToPermission = [](const CVarFlagsConst cvfcS)->CVarFlagsConst
+    auto SourceToPermission = [](const CVarFlagsConst cvfcS)->CVarFlagsConst
     { // Convert the S* flag to a P* flag and return it (order is important)
-      return cvfcS.FlagIsSet(SCMDLINE) ? PCMDLINE
-          : (cvfcS.FlagIsSet(SAPPCFG)  ? PAPPCFG
-          : (cvfcS.FlagIsSet(SUDB)     ? PUDB
-          : (cvfcS.FlagIsSet(SCONSOLE) ? PCONSOLE
-          : (cvfcS.FlagIsSet(SLUA)     ? PLUA : PANY))));
+      return cvfcS.FlagIsClear(SANY)   ? PANY     :
+           ((cvfcS.FlagIsSet(SCMDLINE) ? PCMDLINE : NONE) |
+            (cvfcS.FlagIsSet(SAPPCFG)  ? PAPPCFG  : NONE) |
+            (cvfcS.FlagIsSet(SUDB)     ? PUDB     : NONE) |
+            (cvfcS.FlagIsSet(SCONSOLE) ? PCONSOLE : NONE) |
+            (cvfcS.FlagIsSet(SLUA)     ? PLUA     : NONE));
     }; // Find initial cvar in initial pending list and if not found?
     const CVarMapIt cvmiPendIt{ cvmPending.find(ssvVar) };
     if(cvmiPendIt == cvmPending.cend())
@@ -261,7 +262,7 @@ struct CVars :                         // Start of vars class
         // when we inserted it, we need to check if it is valid too.
         cvmiIt->second.CVarCheckAndSetValue(StdString{ ssvValue },
           // Permission required to set the value
-          fSourceToPermission(cvfcFlags),
+          SourceToPermission(cvfcFlags),
           // Merge throw on error and new cvar flag to supplied flags
           cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
       } // Exception occured?
@@ -296,7 +297,7 @@ struct CVars :                         // Start of vars class
         cviRef.FlagIsAnyOfSet(CSAVEABLE|SAPPCFG|SCMDLINE) ?
           cviRef.CVarGetValue() : StdString{ ssvValue },
         // Permission required to set the value
-        fSourceToPermission(cviRef),
+        SourceToPermission(cviRef),
         // Merge throw on error and new cvar flag to supplied flags
         cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR,
         // Error call back destination string
@@ -369,14 +370,17 @@ struct CVars :                         // Start of vars class
     // Success
     return true;
   }
-  /* ----------------------------------------------------------------------- */
-  CVarMap &GetVarList() { return cvmActive; }
-  CVarMapIt GetVarListEnd() { return cvmActive.end(); }
-  size_t GetVarCount() const { return cvmActive.size(); }
-  const CVarMap &GetInitialVarList() const { return cvmPending; }
-  /* ----------------------------------------------------------------------- */
-  bool SetExistingInitialVar(const StdString &strVar, const StdString &strVal,
-    const CVarFlagsConst cvfcFlags = PCONSOLE)
+  /* -- Get a writable version of the variables list ----------------------- */
+  CVarMap &CVarsGetVarList() { return cvmActive; }
+  /* -- Get end of variable list ------------------------------------------- */
+  CVarMapIt CVarsGetVarListEnd() { return cvmActive.end(); }
+  /* -- Get number of registered variables (lua.hpp) ----------------------- */
+  size_t CVarsGetVarCount() const { return cvmActive.size(); }
+  /* -- Get a read-only version of the initial var list (conlib.hpp) ------- */
+  const CVarMap &CVarsGetInitialVarList() const { return cvmPending; }
+  /* -- Set an initial variable that already exists (console.hpp) ---------- */
+  bool CVarsSetExistingInitialVar(const StdString &strVar,
+    const StdString &strVal, const CVarFlagsConst cvfcFlags = PCONSOLE)
   { // Find initial item and return failure if it doesn't exist
     const CVarMapIt cvmiIt{ cvmPending.find(strVar) };
     if(cvmiIt == cvmPending.end()) return false;
@@ -384,17 +388,17 @@ struct CVars :                         // Start of vars class
     return CVarsSetInitialVar(cvmiIt->second, strVal, cvfcFlags);
   }
   /* -- Return last error from callback (also moves it) -------------------- */
-  StdString GetCBError() { return StdMove(strCBError); }
+  StdString CVarsGetCBError() { return StdMove(strCBError); }
   /* -- Return human readable value of the specified iterator -------------- */
   static StdString CVarsGetReadableValue(const CVarMapConstIt &cvmciIt)
     { return cvmciIt->second.CVarGetValueSafe(); }
   /* ----------------------------------------------------------------------- */
-  size_t MarkAllEncodedVarsAsCommit()
+  size_t CvarsMarkAllEncodedVarsAsCommit()
   { // Total number of commits
     AtomicSizeT astCommitted{0};
     // Enumerate the initial list and cvar list asyncronously
     StdForEach(par_unseq, cvmnsaList.cbegin(), cvmnsaList.cend(),
-      [&astCommitted](const CVarMapNameStruct &cvmmRef)
+      [&astCommitted](const CVarsMapNameStruct &cvmmRef)
       { // Enumerate the cvars in each list asynchronously
         StdForEach(par_unseq, cvmmRef.cvmMap.begin(), cvmmRef.cvmMap.end(),
           [&astCommitted](CVarMapPair &cvmpRef)
@@ -422,7 +426,7 @@ struct CVars :                         // Start of vars class
     AtomicSizeT astCommitTotal{0}, astPurgeTotal{0};
     // Enumerate the lists asynchronously
     StdForEach(par_unseq, cvmnsaList.cbegin(), cvmnsaList.cend(),
-      [&astCommitTotal, &astPurgeTotal](const CVarMapNameStruct &cvmpIt)
+      [&astCommitTotal, &astPurgeTotal](const CVarsMapNameStruct &cvmpIt)
     { // Total number of commits attempted which may need to be read and
       // written by multiple threads.
       AtomicSizeT astCommit{0}, astPurge{0};
@@ -506,7 +510,7 @@ struct CVars :                         // Start of vars class
     return astCommit;
   }
   /* ----------------------------------------------------------------------- */
-  size_t LoadFromDatabase()
+  size_t CVarsLoadFromDatabase()
   { // Return if table is not already created or not available
     switch(cSql->SqlCVarCreateTable())
     { // Table already exists?
@@ -574,14 +578,12 @@ struct CVars :                         // Start of vars class
               "and not type $ for '$'!",
               SQLITE_TEXT, sdValueRef.iType, strVar);
             return;
-          }
-          // Store value directly with synchronisation
+          } // Store value directly with synchronisation
           maMutex.MutexCall([this, &strVar, &sdValueRef, &astLoaded](){
             if(CVarsSetVarOrInitial(strVar, sdValueRef.MemToStringSafe(),
               PUDB|SUDB, CCF_NOTDECRYPTED))
                 ++astLoaded;
-          });
-          // Go to next item
+          }); // Go to next item
           return;
         } // New decrypted value to write into
         StdString strNewValue;
@@ -697,7 +699,7 @@ struct CVars :                         // Start of vars class
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~CVars, CVarsDeInit())
   /* --------------------------------------------------------------- */ public:
-  CVarReturn SetDefaults(const CVarDefaults cvdVal)
+  CVarReturn CVarsSetDefaults(const CVarDefaults cvdVal)
   { // Compare defaults setting
     switch(cvdVal)
     { // Use current configuration
@@ -728,7 +730,7 @@ struct CVars :                         // Start of vars class
     return ACCEPT;
   }
   /* ----------------------------------------------------------------------- */
-  CVarReturn SetDisplayFlags(const CVarShowFlagsType cvsftFlags)
+  CVarReturn CVarsSetDisplayFlags(const CVarShowFlagsType cvsftFlags)
   { // Failed if flags are not valid
     if(cvsftFlags != CSF_NONE && (cvsftFlags & ~CSF_MASK)) return DENY;
     // Set the new flags
@@ -736,22 +738,18 @@ struct CVars :                         // Start of vars class
     // Done
     return ACCEPT;
   }
-  /* ----------------------------------------------------------------------- */
-  CVarReturn LoadSettings(const bool bDoLoad)
-  { // Load settings if needed
-    if(bDoLoad) LoadFromDatabase();
-    // Same
-    return ACCEPT;
-  }
+  /* -- Load settings if needed -------------------------------------------- */
+  CVarReturn CVarsLoadSettings(const bool bDoLoad)
+    { if(bDoLoad) CVarsLoadFromDatabase(); return ACCEPT; }
   /* -- Set maximum offline cvar count ------------------------------------- */
-  CVarReturn MaxICountModified(const size_t stCount)
+  CVarReturn CVarsMaxICountModified(const size_t stCount)
     { return CVarSimpleSetInt(stMaxInactiveCount, stCount); }
   /* -- Set active configuration set --------------------------------------- */
-  CVarReturn SetConfigActiveSet(const ssize_t sstId)
+  CVarReturn CVarsSetConfigActiveSet(const ssize_t sstId)
     { return CVarSimpleSetIntNLG(sstReqActiveSet, sstId,
         static_cast<ssize_t>(-2), StdLimits<ssize_t>::max()); }
   /* -- Set and execute default app configuration file --------------------- */
-  CVarReturn ExecuteAppConfig(const StdString &strFile, StdString &strVal)
+  CVarReturn CVarsExecAppConfig(const StdString &strFile, StdString &strVal)
   { // Convert whole file data to a string
     const Json jsManifest{ StrAppend(strFile, "." JSON_EXTENSION) };
     // Check version is correct

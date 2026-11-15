@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace IConGraph {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICoords::P;            using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace ICoords::P;            using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace ICVars::P;
 using namespace IConDef::P;            using namespace IConsole::P;
 using namespace IEvtMain::P;           using namespace IFbo::P;
 using namespace IFboCore::P;           using namespace IFont::P;

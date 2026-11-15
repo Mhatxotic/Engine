@@ -105,7 +105,7 @@ CVarItemStaticList{{
 // ? will not select any set at all regardless of manifest set value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_activeset", "-2",
-  CB(cCVars->SetConfigActiveSet, ssize_t), TINTEGER|PCMDLINE },
+  CB(cCVars->CVarsSetConfigActiveSet, ssize_t), TINTEGER|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! APP_CONFIG
 // ? Loads the configuration file with the specified extension (usually 'app').
@@ -114,7 +114,7 @@ CVarItemStaticList{{
 // ? command-line.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_config", DEFAULT_CONFIGURATION,
-  CBSTR(cCVars->ExecuteAppConfig), TSTRING|CFILENAME|MTRIM|PCMDLINE },
+  CBSTR(cCVars->CVarsExecAppConfig), TSTRING|CFILENAME|MTRIM|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! APP_AUTHOR
 // ? Specifies the author of the guest application. This is used for display
@@ -253,13 +253,13 @@ CVarItemStaticList{{
 // ? [2] DC_REFRESH   = Completely clear SQL cvars table.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_defaults", "0",
-  CB(cCVars->SetDefaults, CVarDefaults), TUINTEGER|PCMDLINE },
+  CB(cCVars->CVarsSetDefaults, CVarDefaults), TUINTEGER|PCMDLINE },
 /* ------------------------------------------------------------------------- */
 // ! SQL_LOADCONFIG
 // ? Actually loads cvars from the configuration database.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_loadconfig", "1",
-  CB(cCVars->LoadSettings, bool), TBOOLEAN|PNOUI },
+  CB(cCVars->CVarsLoadSettings, bool), TBOOLEAN|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! APP_CFLAGS
 // ? Specifies how the host wants to be run with the following flags...
@@ -367,7 +367,7 @@ CVarItemStaticList{{
 // ? generated if more initial cvars than this are allocated.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "obj_cvarimax", "1000",
-  CB(cCVars->MaxICountModified, size_t), TUINTEGER|PNOUI },
+  CB(cCVars->CVarsMaxICountModified, size_t), TUINTEGER|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CVARMAX
 // ? Specifies the maximum number of cvars allowed to be registered by the
@@ -1041,7 +1041,7 @@ CVarItemStaticList{{
 // ? [0x2] SF_PROTECTED    = Show cvars marked as protected.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "con_cvshowflags", "0",
-  CB(cCVars->SetDisplayFlags, CVarShowFlagsType), TUINTEGER|PANY },
+  CB(cCVars->CVarsSetDisplayFlags, CVarShowFlagsType), TUINTEGER|PANY },
 /* ------------------------------------------------------------------------- */
 // ! CON_BGCOLOUR
 // ? Specifies the background colour of the console texture in the syntax of

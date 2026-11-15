@@ -443,7 +443,7 @@ cConsole->ConsoleAddLineA("Redraw of terminal window requested!");
 /* ========================================================================= */
 { "cvars", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-cConsole->ConsoleAddLine(VariablesMakeList(cCVars->GetVarList(),
+cConsole->ConsoleAddLine(VariablesMakeList(cCVars->CVarsGetVarList(),
   aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlankStr()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvars' function
@@ -472,7 +472,7 @@ cConsole->SetVarInput(aArgs[1]);
 /* ========================================================================= */
 { "cvload", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cConsole->ConsoleAddLineA(StrPluraliseNum(cCVars->LoadFromDatabase(),
+cConsole->ConsoleAddLineA(StrPluraliseNum(cCVars->CVarsLoadFromDatabase(),
   "cvar", "cvars"), " reloaded.");
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvload' function
@@ -490,7 +490,7 @@ cConsole->ConsoleAddLineA(StrPluraliseNum(cCVars->LoadFromDatabase(),
 // Create the private key and if succeeded? Show the result
 if(cSql->SqlCreatePrivateKey())
   cConsole->ConsoleAddLineF("New private key set and $ variables re-encoded!",
-    cCVars->MarkAllEncodedVarsAsCommit());
+    cCVars->CvarsMarkAllEncodedVarsAsCommit());
 // Else failed so show the error
 else cConsole->ConsoleAddLine("Failed to create new private key!");
 /* ------------------------------------------------------------------------- */
@@ -503,7 +503,7 @@ else cConsole->ConsoleAddLine("Failed to create new private key!");
 /* ========================================================================= */
 { "cvpend", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-cConsole->ConsoleAddLine(VariablesMakeList(cCVars->GetInitialVarList(),
+cConsole->ConsoleAddLine(VariablesMakeList(cCVars->CVarsGetInitialVarList(),
   aArgs.size() >= 2 ? aArgs[1] : cCommon->CommonBlankStr()));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'cvpend' function
@@ -1890,8 +1890,8 @@ if(aArgs.size() == 2)
       TimeToShortDuration(UtilMaximum(dRead - dWrite, dWrite - dRead)));
 } // Make neatly formatted table
 Statistic sTable;
-sTable.Header("#").Header("FLAG").Header("IP")
-      .Header("PORT").Header("ADDRESS", false).Header("IDENTIFIER", false)
+sTable.Header("#").Header("FLAG").Header("IP").Header("PORT")
+      .Header("ADDRESS", false).Header("IDENTIFIER", false)
       .Reserve(cSockets->size());
 // Walk through sockets
 for(const Socket*const sPtr : *cSockets)

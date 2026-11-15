@@ -15,8 +15,8 @@ namespace ICore {                      // Start of private module namespace
 using namespace IArchive::P;           using namespace IArgs::P;
 using namespace IAsset::P;             using namespace IAtlas::P;
 using namespace IAudio::P;             using namespace IBin::P;
-using namespace ICVar::P;              using namespace ICVarDef::P;
-using namespace ICVarLib::P;           using namespace ICert::P;
+using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace ICVars::P;             using namespace ICert::P;
 using namespace IClipboard::P;         using namespace IClock::P;
 using namespace ICommon::P;            using namespace ICmdLine::P;
 using namespace ICmdLine::P;           using namespace ICodecCAF::P;
@@ -943,8 +943,8 @@ class Core final :                     // Members initially private
           // should allow any variable to be overridden from the command line.
           // Also show an error if the variable could not be set.
           if(CVarsSetVarOrInitial(tsvKeyVal.front(), tsvKeyVal.size() > 1 ?
-            tsvKeyVal.back() : cCommon->CommonBlankStr(),
-            SCMDLINE|PCMDLINE, CCF_NOTHING))
+            tsvKeyVal.back() : cCommon->CommonBlankStr(), SCMDLINE|PCMDLINE,
+            CCF_NOTHING))
           { // Append argument to accepted command line and add a space
             strV.append(strArg);
             strV.append(cCommon->CommonSpace());

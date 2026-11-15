@@ -13,7 +13,7 @@ namespace IConsole {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IArgs::P;              using namespace IClock::P;
 using namespace ICommon::P;            using namespace IConDef::P;
-using namespace IConLib::P;            using namespace ICVar::P;
+using namespace IConLib::P;            using namespace ICVars::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags::P;             using namespace IFormat::P;
@@ -211,8 +211,9 @@ struct Console :                       // Members initially private
         // specified command is unregistered whilst enumerating.
         acisList.emplace(strKey);
       } // Start adding matching cvars
-      for(CVarMapConstIt cvmiIt{ cCVars->GetVarList().lower_bound(strWord)};
-                         cvmiIt != cCVars->GetVarListEnd();
+      for(CVarMapConstIt cvmiIt{
+            cCVars->CVarsGetVarList().lower_bound(strWord) };
+                         cvmiIt != cCVars->CVarsGetVarListEnd();
                        ++cvmiIt)
       { // Get string and break if prefix doesn't match this command
         const StdString &strKey = cvmiIt->first;
@@ -398,7 +399,7 @@ struct Console :                       // Members initially private
   void SetVarInput(const StdString &strVar)
   { // Return if the cvar doesn't exist
     const CVarMapConstIt cvmcMapIt{ cCVars->CVarsFindVarConst(strVar) };
-    if(cvmcMapIt == cCVars->GetVarListEnd())
+    if(cvmcMapIt == cCVars->CVarsGetVarListEnd())
       return ConsoleAddLine("No such cvar!");
     // Get cvar item data and copy it to input buffer
     const CVarItem &cviItem = cvmcMapIt->second;
@@ -553,7 +554,7 @@ struct Console :                       // Members initially private
       StdOStringStream osS;
       // If the cvar exists?
       const CVarMapIt cvmMapIt{ cCVars->CVarsFindVar(strVarOrCmd) };
-      if(cvmMapIt != cCVars->GetVarListEnd())
+      if(cvmMapIt != cCVars->CVarsGetVarListEnd())
       { // Resulting message
         osS << "Variable '" << strVarOrCmd << "' ";
         // No value specified?
@@ -602,7 +603,8 @@ struct Console :                       // Members initially private
           case CVS_TRIGGERDENIED: osS << "could not be updated!"; break;
           // exception in trigger
           case CVS_TRIGGEREXCEPTION:
-            osS << "not set due to exception! " << cCVars->GetCBError(); break;
+            osS << "not set due to exception! "
+                << cCVars->CVarsGetCBError(); break;
           // String empty
           case CVS_EMPTY: osS << "must not be empty!"; break;
           // Integer is zero
@@ -625,7 +627,7 @@ struct Console :                       // Members initially private
             cGlFW->WinSetClipboardString(StrFormat("$ \"$\"",
               strVarOrCmd, cCVars->CVarsGetInitialVar(strVarOrCmd)));
         } // Set the value and say if it worked
-        else if(cCVars->SetExistingInitialVar(strVarOrCmd, aList[1]))
+        else if(cCVars->CVarsSetExistingInitialVar(strVarOrCmd, aList[1]))
           osS << "was set to '" << aList[1] << "'!";
         // Not changed
         else osS << "was not changed!";

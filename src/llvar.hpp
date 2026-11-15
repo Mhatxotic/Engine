@@ -17,7 +17,7 @@
 /* ========================================================================= */
 namespace LLVariable {                 // Console namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICVar::P;              using namespace ICVarLib::P;
+using namespace ICVars::P;             using namespace ICVarLib::P;
 using namespace ILua::P;               using namespace ILuaVariable::P;
 using namespace Common;
 /* ========================================================================= **

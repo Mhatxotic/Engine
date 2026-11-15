@@ -9,8 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IAudio {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IClock::P;             using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace IClock::P;             using namespace ICVarDef::P;
 using namespace IDuration::P;          using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IHelper::P;
 using namespace ILog::P;               using namespace ILuaFunc::P;

@@ -228,24 +228,24 @@ class CVarItem :                       // Members initially private
           FlagSet(COMMIT);
       } // Remove commit if set
       else if(FlagIsSet(COMMIT)) FlagClear(COMMIT);
-    } // Function to return where the set came from
-    auto fGetType = [cvfcFlags]()->const StdStringView&
-    { // When you set a variable. We only specify one P* enum so the remaining
-      // P* enums not specified are not set.
-      switch(cvfcFlags.FlagGet())
-      { // Return string where the set came from (order is important)
-        case PCMDLINE : return cCommon->CommonFromCmdLine();
-        case PAPPCFG  : return cCommon->CommonFromManifest();
-        case PUDB     : return cCommon->CommonFromDatabase();
-        case PCONSOLE : return cCommon->CommonFromConsole();
-        // Engine set the variable
-        default       : return cCommon->CommonBlank();
-      } // Doesn't get here
-    }; // Log the event
+    } // Log the event
     cLog->LogDebugExSafe("CVars $ '$' to $$.",
+      // Write if it is a new or existing variable
       ccfcFlags.FlagIsSet(CCF_NEWCVAR) ?
         cCommon->CommonRegistered() : cCommon->CommonSet(),
-      CVarGetVar(), CVarGetValueSafe(), fGetType());
+      // Write the variable name and human readable value
+      CVarGetVar(), CVarGetValueSafe(),
+      // PANY means value came and  set internally by engine
+      cvfcFlags == PANY ? cCommon->CommonBlankStr() : StrAppend(
+        // Write where the value data came from (blank if set by engine)
+        (cvfcFlags.FlagIsSet(PCMDLINE) ? cCommon->CommonFromCmdLine()  :
+        (cvfcFlags.FlagIsSet(PAPPCFG)  ? cCommon->CommonFromManifest() :
+        (cvfcFlags.FlagIsSet(PUDB)     ? cCommon->CommonFromDatabase() :
+          cCommon->CommonBlank()))),
+        // Write who or what sent the request (blank if set by engine)
+        (cvfcFlags.FlagIsSet(PCONSOLE) ? cCommon->CommonByConsole()    :
+        (cvfcFlags.FlagIsSet(PLUA)     ? cCommon->CommonByLua()        :
+          cCommon->CommonBlank()))))  ;
     // Return success
     return CVS_OK;
   }

@@ -16,13 +16,11 @@ namespace P {                          // Start of public module namespace
 class Lockable                         // Lua lock class
 { /* -- Private variables -------------------------------------------------- */
   bool             bLocked;            // Class is locked from being dealloced
-  /* -- Set locked status -------------------------------------------------- */
-  void LockSet(const bool bState) { bLocked = bState; }
   /* -- Return true if lock is (not) set --------------------------- */ public:
   bool LockIsSet() const { return bLocked; }
   bool LockIsNotSet() const { return !LockIsSet(); }
   /* -- Set/clear locked status -------------------------------------------- */
-  void LockSet() { LockSet(true); }
+  void LockSet(const bool bState = true) { bLocked = bState; }
   void LockClear() { LockSet(false); }
   /* -- Swap lock status with another class -------------------------------- */
   void LockSwap(Lockable &lOther) { StdSwap(bLocked, lOther.bLocked); }

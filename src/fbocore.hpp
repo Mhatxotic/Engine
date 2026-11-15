@@ -13,8 +13,8 @@
 namespace IFboCore {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace IColour::P;
-using namespace ICoords::P;            using namespace ICVar::P;
-using namespace ICVarDef::P;           using namespace ICVarLib::P;
+using namespace ICoords::P;            using namespace ICVarDef::P;
+using namespace ICVarLib::P;           using namespace ICVars::P;
 using namespace IDim::P;               using namespace IEvtMain::P;
 using namespace IFboBlend::P;          using namespace IFbo::P;
 using namespace IFrame::P;             using namespace IGlFW::P;
