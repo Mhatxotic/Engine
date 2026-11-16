@@ -27,9 +27,9 @@ static Audio *cAudio = nullptr;        // Pointer to global class
 class Audio :                          // Audio manager class
   /* -- Base classes ------------------------------------------------------- */
   private InitHelper,                  // Initialisation helper class
-  private EvtMainRegAuto,              // Frequently used events
-  protected Thread                     // Audio thread class
+  private EvtMainRegAuto               // Frequently used events
 { /* -- Monitoring thread timers ------------------------------------------- */
+  Thread           tThread;            // Audio thread class
   ClkTimePoint     ctpNextCheck;       // Next check for hardware changes
   AtomicClkDuration acdCheckRate,      // Check rate
                    acdThreadDelay;     // Thread sleep time
@@ -58,7 +58,7 @@ class Audio :                          // Audio manager class
     cLog->LogDebugSafe("Audio monitoring thread initialising...");
     // Reset the check time and start the minimal thread
     AudioResetCheckTime();
-    ThreadInit(cOal->FlagIsSet(AFL_HAVESEPBDDC) ?
+    tThread.ThreadInit(cOal->FlagIsSet(AFL_HAVESEPBDDC) ?
       ctfThSysEvts : ctfThNoSysEvts, this);
     // Log completion of thread startup
     cLog->LogDebugExSafe("Audio monitoring thread initialised (D:$;C:$)!",
@@ -69,7 +69,7 @@ class Audio :                          // Audio manager class
   void AudioDeInitThread()
   { // Stop and de-init the thread and log progress
     cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
-    ThreadDeInit();
+    tThread.ThreadDeInit();
     ctpNextCheck = std::chrono::high_resolution_clock::time_point::max();
     cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
   }
@@ -117,9 +117,9 @@ class Audio :                          // Audio manager class
   /* -- ReInit requested --------------------------------------------------- */
   void AudioOnReInit(const EvtMainEvent&) { AudioDoReInit(); }
   /* -- Thread main function with system events support -------------------- */
-  ThreadStatus AudioThreadMainSysEvents(Thread &) try
+  ThreadFlagsType AudioThreadMainSysEvents(Thread &) try
   { // Loop forever until thread exit signalled.
-    while(ThreadShouldNotExit())
+    while(tThread.ThreadShouldNotExit())
     { // Manage stream classes
       StreamManage();
       // Suspend thread for the user requested time
@@ -197,10 +197,10 @@ class Audio :                          // Audio manager class
     return true;
   }
   /* -- Thread main function with no system events support ----------------- */
-  ThreadStatus AudioThreadMainNoSysEvents(Thread &) try
+  ThreadFlagsType AudioThreadMainNoSysEvents(Thread &) try
   { // Enumerate...
     for(AudioResetCheckTime();             // Reset device list check time
-        ThreadShouldNotExit();             // Enum until thread exit signalled
+        tThread.ThreadShouldNotExit();     // Enum until thread exit signalled
         StdSuspend(acdThreadDelay.load())) // Suspend thread pecified time
     { // Manage all streams audio.
       StreamManage();
@@ -209,7 +209,7 @@ class Audio :                          // Audio manager class
       if(AudioVerify()) continue;
       // Put in infinite loop and wait for the reinit function to request
       // termination of this thread
-      while(ThreadShouldNotExit()) StdSuspend(cdDiscWait);
+      while(tThread.ThreadShouldNotExit()) StdSuspend(cdDiscWait);
       // Thread terminate request recieved, now break the loop.
       break;
     } // Terminate thread
@@ -452,7 +452,7 @@ class Audio :                          // Audio manager class
       { EMC_AUD_PDUPDATED, bind(&Audio::AudioOnPbkDeviceUpdated, this, _1) },
       { EMC_AUD_CDUPDATED, bind(&Audio::AudioOnCapDeviceUpdated, this, _1) }
     } },
-    Thread{ "audio", STP_AUDIO },      // Initialise thread priority level
+    tThread{ "audio", STP_AUDIO },     // Initialise thread priority level
     cdDiscWait{ cd100MS },             // Initialise discrepency sleep time
     ctfThSysEvts{ bind(&Audio::AudioThreadMainSysEvents, this, _1) },
     ctfThNoSysEvts{ bind(&Audio::AudioThreadMainNoSysEvents, this, _1) },

@@ -541,7 +541,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     return true;
   }
   /* -- Thread main function ----------------------------------------------- */
-  ThreadStatus VideoThreadMain(const Thread &tClass) try
+  ThreadFlagsType VideoThreadMain(const Thread &tClass) try
   { // Send playing event if we're not temporarily de-initialising
     if(auReason != UB_REINIT) LuaEvtDispatch(VE_PLAY);
     // Loop until thread should exit

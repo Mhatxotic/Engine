@@ -8,7 +8,7 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* -- HTTP Socket main thread function ---------------------------- */ private:
-ThreadStatus HTTPMain()
+ThreadFlagsType HTTPMain()
 { // Connect and send http request and break loop if failed.
   if(InitialConnect() == TS_ERROR) return TS_ERROR;
   // Check if websocket
@@ -222,17 +222,17 @@ ThreadStatus HTTPMain()
   return SetAborted();
 }
 /* -- Socket http connection ----------------------------------------------- */
-ThreadStatus SocketHTTPThreadMain(Thread &)
+ThreadFlagsType SocketHTTPThreadMain(Thread &)
 { // Return code
-  ThreadStatus tsReturn;
+  ThreadFlagsType tftReturn;
   // Capture exceptions and switch to thiscall
-  try { tsReturn = HTTPMain(); }
+  try { tftReturn = HTTPMain(); }
   // Exception occurred?
   catch(const StdException &eReason)
   { // Report error
     cLog->LogErrorExSafe("(SOCKET HTTP THREAD EXCEPTION) $", eReason);
     // Set error message
-    tsReturn = SetErrorStaticSafe(eReason.what());
+    tftReturn = SetErrorStaticSafe(eReason.what());
   } // If we're a websocket then stop the writer thread
   SocketTerminateWriteThread();
   // Clear connection and clean-up
@@ -241,7 +241,7 @@ ThreadStatus SocketHTTPThreadMain(Thread &)
   // Required to stop memory leak
   OPENSSL_thread_stop();
   // Return status
-  return tsReturn;
+  return tftReturn;
 }
 /* -- Init --------------------------------------------------------- */ public:
 void HTTPRequest(lua_State*const lS, const StdStringView &ssvName,

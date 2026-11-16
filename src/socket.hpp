@@ -165,7 +165,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
       StdForward<VarArgs>(vaArgs)...);
   }
   /* -- Initialise static error (no openssl error) ------------------------- */
-  ThreadStatus SetErrorStatic(const StdString &strReason, const bool bSet)
+  ThreadFlagsType SetErrorStatic(const StdString &strReason, const bool bSet)
   { // Show reason in log
     SocketLogUnsafe(LH_WARNING, "error: $", strReason);
     // Forget any error if disconnecting or disconnected
@@ -178,7 +178,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return TS_ERROR;
   }
   /* -- Set aborted connection --------------------------------------------- */
-  ThreadStatus SetAborted()
+  ThreadFlagsType SetAborted()
   { // Clear errors
     ERR_clear_error();
     // Connection aborted message
@@ -191,7 +191,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return TS_ERROR;
   }
   /* -- Socket initial connect failed cleanup function --------------------- */
-  ThreadStatus SetError(const StdString &strReason)
+  ThreadFlagsType SetError(const StdString &strReason)
   { // If socket was not forcefully closed by us
     if(!IsDisconnectedByClient())
     { // If disconnecting or disconnected? Show reason in log
@@ -443,7 +443,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     while(!plData.empty());
   }
   /* -- Create connection with select used to monitor for timeout ---------- */
-  ThreadStatus DoConnect()
+  ThreadFlagsType DoConnect()
   { // Set hostname (always returns 1).
     if(CryptBIOSetConnHostname(bioPtr, GetAddressAndPort().data()) != 1)
       return SetErrorSafe("Resolve failed!");
@@ -539,7 +539,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return ctParent.aiOCSP >= 2 ? 0 : 1;
   }
   /* -- Socket initial connect function ------------------------------------ */
-  ThreadStatus InitialConnect()
+  ThreadFlagsType InitialConnect()
   { // Initialise the status flags
     FlagReset(SS_INITIALISING);
     // Reset counters and timers
@@ -800,23 +800,23 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     });
   }
   /* -- Socket write thread ------------------------------------------------ */
-  ThreadStatus SockWriteThreadMain(Thread &)
+  ThreadFlagsType SockWriteThreadMain(Thread &)
   { // Return code
-    ThreadStatus tsReturn;
+    ThreadFlagsType tftReturn;
     // Capture exceptions and execute the manager
-    try { tsReturn = SockWriteManager(); }
+    try { tftReturn = SockWriteManager(); }
     // exception occured?
     catch(const StdException &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET WRITE THREAD EXCEPTION) $", eReason);
       // Set error message
-      tsReturn = SetErrorStaticSafe(eReason.what());
+      tftReturn = SetErrorStaticSafe(eReason.what());
     } // Force close the socket if the reader thread isn't already exiting
     SendDisconnect();
     // Required to stop memory leak
     OPENSSL_thread_stop();
     // Return exit code
-    return tsReturn;
+    return tftReturn;
   }
   /* -- Dispatch an event -------------------------------------------------- */
   void DispatchEvent(const SocketFlagsConst &evtId, auto &&...aArgs)
@@ -826,7 +826,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     LuaEvtDispatch(evtId.FlagGet(), StdForward<decltype(aArgs)>(aArgs)...);
   }
   /* -- Socket read manager ------------------------------------------------ */
-  ThreadStatus SockReadManager()
+  ThreadFlagsType SockReadManager()
   { // Create a thread to write data requests
     tWriter.ThreadInit(StrAppend("socketwriter:", Serial()),
       bind(&Socket::SockWriteThreadMain, this, _1), this);
@@ -847,17 +847,17 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     return TS_OK;
   }
   /* -- Socket read thread ------------------------------------------------- */
-  ThreadStatus SockReadThreadMain(Thread &)
+  ThreadFlagsType SockReadThreadMain(Thread &)
   { // Return code
-    ThreadStatus tsReturn;
+    ThreadFlagsType tftReturn;
     // Capture exceptions
-    try { tsReturn = SockReadManager(); }
+    try { tftReturn = SockReadManager(); }
     // Exception occured?
     catch(const StdException &eReason)
     { // Report error
       cLog->LogErrorExSafe("(SOCKET THREAD EXCEPTION) $", eReason);
       // Set error message
-      tsReturn = SetErrorStaticSafe(eReason.what());
+      tftReturn = SetErrorStaticSafe(eReason.what());
     } // Stop writer thread
     SocketTerminateWriteThread();
     // Clear connection and clean-up
@@ -866,7 +866,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Required to stop memory leak
     OPENSSL_thread_stop();
     // Return status
-    return tsReturn;
+    return tftReturn;
   }
   /* -- Error occured in event so start cleaning up ------------------------ */
   void EventError()
@@ -926,9 +926,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   bool IsDisconnectingOrDisconnected() const
     { return IsDisconnecting() || IsDisconnected(); }
   bool IsDisconnectedByClient() { return FlagIsSet(SS_CLOSEDBYCLIENT); }
-  /* -- Includes (too big to fit in here) --------------------------------- */
-  #include <sockweb.hpp>               // Include websocket client code inline
-  #include <sockhttp.hpp>              // Include http client code inline
+  /* -- Includes (too big to fit in here) ---------------------------------- */
+#include <sockweb.hpp>                 // Include websocket client code inline
+#include <sockhttp.hpp>                // Include http client code inline
   /* --------------------------------------------------------------- */ public:
   bool IsSecure() const { return FlagIsSet(SS_ENCRYPTION); }
   int GetFD() const { return aiFd; }
@@ -973,9 +973,9 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void CompactTXSafe(Memory &mbD)
     { CompactXSafe(mbD, plTX, stTX, cSockets->ssvTX); }
   /* ----------------------------------------------------------------------- */
-  ThreadStatus SetErrorSafe(const StdString &strS)
+  ThreadFlagsType SetErrorSafe(const StdString &strS)
     { return MutexCall([this, &strS](){ return SetError(strS); }); }
-  ThreadStatus SetErrorStaticSafe(const StdString &strS, const bool bS=true)
+  ThreadFlagsType SetErrorStaticSafe(const StdString &strS, const bool bS=true)
     { return MutexCall([this, &strS, bS]()
         { return SetErrorStatic(strS, bS); }); }
   void PushDataSafe(PacketList &blD, size_t &stX, const char *cpData,

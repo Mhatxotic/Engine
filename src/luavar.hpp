@@ -167,7 +167,8 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
     if(lcvmiIt == GetLuaVarListEnd()) return;
     // Unregister the cvar if valid and registered by Lua
     const CVarMapIt &cvmiIt = Iterator();
-    if(cvmiIt != cCVars->CVarsGetVarListEnd() && cvmiIt->second.FlagIsSet(SLUA))
+    if(cvmiIt != cCVars->CVarsGetVarListEnd() &&
+       cvmiIt->second.FlagIsSet(SLUA))
       cCVars->CVarsUnregister(cvmiIt);
     // Remove the lua var
     GetLuaVarList().erase(lcvmiIt);

@@ -1184,6 +1184,16 @@ LLFUNC(TableCopy, 1, LuaUtilCopyShallowTableSafe(lS, 1))
 /* ------------------------------------------------------------------------- */
 LLFUNC(TableSize, 1, LuaUtilPushVar(lS, LuaUtilGetKeyValTableSizeSafe(lS, 1)))
 /* ========================================================================= */
+// $ Util.TimeIt
+// > Func:function=The function to call.
+// > Args:...=Any arguments to send to the function.
+// < Seconds:number=The time the function took to execute in seconds.
+// < Returns:...=Any arguments returned by the function.
+// ? Times the specified function call and returns the duration in seconds. The
+// ? duration ONLY includes the time it took to execute 'lua_pcall()'.
+/* ------------------------------------------------------------------------- */
+LLFUNCBEGIN(TimeIt) LLFUNCENDEX(LuaUtilTimeIt(lS))
+/* ========================================================================= */
 // $ Util.Trim
 // > String:string=The string to modify.
 // > Search:integer=The ASCII character to remove.
@@ -1320,9 +1330,9 @@ LLRSBEGIN                              // Util.* non-member functions begin
   LLRSFUNC(SHA512SSS), LLRSFUNC(Sanitise), LLRSFUNC(Sign), LLRSFUNC(Shorten),
   LLRSFUNC(ShortenEx), LLRSFUNC(StretchCover), LLRSFUNC(StretchInner),
   LLRSFUNC(StretchOuter), LLRSFUNC(TableCopy), LLRSFUNC(TableSize),
-  LLRSFUNC(Trim), LLRSFUNC(UrlDecode), LLRSFUNC(UrlEncode), LLRSFUNC(UTF8Char),
-  LLRSFUNC(UUIDDecode), LLRSFUNC(UUIDEncode), LLRSFUNC(UUIDRandom),
-  LLRSFUNC(WordWrap),
+  LLRSFUNC(TimeIt), LLRSFUNC(Trim), LLRSFUNC(UrlDecode), LLRSFUNC(UrlEncode),
+  LLRSFUNC(UTF8Char), LLRSFUNC(UUIDDecode), LLRSFUNC(UUIDEncode),
+  LLRSFUNC(UUIDRandom), LLRSFUNC(WordWrap),
 LLRSEND                                // Util.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Util namespace

@@ -9,14 +9,16 @@
 /* ------------------------------------------------------------------------- */
 namespace ILuaUtil {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
+using namespace IClock::P;
 using namespace ICommon::P;            using namespace IDir::P;
-using namespace IError::P;             using namespace ILog::P;
-using namespace ILuaBase::P;           using namespace ILuaIdent::P;
-using namespace IMemory::P;            using namespace IRefCtr::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace IToken::P;
-using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
-using namespace IUtfEncoder::P;        using namespace IUtil::P;
+using namespace IError::P;             using namespace IInterval::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace IMemory::P;
+using namespace IRefCtr::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace IToken::P;             using namespace IUtfCodepoint::P;
+using namespace IUtfDecoder::P;        using namespace IUtfEncoder::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Variables ------------------------------------------------------------ */
@@ -1479,6 +1481,23 @@ static StdString LuaUtikMakeSafeRegexStr(const StdStringView &ssvStr)
   // Return properly escaped string
   return strOut;
 }
+/* -- Time a Lua function -------------------------------------------------- */
+static int LuaUtilTimeIt(lua_State*const lS)
+{ // Must have one parameter and it must be a function
+  LuaUtilCheckFunc(lS, 1);
+  // Get number of user parameters on stack minus the supplied function
+  const int iParams = LuaBaseGetTop(lS) - 1;
+  // Setup query time
+  const Interval ivStart;
+  // Execute the function with the user specified arguments, expect any returns
+  LuaBaseCall(lS, iParams, LUA_MULTRET);
+  // Push the duration which is the last parameter on the stack
+  LuaBasePushNum(lS, ClockDurationToDouble(ivStart.CIDelta()));
+  // Move duration to back of stack
+  LuaBaseRotate(lS, 1, 1);
+  // Return number of parameters pushed onto the stack
+  return LuaBaseGetTop(lS);
+} // lexec return Util.TimeIt(function(...) return ... end, 1, 2, 3)
 /* -- Push a true or false ------------------------------------------------- */
 static void LuaUtilPushTrue(lua_State*const lS)
   { LuaBasePushBool(lS, true); }

@@ -2397,14 +2397,14 @@ for(const Thread*const tPtr : *cThreads)
   const Thread &tRef = *tPtr;
   sTable.DataN(tRef.Serial()).DataE({
     { tRef.ThreadHaveCallback(), 'C' }, { tRef.ThreadIsParamSet(),   'P' },
-    { tRef.ThreadShouldExit(),   'T' }, { tRef.ThreadIsException(),  'E' },
-    { tRef.ThreadIsJoinable(),   'J' }, { tRef.ThreadIsExited(),     'X' },
+    { tRef.ThreadShouldExit(),   'T' }, { tRef.ThreadIsJoinable(),   'J' },
+    { tRef.ThreadIsExited(),     'X' },
   }).DataN(tRef.ThreadGetPerf()).Data(tRef.ThreadGetExitCodeString())
     .Data(TimeToShortDuration(cLog->
       CCDeltaToClampedDouble(tRef.ThreadGetStartTime())))
     .Data(TimeToShortDuration(cLog->
       CCDeltaToClampedDouble(tRef.ThreadGetEndTime())))
-    .Data(TimeToShortDuration(tRef.ThreadIsJoinable()
+    .Data(TimeToShortDuration(tRef.ThreadIsNotExited()
        ? cmHiRes.TimePointToClampedDouble(tRef.ThreadGetStartTime())
        : ClockTimePointRangeToClampedDouble(tRef.ThreadGetEndTime(),
            tRef.ThreadGetStartTime())))

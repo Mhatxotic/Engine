@@ -35,7 +35,7 @@ class SysRedirect final :              // Rediector
   using AllHandles = StdArray<StdRefWrapper<int>, 3>; // StdArray<int&,3>
   AllHandles    ahHandles;             // All handles (iSaved, iWrite, iRead)
   /* -- Async off-main thread function ------------------------------------- */
-  ThreadStatus ThreadMain(Thread&)
+  ThreadFlagsType ThreadMain(Thread&)
   { // Until thread should exit or end of file
     while(ThreadShouldNotExit())
     { // Read some data and if we got some? Return how much we read

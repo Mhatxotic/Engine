@@ -18,7 +18,7 @@ enum OpCode : unsigned                 // Websocket packet op codes
   OC_PING        = 0x9,                // Ping the client test
   OC_PONG        = 0xA                 // Server ACK the ping client test.
 }; /* -- Socket write manager ---------------------------------------------- */
-ThreadStatus SockWebWriteManager()
+ThreadFlagsType SockWebWriteManager()
 { // Block until requested to exit
   while(tWriter.ThreadShouldNotExit())
   { // For each packet waiting to be written
@@ -115,7 +115,7 @@ ThreadStatus SockWebWriteManager()
   return TS_OK;
 }
 /* -- Socket write manager ------------------------------------------------- */
-ThreadStatus SockWriteManager()
+ThreadFlagsType SockWriteManager()
 { // Block until requested to exit
   while(tWriter.ThreadShouldNotExit())
   { // For each packet waiting to be written
@@ -133,26 +133,26 @@ ThreadStatus SockWriteManager()
   return TS_OK;
 }
 /* -- WebSocket write thread ----------------------------------------------- */
-ThreadStatus SockWebWriteThreadMain(Thread &)
+ThreadFlagsType SockWebWriteThreadMain(Thread &)
 { // Return code
-  ThreadStatus tsReturn;
+  ThreadFlagsType tftReturn;
   // Capture exceptions and execute the manager
-  try { tsReturn = SockWebWriteManager(); }
+  try { tftReturn = SockWebWriteManager(); }
   // exception occured?
   catch(const StdException &eReason)
   { // Report error
     cLog->LogErrorExSafe("(WEBSOCKET WRITE THREAD EXCEPTION) $", eReason);
     // Set error message
-    tsReturn = SetErrorStaticSafe(eReason.what());
+    tftReturn = SetErrorStaticSafe(eReason.what());
   } // Force close the socket if the reader thread isn't already exiting
   SendDisconnect();
   // Required to stop memory leak
   OPENSSL_thread_stop();
   // Return exit code
-  return tsReturn;
+  return tftReturn;
 }
 /* -- Web socket main thread function reusing temporary buffer ------------- */
-ThreadStatus WebSocketMain(Memory &mDest)
+ThreadFlagsType WebSocketMain(Memory &mDest)
 { // Check for upgrade status and return error if not found
   const ParserStringVolConstIt psvciIt{ GetRegistryIterator("Upgrade") };
   if(psvciIt == psvRegistry.cend())

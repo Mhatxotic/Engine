@@ -1419,7 +1419,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     sqlDB(nullptr),                    // No sql database handle yet
     iError(SQLITE_OK)                  // Initialise sqlite and store error
   /* -- No code ------------------------------------------------------------ */
-  { }
+  { cSql = this; }
   /* -- Destructor to de-initialise database if opened --------------------- */
   DTORHELPER(~Sql, SqlDeInit())
 };/* ----------------------------------------------------------------------- */

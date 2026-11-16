@@ -34,8 +34,8 @@ class InitHelper :                     // The Init Helper class
     if(IHIsInitialised())
       XC("Object already initialised!",
         "Name", NameGet(),
-        "Age",  TimeToShortDuration(cmHiRes.
-                  TimePointToClampedDouble(ctInitialised)));
+        "Age",  TimeToShortDuration(
+                  cmHiRes.TimePointToClampedDouble(ctInitialised)));
     // Class now initialised
     IHSetInitialised();
   }

@@ -263,7 +263,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     { FileMap fmData{ AssetExtract(NameGet()) };
       AsyncParseFileMap(fmData); }
   /* -- Async off-main thread function ------------------------------------- */
-  ThreadStatus AsyncThreadMain(Thread&)
+  ThreadFlagsType AsyncThreadMain(Thread&)
   { // Capture exceptions. Remember that after these operations the memory at
     // mAsyncLoadData should be de-initialised. So don't use it again.
     try

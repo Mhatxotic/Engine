@@ -175,6 +175,9 @@ static void LuaBasePushInt(lua_State*const lS, const IntType itValue)
   { lua_pushinteger(lS, static_cast<lua_Integer>(itValue)); }
 /* -- Throw error ---------------------------------------------------------- */
 static void LuaBaseError(lua_State*const lS) { lua_error(lS); }
+/* -- Rotate stack items --------------------------------------------------- */
+static void LuaBaseRotate(lua_State*const lS, const int iS, const int iA)
+  { lua_rotate(lS, iS, iA); }
 /* -- Copy one value on the stack ------------------------------------------ */
 static void LuaBasePushValue(lua_State*const lS, const int iIndex)
   { lua_pushvalue(lS, iIndex); }

@@ -480,7 +480,7 @@ class Core final :                     // Members initially private
     }
   }
   /* -- Engine thread (member function) ------------------------------------ */
-  ThreadStatus CoreThreadMain(Thread&) try
+  ThreadFlagsType CoreThreadMain(Thread&) try
   { // Log reason for init
     cLog->LogDebugExSafe("Core engine thread started (C:$;M:$<$>).",
       GetExitReason(), MetadataGetCoreFlagsString(), MetadataGetCoreFlags());
@@ -868,7 +868,7 @@ class Core final :                     // Members initially private
     uErrorLimit(0),                    // Init number of errors allowed
     ivForceFrame{ cd1S }               // Force render frame after 1 second
     /* -- Set global pointer to static classes ----------------------------- */
-    { cSql = this; cCore = this; }
+    { cCore = this; }
   /* -- Process compatibility flags ---------------------------------------- */
   static CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
   { // Nothing yet

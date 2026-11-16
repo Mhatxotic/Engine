@@ -208,7 +208,7 @@ struct Flags :
   constexpr explicit Flags(const IntType &itOther) :
     ConstType{ itOther } {}
   constexpr explicit Flags(const ConstType &ctOther) :
-   ConstType{ ctOther } {}
+    ConstType{ ctOther } {}
   /* -- Default constructor ------------------------------------------------ */
   constexpr Flags() : ConstType{ 0 } {}
 };/* ----------------------------------------------------------------------- */
