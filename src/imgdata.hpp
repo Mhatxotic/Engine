@@ -151,15 +151,15 @@ class ImageData :                      // Members initially private
   /* -- Helps with one-liners (temporary variables) ------------------------ */
   void AddSlot(Memory &&mData) { AddSlot(mData); }
   /* -- Get read-only slots ------------------------------------------------ */
-  const SlotList &GetSlotsConst() const { return slSlots; }
+  const SlotList &GetSlots() const { return slSlots; }
   /* -- Is no slots? ------------------------------------------------------- */
-  bool IsNoSlots() const { return GetSlotsConst().empty(); }
+  bool IsNoSlots() const { return GetSlots().empty(); }
   /* -- Clear slots -------------------------------------------------------- */
   void ClearSlots() { GetSlots().clear(); }
   /* -- Recover slot memory ------------------------------------------------ */
   void CompactSlots() { GetSlots().shrink_to_fit(); }
   /* -- Get slots count ---------------------------------------------------- */
-  size_t GetSlotCount() const { return GetSlotsConst().size(); }
+  size_t GetSlotCount() const { return GetSlots().size(); }
   /* -- Set allocated data size -------------------------------------------- */
   void SetAlloc(const size_t stNAlloc) { stAlloc = stNAlloc; }
   /* -- Reserve allocated slots -------------------------------------------- */

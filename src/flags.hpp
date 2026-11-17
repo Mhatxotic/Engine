@@ -37,7 +37,7 @@ class FlagsStorageUnsafe
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>requires StdIsIntegral<IntType>
+  template<typename AnyType = IntType>requires StdIsIntegral<IntType>
     constexpr AnyType FlagGet() const { return static_cast<AnyType>(itV); }
   /* -- Type --------------------------------------------------------------- */
   using ValueType = IntType;
@@ -141,19 +141,15 @@ class FlagsConst :
       StorageType{ static_cast<IntType>(atValue) } {}
   /* -- Operators ---------------------------------------------------------- */
   constexpr const FlagsConst operator~() const
-    { return FlagsConst{ ~this->template FlagGet<IntType>() }; }
+    { return FlagsConst{ ~this->FlagGet() }; }
   constexpr const FlagsConst operator|(const FlagsConst &fcRHS) const
-    { return FlagsConst{ this->template FlagGet<IntType>() |
-                         fcRHS.template FlagGet<IntType>() }; }
+    { return FlagsConst{ this->FlagGet() | fcRHS.FlagGet() }; }
   constexpr const FlagsConst operator&(const FlagsConst &fcRHS) const
-    { return FlagsConst{ this->template FlagGet<IntType>() &
-                         fcRHS.template FlagGet<IntType>() }; }
+    { return FlagsConst{ this->FlagGet() & fcRHS.FlagGet() }; }
   constexpr const FlagsConst operator^(const FlagsConst &fcRHS) const
-    { return FlagsConst{ this->template FlagGet<IntType>() ^
-                         fcRHS.template FlagGet<IntType>() }; }
+    { return FlagsConst{ this->FlagGet() ^ fcRHS.FlagGet() }; }
   /* -- Direct access using class variable name which returns value -------- */
-  constexpr operator IntType() const
-    { return this->template FlagGet<IntType>(); }
+  constexpr operator IntType() const { return this->FlagGet(); }
 };/* ----------------------------------------------------------------------- */
 /* == Flags helper class =================================================== **
 ** ######################################################################### **
@@ -191,7 +187,7 @@ struct Flags :
     { this->FlagSetInt(this->FlagGet() ^ ctValue.FlagGet()); }
   /* -- Clear specified bits ----------------------------------------------- */
   constexpr void FlagClear(const ConstType &ctValue)
-    { FlagMask(ConstType{ ~ctValue.template FlagGet<IntType>() }); }
+    { FlagMask(ConstType{ ~ctValue.FlagGet() }); }
   /* -- Add or clear bits -------------------------------------------------- */
   constexpr void FlagSetOrClear(const ConstType &ctValue,
     const bool bCondition)

@@ -177,8 +177,9 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cArchives->CollectorCount()))
 // ? you should NOT use solid archives or there could be extreme performance
 // ? issues while extracting files from it, this is by LZMA design.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Load, 1, const AgFilename aFilename{lS, 1};
-  AcArchive{lS}().SyncInitFileSafe(aFilename))
+LLFUNC(Load, 1,
+  const AgFilename aFilename{lS, 1};
+  AcArchive{lS}().SyncInitFileSafe(aFilename(), "archivefile"))
 /* ========================================================================= */
 // $ Archive.LoadAsync
 // > Filename:string=The filename of the archive to load
@@ -193,7 +194,7 @@ LLFUNC(LoadAsync, 0,
   LuaUtilCheckParams(lS, 4);
   const AgFilename aFilename{lS,1};
   LuaUtilCheckFunc(lS, 2, 3, 4);
-  AcArchive{lS}().AsyncInitNone(lS, aFilename, "archivefile"))
+  AcArchive{lS}().AsyncInitNone(lS, aFilename(), "archivefile"))
 /* ========================================================================= */
 // $ Archive.WaitAsync
 // ? Halts main-thread execution until all async archive events have completed

@@ -448,7 +448,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
       AddSlot(mTexture, static_cast<unsigned>(stTexWidth),
                         static_cast<unsigned>(stTexHeight));
     } // Set size of first texture
-    DimSet(GetSlotsConst().front());
+    DimSet(GetSlots().front());
     // Success
     return true;
   }
@@ -788,29 +788,33 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   }
   /* -- Save image using a type id ----------------------------------------- */
   void SaveFile(const StdStringView &ssvFile, const size_t stSId,
-    const ImageFormat ifPId)
-      const { ImageSave(ifPId, ssvFile, *this, GetSlotsConst()[stSId]); }
+    const ImageFormat ifPId) const
+  { ImageSave(ifPId, ssvFile, *this, GetSlots()[stSId]); }
   /* -- Load image from memory asynchronously ------------------------------ */
-  void InitAsyncArray(lua_State*const lS, const StdStringView &ssvIdent,
-    Asset &aData, const ImageFlagsConst ifcFlags)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void InitAsyncArray(lua_State*const lS, StrType &&strIdent, Asset &aData,
+    const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
     // The decoded image will be kept in memory
     SetDynamic();
     // Load image from memory asynchronously
-    AsyncInitArray(lS, ssvIdent, "bmparray", aData);
+    AsyncInitArray(lS, StdForward<StrType>(strIdent), "imagearray", aData);
   }
   /* -- Load image from file asynchronously -------------------------------- */
-  void InitAsyncFile(lua_State*const lS, const StdStringView &ssvFile,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void InitAsyncFile(lua_State*const lS, StrType &&strFile,
     const ImageFlagsConst ifcFlags)
   { // Set user flags
     FlagSet(ifcFlags);
     // Load image from file asynchronously
-    AsyncInitFile(lS, ssvFile, "imagefile");
+    AsyncInitFile(lS, StdForward<StrType>(strFile), "imagefile");
   }
   /* -- Create a blank image for working on -------------------------------- */
-  void InitBlank(const StdStringView &ssvIdent, const unsigned uBWidth,
-    const unsigned uBHeight, const bool bAlpha, const bool bClear)
+  void InitBlank(const unsigned uBWidth, const unsigned uBHeight,
+    const bool bAlpha, const bool bClear)
   { // Lookup table for alpha setting
     using BitDepthTexTypePair = StdPair<const BitDepth, const TextureType>;
     using BitDepthTexTypePairArray = StdArray<const BitDepthTexTypePair, 2>;
@@ -822,7 +826,6 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     SetBitsAndBytesPerPixel(bdttpLookupRef.first);
     SetPixelType(bdttpLookupRef.second);
     // Set other members
-    NameSet(ssvIdent);
     SetDynamic();
     DimSet(uBWidth, uBHeight);
     // Add the raw data into a slot
@@ -830,6 +833,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Load succeeded so register the block
     CollectorRegister();
   }
+  /* -- Create a blank image for working on -------------------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void InitBlank(StrType &&strIdent, const unsigned uBWidth,
+    const unsigned uBHeight, const bool bAlpha, const bool bClear)
+  { NameSet(StdForward<StrType>(strIdent));
+    InitBlank(uBWidth, uBHeight, bAlpha, bClear); }
   /* -- Replace image from a raw image data -------------------------------- */
   void InitReplace(Memory &mSrc)
   { // Take ownership current slots list and make a blank new one.
@@ -846,15 +856,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     isFirst.MemSwap(mSrc);
   }
   /* -- Load image from a raw image data ----------------------------------- */
-  void InitRaw(const StdStringView &ssvName, Memory &mSrc,
-    const unsigned uBWidth, const unsigned uBHeight,
+  void InitRaw(Memory &mSrc, const unsigned uBWidth, const unsigned uBHeight,
     const BitDepth bdBitsPP)
   { // Check that the range is valid
     const unsigned uMSize = 0xFFFF;
     if(!uBWidth || !uBHeight || uBWidth > uMSize || uBHeight > uMSize)
       XC("Image dimensions are not acceptable!",
-        "File",   ssvName, "Width",   uBWidth,
-        "Height", uBHeight, "Maximum", uMSize);
+        "File",   NameGet(), "Width",   uBWidth,
+        "Height", uBHeight,  "Maximum", uMSize);
     // Set bits per pixel
     SetBitsAndBytesPerPixel(bdBitsPP);
     // Set the dimensions
@@ -867,31 +876,38 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     { // Only fail if not binary
       if(GetBitsPerPixel() != BD_BINARY)
         XC("Image bits per pixel not valid!",
-          "File", ssvName, "Depth", GetBitsPerPixel());
+          "File", NameGet(), "Depth", GetBitsPerPixel());
       // Total pixels must be divisible by 8
       if(const size_t stRemainder = TotalPixels() % CHAR_BIT)
         XC("Binary image pixel count must be divisible by eight!",
-          "File", ssvName, "Pixels", TotalPixels(), "Remainder", stRemainder);
+          "File",      NameGet(), "Pixels", TotalPixels(),
+          "Remainder", stRemainder);
       // Set expected number of bits for binary image
       stExpect = TotalPixels() / CHAR_BIT;
     } // Compressed textures not supported yet
     else if(GetPixelType() >= TT_DXT1 && GetPixelType() <= TT_DXT3)
       XC("Compressed images not supported yet!",
-        "File", ssvName, "Type", ImageGetPixelFormat(GetPixelType()));
+        "File", NameGet(), "Type", ImageGetPixelFormat(GetPixelType()));
     // Set expected number of bytes
     else stExpect = TotalPixels() * GetBytesPerPixel();
     // Check that the size matches
     if(stExpect != mSrc.MemSize())
       XC("Arguments are not valid for specified image data!",
-        "File", ssvName, "Expect", stExpect, "Actual", mSrc.MemSize());
+        "File", NameGet(), "Expect", stExpect, "Actual", mSrc.MemSize());
     // Everything looks OK, set rest of the members
-    NameSet(ssvName);
     SetDynamic();
     // Add the raw data into a slot
     AddSlot(mSrc);
     // Load succeeded so register the block
     CollectorRegister();
   }
+  /* -- Load image from a raw image data ----------------------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void InitRaw(StrType &&strName, Memory &mSrc, const unsigned uBWidth,
+    const unsigned uBHeight, const BitDepth bdBitsPP)
+  { NameSet(StdForward<StrType>(strName));
+    InitRaw(mSrc, uBWidth, uBHeight, bdBitsPP); }
   /* -- Load image from a single colour ------------------------------------ */
   void InitColour(const uint32_t ulColour)
   { // Set members
@@ -915,22 +931,25 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     CollectorRegister();
   }
   /* -- Init from file ----------------------------------------------------- */
-  void InitFile(const StdStringView &ssvFileName,
-    const ImageFlagsConst &ifcFlags)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void InitFile(StrType &&strFile, const ImageFlagsConst &ifcFlags)
   { // Set the loading flags
     FlagSet(ifcFlags);
     // Load the file normally
-    SyncInitFileSafe(ssvFileName);
+    SyncInitFileSafe(StdForward<StrType>(strFile), "imagefile");
   }
   /* -- Init from array ---------------------------------------------------- */
-  void InitArray(const StdStringView &ssvName, Memory &mRval,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void InitArray(StrType &&strIdent, Memory &mRval,
     const ImageFlagsConst &ifcFlags)
   { // Is dynamic because it was not loaded from disk
     SetDynamic();
     // Set the loading flags
     FlagSet(ifcFlags);
     // Load the array normally
-    SyncInitArray(ssvName, mRval);
+    SyncInitArray(StdForward<StrType>(strIdent), "imagearray", mRval);
   }
   /* -- Default constructor ------------------------------------------------ */
   Image() :

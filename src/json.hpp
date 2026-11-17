@@ -430,11 +430,13 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor from a filename ---------------------------------------- */
-  explicit Json(const StdStringView &ssvFile) :
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  explicit Json(StrType &&strFile) :
     /* -- Initialisers ----------------------------------------------------- */
     Json{}                             // Use default initialisers
     /* -- Initialise from file --------------------------------------------- */
-    { SyncInitFileSafe(ssvFile); }
+    { SyncInitFileSafe(StdForward<StrType>(strFile), "jsonfile"); }
   /* -- Destructor that tries to recover on exception ---------------------- */
   DTORHELPER(~Json, AsyncCancel())
 };/* -- End ---------------------------------------------------------------- */

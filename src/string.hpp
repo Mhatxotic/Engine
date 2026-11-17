@@ -212,7 +212,7 @@ template<typename IntType = int64_t, class StrType>
   requires (StdIsArithmatic<IntType> || StdIsEnum<IntType>) &&
             StdIsStrOrCStr<StrType>
 static IntType StrToNum(StrType &&strStr)
-  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+  { return StdNormaliseString(StdForward<StrType>(strStr),
       [](auto &&aStr)->IntType{
         return PtrToNum<IntType>(aStr.data(),
           static_cast<ssize_t>(aStr.size())); }); }
@@ -231,7 +231,7 @@ template<typename IntType>
 template<typename IntType = int64_t, typename StrType>
   requires StdIsArithmatic<IntType> && StdIsString<StrType>
 static IntType StrHexToInt(StrType &&strStr)
-  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+  { return StdNormaliseString(StdForward<StrType>(strStr),
       [](auto &&aStr)->IntType{
         return PtrHexToInt<IntType>(aStr.data(),
           static_cast<ssize_t>(aStr.size())); }); }
@@ -277,7 +277,7 @@ template<typename IntType = int64_t, class StrType>
   requires (StdIsArithmatic<IntType> || StdIsEnum<IntType>) &&
     StdIsStrOrCStr<StrType>
 static bool StrIsInt(StrType &&strStr)
-  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+  { return StdNormaliseString(StdForward<StrType>(strStr),
       [](auto &&aStr)->bool{
         return PtrIsInt<IntType>(aStr.data(),
           static_cast<ssize_t>(aStr.size())); }); }

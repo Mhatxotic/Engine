@@ -79,31 +79,33 @@ struct UrlBase :
   Port UrlGetPort() const { return pPort; }
   bool UrlGetSecure() const { return bSecure; }
   /* -- Parse -------------------------------------------------------------- */
-  void UrlParse(const StdStringView &ssvUrl, const unsigned uMode = 0)
+  template<class StrTypeUrl>
+    requires StdIsString<StrTypeUrl>
+  void UrlParse(const StrTypeUrl &strUrl, const unsigned uMode = 0)
   { // Error if string is empty
-    if(ssvUrl.empty()) { UrlSetCode(R_EMURL); return; }
+    if(strUrl.empty()) { UrlSetCode(R_EMURL); return; }
     // Error if URL is too long
-    if(ssvUrl.size() > 2048) { UrlSetCode(R_TOOLONG); return; }
+    if(strUrl.size() > 2048) { UrlSetCode(R_TOOLONG); return; }
     // Error if no scheme
-    size_t stStart = 0, stEnd = ssvUrl.find(':');
+    size_t stStart = 0, stEnd = strUrl.find(':');
     if(stEnd == StdNPos) { UrlSetCode(R_NOSCHEME); return; }
     // Set scheme and error if empty
-    strScheme = ssvUrl.substr(stStart, stEnd);
+    strScheme = strUrl.substr(stStart, stEnd);
     if(strScheme.empty()) { UrlSetCode(R_EMSCHEME); return; }
     // Error if scheme is invalid
     stStart = stEnd + 1;
-    if(ssvUrl.substr(stStart, 2) != "//") { UrlSetCode(R_INVSCHEME); return; }
+    if(strUrl.substr(stStart, 2) != "//") { UrlSetCode(R_INVSCHEME); return; }
     // Move past scheme and find the resource part
     stStart += 2;
-    stEnd = ssvUrl.find('/', stStart);
+    stEnd = strUrl.find('/', stStart);
     if(stEnd == StdNPos)
     { // Couldn't find it so the resource wasn't specified so assume the root
-      stEnd = ssvUrl.size();
+      stEnd = strUrl.size();
       strResource = "/";
     } // We got the resource
-    else strResource = ssvUrl.substr(stEnd);
+    else strResource = strUrl.substr(stEnd);
     // Extract entire part of authority, hostname and port
-    StdString strAHP{ ssvUrl.substr(stStart, stEnd - stStart) };
+    StdString strAHP{ strUrl.substr(stStart, stEnd - stStart) };
     // Find authority delimiter and if we find it?
     size_t stAtPos = strAHP.find('@');
     if(stAtPos != StdNPos)
@@ -227,8 +229,10 @@ struct UrlBase :
     UrlSetCode(R_GOOD);
   }
   /* -- Constructor -------------------------------------------------------- */
-  explicit UrlBase(const StdStringView &ssvUrl, const unsigned uMode = 0)
-    { UrlParse(ssvUrl, uMode); }
+  template<class StrTypeUrl>
+    requires StdIsString<StrTypeUrl>
+  explicit UrlBase(const StrTypeUrl &strUrl, const unsigned uMode = 0)
+    { UrlParse(strUrl, uMode); }
   /* -- Default constructor that does nothing ------------------------------ */
   UrlBase() : rResult(R_STANDBY), pPort(P_NONE), bSecure(false) { }
 };/* == Url collector and member class ===================================== */

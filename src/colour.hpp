@@ -21,13 +21,13 @@ class Colour                           // Members initially private
 { /* -- Private typedefs --------------------------------------------------- */
   Components       cComponents;        // Red + Green + Blue + Alpha values
   /* -- Get colour array --------------------------------------------------- */
-  const Components &ColourGetConst() const { return cComponents; }
+  const Components &ColourGet() const { return cComponents; }
   Components &ColourGet() { return cComponents; }
   /* -- Get individual colour floats ------------------------------- */ public:
-  GLfloat ColourGetRed() const { return ColourGetConst()[0]; }
-  GLfloat ColourGetGreen() const { return ColourGetConst()[1]; }
-  GLfloat ColourGetBlue() const { return ColourGetConst()[2]; }
-  GLfloat ColourGetAlpha() const { return ColourGetConst()[3]; }
+  GLfloat ColourGetRed() const { return ColourGet()[0]; }
+  GLfloat ColourGetGreen() const { return ColourGet()[1]; }
+  GLfloat ColourGetBlue() const { return ColourGet()[2]; }
+  GLfloat ColourGetAlpha() const { return ColourGet()[3]; }
   GLfloat *ColourGetMemory() { return ColourGet().data(); }
   /* -- Set individual colour floats --------------------------------------- */
   void ColourSetRed(const GLfloat fR) { ColourGet()[0] = fR; }

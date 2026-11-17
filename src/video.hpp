@@ -115,7 +115,6 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Lua callback event ids --------------------------------------------- */
   enum Event { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
   /* -- Concurrency -------------------------------------------------------- */
-  Thread           tThread;            // Video Decoding Thread
   AtomicUnblock    auReason;           // Unlock condition variable
   AtomicSizeT      astLoop;            // Loops count
   double           dDrift;             // Drift between audio and video
@@ -232,7 +231,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // Data was parsed?
     bool bParsed = false;
     // Repeat until break or thread should exit
-    while(tThread.ThreadShouldNotExit())
+    while(AsyncGetThread().ThreadShouldNotExit())
     { // If frames are available, but we're way behind the video?
       ALfloat **alfpaPCM;
       if(const int iFrames = vorbis_synthesis_pcmout(&vdsData, &alfpaPCM))
@@ -412,7 +411,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       } // Break out of loop
       break;
     } // ...until the timer continues to trigger
-    while(tThread.ThreadShouldNotExit() && CIIsTriggered());
+    while(AsyncGetThread().ThreadShouldNotExit() && CIIsTriggered());
     // Return parse result
     return bParsed;
   }
@@ -466,7 +465,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     { // Try to load more raw data and return if we're at the end of file
       if(LoadRawData()) return false;
       // Repeat until there are more audio packets to parse
-      while(tThread.ThreadShouldNotExit() && ParseRawData())
+      while(AsyncGetThread().ThreadShouldNotExit() && ParseRawData())
         ogg_stream_pagein(&ostsVorbis, &opgData);
     } // Done
     return true;
@@ -485,7 +484,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     { // Try to load more raw data and return if at end of file
       if(LoadRawData()) return false;
       // Repeat until there are more video packets to parse
-      while(tThread.ThreadShouldNotExit() && ParseRawData())
+      while(AsyncGetThread().ThreadShouldNotExit() && ParseRawData())
         ogg_stream_pagein(&ostsTheora, &opgData);
     } // Keep thread loop alive
     return true;
@@ -532,7 +531,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     { // Try to load more raw data and return if we're at the end of file
       if(LoadRawData()) return false;
       // Repeat until there are more audio and video packets to parse
-      while(tThread.ThreadShouldNotExit() && ParseRawData())
+      while(AsyncGetThread().ThreadShouldNotExit() && ParseRawData())
       { // Parse more video and audio data. No point logging failures.
         ogg_stream_pagein(&ostsTheora, &opgData);
         ogg_stream_pagein(&ostsVorbis, &opgData);
@@ -922,6 +921,10 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       }
     } // Set stopped
     FlagSet(FL_STOP);
+    // Set new callback function for async thread since we're reusing it
+    AsyncGetThread().CollectorUnregister();
+    AsyncGetThread().ThreadInit(bind(&Video::VideoThreadMain, this, _1));
+    AsyncGetThread().CollectorRegister();
   }
   /* -- Reinitialise frame buffer object and texture ----------------------- */
   void ReInitDisplayOutput() { FboReInit(); InitTexture(); }
@@ -951,7 +954,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       try_to_lock);
   }
   /* -- Video is playing? -------------------------------------------------- */
-  bool IsPlaying() const { return tThread.ThreadIsJoinable(); }
+  bool IsPlaying() const { return AsyncGetThread().ThreadIsJoinable(); }
   /* -- DeInitialise audio ouput (because reinitialising) ------------------ */
   void DeInitAudio()
   { // Return if there is no audio in this video
@@ -989,7 +992,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Set exit reason
     auReason = ubNewReason;
     // DeInit the thread, unblock the worker thread and stop and unload buffers
-    tThread.ThreadStop();
+    AsyncGetThread().ThreadDeInit();
     // Success
     return true;
   }
@@ -1020,8 +1023,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   }
   /* -- Advance a frame ---------------------------------------------------- */
   void Advance()
-  { // If not playing
-    if(tThread.ThreadIsNotExited()) return;
+  { // Return if already playing
+    if(AsyncGetThread().ThreadIsRunning()) return;
     // Loop until thread should exit
     if(FlagIsSet(FL_THEORAVORBIS)) // Ogg has both audio and video streams?
       while(!VideoHandleAudioVideo() && !stFWaiting);
@@ -1094,8 +1097,8 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     CISync();
     // Set playing flag
     FlagSet(FL_PLAY);
-    // Start decoding if we're still playing
-    tThread.ThreadStart(this);
+    // Start decoding (reusing the async thread)
+    AsyncGetThread().ThreadStart(this);
     // Log that the video was started
     cLog->LogDebugExSafe("Video '$' playing with reason $!",
       NameGet(), ubNewReason);
@@ -1227,9 +1230,6 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     LuaEvtSlave{ this,                 // Initialise event handler
       EMC_VID_EVENT },                 // ...event handler code
     VideoFlags{ FL_FDR|FL_REC709 },    // Use full-dynamic range and Rec.709
-    tThread{ "video", STP_HIGH,        // Initialise thread with high priority
-      bind(&Video::VideoThreadMain,    // ...preset callback
-        this, _1) },                   // ...class as parameter
     auReason(UB_STANDBY),              // Initially set to blocked
     astLoop(0),                        // Initialise no loops remaining
     dDrift(0.0),                       // Initialise drift time
@@ -1281,7 +1281,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     // Set exit reason
     auReason = UB_FINISH;
     // DeInit the thread, unblock the worker thread and stop and unload buffers
-    tThread.ThreadStopNoThrow();
+    AsyncGetThread().ThreadStopNoThrow();
     // Ignore if file data not initialised
     if(fmFile.FileMapClosed()) return;
     // Prevent more events being generated

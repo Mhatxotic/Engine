@@ -856,7 +856,7 @@ class Display :                        // Actual class body
       if(cLog->LogHasLevel(LH_DEBUG))
         for(Image &imC : ivIcons)
         { // Get first icon and log data
-          const ImageSlot &imsD = imC.GetSlotsConst().front();
+          const ImageSlot &imsD = imC.GetSlots().front();
           cLog->LogNLCDebugExSafe("- $x$x$: $.", imsD.DimGetWidth(),
             imsD.DimGetHeight(), imC.GetBitsPerPixel(), imC.NameGet());
         }
@@ -889,7 +889,7 @@ class Display :                        // Actual class body
           const Image &imC = ivIcons.emplace_back(
             Image{ StdString{ ssvName }, IL_REVERSE|IL_TORGB|IL_TO32BPP });
           // Add to the available images we loaded
-          const ImageSlot &imsD = imC.GetSlotsConst().front();
+          const ImageSlot &imsD = imC.GetSlots().front();
           gfwivIcons.push_back({ imsD.DimGetWidth<int>(),
             imsD.DimGetHeight<int>(), imsD.MemPtr<unsigned char>() });
         }
@@ -902,12 +902,12 @@ class Display :                        // Actual class body
         { // Get string and set small icon from the last icon specified
           const Image imC{ StdString{ tsvIcons.back() },
             IL_REVERSE|IL_TOBGR };
-          const ImageSlot &imsD = imC.GetSlotsConst().front();
+          const ImageSlot &imsD = imC.GetSlots().front();
           cSystem->SetSmallIcon(imC.NameGet(), imsD.DimGetWidth(),
             imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
         } // Set large icon from the first icon specified
         const Image imC{ StdString{ tsvIcons.front() }, IL_REVERSE|IL_TOBGR };
-        const ImageSlot &imsD = imC.GetSlotsConst().front();
+        const ImageSlot &imsD = imC.GetSlots().front();
         cSystem->SetLargeIcon(imC.NameGet(), imsD.DimGetWidth(),
           imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
        // Not using windows?

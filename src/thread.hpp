@@ -25,30 +25,16 @@ namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
 BUILD_SECURE_FLAGS(Thread,
   /* -- Current status ----------------------------------------------------- */
-  TS_STANDBY                {Flag(0)}, // Thread is not doing anything?
-  TS_INIT                   {Flag(1)}, // Thread starting up?
-  TS_RUNNING                {Flag(2)}, // Thread is running still?
-  TS_ABORT                  {Flag(3)}, // Thread should exit?
-  TS_RETRY                  {Flag(4)}, // Thread will start again?
-  TS_FINISHED               {Flag(5)}, // Thread waiting for join?
-  TS_EXCEPTION              {Flag(6)}, // Thread unhandled exception occured?
+  TS_STANDBY                {Flag(0)}, // [0x00] Thread is not doing anything?
+  TS_INIT                   {Flag(1)}, // [0x01] Thread starting up?
+  TS_RUNNING                {Flag(2)}, // [0x02] Thread is running still?
+  TS_ABORT                  {Flag(3)}, // [0x04] Thread should exit?
+  TS_RETRY                  {Flag(4)}, // [0x08] Thread will start again?
+  TS_FINISHED               {Flag(5)}, // [0x10] Thread waiting for join?
+  TS_EXCEPTION              {Flag(6)}, // [0x20] Thread exception occured?
   /* -- Thread callbacks must only return one of these --------------------- */
-  TS_ERROR                  {Flag(7)}, // Thread terminated uncleanly?
-  TS_OK                     {Flag(8)}, // Thread terminated cleanly?
-  /* -- Misc. combinations ------------------------------------------------- */
-  TS_AF          { TS_ABORT | TS_FINISHED },
-  /* -- Combinations when 'ThreadSetExit()' called ------------------------- */
-  TS_AERROR      { TS_ABORT | TS_ERROR },
-  TS_AEXCEPTION  { TS_ABORT | TS_EXCEPTION },
-  TS_AOK         { TS_ABORT | TS_OK },
-  /* -- Combinations when 'ThreadSetExit()' called and thread exited ------- */
-  TS_AFERROR     { TS_AF | TS_ERROR },
-  TS_AFEXCEPTION { TS_AF | TS_EXCEPTION },
-  TS_AFOK        { TS_AF | TS_OK },
-  /* -- Combinations when thread exited naturally -------------------------- */
-  TS_FERROR      { TS_FINISHED | TS_ERROR },
-  TS_FEXCEPTION  { TS_FINISHED | TS_EXCEPTION },
-  TS_FOK         { TS_FINISHED | TS_OK }
+  TS_ERROR                  {Flag(7)}, // [0x40] Thread terminated uncleanly?
+  TS_OK                     {Flag(8)}  // [0x80] Thread terminated cleanly?
 );/* == Thread collector class with global thread id counter =============== */
 CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
@@ -105,7 +91,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   { // Wait for main thread swap function to complete for the minute chance
     // that this thread could execute faster than the main thread and access
     // data from an uninitialised 'std::thread' class before 'swap()' finishes.
-    while(FlagIsClear(TS_INIT)) StdSuspend();
+    while(ThreadIsNotInitialising()) StdSuspend();
     // Incrememt thread running count
     ++ctParent.astRunning;
     // Thread starting up in log
@@ -113,41 +99,48 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Set the start time and initialise the end time
     acdStart = cmHiRes.GetEpochTime();
     acdEnd = cd0;
-    // If we never get to run the callback? Set as finished
-    if(ThreadShouldExit()) ThreadSetExiting(TS_OK);
     // Loop forever...
-    else do
+    while(ThreadShouldNotExit())
     { // Set exit code as a reference that execution is proceeding
       FlagReset(TS_RUNNING);
       // Run thread and capture and check the result
       switch(const ThreadFlagsConst tfcResult{ ThreadGetCallback()(*this) })
       { // Clean exit of thread? Fallthrough to break the thread
         case TS_OK: [[fallthrough]];
-        // Thread encounted an error? Set finished and break the loop
-        case TS_ERROR: ThreadSetExiting(tfcResult); goto Finished;
+        // Thread encounted an error?
+        case TS_ERROR:
+          // Set finished
+          ThreadSetExiting(tfcResult);
+          // Log the finish
+          cLog->LogDebugExSafe("Thread $<$> finished in $ with $<0x$$>.",
+            Serial(), NameGet(),
+            durShort.Parse(ClockTimePointRangeToClampedDouble(
+              ThreadGetEndTime(), ThreadGetStartTime())),
+            ctParent.imCodes.Get(tfcResult), StdIOSHex, FlagGet());
+          // Finished
+          return;
         // Thread wants to retry? Then just retry!
         case TS_RETRY: continue;
         // Anything else just throw this error
         default: XC("Internal error: Invalid thread exit code!",
                    "Return", tfcResult.FlagGet(), "Flags", FlagGet());
       } // Execution never gets here
-    } // ...until thread should exit
-    while(ThreadShouldNotExit());
+    } // Set finished
+    ThreadSetExiting(TS_OK);
     // Log that the thread has terminated normally
-    Finished: cLog->LogDebugExSafe("Thread $<$> finished in $ with $<0x$$>.",
+    cLog->LogDebugExSafe("Thread $<$> aborted in $ with 0x$$.",
       Serial(), NameGet(), durShort.Parse(ClockTimePointRangeToClampedDouble(
-        ThreadGetEndTime(), ThreadGetStartTime())),
-      ThreadGetExitCodeString(), StdIOSHex, FlagGet());
+        ThreadGetEndTime(), ThreadGetStartTime())), StdIOSHex, FlagGet());
   } // exception occurred in thread so handle it
   catch(const StdException &eReason)
   { // Begin shutting down
     ThreadSetExiting(TS_EXCEPTION);
     // Log if thread didn't signal to exit
-    cLog->LogErrorExSafe("Thread $<$> finished in $ with $<0x$$> "
+    cLog->LogErrorExSafe("Thread $<$> finished in $ with 0x$$ "
                          "due to unhandled exception: $!",
       Serial(), NameGet(), durShort.Parse(ClockTimePointRangeToClampedDouble(
-        ThreadGetEndTime(), ThreadGetStartTime())), ThreadGetExitCodeString(),
-        StdIOSHex, FlagGet(), eReason);
+        ThreadGetEndTime(), ThreadGetStartTime())),
+      StdIOSHex, FlagGet(), eReason);
   }
   /* ----------------------------------------------------------------------- */
   static void ThreadMain(void*const vpPtr)
@@ -184,9 +177,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   ClkTimePoint ThreadGetStartTime() const { return ClkTimePoint{ acdStart }; }
   ClkTimePoint ThreadGetEndTime() const { return ClkTimePoint{ acdEnd }; }
   /* ----------------------------------------------------------------------- */
-  StdStringView ThreadGetExitCodeString() const
-    { return ctParent.imCodes.Get(*this); }
-  /* ----------------------------------------------------------------------- */
   const CbThFunc &ThreadGetCallback() const { return ctfFunc; }
   bool ThreadHaveCallback() const { return ThreadGetCallback() != nullptr; }
   /* ----------------------------------------------------------------------- */
@@ -194,7 +184,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   /* ----------------------------------------------------------------------- */
   void ThreadSetExit()
   { // Ignore if already exited or already signalled to exit
-    if(FlagIsAnyOfSet(TS_AF)) return;
+    if(FlagIsAnyOfSet(TS_ABORT | TS_FINISHED)) return;
     // Set exit
     ThreadDoSetExit();
     // Log signal to exit if sent from the thread
@@ -207,7 +197,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // even though the thread explicitly said it's no longer executing
     // because join() HAS to be called in order for thread to be reused, and
     // join() will abort() if joinable() isn't checked as well.
-    if(ThreadIsJoinable()) { ThreadJoin(); FlagSet(TS_FINISHED); }
+    if(ThreadIsJoinable()) ThreadJoin();
   }
   /* ----------------------------------------------------------------------- */
   void ThreadStopNoCheck()
@@ -215,8 +205,6 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     ThreadSetExit();
     // Wait for thread to complete
     ThreadWait();
-    // Set to standby with a new thread
-    ThreadNew();
   }
   /* ----------------------------------------------------------------------- */
   void ThreadStopNoThrow()
@@ -229,99 +217,130 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Proceed with termination
     ThreadStopNoCheck();
   }
-  /* ----------------------------------------------------------------------- */
-  void ThreadStop()
-  { // Return if thread is not running
-    if(ThreadIsNotJoinable()) return;
-    // If is this thread then this is a bad idea
-    if(ThreadIsCurrent())
-      XC("Tried to join from the same thread!", "Name", NameGet());
-    // Proceed with termination
-    ThreadStopNoCheck();
-  }
+  /* -- Access individual thread flags ------------------------------------- */
+  bool ThreadIsStandBy() const { return FlagGet() == TS_STANDBY; }
+  bool ThreadIsNotStandBy() const { return !ThreadIsStandBy(); }
+  bool ThreadIsInitialising() const { return FlagIsSet(TS_INIT); }
+  bool ThreadIsNotInitialising() const { return !ThreadIsInitialising(); }
+  bool ThreadIsExited() const { return FlagIsSet(TS_FINISHED); }
+  bool ThreadIsNotExited() const { return !ThreadIsExited(); }
+  bool ThreadIsRunning() const { return FlagIsSet(TS_RUNNING); }
+  bool ThreadIsExitRetry() const { return FlagIsSet(TS_RETRY); }
+  bool ThreadIsExitOk() const { return FlagIsSet(TS_OK); }
+  bool ThreadIsExitError() const { return FlagIsSet(TS_ERROR); }
+  bool ThreadIsExitExc() const { return FlagIsSet(TS_EXCEPTION); }
+  bool ThreadShouldExit() const { return FlagIsSet(TS_ABORT); }
+  bool ThreadShouldNotExit() const { return !ThreadShouldExit(); }
   /* ----------------------------------------------------------------------- */
   bool ThreadIsCurrent() const { return StdThreadId() == get_id(); }
   bool ThreadIsNotCurrent() const { return !ThreadIsCurrent(); }
   /* ----------------------------------------------------------------------- */
   unsigned ThreadGetPerf() const { return static_cast<unsigned>(sytPerf); }
   /* ----------------------------------------------------------------------- */
-  bool ThreadShouldExit() const { return FlagIsSet(TS_ABORT); }
-  bool ThreadShouldNotExit() const { return !ThreadShouldExit(); }
-  /* ----------------------------------------------------------------------- */
   bool ThreadIsJoinable() const { return joinable(); }
   bool ThreadIsNotJoinable() const { return !ThreadIsJoinable(); }
   /* ----------------------------------------------------------------------- */
   void ThreadJoin() { return join(); }
   /* ----------------------------------------------------------------------- */
-  bool ThreadIsNotExited() const { return FlagIsSet(TS_RUNNING); }
-  bool ThreadIsExited() const { return !ThreadIsNotExited(); }
-  /* ----------------------------------------------------------------------- */
   void ThreadStart(void*const vpPtr = nullptr)
-  { // Bail if thread already started
-    if(ThreadIsJoinable()) return;
-    // Set new thread parameters
-    ThreadCancelExit();
+  { // Set new thread parameters
     ThreadSetParam(vpPtr);
-    FlagReset(TS_INIT);
+    // Reset the thread flags
+    FlagReset(TS_STANDBY);
     // Start the thread and move that thread class to this thread
     ThreadNew(ThreadMain, this);
+    // Register thread in collector
+    this->CollectorRegister();
+    // The thread is suspended until it sees this flag
+    FlagReset(TS_INIT);
   }
   /* -- Stop and de-initialise the thread ---------------------------------- */
   void ThreadDeInit()
-    { ThreadStop(); this->CollectorUnregister(); }
+  { // Return if thread is not running
+    if(ThreadIsNotJoinable()) return;
+    // If is this thread then this is a bad idea
+    if(ThreadIsCurrent())
+      XC("Tried to join from the same thread!", "Name", NameGet());
+    // Proceed with stop procuder if not exited
+    if(ThreadIsNotExited()) ThreadStopNoCheck();
+    // Else check to make sure it's not joined anyway
+    else ThreadJoin();
+  }
   /* -- Initialise with callback only and register ------------------------- */
-  void ThreadInit(const CbThFunc &cbfCb)
-    { ctfFunc = cbfCb; this->CollectorRegister(); }
+  void ThreadInit(const CbThFunc &cbfCb) { ctfFunc = cbfCb; }
   /* -- Initialise with name and callback ---------------------------------- */
-  void ThreadInit(const StdStringView &ssvIdent, const CbThFunc &cbfCb)
-    { NameSet(ssvIdent); ThreadInit(cbfCb); }
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void ThreadInit(StrType &&strIdent, const CbThFunc &cbfCb)
+    { NameSet(StdForward<StrType>(strIdent)); ThreadInit(cbfCb); }
+  /* -- Initialise with name only and start (async.hpp) -------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void ThreadInit(StrType &&strIdent, void*const vpPtr)
+    { NameSet(StdForward<StrType>(strIdent)); ThreadStart(vpPtr); }
   /* -- Initialise with name, callback, parameter and start execute -------- */
-  void ThreadInit(const StdStringView &ssvIdent, const CbThFunc &cbfCb,
-    void*const vpPtr)
-  { ThreadInit(ssvIdent, cbfCb); ThreadStart(vpPtr); }
-  /* -- Initialise with callback, parameter and start execute -------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void ThreadInit(StrType &&strIdent, const CbThFunc &cbfCb, void*const vpPtr)
+    { ThreadInit(StdForward<StrType>(strIdent), cbfCb); ThreadStart(vpPtr); }
+  /* -- Initialise with callback, parameter and start execute (video.hpp)--------- */
   void ThreadInit(const CbThFunc &cbfCb, void*const vpPtr)
     { ThreadInit(cbfCb); ThreadStart(vpPtr); }
   /* -- Full initialise and execute constructor ---------------------------- */
-  Thread(const StdStringView &ssvIdent,// Requested Thread name
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  Thread(StrType &&strId,              // Requested Thread name
          const SysThread sytPf,        // Thread needs high performance?
          const CbThFunc &cbfCb,        // Requested callback function
          void*const vpPtr) :           // User parameter to store
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvIdent },                  // Initialise requested thread name
+    Name{ StdForward<StrType>(strId) },// Initialise requested thread name
     ICHelperThread{ cThreads, this },  // Automatic (de)registration
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
     ThreadBase{ sytPf, vpPtr, cbfCb }, // Set perf, parameter and callback
     StdThread{ ThreadMain, this }      // Start the thread straight away
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Standby constructor (set everything except user parameter) --------- */
-  Thread(const StdStringView &ssvIdent,// Requested Thread name
+  /* -- Init name, priority and function in standby ------------------------ */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  Thread(StrType &&strId,              // Requested Thread name
          const SysThread sytPf,        // Thread needs high performance?
          const CbThFunc &cbfCb) :      // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvIdent },                  // Set requested identifier
-    ICHelperThread{ cThreads, this },  // Automatic (de)registration
+    Name{ StdForward<StrType>(strId) },// Initialise requested thread name
+    ICHelperThread{ cThreads },        // Automatic (de)registration
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
     ThreadBase{ sytPf, nullptr, cbfCb }// Just set callback function
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Standby constructor ------------------------------------------------ */
-  Thread(const StdStringView &ssvIdent,// Requested Thread name
+  /* -- Init name and priority in standby ---------------------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  Thread(StrType &&strId,              // Requested Thread name
          const SysThread sytPf) :      // Thread needs high performance?
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvIdent },                  // Set requested identifer
+    Name{ StdForward<StrType>(strId) },// Initialise requested thread name
     ICHelperThread{ cThreads },        // No automatic registration
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
     ThreadBase{ sytPf }                // Initialise nothing else
     /* -- No code ---------------------------------------------------------- */
     {}
-  /* -- Standby constructor ------------------------------------------------ */
-  explicit Thread(const SysThread sytPf) :// Thread needs high performance?
+  /* -- Init only priority in standby -------------------------------------- */
+  explicit Thread(const SysThread sytPf) : // Requested callback function
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperThread{ cThreads },        // No automatic registration
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
-    ThreadBase{ sytPf }                // Initialise only thread priority
+    ThreadBase{ sytPf }                // Just set callback function
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Init priority and function in standby ------------------------------ */
+  Thread(const SysThread sytPf,        // Thread needs high performance?
+         const CbThFunc &cbfCb) :      // Requested callback function
+    /* -- Initialisers ----------------------------------------------------- */
+    ICHelperThread{ cThreads },        // No automatic registration
+    SerialSlave{ ctParent.Serial() },  // Initialise identification number
+    ThreadBase{ sytPf, nullptr, cbfCb }// Just set callback function
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
@@ -340,16 +359,9 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   )
 };/* ======================================================================= */
 CTOR_END(Threads, Thread, THREAD,,,, astRunning{0}, imCodes{{
-  /* ----------------------------------------------------------------------- */
-  IDMAPSTR(TS_STANDBY),                IDMAPSTR(TS_INIT),
-  IDMAPSTR(TS_RUNNING),                IDMAPSTR(TS_ABORT),
-  IDMAPSTR(TS_RETRY),                  IDMAPSTR(TS_FINISHED),
-  IDMAPSTR(TS_EXCEPTION),              IDMAPSTR(TS_ERROR),
-  IDMAPSTR(TS_OK),                     IDMAPSTR(TS_FOK),
-  IDMAPSTR(TS_FERROR),                 IDMAPSTR(TS_FEXCEPTION),
-  IDMAPSTR(TS_AOK),                    IDMAPSTR(TS_AERROR),
-  IDMAPSTR(TS_AEXCEPTION),             IDMAPSTR(TS_AFOK),
-  IDMAPSTR(TS_AFERROR),                IDMAPSTR(TS_AFEXCEPTION),
+  /* -- These only cover the exit codes ------------------------------------ */
+  IDMAPSTR(TS_ERROR), IDMAPSTR(TS_EXCEPTION), IDMAPSTR(TS_OK),
+  IDMAPSTR(TS_RETRY),
   /* ----------------------------------------------------------------------- */
 }, "TS_UNKNOWN" });                    // End of 'Threads' initialisation
 /* ------------------------------------------------------------------------- */

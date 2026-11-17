@@ -130,41 +130,48 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
       FtfGetDPIHeight(), FtfGetOutline());
   }
   /* -- Load pcm from memory asynchronously -------------------------------- */
-  void FtfInitAsyncArray(lua_State*const lS, const StdStringView &ssvFile,
-    Asset &aRef, const float fWidth, const float fHeight,
-    const unsigned uDpiWidth, const unsigned uDpiHeight,
-    const GLfloat fNOutline)
-  { // Set other members
-    FtfInitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
-    // Prepare asynchronous loading from array
-    AsyncInitArray(lS, ssvFile, "ftfarray", aRef);
-  }
-  /* -- Load pcm from file asynchronously ---------------------------------- */
-  void FtfInitAsyncFile(lua_State*const lS, const StdStringView &ssvFile,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void FtfInitAsyncArray(lua_State*const lS, StrType &&strIdent, Asset &aRef,
     const float fWidth, const float fHeight, const unsigned uDpiWidth,
     const unsigned uDpiHeight, const GLfloat fNOutline)
   { // Set other members
     FtfInitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Prepare asynchronous loading from array
-    AsyncInitFile(lS, ssvFile, "ftffile");
+    AsyncInitArray(lS, StdForward<StrType>(strIdent), "ftfarray", aRef);
+  }
+  /* -- Load pcm from file asynchronously ---------------------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void FtfInitAsyncFile(lua_State*const lS, StrType &&strFile,
+    const float fWidth, const float fHeight, const unsigned uDpiWidth,
+    const unsigned uDpiHeight, const GLfloat fNOutline)
+  { // Set other members
+    FtfInitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
+    // Prepare asynchronous loading from array
+    AsyncInitFile(lS, StdForward<StrType>(strFile), "ftffile");
   }
   /* -- Init from file ----------------------------------------------------- */
-  void FtfInitFile(const StdStringView &ssvFile, const GLfloat fWidth,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void FtfInitFile(StrType &&strFile, const GLfloat fWidth,
     const GLfloat fHeight, const unsigned uDpiWidth, const unsigned uDpiHeight,
     const GLfloat fNOutline)
   { // Set other members
     FtfInitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Load file normally
-    SyncInitFileSafe(ssvFile);
+    SyncInitFileSafe(StdForward<StrType>(strFile), "ftffile");
   }
   /* -- Init from array ---------------------------------------------------- */
-  void FtfInitArray(const StdStringView &ssvName, Memory &mData,
-    const GLfloat fWidth, const GLfloat fHeight, const unsigned uDpiWidth,
-    const unsigned uDpiHeight, const GLfloat fNOutline)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void FtfInitArray(StrType &&strFile, Memory &mData, const GLfloat fWidth,
+    const GLfloat fHeight, const unsigned uDpiWidth, const unsigned uDpiHeight,
+    const GLfloat fNOutline)
   { // Set other members
     FtfInitVars(fWidth, fHeight, uDpiWidth, uDpiHeight, fNOutline);
     // Load file as array
-    SyncInitArray(ssvName, mData);
+    SyncInitArray(StdForward<StrType>(strFile), "ftfarray", mData);
   }
   /* -- De-init ftf font --------------------------------------------------- */
   void FtfDeInit() { FtfDoDeInit(); FtfDoClearHandles(); }

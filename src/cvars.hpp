@@ -164,7 +164,7 @@ struct CVars :                         // Start of vars class
   /* -- Return the cvar id's value as a string ----------------------------- */
   const StdString &CVarsGetStrInternal(const CVarEnums cveId) const
   { // Get internal iterator and return value or empty string if invalid
-    const CVarMapConstIt cvmciIt{ CVarsGetInternalListConst()[cveId] };
+    const CVarMapConstIt cvmciIt{ CVarsGetInternalList()[cveId] };
     return cvmciIt != cvmActive.cend() ? cvmciIt->second.CVarGetValue() :
       cCommon->CommonBlankStr();
   }
@@ -186,7 +186,7 @@ struct CVars :                         // Start of vars class
     const CVarFlagsConst cvfcFlags = PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { // Get internal iterator and return value or empty string if invalid
-    const CVarMapIt cvmiIt{ CVarsGetInternalListConst()[cveId] };
+    const CVarMapIt cvmiIt{ CVarsGetInternalList()[cveId] };
     return cvmiIt != cvmActive.cend() ?
       CVarsResetIt(cvmiIt, cvfcFlags, cvcfcFlags) : CVS_NOTFOUND;
   }
@@ -195,7 +195,7 @@ struct CVars :                         // Start of vars class
     const StdString &strValue, const CVarFlagsConst cvfcFlags = PCONSOLE,
     const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { // Get iterator and set the value if valid except return invalid
-    const CVarMapIt cvmiIt{ CVarsGetInternalListConst()[cveId] };
+    const CVarMapIt cvmiIt{ CVarsGetInternalList()[cveId] };
     return cvmiIt != cvmActive.cend() ?
       cvmiIt->second.CVarCheckAndSetValue(strValue,
         cvfcFlags, cvcfcFlags, strCBError) : CVS_NOTFOUND;
@@ -205,10 +205,10 @@ struct CVars :                         // Start of vars class
     CVarSetEnums CVarsSetInternalNum(const CVarEnums cveId, const AnyType atV)
   { return CVarsSetInternal(cveId, StrFromNum(atV)); }
   /* -- -------------------------------------------------------------------- */
-  const ArrayVars &CVarsGetInternalListConst() const { return avInternal; }
+  const ArrayVars &CVarsGetInternalList() const { return avInternal; }
   /* -- -------------------------------------------------------------------- */
   size_t CVarsGetInternalListSize() const
-    { return CVarsGetInternalListConst().size(); }
+    { return CVarsGetInternalList().size(); }
   /* -- Return the cvar name's value as a string --------------------------- */
   static const StdString &CVarsGetStrIt(const CVarMapConstIt &cvmciIt)
     { return cvmciIt->second.CVarGetValue(); }
@@ -642,7 +642,7 @@ struct CVars :                         // Start of vars class
                stIndex != StdMaxSizeT;
              --stIndex)
     { // Get iterator and unregister it if it is registered
-      const CVarMapIt cvmiIt{ CVarsGetInternalListConst()[stIndex] };
+      const CVarMapIt cvmiIt{ CVarsGetInternalList()[stIndex] };
       if(cvmiIt == cvmActive.end()) continue;
       avInternal[stIndex] = cvmActive.end();
       CVarsUnregister(cvmiIt);
@@ -709,7 +709,7 @@ struct CVars :                         // Start of vars class
         // Overwrite engine variables with defaults
         cLog->LogDebugSafe("CVars forcing default engine settings...");
         cSql->SqlBegin();
-        for(const CVarMapIt &cvmiIt : CVarsGetInternalListConst())
+        for(const CVarMapIt &cvmiIt : CVarsGetInternalList())
           if(cvmiIt != cvmActive.end()) cSql->SqlCVarPurge(cvmiIt->first);
         cSql->SqlEnd();
         cLog->LogWarningSafe("CVars finished setting defaults.");

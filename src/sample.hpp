@@ -231,8 +231,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
       "Name", pcmSrc.NameGet(), "Count", aluvNames.size());
     // Buffer the left or mono channel
     AL(cOal->BufferData(aluvNames.front(), GetSFormat(),
-      pcmSrc.PcmDataGetLeftConst(),
-      static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
+      pcmSrc.PcmDataGetLeft(), static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
       "Error buffering left channel/mono PCM audio data!",
       "Name",   pcmSrc.NameGet(),        "Buffer",  aluvNames.front(),
       "Format", GetFormat(),             "MFormat", GetSFormat(),
@@ -247,8 +246,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
         cOal->GetALFormat(GetFormat()));
     // Buffer the right stereo channel
     AL(cOal->BufferData(aluvNames.back(), GetSFormat(),
-      pcmSrc.PcmDataGetRightConst(),
-      static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
+      pcmSrc.PcmDataGetRight(), static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
       "Error buffering right/stereo channel PCM audio data!",
       "Name",   pcmSrc.NameGet(), "Buffer",  aluvNames.back(),
       "Format", GetFormat(),      "MFormat", GetSFormat(),

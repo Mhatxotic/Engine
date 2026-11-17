@@ -32,7 +32,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   { // If pcm data only is single channel, we don't need to split channels.
     if(PcmDataGetChannels() == 1) return PcmDataGetLeftSize();
     // If the right channel was already filled then we don't need to do it
-    if(PcmDataGetRightConst().MemIsEmpty())
+    if(PcmDataGetRight().MemIsEmpty())
     { // Move pcm file data to a temporary array
       const Memory mTemp{ StdMove(PcmDataGetLeft()) };
       // Initialise buffers, half the size since we're only splitting
@@ -64,9 +64,9 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   { // Get half of the specified integer type and do the transformation
     constexpr const UIntType utHalf =
       UIntType(1) << (StdLimits<UIntType>::digits - 1);
-    StdTransform(par_unseq, PcmDataGetLeftConst().MemPtr<IntType>(),
-      PcmDataGetLeftConst().MemPtrEnd<IntType>(),
-      PcmDataGetLeftConst().MemPtr<UIntType>(),
+    StdTransform(par_unseq, PcmDataGetLeft().MemPtr<IntType>(),
+      PcmDataGetLeft().MemPtrEnd<IntType>(),
+      PcmDataGetLeft().MemPtr<UIntType>(),
       [](const auto aSample)->UIntType {
         return static_cast<UIntType>(aSample) + utHalf; });
   }
@@ -194,54 +194,62 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     AsyncReady(fmData);
   }
   /* -- Init from array ---------------------------------------------------- */
-  void PcmInitArray(const StdStringView &ssvName, Memory &mSrc,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void PcmInitArray(StrType &&strName, Memory &mSrc,
     const PcmFlagsConst &pfcFlags)
   { // Is dynamic because it was not loaded from disk
     PcmDataSetDynamic();
     // Set the loading flags
     FlagSet(pfcFlags);
     // Load the array normally
-    SyncInitArray(ssvName, mSrc);
+    SyncInitArray(StdForward<StrType>(strName), "pcmarray", mSrc);
   }
   /* -- Load pcm from memory asynchronously -------------------------------- */
-  void PcmInitAsyncArray(lua_State*const lS, const StdStringView &ssvFile,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void PcmInitAsyncArray(lua_State*const lS, StrType &&strFile,
     Asset &aCref, const PcmFlagsConst &pfcFlags)
   { // Is dynamic because it was not loaded from disk
     PcmDataSetDynamic();
     // Set user loading flags
     FlagSet(pfcFlags);
     // Load sample from memory asynchronously
-    AsyncInitArray(lS, ssvFile, "pcmarray", aCref);
+    AsyncInitArray(lS, StdForward<StrType>(strFile), "pcmarray", aCref);
   }
   /* -- Load pcm from file asynchronously ---------------------------------- */
-  void PcmInitAsyncFile(lua_State*const lS, const StdStringView &ssvFile,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void PcmInitAsyncFile(lua_State*const lS, StrType &&strFile,
     const PcmFlagsConst &pfcFlags)
   { // Set user loading flags
     FlagSet(pfcFlags);
     // Load sample from file asynchronously
-    AsyncInitFile(lS, ssvFile, "pcmfile");
+    AsyncInitFile(lS, StdForward<StrType>(strFile), "pcmfile");
   }
   /* -- Init from file ----------------------------------------------------- */
-  void PcmInitFile(const StdStringView &ssvFile,
-    const PcmFlagsConst &pfcFlags)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void PcmInitFile(StrType &&strFile, const PcmFlagsConst &pfcFlags)
   { // Set the loading flags
     FlagSet(pfcFlags);
     // Load the file normally
-    SyncInitFileSafe(ssvFile);
+    SyncInitFileSafe(StdForward<StrType>(strFile), "pcmfile");
   }
   /* -- Load audio file from raw memory ------------------------------------ */
-  void PcmInitRaw(const StdStringView &ssvName, Memory &mSrc,
-    const unsigned uNRate, const PcmChannelType pctNChannels,
-    const PcmBitType pbtNBits)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void PcmInitRaw(StrType &&strName, Memory &mSrc, const unsigned uNRate,
+    const PcmChannelType pctNChannels, const PcmBitType pbtNBits)
   { // Calculate actual memory size required for raw data
     const size_t stExpected = uNRate * pctNChannels * pbtNBits;
     if(mSrc.MemSize() != stExpected)
       XC("Expected size versus actual size mismatch!",
-        "Name",     ssvName,      "Rate",   uNRate,
+        "Name",     strName,      "Rate",   uNRate,
         "Channels", pctNChannels, "Bits",   pbtNBits,
         "Expected", stExpected,   "Actual", mSrc.MemSize());
     // Set members
-    NameSet(ssvName);
+    NameSet(StdForward<StrType>(strName));
     PcmDataSetDynamic();
     PcmDataGetLeft().MemSwap(mSrc);
     PcmDataSetRate(uNRate);

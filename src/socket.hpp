@@ -777,7 +777,6 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     // Unblock writer thread so that it may terminate cleanly
     WriteUnblock();
     // Wait for thread to terminate and deinit
-    tWriter.ThreadStop();
     tWriter.ThreadDeInit();
   }
   /* -- Return if there are TX packets available --------------------------- */
@@ -927,8 +926,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
     { return IsDisconnecting() || IsDisconnected(); }
   bool IsDisconnectedByClient() { return FlagIsSet(SS_CLOSEDBYCLIENT); }
   /* -- Includes (too big to fit in here) ---------------------------------- */
-#include <sockweb.hpp>                 // Include websocket client code inline
-#include <sockhttp.hpp>                // Include http client code inline
+#include "sockweb.hpp"                 // Include websocket client code inline
+#include "sockhttp.hpp"                // Include http client code inline
   /* --------------------------------------------------------------- */ public:
   bool IsSecure() const { return FlagIsSet(SS_ENCRYPTION); }
   int GetFD() const { return aiFd; }

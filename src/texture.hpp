@@ -224,7 +224,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       // Load all the other mipmaps
       for(size_t stSubTexId = 1; stSubTexId < stSlots; ++stSubTexId)
       { // Get next slot
-        const ImageSlot &isRef = GetSlotsConst()[stSubTexId];
+        const ImageSlot &isRef = GetSlots()[stSubTexId];
         // Make sure size is smaller than the last
         if(isRef.DimGetWidth() >= uLWidth ||
            isRef.DimGetHeight() >= uLHeight)
@@ -365,7 +365,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   { // Get number of slots in this image and return if zero
     if(IsNoSlots()) XC("No data in image object!", "Name", NameGet());
     // Get first slot
-    const ImageSlot &isSlot = GetSlotsConst().front();
+    const ImageSlot &isSlot = GetSlots().front();
     // Copy image dimensions to texture dimensions
     DimSet(isSlot);
     // Set image dimensions as float for opengl
@@ -715,7 +715,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   { // Do the update
     UpdateEx(GetSubName(stSubTexId), gliX1, gliY1,
       imImage.DimGetWidth<GLsizei>(), imImage.DimGetHeight<GLsizei>(),
-      imImage.GetPixelType(), imImage.GetSlotsConst().front().MemPtr());
+      imImage.GetPixelType(), imImage.GetSlots().front().MemPtr());
   }
   /* -- Replace texture in VRAM from array --------------------------------- */
   void Update(Image &imOther)

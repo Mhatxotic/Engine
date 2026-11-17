@@ -166,7 +166,7 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
         "Palette", ssvName, "Image", imOther.NameGet(),
         "Slots",   imOther.GetSlotCount());
     // Get last item
-    const ImageSlot &isPalette = imOther.GetSlotsConst().back();
+    const ImageSlot &isPalette = imOther.GetSlots().back();
     // Dimensions must be valid
     if(isPalette.DimIsNotWidthSet() || isPalette.DimGetWidth() > size())
       XC("Image palette has invalid count!",

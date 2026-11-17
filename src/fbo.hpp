@@ -142,7 +142,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   size_t FboGetTrisReserved() const { return ftvActive.capacity(); }
   /* -- Return stage bounds ------------------------------------------------ */
   CoordsGLFloat &FboGetStage() { return cglfStage; }
-  const CoordsGLFloat &FboGetStageConst() const { return cglfStage; }
+  const CoordsGLFloat &FboGetStage() const { return cglfStage; }
   /* -- Activate this Fbo -------------------------------------------------- */
   void FboSetActive()
   { // Set active fbo to this
@@ -333,10 +333,10 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   { // Set new stage bounds
     FboGetStage().CoordsSet(glfX1, glfY1, glfX2, glfY2);
     // Set matrix top-left co-ordinates
-    CoordsSetX1(FboGetStageConst().CoordsGetX1() < 0 ?
-      -FboGetStageConst().CoordsGetX1() : FboGetStageConst().CoordsGetX1());
-    CoordsSetY1(FboGetStageConst().CoordsGetY1() < 0 ?
-      -FboGetStageConst().CoordsGetY1() : FboGetStageConst().CoordsGetY1());
+    CoordsSetX1(FboGetStage().CoordsGetX1() < 0 ?
+      -FboGetStage().CoordsGetX1() : FboGetStage().CoordsGetX1());
+    CoordsSetY1(FboGetStage().CoordsGetY1() < 0 ?
+      -FboGetStage().CoordsGetY1() : FboGetStage().CoordsGetY1());
   }
   /* -- ReInitialise ------------------------------------------------------- */
   void FboReInit()

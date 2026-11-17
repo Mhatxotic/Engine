@@ -111,9 +111,9 @@ class FboCore :                        // The main Fbo operations manager
   Fbo &FboCoreGetConsole() { return fboConsole; }
   /* -- Shortcut to the main Fbo stage bounds ------------------------------ */
   const CoordsGLFloat &FboCoreGetMainStage() const
-    { return fboMain.FboGetStageConst(); }
+    { return fboMain.FboGetStage(); }
   const CoordsGLFloat &FboCoreGetConsoleStage() const
-    { return fboConsole.FboGetStageConst(); }
+    { return fboConsole.FboGetStage(); }
   /* -- Blits the console Fbo to main Fbo ---------------------------------- */
   void FboCoreBlitConsoleToMain() { fboMain.FboBlit(fboConsole); }
   /* -- Draw flags --------------------------------------------------------- */

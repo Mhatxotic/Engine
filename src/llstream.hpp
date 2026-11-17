@@ -317,7 +317,7 @@ LLRSEND                                // Stream:* methods end
 LLFUNC(Asset, 1,
   const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
-  AcStream{lS}().SyncInitArray(aName, aAsset))
+  AcStream{lS}().SyncInitArray(aName(), "streamasset", aAsset))
 /* ========================================================================= */
 // $ Stream.AssetAsync
 // > Id:String=The identifier of the string
@@ -334,7 +334,7 @@ LLFUNC(AssetAsync, 0,
   const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcStream{lS}().AsyncInitArray(lS, aName, "streamarray", aAsset))
+  AcStream{lS}().AsyncInitArray(lS, aName(), "streamarray", aAsset))
 /* ========================================================================= */
 // $ Stream.ClearEvents
 // ? Clear the OnEvent callback on all Stream objects. This might be useful for
@@ -350,8 +350,9 @@ LLFUNC(ClearEvents, 0, StreamClearEvents())
 // ? Loads a stream sample on the main thread from the specified file on disk.
 // ? Returns the stream object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(File, 1, const AgFilename aFilename{lS, 1};
-  AcStream{lS}().SyncInitFileSafe(aFilename))
+LLFUNC(File, 1,
+  const AgFilename aFilename{lS, 1};
+  AcStream{lS}().SyncInitFileSafe(aFilename(), "streamfile"))
 /* ========================================================================= */
 // $ Stream.FileAsync
 // > Filename:string=The filename of the ogg to load
@@ -365,7 +366,7 @@ LLFUNC(FileAsync, 0,
   LuaUtilCheckParams(lS, 4);
   const AgFilename aFilename{lS, 1};
   LuaUtilCheckFunc(lS, 2, 3, 4);
-  AcStream{lS}().AsyncInitFile(lS, aFilename, "streamfile"))
+  AcStream{lS}().AsyncInitFile(lS, aFilename(), "streamfile"))
 /* ========================================================================= */
 // $ Stream.GetClasses
 // < Count:integer=Total number of Streams created.

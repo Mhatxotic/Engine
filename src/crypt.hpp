@@ -463,7 +463,7 @@ static StdString CryptEntEncodePtr(const char*const cpPtr, const size_t stSize)
 template<class StrType>
   requires StdIsStrOrCStr<StrType>
 static StdString CryptEntEncode(StrType &&strStr)
-  { return StdNormaliseString<StrType>(StdForward<StrType>(strStr),
+  { return StdNormaliseString(StdForward<StrType>(strStr),
       [](auto &aStr){ return CryptEntEncodePtr(aStr.data(), aStr.size()); }); }
 /* -- URL decode the specified normalised string (thick) ------------------- */
 template<class StrType>

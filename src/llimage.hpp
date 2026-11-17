@@ -212,7 +212,7 @@ LLFUNC(FileAsync, 0,
   const AgFilename aFilename{lS, 1};
   const AgImageFlags aFlags{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcImage{lS}().InitAsyncFile(lS, aFilename, aFlags))
+  AcImage{lS}().InitAsyncFile(lS, aFilename(), aFlags))
 /* ========================================================================= */
 // $ Image.GetClasses
 // < Count:integer=Total number of images created.

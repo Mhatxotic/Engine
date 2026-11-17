@@ -397,10 +397,12 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     else cLog->LogWarningExSafe("Archive loaded empty '$'!", NameGet());
   }
   /* -- Loads archive synchronously at specified position ------------------ */
-  void InitFromFile(const StdStringView &ssvFile, const uint64_t ullPosition)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void InitFromFile(StrType &&strFile, const uint64_t ullPosition)
   { // Store position and set filename without filename checking
     ullArchPos = ullPosition;
-    SyncInitFileDisk(ssvFile);
+    SyncInitFileDisk(StdForward<StrType>(strFile), "archivefs");
   }
   /* -- Default constructor ------------------------------------------------ */
   Archive() :
@@ -462,13 +464,15 @@ static bool ArchiveFileExists(const StdStringView &ssvFile)
   });
 }
 /* -- Create and check a dynamic archive ----------------------------------- */
-static Archive *ArchiveInitNew(const StdString &strFile, const size_t stSize=0)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+static Archive *ArchiveInitNew(StrType &&strFile, const size_t stSize = 0)
 { // Dynamically create the archive. The pointer is recorded in the parent
   // Archives collector class. Load the archive and return archive if there are
   // entries inside it.
   using ArchivePtr = StdUniquePtr<Archive>;
   ArchivePtr apClass{ new Archive };
-  apClass->InitFromFile(strFile, stSize);
+  apClass->InitFromFile(StdForward<StrType>(strFile), stSize);
   return !apClass->ArchiveGetFileList().empty() ||
     !apClass->ArchiveGetDirList().empty() ? apClass.release() : nullptr;
 }
@@ -521,7 +525,7 @@ static CVarReturn ArchiveScan(const char*const cpType, const StdString &ssvDir,
     // Dynamically create the archive. The pointer is recorded in the parent
     // and is referenced from there when loading other files. If succeeded?
     if(const Archive*const aPtr =
-      ArchiveInitNew({ StrAppend(ssvDir, dempPair.first) }))
+      ArchiveInitNew(StrAppend(ssvDir, dempPair.first)))
     { // Add counters to grand totals
       stFiles += aPtr->ArchiveGetFileList().size();
       stDirs += aPtr->ArchiveGetDirList().size();

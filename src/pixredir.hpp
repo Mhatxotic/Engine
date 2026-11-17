@@ -94,7 +94,7 @@ class SysRedirect final :              // Rediector
   SysRedirect(const int iHandle, const StdString &strNName) :
     /* --------------------------------------------------------------------- */
     Name{ strNName },                // Initialise identifier
-    Thread{ STP_LOW },               // Initialise low priority thread
+    Thread{ STP_LOW, bind(&SysRedirect::ThreadMain, this, _1) },// Low priority
     Memory{ 4096 },                  // Initialise buffer
     iRequested(iHandle),             // Store requested handle
     phHandles{ iInvalid, iInvalid }, // Initialise pipe handles references
@@ -134,7 +134,7 @@ class SysRedirect final :              // Rediector
     // otherwise the reader never sees EOF.
     CloseAndReset(iWrite);
     // Start the monitoring thread if it is open
-    ThreadInit(bind(&SysRedirect::ThreadMain, this, _1), this);
+    ThreadStart(this);
   }
   /* ----------------------------------------------------------------------- */
   ~SysRedirect()

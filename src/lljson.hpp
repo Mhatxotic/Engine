@@ -129,10 +129,11 @@ LLRSEND                                // Json:* methods end
 // ? Decodes the specified asset as JSON encoded. The level depth is limited
 // ? to 255 due to limitations with LUA's hardcoded stack level.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Asset, 1, const AgFilename aFilename{lS,1};
+LLFUNC(Asset, 1,
+  const AgFilename aFilename{lS,1};
   const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
-  AcJson{lS}().SyncInitArray(aName(), aAsset))
+  AcJson{lS}().SyncInitArray(aName(), "jsonasset", aAsset))
 /* ========================================================================= */
 // $ Json.AssetAsync
 // > Id:string=The user specified identifier of the asset.
@@ -154,8 +155,9 @@ LLFUNC(AssetAsync, 0,
 // ? Decodes the specified string as JSON encoded. The level depth is limited
 // ? to 255 due to limitations with LUA's hardcoded stack level.
 /* ------------------------------------------------------------------------- */
-LLFUNC(File, 1, const AgFilename aFilename{lS,1};
-  AcJson{lS}().SyncInitFileSafe(aFilename))
+LLFUNC(File, 1,
+  const AgFilename aFilename{lS,1};
+  AcJson{lS}().SyncInitFileSafe(aFilename(), "jsonfile"))
 /* ========================================================================= */
 // $ Json.FileAsync
 // > Filename:string=The filename of the json to load
@@ -168,7 +170,7 @@ LLFUNC(FileAsync, 0,
   LuaUtilCheckParams(lS, 4);
   const AgNeString aFilename{lS, 1};
   LuaUtilCheckFunc(lS, 2, 3, 4);
-  AcJson{lS}().AsyncInitFile(lS, aFilename, "jsonfile"));
+  AcJson{lS}().AsyncInitFile(lS, aFilename(), "jsonfile"));
 /* ========================================================================= */
 // $ Json.GetClasses
 // < Count:integer=Total number of jsons created.
@@ -186,7 +188,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cJsons->CollectorCount()))
 LLFUNC(String, 1,
   const AgNeString aName{lS, 1};
   AgMbString aCode{lS, 2};
-  AcJson{lS}().SyncInitArray(aName(), aCode))
+  AcJson{lS}().SyncInitArray(aName(), "jsonstring", aCode))
 /* ========================================================================= */
 // $ Json.StringAsync
 // > Id:string=The user specified identifier of the asset.

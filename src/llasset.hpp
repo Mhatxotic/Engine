@@ -427,7 +427,7 @@ LLFUNC(SX64, 0, const AgAsPoBy aAsset{lS};
 LLFUNC(ToFile, 1,
   const AgAsset aAsset{lS, 1};
   const AgFilename aFilename{lS, 2};
-  LuaUtilPushVar(lS, FStream{ aFilename, FM_W_B }.
+  LuaUtilPushVar(lS, FStream{ aFilename(), FM_W_B }.
     FStreamWriteBlockSafe(aAsset)))
 /* ========================================================================= */
 // $ Asset:ToString
@@ -821,7 +821,7 @@ LLFUNC(String, 1,
   const AgNeString aName{lS, 1};
   const AgLCString aText{lS, 2};
   const AgAssetFlags aFlags{lS, 3};
-  AcAsset{lS}().AssetInitPtr(aName, aFlags, aText.stB, aText.cpD))
+  AcAsset{lS}().AssetInitPtr(aName(), aFlags, aText.stB, aText.cpD))
 /* ========================================================================= */
 // $ Asset.WaitAsync
 // ? Halts main-thread execution until all async asset events have completed

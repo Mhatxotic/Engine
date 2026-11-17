@@ -62,17 +62,14 @@ class PcmData :                        // Audio data structure
       pbitBits = static_cast<PcmBitType>(pbytBytes * CHAR_BIT); }
   /* ----------------------------------------------------------------------- */
   Memory &PcmDataGetLeft() { return mPcmL; }
-  MemConst &PcmDataGetLeftConst() const { return mPcmL; }
+  const MemConst &PcmDataGetLeft() const { return mPcmL; }
   Memory &PcmDataGetRight() { return mPcmR; }
-  MemConst &PcmDataGetRightConst() const { return mPcmR; }
+  const MemConst &PcmDataGetRight() const { return mPcmR; }
   /* ----------------------------------------------------------------------- */
-  size_t PcmDataGetLeftSize() const
-    { return PcmDataGetLeftConst().MemSize(); }
-  size_t PcmDataGetRightSize() const
-    { return PcmDataGetRightConst().MemSize(); }
+  size_t PcmDataGetLeftSize() const { return PcmDataGetLeft().MemSize(); }
+  size_t PcmDataGetRightSize() const { return PcmDataGetRight().MemSize(); }
   /* -- Returns if initial memory not allocated ---------------------------- */
-  bool PcmDataNotPrepared() const
-    { return PcmDataGetLeftConst().MemIsEmpty(); }
+  bool PcmDataNotPrepared() const { return PcmDataGetLeft().MemIsEmpty(); }
   /* -- Allocate memory and return unmodifiable class for it --------------- */
   MemConst &PcmDataPrepare(const size_t stSize)
     { PcmDataGetLeft().MemResize(stSize); return PcmDataGetLeft(); }

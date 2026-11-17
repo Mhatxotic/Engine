@@ -131,7 +131,7 @@ LLFUNC(GetLFloatCount, 1, LuaUtilPushVar(lS, AgFbo{lS, 1}().FboGetTris()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetMatrix, 6,
   const Fbo &fboCref = AgFbo{lS, 1}();
-  const CoordsGLFloat &cglfRef = fboCref.FboGetStageConst();
+  const CoordsGLFloat &cglfRef = fboCref.FboGetStage();
   LuaUtilPushVar(lS, fboCref.DimGetWidth(), fboCref.DimGetHeight(),
     cglfRef.CoordsGetX1(), cglfRef.CoordsGetY1(), cglfRef.CoordsGetX2(),
     cglfRef.CoordsGetY2()))

@@ -77,17 +77,16 @@ class Joystick :
   /* -- Return writable joystick data -------------------------------------- */
   JoyInfo &JoyGet(const size_t stJId) { return (*this)[stJId]; }
   /* -- Return read-only joystick data ------------------------------------- */
-  const JoyInfo &JoyGetConst(const size_t stJId) const
-    { return (*this)[stJId]; }
+  const JoyInfo &JoyGet(const size_t stJId) const { return (*this)[stJId]; }
   /* -- Get read-only acess to joystick list ------------------------------- */
-  const JoyList &JoyListGetConst() const { return *this; }
+  const JoyList &JoyListGet() const { return *this; }
   /* -- Get connected count ----------------------------------------------- */
   size_t JoyGetConnected() const { return stConnected; }
   /* -- Return joysticks count --------------------------------------------- */
-  size_t JoyGetCount() const { return JoyListGetConst().size(); }
+  size_t JoyGetCount() const { return JoyListGet().size(); }
   /* -- Return if joystick is connected ------------------------------------ */
   bool JoyIsConnected(const size_t stId)
-    { return JoyGetConst(stId).JoyIsConnected(); }
+    { return JoyGet(stId).JoyIsConnected(); }
   /* -- Clear buttons and axis state --------------------------------------- */
   void JoyClearStates()
     { StdForEach(par_unseq, this->begin(), this->end(),

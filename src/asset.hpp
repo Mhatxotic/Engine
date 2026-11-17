@@ -57,16 +57,19 @@ FSOverrideType     fsotOverride;       // Allow load of external files
 AtomicSizeT        astPipeBufSize;     // Pipe buffer size for execute
 ); /* ---------------------------------------------------------------------- */
 /* -- Function to load a file locally -------------------------------------- */
-static FileMap AssetLoadFromDisk(const StdStringView &ssvFile)
+template<class StrType>
+  requires StdIsStrOrCStr<StrType>
+static FileMap AssetLoadFromDisk(StrType &&strFile)
 { // Open it and sending full-load flag and if succeeded?
-  if(FileMap fmFile{ ssvFile })
+  if(FileMap fmFile{ StdForward<StrType>(strFile) })
   { // Put in the log that we loaded the file successfully
     cLog->LogDebugExSafe("Assets mapped resource '$'[$].",
-      ssvFile, fmFile.MemSize());
+      fmFile.NameGet(), fmFile.MemSize());
     // Return file class to caller
     return fmFile;
   } // Failed so throw exception
-  XCL("Failed to open local resource!", "File", ssvFile, "Path", DirGetCWD());
+  else XCL("Failed to open local resource!",
+         "File", fmFile.NameGet(), "Path", DirGetCWD());
 }
 /* -- Function to search local directory then archives for a file ---------- */
 static FileMap AssetExtract(const StdStringView &ssvFile)
@@ -204,27 +207,33 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     AsyncInitCmdLine(lS, ssvCmdLine, "assetexecex", aStdIn);
   }
   /* -- Init from file ----------------------------------------------------- */
-  void AssetInitFile(const StdStringView &ssvFile,
-    const AssetFlagsConst &afcFlags)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void AssetInitFile(StrType &&strFile, const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
     // Load file normally
-    SyncInitFileSafe(ssvFile);
+    SyncInitFileSafe(StdForward<StrType>(strFile), "assetfile");
   }
   /* -- Init from file ----------------------------------------------------- */
-  void AssetInitPtr(const StdStringView &ssvName,
-    const AssetFlagsConst &afcFlags, size_t stNSize, const char*const cpNPtr)
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void AssetInitPtr(StrType &&strName, const AssetFlagsConst &afcFlags,
+    size_t stNSize, const char*const cpNPtr)
   { // Prepare flags
     FlagSet(afcFlags);
     // Copy the memory
     Memory mData{ stNSize, cpNPtr };
     // Do the initialisation
-    SyncInitArray(ssvName, mData);
+    SyncInitArray(StdForward<StrType>(strName), "assetptr", mData);
   }
   /* -- Init from asset ---------------------------------------------------- */
-  void AssetInitAsset(const StdStringView &ssvName,
-    const AssetFlagsConst &afcFlags, const Asset &aData)
-  { AssetInitPtr(ssvName, afcFlags, aData.MemSize(), aData.MemPtr<char>()); }
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void AssetInitAsset(StrType &&strName, const AssetFlagsConst &afcFlags,
+    const Asset &aData)
+  { AssetInitPtr(StdForward<StrType>(strName), afcFlags, aData.MemSize(),
+      aData.MemPtr<char>()); }
   /* -- Init duplicate asset ----------------------------------------------- */
   void AssetInitDuplicate(const Asset &aCref)
   { // Copy name of asset
@@ -246,12 +255,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     CollectorRegister();
   }
   /* -- Init from string --------------------------------------------------- */
-  void AssetInitArray(const StdStringView &ssvName, Asset &aRef,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void AssetInitArray(StrType &&strName, Asset &aRef,
     const AssetFlagsConst &afcFlags)
   { // Set load flags
     FlagSet(afcFlags);
     // Set filename and flags
-    SyncInitArray(ssvName, aRef);
+    SyncInitArray(StdForward<StrType>(strName), "assetarray", aRef);
   }
   /* -- Move assignment ---------------------------------------------------- */
   Asset& operator=(Asset &&aOther) { AssetSwap(aOther); return *this; }

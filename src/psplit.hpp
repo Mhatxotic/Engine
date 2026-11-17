@@ -75,8 +75,8 @@ class PathSplit :
     // If a full path name build is re4quested? Set original string
     StdResized<StdString> strFull{ _MAX_PATH };
     if(!bUseFullPath || !realpath(const_cast<char*>(ssvSrc.data()),
-      const_cast<char*>(strFull.data())))
-        strFull.assign(ssvSrc);
+         const_cast<char*>(strFull.data())))
+      strFull.assign(ssvSrc);
     // Succeeded? Resize the string
     else strFull.resize(strlen(strFull.data()));
     // This is the final full path string so compact it

@@ -174,7 +174,7 @@ LLFUNC(File, 1,
   const AgDpiDimension aDpiWidth{lS, 4},
                        aDpiHeight{lS, 5};
   const AgOutline aOutline{lS, 6};
-  AcFtf{lS}().FtfInitFile(aFilename, aWidth, aHeight, aDpiWidth, aDpiHeight,
+  AcFtf{lS}().FtfInitFile(aFilename(), aWidth, aHeight, aDpiWidth, aDpiHeight,
     aOutline))
 /* ========================================================================= */
 // $ Ftf.FileAsync
@@ -199,7 +199,7 @@ LLFUNC(FileAsync, 0,
                        aDpiHeight{lS, 5};
   const AgOutline aOutline{lS, 6};
   LuaUtilCheckFunc(lS, 7, 8, 9);
-  AcFtf{lS}().FtfInitAsyncFile(lS, aFilename, aWidth, aHeight, aDpiWidth,
+  AcFtf{lS}().FtfInitAsyncFile(lS, aFilename(), aWidth, aHeight, aDpiWidth,
     aDpiHeight, aOutline))
 /* ========================================================================= */
 // $ Ftf.GetClasses

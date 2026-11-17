@@ -315,6 +315,16 @@ template<class InIt, class OutIt, class UnaryOp>
   static OutIt StdTransformNXP(InIt iiFirst, InIt iiLast, OutIt oiFirst,
     UnaryOp uoOp)
 { return ::std::transform(iiFirst, iiLast, oiFirst, StdMove(uoOp)); }
+/* -- Returns .data() on string or just the pointer to the string ---------- */
+template<typename RetPtrType = const char*, typename StrType>
+  requires StdIsPointer<RetPtrType> && StdIsStrOrCStr<StrType>
+static RetPtrType StdGetStrOrCStr(StrType &&strStr)
+{ // If this is a string class then return the data part
+  if constexpr(StdIsString<StrType>)
+    return StdToNonConstCast<RetPtrType>(strStr.data());
+  // It's not so return the pointer
+  else return StdToNonConstCast<RetPtrType>(strStr);
+}
 /* ------------------------------------------------------------------------- */
 template<typename FloatType>
   requires StdIsFloat<FloatType>

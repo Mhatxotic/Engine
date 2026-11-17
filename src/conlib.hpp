@@ -696,10 +696,10 @@ const function ShowFboInfo{ [](const Fbo &fRef, Statistic &sTable,
                 { fRef.FboIsClearEnabled(),        'C' }})
         .DataN(fRef.FboGetFilter()).DataN(fRef.DimGetWidth())
         .DataN(fRef.DimGetHeight())
-        .DataN(fRef.FboGetStageConst().CoordsGetX1())
-        .DataN(fRef.FboGetStageConst().CoordsGetY1())
-        .DataN(fRef.FboGetStageConst().CoordsGetX2())
-        .DataN(fRef.FboGetStageConst().CoordsGetY2())
+        .DataN(fRef.FboGetStage().CoordsGetX1())
+        .DataN(fRef.FboGetStage().CoordsGetY1())
+        .DataN(fRef.FboGetStage().CoordsGetX2())
+        .DataN(fRef.FboGetStage().CoordsGetY2())
         .DataN(fRef.FboGetTris())
         .DataN(fRef.FboGetCmds())
         .DataN(fRef.FboGetTrisReserved())
@@ -928,7 +928,7 @@ if(aArgs.size() == 2)
   sTable.Header("SIZX").Header("SIZY").Header("SIZE")
         .Reserve(iRef.GetSlotCount());
   // For each slot
-  for(const ImageSlot &imdD : iRef.GetSlotsConst())
+  for(const ImageSlot &imdD : iRef.GetSlots())
     sTable.DataN(imdD.DimGetWidth()).DataN(imdD.DimGetHeight())
           .DataN(imdD.MemSize());
   // Log texture counts
@@ -1008,7 +1008,7 @@ if(aArgs.size() > 1)
   if(stArg >= cInput->JoyGetCount())
     return cConsole->ConsoleAddLine("Joystick index argument invalid!");
   // Get joystick information and return if not connected
-  const JoyInfo &jiRef = cInput->JoyGetConst(stArg);
+  const JoyInfo &jiRef = cInput->JoyGet(stArg);
   if(jiRef.JoyIsDisconnected())
     return cConsole->ConsoleAddLine("Joystick is not being polled right now!");
   // Build axis state data
@@ -1056,7 +1056,7 @@ sTable.Header("ID").Header("FL").Header("AX").Header("BT")
       .Header("GUID", false).Header("NAME", false)
       .Header("IDENT", false).Reserve(cInput->JoyGetCount());
 // For each joystick
-const JoyList &jlList = cInput->JoyListGetConst();
+const JoyList &jlList = cInput->JoyListGet();
 for(const JoyInfo &jiRef : jlList)
 { // If joystick is disconnected and joystick name was empty then ignore it.
   if(jiRef.JoyIsDisconnected() && jiRef.NameIsNotSet()) continue;
@@ -2388,23 +2388,26 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 /* ------------------------------------------------------------------------- */
 // Make a table to automatically format our data neatly
 Statistic sTable;
-sTable.Header("ID").Header("FLAG").Header("P").Header("STATUS", false)
-      .Header("STTIME").Header("ENTIME").Header("UPTIME")
-      .Header("IDENTIFIER", false).Reserve(cThreads->size());
+sTable.Header("ID").Header("FLAG").Header("P").Header("STTIME")
+      .Header("ENTIME").Header("UPTIME").Header("IDENTIFIER", false)
+      .Reserve(cThreads->size());
 // For each thread pointer
 for(const Thread*const tPtr : *cThreads)
 { // Get reference to class and write its data to the table
   const Thread &tRef = *tPtr;
   sTable.DataN(tRef.Serial()).DataE({
-    { tRef.ThreadHaveCallback(), 'C' }, { tRef.ThreadIsParamSet(),   'P' },
-    { tRef.ThreadShouldExit(),   'T' }, { tRef.ThreadIsJoinable(),   'J' },
-    { tRef.ThreadIsExited(),     'X' },
-  }).DataN(tRef.ThreadGetPerf()).Data(tRef.ThreadGetExitCodeString())
+    { tRef.ThreadIsStandBy(),   'S' }, { tRef.ThreadHaveCallback(),   'C' },
+    { tRef.ThreadIsParamSet(),  'P' }, { tRef.ThreadIsInitialising(), 'I' },
+    { tRef.ThreadIsRunning(),   'R' }, { tRef.ThreadShouldExit(),     'A' },
+    { tRef.ThreadIsJoinable(),  'J' }, { tRef.ThreadIsExitRetry(),    'Y' },
+    { tRef.ThreadIsExitOk(),    'O' }, { tRef.ThreadIsExitError(),    'E' },
+    { tRef.ThreadIsExitExc(),   'X' }, { tRef.ThreadIsExited(),       'F' },
+  }).DataN(tRef.ThreadGetPerf())
     .Data(TimeToShortDuration(cLog->
       CCDeltaToClampedDouble(tRef.ThreadGetStartTime())))
     .Data(TimeToShortDuration(cLog->
       CCDeltaToClampedDouble(tRef.ThreadGetEndTime())))
-    .Data(TimeToShortDuration(tRef.ThreadIsNotExited()
+    .Data(TimeToShortDuration(tRef.ThreadIsRunning()
        ? cmHiRes.TimePointToClampedDouble(tRef.ThreadGetStartTime())
        : ClockTimePointRangeToClampedDouble(tRef.ThreadGetEndTime(),
            tRef.ThreadGetStartTime())))

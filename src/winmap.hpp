@@ -137,10 +137,25 @@ class SysMap :                         // Members initially private
     // Clear the name
     NameClear();
   }
-  /* -- Constructor with just id initialisation ---------------------------- */
-  SysMap(const StdStringView &ssvIn, const StdTimeT tC, const StdTimeT tM) :
+  /* -- Constructor with actual initialisation ----------------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  explicit SysMap(StrType &&strF) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvIn },                     // Initialise file name
+    Name{ StdForward<StrType>(strF) }, // Set file name
+    hFile(SysMapSetupFile()),          // Get file handle from file on disk
+    ullSize(SysMapSetupSize()),        // Get file size on disk
+    hMap(SysMapSetupMap()),            // Get map handle
+    cpMem(SysMapSetupMemory()),        // Get pointer to file in memory
+    atTime{ SysMapSetupTimes() }       // Get times of file
+    /* -- No code ---------------------------------------------------------- */
+    {}
+  /* -- Constructor with just id initialisation ---------------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  SysMap(StrType &&strF, const StdTimeT tC, const StdTimeT tM) :
+    /* -- Initialisers ----------------------------------------------------- */
+    Name{ StdForward<StrType>(strF) }, // Set file name
     hFile(INVALID_HANDLE_VALUE),       // No file handle
     ullSize(0),                        // No file size
     hMap(nullptr),                     // No map handle
@@ -169,17 +184,6 @@ class SysMap :                         // Members initially private
     atTime{ StdMove(smOther.atTime) }  // Move other file times
     /* -- Clear other variables -------------------------------------------- */
     { smOther.SysMapClearVarsInternal(); }
-  /* -- Constructor with actual initialisation ----------------------------- */
-  explicit SysMap(const StdStringView &ssvIn) :
-    /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvIn },                     // Set file name
-    hFile(SysMapSetupFile()),          // Get file handle from file on disk
-    ullSize(SysMapSetupSize()),        // Get file size on disk
-    hMap(SysMapSetupMap()),            // Get map handle
-    cpMem(SysMapSetupMemory()),        // Get pointer to file in memory
-    atTime{ SysMapSetupTimes() }       // Get times of file
-    /* -- No code ---------------------------------------------------------- */
-    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~SysMap, SysMapDeInitInternal())
 };/* -- End ---------------------------------------------------------------- */

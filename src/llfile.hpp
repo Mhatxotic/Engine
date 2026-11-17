@@ -316,7 +316,7 @@ LLFUNC(GetInfo, 12,
 // ? Splits apart a filename and return its parts.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetParts, 5,
-  const PathSplit psData{ AgFilename{lS, 1} };
+  const PathSplit psData{ AgFilename{lS, 1}() };
   LuaUtilPushVar(lS, psData.strDir, psData.strFile, psData.strExt,
     psData.strFileExt, psData.strFull))
 /* ========================================================================= */

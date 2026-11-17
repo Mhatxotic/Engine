@@ -452,7 +452,7 @@ LLRSEND                                // Video:* methods end
 LLFUNC(Asset, 1,
   const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
-  AcVideo{lS}().SyncInitArray(aName, aAsset))
+  AcVideo{lS}().SyncInitArray(aName(), "videoasset", aAsset))
 /* ========================================================================= */
 // $ Video.AssetAsync
 // > Id:String=The identifier of the string
@@ -469,7 +469,7 @@ LLFUNC(AssetAsync, 0,
   const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcVideo{lS}().AsyncInitArray(lS, aName, "videoarray", aAsset))
+  AcVideo{lS}().AsyncInitArray(lS, aName(), "videoarray", aAsset))
 /* ========================================================================= */
 // $ Video.File
 // > Filename:string=The filename of the ogg file to load
@@ -477,8 +477,9 @@ LLFUNC(AssetAsync, 0,
 // ? Loads a video stream sample on the main thread from the specified file
 // ? on disk. Returns the video stream object.
 /* ------------------------------------------------------------------------- */
-LLFUNC(File, 1, const AgFilename aFilename{lS, 1};
-  AcVideo{lS}().SyncInitFileSafe(aFilename))
+LLFUNC(File, 1,
+  const AgFilename aFilename{lS, 1};
+  AcVideo{lS}().SyncInitFileSafe(aFilename(), "videofile"))
 /* ========================================================================= */
 // $ Video.FileAsync
 // > Filename:string=The filename of the ogv to load
@@ -492,7 +493,7 @@ LLFUNC(FileAsync, 0,
   LuaUtilCheckParams(lS, 4);
   const AgFilename aFilename{lS, 1};
   LuaUtilCheckFunc(lS, 2, 3, 4);
-  AcVideo{lS}().AsyncInitFile(lS, aFilename, "videofile"))
+  AcVideo{lS}().AsyncInitFile(lS, aFilename(), "videofile"))
 /* ========================================================================= */
 // $ Video.GetClasses
 // < Count:integer=Total number of videos created.

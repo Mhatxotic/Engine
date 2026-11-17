@@ -209,29 +209,35 @@ class FileMap :
   /* -- Direct access using class variable name which returns opened ------- */
   operator bool() const { return FileMapOpened(); }
   /* -- Open a file on disk and map it to memory --------------------------- */
-  explicit FileMap(const StdStringView &ssvF) :
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  explicit FileMap(StrType &&strF) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvF },                      // Set identifier (virtual)
-    SysMap{ ssvF },                    // Initialise file handle
+    Name{ StdForward<StrType>(strF) }, // Set identifier (virtual)
+    SysMap{ NameGet() },               // Initialise file handle
     MemConst{ UtilIntOrMax<size_t>(SysMapGetSize()), SysMapGetMemory() },
     stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Take ownership of another memory block ----------------------------- */
-  FileMap(const StdStringView &ssvF, MemConst &&mcSrc, const StdTimeT ttC,
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  FileMap(StrType &&strF, MemConst &&mcSrc, const StdTimeT ttC,
     const StdTimeT ttM) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvF },                      // Set identifier (virtual)
-    SysMap{ ssvF, ttC, ttM },          // Reuse system map variables
+    Name{ StdForward<StrType>(strF) }, // Set identifier (virtual)
+    SysMap{ NameGet(), ttC, ttM },     // Reuse system map variables
     MemConst{ StdMove(mcSrc) },        // Init read-only memory block
     stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Take ownership of another memory block ----------------------------- */
-  FileMap(const StdStringView &ssvF, MemConst &&mcSrc, const StdTimeT ttC) :
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  FileMap(StrType &&strF, MemConst &&mcSrc, const StdTimeT ttC) :
     /* -- Initialisers ----------------------------------------------------- */
-    Name{ ssvF },                      // Set identifier (virtual)
-    SysMap{ ssvF, ttC, ttC },          // Reuse system map variables
+    Name{ StdForward<StrType>(strF) }, // Set identifier (virtual)
+    SysMap{ NameGet(), ttC, ttC },     // Reuse system map variables
     MemConst{ StdMove(mcSrc) },        // Init read-only memory block
     stPosition(0)                      // Initialise position
     /* -- No code ---------------------------------------------------------- */

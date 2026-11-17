@@ -22,7 +22,7 @@ static bool StdIsCStringValid(const CharType*const ctStr)
 template<typename CharType>
   requires (!StdIsPointer<CharType>)
 static bool StdIsCStringNotValid(const CharType*const ctStr)
-  { return !StdIsCStringValid<CharType>(ctStr); }
+  { return !StdIsCStringValid(ctStr); }
 /* ------------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using Windows?
 /* -- These don't exist on Windows so we'll make it easier ----------------- */
