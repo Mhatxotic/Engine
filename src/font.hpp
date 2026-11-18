@@ -461,9 +461,9 @@ static void FontDeInitTextures()
 { // Ignore if no fonts
   if(cFonts->empty()) return;
   // De-init all the font textures and log pre/post deinit
-  cLog->LogDebugExSafe("Fonts de-initialising $ objects...", cFonts->size());
+  cLog->LogDebugExSafe("Fonts deinitialising $ objects...", cFonts->size());
   for(Font*const fCptr : *cFonts) fCptr->DeInit();
-  cLog->LogInfoExSafe("Fonts de-initialising $ objects.", cFonts->size());
+  cLog->LogInfoExSafe("Fonts deinitialising $ objects.", cFonts->size());
 }
 /* -- Reload Font Textures ------------------------------------------------- */
 static void FontReInitTextures()

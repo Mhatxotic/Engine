@@ -85,7 +85,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     // Get new filename or original filename
     NameSet(StrIsBlank(ssvFile,
       StrAppend(cMetadata->MetadataGetShortTitle(),
-                cmSys.FormatTime(cCommon->CommonFileTs().data()))));
+                cmSys.ClockFormatTime(cCommon->CommonFileTs().data()))));
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
       fboRef.NameGet(), NameGet(), fboRef.DimGetWidth(),

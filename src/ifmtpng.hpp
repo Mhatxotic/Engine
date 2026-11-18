@@ -121,7 +121,7 @@ class CodecPNG :                       // PNG codec object
       cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor()));
     pwC.Meta("Copyright", cMetadata->MetadataGetCopyright());
     pwC.Meta("Creation Time",
-      TimeLocalTTtoStr(cmSys.GetTimeS(), "%Y-%m-%dT%H:%M:%S%z"));
+      TimeLocalTTtoStr(cmSys.ClockGetTimeSeconds(), "%Y-%m-%dT%H:%M:%S%z"));
     pwC.Meta("Description", cMetadata->MetadataGetDescription());
     pwC.Meta("Identifier", cMetadata->MetadataGetShortTitle());
     pwC.Meta("Language", cSystem->OSLocale());

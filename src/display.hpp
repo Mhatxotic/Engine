@@ -17,18 +17,17 @@ using namespace ICVars::P;             using namespace IDim::P;
 using namespace IDimCoord::P;          using namespace IDir::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFboCore::P;           using namespace IFlags::P;
-using namespace IFont::P;              using namespace IGlFW::P;
-using namespace IGlFWBase::P;          using namespace IGlFWCursor::P;
-using namespace IGlFWMonitor::P;       using namespace IHelper::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IImageSlot::P;         using namespace IInput::P;
-using namespace ILog::P;               using namespace ILookupArray::P;
-using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
-using namespace IMetadata::P;          using namespace IMutex::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtil::P;
-using namespace Lib::GlFW::Types;
+using namespace IGlFW::P;              using namespace IGlFWBase::P;
+using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
+using namespace IHelper::P;            using namespace IImage::P;
+using namespace IImageDef::P;          using namespace IImageSlot::P;
+using namespace IInput::P;             using namespace ILog::P;
+using namespace ILookupArray::P;       using namespace ILuaFunc::P;
+using namespace ILuaUtil::P;           using namespace IMetadata::P;
+using namespace IMutex::P;             using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtil::P;              using namespace Lib::GlFW::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -73,7 +72,7 @@ class Display :                        // Actual class body
   private EvtWinRegAuto                // Window events list to register
 { /* -- Monitors and resolutions ------------------------------------------- */
   const GlFWMonitor *gfwmActive;       // Monitor selected
-  const GlFWRes     *gfwrActive;       // Monitor resolution selected
+  const GlFWRes   *gfwrActive;         // Monitor resolution selected
   size_t           stMRequested,       // Monitor id request
                    stVRequested;       // Video mode requested
   AtomicBool       abUnsuspend;        // Request to un-suspend window thread
@@ -946,14 +945,14 @@ class Display :                        // Actual class body
     // Reinitialise the window
     DisplayReInitWindow(FlagIsSet(DF_INFULLSCREEN));
     // Log progress
-    cLog->LogInfoSafe("Display class reinitialised successfully.");
+    cLog->LogInfoSafe("Display class reinitialised.");
   }
   /* -- Init --------------------------------------------------------------- */
   void DisplayInit()
   { // Class initialised
     IHInitialise();
     // Log progress
-    cLog->LogDebugSafe("Display class starting up...");
+    cLog->LogDebugSafe("Display class initialising...");
     // Enumerate monitors and video modes
     DisplayEnumerateMonitorsAndVideoModes();
     // Inform main FBO class of our transparency setting
@@ -1007,7 +1006,7 @@ class Display :                        // Actual class body
     // Set default gamma for selected monitor
     DisplayApplyGamma();
     // Log progress
-    cLog->LogInfoSafe("Display class started successfully.");
+    cLog->LogInfoSafe("Display class initialised.");
   }
   /* -- DeInit ------------------------------------------------------------- */
   void DisplayDeInit()
@@ -1031,8 +1030,6 @@ class Display :                        // Actual class body
       cSystem->SetWindowDestroyed();
       // Actually destroy window
       cGlFW->WinDeInit();
-      // Log progress
-      cLog->LogDebugSafe("Display window handle and context destroyed.");
     } // Don't have window
     else
     { // Skipped removal of window
@@ -1043,7 +1040,7 @@ class Display :                        // Actual class body
     } // Clear selected video mode
     gfwrActive = nullptr;
     // Log progress
-    cLog->LogInfoSafe("Display class deinitialised successfully.");
+    cLog->LogInfoSafe("Display class deinitialised.");
   }
   /* -- Default constructor ------------------------------------- */ protected:
   Display() :

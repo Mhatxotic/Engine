@@ -145,23 +145,6 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Convert ADR id to string ------------------------------------------- */
   const StdStringView &SqlADResultToString(const ADResult adrResult) const
     { return ctParent.adrlStrings.Get(adrResult); }
-  /* -- Close the database ------------------------------------------------- */
-  void SqlDoClose()
-  { // Number of retries needed to close the database
-    unsigned uRetries;
-    // Wait until the database can be closed
-    for(uRetries = 0; sqlite3_close(sqlDB) == SQLITE_BUSY; ++uRetries)
-    { // Keep trying to clean up if we can (this shouldn't really happen).
-      SqlFinalise();
-      // Don't whore the CPU usage while waiting for async ops.
-      StdSuspend();
-    } // Database handle no longer valid
-    sqlDB = nullptr;
-    // Say we closed the database
-    cLog->LogExSafe(uRetries > 0 ? LH_WARNING : LH_INFO,
-      "Sql database '$' closed successfully ($ retries).",
-      NameGet(), uRetries);
-  }
   /* -- Build a new node into the a records list --------------------------- */
   void SqlDoPair(SqlRecordsMap &srmMap, const int iType,
     const char*const cpKey, const void*const vpPtr, const size_t stSize)
@@ -561,6 +544,65 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
       SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
       SQLITE_OPEN_SHAREDCACHE, reinterpret_cast<char*>(sqlDBout)));
     return sqlDBout;
+  }
+  /* -- Close the database without cleaning anything up -------------------- */
+  void SqlDoDeInit()
+  { // Ignore if no handle to deinit
+    if(SqlIsNotOpened()) return;
+    // Log deinitialisation
+    cLog->LogDebugExSafe("Sql database '$' deinitialising...", NameGet());
+    // Finalise statements and if we found orphans
+    if(const size_t stOrphans = SqlFinalise())
+      cLog->LogWarningExSafe("Sql finalised $ orphan statements.", stOrphans);
+    // Function to close the database
+    auto SqlDoClose = [this]()
+    { // Log that we're closing the database
+      cLog->LogDebugExSafe("Sql database '$' closing...", NameGet());
+      // Number of retries needed to close the database
+      unsigned uRetries;
+      // Wait until the database can be closed
+      for(uRetries = 0; sqlite3_close(sqlDB) == SQLITE_BUSY; ++uRetries)
+      { // Keep trying to clean up if we can (this shouldn't really happen).
+        SqlFinalise();
+        // Don't whore the CPU usage while waiting for async ops.
+        StdSuspend();
+      } // Say we closed the database
+      cLog->LogExSafe(uRetries > 0 ? LH_WARNING : LH_INFO,
+        "Sql database '$' closed with $ retries.",
+        NameGet(), uRetries);
+    }; // Check if database should be deleted, if it should'nt?
+    switch(const ADResult adrResult = SqlCanDatabaseBeDeleted())
+    { // Deletion is ok?
+      case ADR_OK_NO_TABLES:
+      case ADR_OK_NO_RECORDS:
+        // Print the result
+        cLog->LogDebugExSafe("Sql will delete empty database because $ ($).",
+          SqlADResultToString(adrResult), adrResult);
+        // Close the database
+        SqlDoClose();
+        // Try to delete it and log the result
+        if(!DirFileUnlink(NameGet()))
+          cLog->LogWarningExSafe(
+            "Sql empty database file '$' could not be deleted! $",
+            NameGet(), StrFromErrNo());
+        // Delete failure
+        else cLog->LogDebugExSafe("Sql empty database file '$' deleted.",
+          NameGet());
+        // Done
+        break;
+      // Deletion is not ok?
+      default:
+        // Print the result
+        cLog->LogDebugExSafe("Sql won't delete database because $ ($).",
+          SqlADResultToString(adrResult), adrResult);
+        // Sqlite docs recommend us to optimise before closing.
+        SqlPragma("optimize");
+        // Close the database
+        SqlDoClose();
+        // Done
+        break;
+    } // Log deinitialisation
+    cLog->LogDebugExSafe("Sql database '$' deinitialised.", NameGet());
   }
   /* -- Set a pragma (used only with cvar callbacks) --------------- */ public:
   void SqlPragma(const StdStringView &ssvVar)
@@ -984,7 +1026,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
         SqlGetErrorStr(), SqlGetError());
       return CTR_FAIL;
     } // Write success in console and return success
-    cLog->LogDebugSafe("Sql destroyed CVars table successfully.");
+    cLog->LogDebugSafe("Sql destroyed CVars table.");
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
@@ -1004,7 +1046,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
         SqlGetErrorStr(), SqlGetError());
       return CTR_FAIL;
     } // Write success in console and return success
-    cLog->LogDebugSafe("Sql created CVars table successfully.");
+    cLog->LogDebugSafe("Sql created CVars table.");
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
@@ -1013,6 +1055,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     if(SqlGetRecordCount(ctParent.ssvLCTable) == StdMaxSizeT)
       return CTR_OK_ALREADY;
     // Drop the SQL table and if failed?
+    cLog->LogDebugSafe("Sql destroying the cache table...");
     if(SqlDropTable(ctParent.ssvLCTable))
     { // Write error in console and return failure
       cLog->LogWarningExSafe(
@@ -1020,7 +1063,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
         SqlGetErrorStr(), SqlGetError());
       return CTR_FAIL;
     } // Write success in console and return success
-    cLog->LogDebugSafe("Sql destroyed cache table successfully.");
+    cLog->LogDebugSafe("Sql destroyed cache table.");
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
@@ -1028,6 +1071,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   { // If table already exists then return success already
     if(SqlIsTableExist(ctParent.ssvLCTable)) return CTR_OK_ALREADY;
     // Create the SQL table for our settings if it does not exist
+    cLog->LogDebugSafe("Sql creating the cache table...");
     if(SqlExecute(StrFormat(
          "CREATE table `$`("              // Table name
            "`$` INTEGER UNIQUE NOT NULL," // Code CRC value
@@ -1038,11 +1082,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
          ctParent.ssvLCTimeColumn, ctParent.ssvLCRefColumn,
          ctParent.ssvLCCodeColumn)))
     { // Write error in console and return failure
-      cLog->LogWarningExSafe("Sql failed to create cache table because $ ($)!",
+      cLog->LogWarningExSafe(
+        "Sql failed to create the cache table because $ ($)!",
         SqlGetErrorStr(), SqlGetError());
       return CTR_FAIL;
     } // Write success in console and return success
-    cLog->LogDebugSafe("Sql created cache table successfully.");
+    cLog->LogDebugSafe("Sql created the cache table.");
     return CTR_OK;
   }
   /* ----------------------------------------------------------------------- */
@@ -1096,48 +1141,12 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     { return SqlCVarPurgeData(strVar.data(), strVar.size()); }
   /* -- DeInit ------------------------------------------------------------- */
   void SqlDeInit()
-  { // Ignore if no handle to deinit
-    if(SqlIsNotOpened()) return;
-    // Log deinitialisation
-    cLog->LogDebugExSafe("Sql database '$' is closing...", NameGet());
-    // Finalise statements and if we found orphans
-    if(const size_t stOrphans = SqlFinalise())
-      cLog->LogWarningExSafe("Sql finalised $ orphan statements.", stOrphans);
-    // Check if database should be deleted, if it should'nt?
-    switch(const ADResult adrResult = SqlCanDatabaseBeDeleted())
-    { // Deletion is ok?
-      case ADR_OK_NO_TABLES:
-      case ADR_OK_NO_RECORDS:
-        // Print the result
-        cLog->LogDebugExSafe("Sql will delete empty database because $ ($).",
-          SqlADResultToString(adrResult), adrResult);
-        // Close the database
-        SqlDoClose();
-        // Try to delete it and log the result
-        if(!DirFileUnlink(NameGet()))
-          cLog->LogWarningExSafe(
-            "Sql empty database file '$' could not be deleted! $",
-            NameGet(), StrFromErrNo());
-        // Delete failure
-        else cLog->LogDebugExSafe("Sql empty database file '$' deleted.",
-          NameGet());
-        // Done
-        break;
-      // Deletion is not ok?
-      default:
-        // Print the result
-        cLog->LogDebugExSafe("Sql won't delete database because $ ($).",
-          SqlADResultToString(adrResult), adrResult);
-        // Sqlite docs recommend us to optimise before closing.
-        SqlPragma("optimize");
-        // Close the database
-        SqlDoClose();
-        // Done
-        break;
-    } // Reset results
+  { // Do close the database
+    SqlDoDeInit();
+    // Database handle no longer valid
+    sqlDB = nullptr;
+    // Reset results
     SqlReset();
-    // Reset database name
-    NameClear();
     // Temporary database boolean
     FlagClear(SF_ISTEMPDB);
   }
@@ -1420,8 +1429,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     iError(SQLITE_OK)                  // Initialise sqlite and store error
   /* -- No code ------------------------------------------------------------ */
   { cSql = this; }
-  /* -- Destructor to de-initialise database if opened --------------------- */
-  DTORHELPER(~Sql, SqlDeInit())
+  /* -- Destructor to close the database if opened ------------------------- */
+  DTORHELPER(~Sql, SqlDoDeInit())
 };/* ----------------------------------------------------------------------- */
 /* -- Set a pragma on or off (used only with cvar callbacks) --------------- */
 static CVarReturn SqlPragmaOnOff(const StdString &strVar, const bool bState)

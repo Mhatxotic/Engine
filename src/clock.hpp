@@ -12,20 +12,17 @@ namespace IClock {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IDuration::P;          using namespace IStd::P;
 using namespace IStdLib::P;            using namespace ITime::P;
-using namespace IUtil::P;
-/* ------------------------------------------------------------------------- */
-using CoreClock = ::std::chrono::high_resolution_clock; // Default clock is HRC
+using namespace IUtil::P;              using namespace ::std::chrono;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using ::std::chrono::duration_cast;    using ::std::chrono::duration;
-using ::std::chrono::microseconds;     using ::std::chrono::milliseconds;
-using ::std::chrono::nanoseconds;      using ::std::chrono::seconds;
-using ::std::chrono::system_clock;
-/* -- Typedefs ------------------------------------------------------------- */
-using ClkTimePoint      = CoreClock::time_point;  // Holds a time
-using ClkDuration       = CoreClock::duration;    // Holds a duration
-using AtomicClkDuration = StdAtomic<ClkDuration>; // Thread safe duration
+using ::std::chrono::duration;         using ::std::chrono::microseconds;
+using ::std::chrono::milliseconds;     using ::std::chrono::nanoseconds;
+using ::std::chrono::seconds;
+/* ------------------------------------------------------------------------- */
+using ClkTimePoint      = high_resolution_clock::time_point; // Holds a time
+using ClkDuration       = high_resolution_clock::duration;   // Holds duration
+using AtomicClkDuration = StdAtomic<ClkDuration>;            // Thread safe
 /* -- Common duration values ----------------------------------------------- */
 constexpr static const ClkDuration
   cd0{ nanoseconds{ 0 } },             cd1MS{ milliseconds{ 1 } },
@@ -49,71 +46,72 @@ static double ClockTimePointRangeToClampedDouble
 /* -- Clock ---------------------------------------------------------------- */
 template<class ClockType>struct Clock final
 { /* -- Get current time --------------------------------------------------- */
-  static auto GetTime() { return ClockType::now(); }
+  static auto ClockGetTime() { return ClockType::now(); }
   /* -- Get time since epoch ----------------------------------------------- */
-  static ClkDuration GetEpochTime() { return GetTime().time_since_epoch(); }
+  static ClkDuration ClockGetEpochTime()
+    { return ClockGetTime().time_since_epoch(); }
   /* -- Get current time since epoch casted and counted -------------------- */
   template<typename DurationType, typename RIntType>
-    RIntType GetTimeEx() const
+    RIntType ClockGetTimeEx() const
   { return static_cast<RIntType>(
-      ClockGetCount<DurationType>(GetEpochTime())); }
+      ClockGetCount<DurationType>(ClockGetEpochTime())); }
   /* -- Return time as double ---------------------------------------------- */
-  static double GetTimeDouble()
-    { return ClockDurationToDouble(GetEpochTime()); }
+  static double ClockGetTimeDouble()
+    { return ClockDurationToDouble(ClockGetEpochTime()); }
   /* -- Return time since epoch count as integer --------------------------- */
   template<typename IntType = StdTimeT>
     requires StdIsArithmatic<IntType>
-  IntType GetTimeS() const
-    { return GetTimeEx<duration<IntType>,IntType>(); }
+  IntType ClockGetTimeSeconds() const
+    { return ClockGetTimeEx<duration<IntType>,IntType>(); }
   /* -- Return time in microseconds ---------------------------------------- */
   template<typename IntType = uint64_t>
     requires StdIsArithmatic<IntType>
-  IntType GetTimeUS() const
-    { return GetTimeEx<microseconds,IntType>(); }
+  IntType ClockGetTimeMicroseconds() const
+    { return ClockGetTimeEx<microseconds,IntType>(); }
   /* -- Return time in milliseconds ---------------------------------------- */
   template<typename IntType = uint64_t>
     requires StdIsArithmatic<IntType>
-  IntType GetTimeMS() const
-    { return GetTimeEx<milliseconds,IntType>(); }
+  IntType ClockGetTimeMilliseconds() const
+    { return ClockGetTimeEx<milliseconds,IntType>(); }
   /* -- Return time in nanoseconds ----------------------------------------- */
   template<typename IntType = uint64_t>
     requires StdIsArithmatic<IntType>
-  IntType GetTimeNS() const
-    { return GetTimeEx<nanoseconds,IntType>(); }
+  IntType ClockGetTimeNanoseconds() const
+    { return ClockGetTimeEx<nanoseconds,IntType>(); }
   /* -- Get offset time ---------------------------------------------------- */
-  static ClkDuration GetDuration(const ClkTimePoint &ctpCurrent)
-    { return GetTime() - ctpCurrent; }
+  static ClkDuration ClockGetDuration(const ClkTimePoint &ctpCurrent)
+    { return ClockGetTime() - ctpCurrent; }
   /* -- Get timepoint count ------------------------------------------------ */
   template<typename IntType>
-    auto GetDurationCount(const ClkTimePoint &ctpCurrent) const
-  { return ClockGetCount<IntType>(GetDuration(ctpCurrent)); }
+    auto ClockGetDurationCount(const ClkTimePoint &ctpCurrent) const
+  { return ClockGetCount<IntType>(ClockGetDuration(ctpCurrent)); }
   /* -- Convert timepoint to double ---------------------------------------- */
-  static double TimePointToDouble(const ClkTimePoint &ctpTime)
-    { return ClockDurationToDouble(GetDuration(ctpTime)); }
+  static double ClockTimePointToDouble(const ClkTimePoint &ctpTime)
+    { return ClockDurationToDouble(ClockGetDuration(ctpTime)); }
   /* -- Convert clamped timepoint to double -------------------------------- */
-  static double TimePointToClampedDouble(const ClkTimePoint &ctpTime)
-    { return UtilMaximum(TimePointToDouble(ctpTime), 0.0); }
+  static double ClockTimePointToClampedDouble(const ClkTimePoint &ctpTime)
+    { return UtilMaximum(ClockTimePointToDouble(ctpTime), 0.0); }
   /* -- Convert local time to string --------------------------------------- */
-  StdString FormatTime(const char*const cpFormat = caTimeFormat) const
-    { return TimeLocalTTtoStr(GetTimeS(), cpFormat); }
+  StdString ClockFormatTime(const char*const cpFormat = caTimeFormat) const
+    { return TimeLocalTTtoStr(ClockGetTimeSeconds(), cpFormat); }
   /* -- Convert universal time to string ----------------------------------- */
-  StdString FormatTimeUTC(const char*const cpFormat = caTimeFormat) const
-    { return TimeUTCTTtoStr(GetTimeS(), cpFormat); }
+  StdString ClockFormatTimeUTC(const char*const cpFormat = caTimeFormat) const
+    { return TimeUTCTTtoStr(ClockGetTimeSeconds(), cpFormat); }
   /* -- Convert time to short duration ------------------------------------- */
-  static StdString ToDurationString(unsigned uPrecision = 6)
-    { return TimeToShortDuration(GetTimeDouble(), uPrecision); }
+  static StdString ClockToDurationString(unsigned uPrecision = 6)
+    { return TimeToShortDuration(ClockGetTimeDouble(), uPrecision); }
   /* -- Convert seconds to long duration relative to current time ---------- */
-  StdString ToDurationRel(const StdTimeT tDuration = 0,
+  StdString ClockToDurationRelative(const StdTimeT tDuration = 0,
     unsigned uCompMax = StdMaxUInt) const
-  { return durLong.Parse(GetTimeS() - tDuration, uCompMax); }
+  { return durLong.Parse(ClockGetTimeSeconds() - tDuration, uCompMax); }
   /* -- Convert time to long duration -------------------------------------- */
-  StdString ToDurationLongString(unsigned uCompMax = StdMaxUInt) const
-    { return ToDurationRel(0, uCompMax); }
+  StdString ClockToDurationLongStr(unsigned uCompMax = StdMaxUInt) const
+    { return ClockToDurationRelative(0, uCompMax); }
   /* -- Unused constructor ------------------------------------------------- */
   Clock() = default;
 }; /* -- Clocks we make use of --------------------------------------------- */
-static const Clock<system_clock> cmSys; // System time
-static const Clock<CoreClock> cmHiRes; // Main high resolution timer
+static const Clock<system_clock>          cmSys;
+static const Clock<high_resolution_clock> cmHiRes;
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

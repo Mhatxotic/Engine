@@ -256,7 +256,7 @@ class FboCore :                        // The main Fbo operations manager
     fboConsole.FboInit("console",
       fboMain.DimGetWidth(), fboMain.DimGetHeight(), stTriangles, 2);
    }
-  /* -- Temporary de-init all guest, console and main Fbo objects ---------- */
+  /* -- Temporary deinit all guest, console and main Fbo objects ----------- */
   void FboCoreDeInit()
   { // De-init guest Fbo objects
     FboDeInit();

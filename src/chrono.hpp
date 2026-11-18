@@ -26,24 +26,24 @@ class Chrono
   /* -- Return uptime as milliseconds in a 64-bit uint --------------------- */
   uint64_t CCDeltaMS() const
     { return static_cast<uint64_t>(
-        cmHiRes.GetDurationCount<milliseconds>(ctpStart)); }
+        cmHiRes.ClockGetDurationCount<milliseconds>(ctpStart)); }
   /* -- Return uptime as nanoseconds in a 64-bit uint ---------------------- */
   uint64_t CCDeltaNS() const
     { return static_cast<uint64_t>(
-        cmHiRes.GetDurationCount<nanoseconds>(ctpStart)); }
+        cmHiRes.ClockGetDurationCount<nanoseconds>(ctpStart)); }
   /* -- Return uptime as microseconds in a 64-bit uint --------------------- */
   uint64_t CCDeltaUS() const
     { return static_cast<uint64_t>(
-        cmHiRes.GetDurationCount<microseconds>(ctpStart)); }
+        cmHiRes.ClockGetDurationCount<microseconds>(ctpStart)); }
   /* -- Return uptime as a double ------------------------------------------ */
   double CCDeltaToDouble() const
-    { return cmHiRes.TimePointToDouble(ctpStart); }
+    { return cmHiRes.ClockTimePointToDouble(ctpStart); }
   /* -- Reset the start time ----------------------------------------------- */
-  void CCReset() { ctpStart = cmHiRes.GetTime(); }
+  void CCReset() { ctpStart = cmHiRes.ClockGetTime(); }
   /* -- Constructor. Just initialise current time -------------------------- */
   Chrono() :
     /* -- Initialisers ----------------------------------------------------- */
-    ctpStart{ cmHiRes.GetTime() }      // Set start time
+    ctpStart{ cmHiRes.ClockGetTime() } // Set start time
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

@@ -354,7 +354,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     if(gluFbotex)
     { // Mark texture for deletion (explanation at top)
       cOgl->SetDeleteTexture(gluFbotex);
-      // Log the de-initialised
+      // Log the deinitialised
       cLog->LogDebugExSafe("Fbo '$' at $ removed texture $.",
         NameGet(), gluFbo, gluFbotex);
       // Done with this texture handle
@@ -363,7 +363,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     if(gluFbo)
     { // Mark Fbo for deletion (explanation at top)
       cOgl->SetDeleteFbo(gluFbo);
-      // Log the de-initialised
+      // Log the deinitialised
       cLog->LogDebugExSafe("Fbo '$' removed from $.", NameGet(), gluFbo);
       // Done with this Fbo handle
       gluFbo = 0;
@@ -471,9 +471,9 @@ static void FboDeInit()
 { // Ignore if no Fbo's
   if(cFbos->empty()) return;
   // De-init all Fbo's (NOT destroy them!) and log pre/post operation.
-  cLog->LogDebugExSafe("Fbos de-initialising $ objects...", cFbos->size());
+  cLog->LogDebugExSafe("Fbos deinitialising $ objects...", cFbos->size());
   for(Fbo*const fCptr : *cFbos) fCptr->FboDeInit();
-  cLog->LogInfoExSafe("Fbos de-initialised $ objects.", cFbos->size());
+  cLog->LogInfoExSafe("Fbos deinitialised $ objects.", cFbos->size());
 }
 /* -- Set Fbo render order reserve ----------------------------------------- */
 static CVarReturn FboSetOrderReserve(const size_t) { return ACCEPT; }

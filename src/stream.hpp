@@ -90,48 +90,49 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   ALfloat          alfVolume;          // Saved volume
   StrNCStrMap      ssMetaData;         // Metadata strings
   /* -- Updates the PCM position ------------------------------------------- */
-  void UpdatePosition() { llDecPos = llLivePos = ov_pcm_tell(&ovfContext); }
+  void StreamUpdatePosition()
+    { llDecPos = llLivePos = ov_pcm_tell(&ovfContext); }
   /* -- Get time elapsed --------------------------------------------------- */
-  ALdouble GetElapsed() { return ov_time_tell(&ovfContext); }
+  ALdouble StreamGetElapsed() { return ov_time_tell(&ovfContext); }
   /* -- Set time elapsed --------------------------------------------------- */
-  void SetElapsed(const ALdouble dElapsed)
-    { ov_time_seek(&ovfContext, dElapsed); UpdatePosition(); }
+  void StreamSetElapsed(const ALdouble dElapsed)
+    { ov_time_seek(&ovfContext, dElapsed); StreamUpdatePosition(); }
   /* -- Set time elapsed faster -------------------------------------------- */
-  void SetElapsedFast(const ALdouble dElapsed)
-    { ov_time_seek_page(&ovfContext, dElapsed); UpdatePosition(); }
+  void StreamSetElapsedFast(const ALdouble dElapsed)
+    { ov_time_seek_page(&ovfContext, dElapsed); StreamUpdatePosition(); }
   /* -- Get total time ----------------------------------------------------- */
-  ALdouble GetDuration() { return ov_time_total(&ovfContext, -1); }
+  ALdouble StreamGetDuration() { return ov_time_total(&ovfContext, -1); }
   /* -- Get PCM bytes duration --------------------------------------------- */
-  ogg_int64_t GetPosition() const { return llLivePos; }
+  ogg_int64_t StreamGetPosition() const { return llLivePos; }
   /* -- Set PCM byte position ---------------------------------------------- */
-  void SetPosition(const ogg_int64_t llNewPos)
-    { ov_pcm_seek(&ovfContext, llNewPos); UpdatePosition(); }
+  void StreamSetPosition(const ogg_int64_t llNewPos)
+    { ov_pcm_seek(&ovfContext, llNewPos); StreamUpdatePosition(); }
   /* -- Set PCM byte position fast ----------------------------------------- */
-  void SetPositionFast(const ogg_int64_t llPosition)
-    { ov_pcm_seek_page(&ovfContext, llPosition); UpdatePosition(); }
+  void StreamSetPositionFast(const ogg_int64_t llPosition)
+    { ov_pcm_seek_page(&ovfContext, llPosition); StreamUpdatePosition(); }
   /* -- Get total PCM samples ---------------------------------------------- */
-  ogg_int64_t GetSamples() { return ov_pcm_total(&ovfContext, -1); }
+  ogg_int64_t StreamGetSamples() { return ov_pcm_total(&ovfContext, -1); }
   /* -- Convert stop reason to string -------------------------------------- */
   const StdStringView
-    &StopReasonToString(const StreamStopReason ssrReason) const
+    &StreamStopReasonToString(const StreamStopReason ssrReason) const
   { return ctParent.srStrings.Get(ssrReason); }
   /* -- Convert stop reason to string -------------------------------------- */
   const StdStringView
-    &StateReasonToString(const StreamPlayState psReason) const
+    &StreamStateReasonToString(const StreamPlayState psReason) const
   { return ctParent.psStrings.Get(psReason); }
   /* -- Stop (without locks) ----------------------------------------------- */
-  void Stop(const StreamStopReason ssrReason)
+  void StreamStop(const StreamStopReason ssrReason)
   { // Don't have source class? There is nothing else to do!
     if(!sCptr) return;
     // Stop source from playing and unload it
-    sCptr->Stop();
-    UnloadSource();
+    sCptr->SourceStop();
+    StreamUnloadSource();
     // Go back to unplayed position
-    SetPosition(llLivePos);
+    StreamSetPosition(llLivePos);
     // Write debug reason for stoppage
     cLog->LogDebugExSafe("Stream stopped '$'! (R:$<$>;L:$<$>).", NameGet(),
-      StopReasonToString(ssrReason), ssrReason, StateReasonToString(spsState),
-      spsState);
+      StreamStopReasonToString(ssrReason), ssrReason,
+      StreamStateReasonToString(spsState), spsState);
     // What was the state before?
     switch(spsState)
     { // Anything else? Send playback event and set internal state to stopped
@@ -144,30 +145,30 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     }
   }
   /* -- Play (without locks) ----------------------------------------------- */
-  void Play()
+  void StreamPlay()
   { // If we already have a source? Stop and unqueue all buffers
-    if(sCptr) sCptr->StopAndUnQueueAllBuffers();
+    if(sCptr) sCptr->SourceStopAndUnQueueAllBuffers();
     // Grab and lock a new free source if need be return if we can't
-    else if(!LockSource()) return;
+    else if(!StreamLockSource()) return;
     // Update volume
-    UpdateVolume();
+    StreamUpdateVolume();
     // If we didn't rebuffer anything then no point playing
-    if(!FullRebuffer()) return;
+    if(!StreamFullRebuffer()) return;
     // Play the buffers
-    sCptr->Play();
+    sCptr->SourcePlay();
     // Send playback event if was not already playing
     LuaEvtDispatch(SE_PLAY, spsState);
     // Set internal state to playing
     spsState = PS_PLAYING;
   }
   /* -- Decompression routine (VORBIS->PCM) -------------------------------- */
-  bool Rebuffer(const ALuint uBufferId)
+  bool StreamRebuffer(const ALuint uBufferId)
   { // Reseek and rebuffer if looping
     if(llDecPos >= llLoopEnd) return false;
     // Bytes written to buffer and bytes per channel
     size_t stPos = 0, stBpc;
     // Number of channels as size_t
-    const size_t stChannels = static_cast<size_t>(GetChannels());
+    const size_t stChannels = static_cast<size_t>(StreamGetChannels());
     // Decode the buffer and grab the size. If nothing was decoded then reloop.
     if(cOal->Have32FPPB())
     { // Four bytes per channel (float)
@@ -232,17 +233,17 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     } // Return failure if no bytes were buffered
     if(!stPos) return false;
     // Buffer the PCM data if we have some
-    AL(cOal->BufferData(uBufferId, GetFormat(), MemPtr<ALvoid>(),
-      static_cast<ALsizei>(stPos), static_cast<ALsizei>(GetRate())),
+    AL(cOal->OalBufferData(uBufferId, StreamGetFormat(), MemPtr<ALvoid>(),
+      static_cast<ALsizei>(stPos), static_cast<ALsizei>(StreamGetRate())),
       "Failed to buffer ogg stream data!",
-      "Name",       NameGet(),   "BufferId",   uBufferId,
-      "Format",     GetFormat(), "BufferData", MemPtr<void>(),
-      "BufferSize", stPos,       "Rate",       GetRate());
+      "Name",       NameGet(),         "BufferId",   uBufferId,
+      "Format",     StreamGetFormat(), "BufferData", MemPtr<void>(),
+      "BufferSize", stPos,             "Rate",       StreamGetRate());
     // Return status
     return true;
   }
   /* -- Unload buffers ----------------------------------------------------- */
-  void UnloadBuffers()
+  void StreamUnloadBuffers()
   { // Unload the buffers if we have them
     if(!aluvBuffers.empty())
       ALL(cOal->DeleteBuffers(aluvBuffers),
@@ -250,22 +251,22 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
         NameGet(), aluvBuffers.size());
   }
   /* -- Unload source ------------------------------------------------------ */
-  void UnloadSource()
+  void StreamUnloadSource()
   { // If source is not available, bail
     if(!sCptr) return;
     // Save current state. Use our internal state to decide if we should replay
     // the source as if the context was lost due to hardware changes. IsPlaying
     // will report as AL_STOPPED and any music that was playing, will not
     // resume when the audio is reinitialised.
-    if(spsState == PS_PLAYING && IsPlaying()) spsState = PS_WASPLAYING;
+    if(spsState == PS_PLAYING && StreamIsPlaying()) spsState = PS_WASPLAYING;
     // Get reference to source, stop it, unqueue it
-    sCptr->StopAndUnQueueAllBuffers();
+    sCptr->SourceStopAndUnQueueAllBuffers();
     // Allow the source manager to recycle this source
-    sCptr->Unlock();
+    sCptr->SourceUnlock();
     sCptr = nullptr;
   }
   /* -- Load and lock source ----------------------------------------------- */
-  void GenerateBuffers()
+  void StreamGenerateBuffers()
   { // Ignore if we already have buffers
     if(aluvBuffers.empty())
       XC("Empty sources list!",
@@ -279,11 +280,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     aluvReQBuffers.reserve(aluvBuffers.size());
   }
   /* -- Lock source buffer ------------------------------------------------- */
-  bool LockSource()
+  bool StreamLockSource()
   { // Need a source?
     if(!sCptr)
     { // Lock a new source and if failed?
-      sCptr = GetSource();
+      sCptr = SourceGet();
       if(!sCptr)
       { // Log and return failure
         cLog->LogWarningExSafe("Stream out of sources locking '$'!",
@@ -294,70 +295,76 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     return true;
   }
   /* -- Get/Set loop ------------------------------------------------------- */
-  void SetLoopBegin(const ogg_int64_t llNewPos) { llLoopBegin = llNewPos; }
-  void SetLoopEnd(const ogg_int64_t llNewPos) { llLoopEnd = llNewPos; }
-  void SetLoopRange(const ogg_int64_t llNBPos, const ogg_int64_t llNEPos)
-    { SetLoopBegin(llNBPos); SetLoopEnd(llNEPos); }
-  void SetLoop(const ogg_int64_t llLoopCount)
+  void StreamSetLoopBegin(const ogg_int64_t llNewPos)
+    { llLoopBegin = llNewPos; }
+  void StreamSetLoopEnd(const ogg_int64_t llNewPos)
+    { llLoopEnd = llNewPos; }
+  void StreamSetLoopRange(const ogg_int64_t llNBPos, const ogg_int64_t llNEPos)
+    { StreamSetLoopBegin(llNBPos); StreamSetLoopEnd(llNEPos); }
+  void StreamSetLoop(const ogg_int64_t llLoopCount)
   { // Set the loop
     llLoop = llLoopCount;
     // Set loop to the end if we're to finish
-    if(!llLoop) SetLoopEnd(GetSamples());
+    if(!llLoop) StreamSetLoopEnd(StreamGetSamples());
   }
   /* -- Get functions with safe versions---------------------------- */ public:
-  bool IsPlaying() const { return sCptr && sCptr->GetState() == AL_PLAYING; }
-  ALfloat GetVolume() const { return alfVolume; }
+  bool StreamIsPlaying() const
+    { return sCptr && sCptr->SourceGetState() == AL_PLAYING; }
+  ALfloat StreamGetVolume() const { return alfVolume; }
   /* -- Get info (safe functions) ------------------------------------------ */
-  long GetRate() const { return viData.rate; }
-  int GetChannels() const { return viData.channels; }
-  int GetVersion() const { return viData.version; }
-  long GetBitRateUpper() const { return viData.bitrate_upper; }
-  long GetBitRateNominal() const { return viData.bitrate_nominal; }
-  long GetBitRateLower() const { return viData.bitrate_lower; }
-  long GetBitRateWindow() const { return viData.bitrate_window; }
+  long StreamGetRate() const { return viData.rate; }
+  int StreamGetChannels() const { return viData.channels; }
+  int StreamGetVersion() const { return viData.version; }
+  long StreamGetBitRateUpper() const { return viData.bitrate_upper; }
+  long StreamGetBitRateNominal() const { return viData.bitrate_nominal; }
+  long StreamGetBitRateLower() const { return viData.bitrate_lower; }
+  long StreamGetBitRateWindow() const { return viData.bitrate_window; }
   /* -- Get loop (unsafe functions) ---------------------------------------- */
-  ogg_int64_t GetLoop() const { return llLoop; }
-  ogg_int64_t GetLoopBegin() const { return llLoopBegin; }
-  ogg_int64_t GetLoopEnd() const { return llLoopEnd; }
+  ogg_int64_t StreamGetLoop() const { return llLoop; }
+  ogg_int64_t StreamGetLoopBegin() const { return llLoopBegin; }
+  ogg_int64_t StreamGetLoopEnd() const { return llLoopEnd; }
   /* -- Seek and tell functions (with locks) ------------------------------- */
-  void SetLoopSafe(const ogg_int64_t llLoopCount)
-    { MutexCall([this, llLoopCount](){ SetLoop(llLoopCount); }); }
-  ogg_int64_t GetLoopSafe()
-    { return MutexCall([this](){ return GetLoop(); }); }
-  ogg_int64_t GetLoopBeginSafe()
-    { return MutexCall([this](){ return GetLoopBegin(); }); }
-  ogg_int64_t GetLoopEndSafe()
-    { return MutexCall([this](){ return GetLoopEnd(); }); }
-  void SetLoopBeginSafe(const ogg_int64_t llNewPos)
-    { MutexCall([this, llNewPos](){ SetLoopBegin(llNewPos); }); }
-  void SetLoopEndSafe(const ogg_int64_t llNewPos)
-    { MutexCall([this, llNewPos](){ SetLoopEnd(llNewPos); }); }
-  void SetLoopRangeSafe(const ogg_int64_t llNBPos, const ogg_int64_t llNEPos)
-    { MutexCall([this, llNBPos, llNEPos]()
-        { SetLoopRange(llNBPos, llNEPos); }); }
-  ALdouble GetElapsedSafe()
-    { return MutexCall([this](){ return GetElapsed(); }); }
-  void SetElapsedSafe(const ALdouble dElapsed)
-    { MutexCall([this, dElapsed](){ SetElapsed(dElapsed); }); }
-  void SetElapsedFastSafe(const ALdouble dElapsed)
-    { MutexCall([this, dElapsed](){ SetElapsedFast(dElapsed); }); }
-  ALdouble GetDurationSafe()
-    { return MutexCall([this](){ return GetDuration(); }); }
-  ogg_int64_t GetPositionSafe()
-    { return MutexCall([this](){ return GetPosition(); }); }
-  void SetPositionSafe(const ogg_int64_t llNewPos)
-    { MutexCall([this, llNewPos](){ SetPosition(llNewPos); }); }
-  void SetPositionFastSafe(const ogg_int64_t llPosition)
-    { MutexCall([this, llPosition](){ SetPositionFast(llPosition); }); }
-  ogg_int64_t GetSamplesSafe()
-    { return MutexCall([this](){ return GetSamples(); }); }
+  void StreamSetLoopSafe(const ogg_int64_t llLoopCount)
+    { MutexCall([this, llLoopCount](){ StreamSetLoop(llLoopCount); }); }
+  ogg_int64_t StreamGetLoopSafe()
+    { return MutexCall([this](){ return StreamGetLoop(); }); }
+  ogg_int64_t StreamGetLoopBeginSafe()
+    { return MutexCall([this](){ return StreamGetLoopBegin(); }); }
+  ogg_int64_t StreamGetLoopEndSafe()
+    { return MutexCall([this](){ return StreamGetLoopEnd(); }); }
+  void StreamSetLoopBeginSafe(const ogg_int64_t llNewPos)
+    { MutexCall([this, llNewPos](){ StreamSetLoopBegin(llNewPos); }); }
+  void StreamSetLoopEndSafe(const ogg_int64_t llNewPos)
+    { MutexCall([this, llNewPos](){ StreamSetLoopEnd(llNewPos); }); }
+  void StreamSetLoopRangeSafe(const ogg_int64_t llNBPos,
+    const ogg_int64_t llNEPos)
+  { MutexCall([this, llNBPos, llNEPos]()
+      { StreamSetLoopRange(llNBPos, llNEPos); }); }
+  ALdouble StreamGetElapsedSafe()
+    { return MutexCall([this](){ return StreamGetElapsed(); }); }
+  void StreamSetElapsedSafe(const ALdouble dElapsed)
+    { MutexCall([this, dElapsed](){ StreamSetElapsed(dElapsed); }); }
+  void StreamSetElapsedFastSafe(const ALdouble dElapsed)
+    { MutexCall([this, dElapsed](){ StreamSetElapsedFast(dElapsed); }); }
+  ALdouble StreamGetDurationSafe()
+    { return MutexCall([this](){ return StreamGetDuration(); }); }
+  ogg_int64_t StreamGetPositionSafe()
+    { return MutexCall([this](){ return StreamGetPosition(); }); }
+  void StreamSetPositionSafe(const ogg_int64_t llNewPos)
+    { MutexCall([this, llNewPos](){ StreamSetPosition(llNewPos); }); }
+  void StreamSetPositionFastSafe(const ogg_int64_t llPosition)
+    { MutexCall([this, llPosition](){ StreamSetPositionFast(llPosition); }); }
+  ogg_int64_t StreamGetSamplesSafe()
+    { return MutexCall([this](){ return StreamGetSamples(); }); }
   /* ----------------------------------------------------------------------- */
-  ogg_int64_t GetOggBytes() const { return fmFile.MemSize<ogg_int64_t>(); }
+  ogg_int64_t StreamGetOggBytes() const
+    { return fmFile.MemSize<ogg_int64_t>(); }
   /* -- GetFormat ---------------------------------------------------------- */
-  ALenum GetFormat() const { return aleFormat; }
-  StdStringView GetFormatName() const { return cOal->GetALFormat(aleFormat); }
+  ALenum StreamGetFormat() const { return aleFormat; }
+  StdStringView StreamGetFormatName() const
+    { return cOal->OalFormatToString(aleFormat); }
   /* -- Main (from audio thread) ------------------------------------------- */
-  void Main()
+  void StreamMain()
   { // Wait for audio thread and lock access to stream buffers
     MutexCall([this](){
       // Compare state
@@ -369,25 +376,25 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
         { // Ignore if there is no source
           if(!sCptr) { spsState = PS_STANDBY; return; }
           // Return and stop if no buffers are queued
-          if(!sCptr->GetBuffersQueued()) return Stop(SR_STOPNOUNQ);
+          if(!sCptr->SourceGetBuffersQueued()) return StreamStop(SR_STOPNOUNQ);
           // Unqueue all the buffers
-          sCptr->UnQueueAllBuffers();
+          sCptr->SourceUnQueueAllBuffers();
           // Return if theres still buffers queued
-          if(sCptr->GetBuffersQueued()) return;
+          if(sCptr->SourceGetBuffersQueued()) return;
           // Full stop
-          return Stop(SR_STOPUNQ);
+          return StreamStop(SR_STOPUNQ);
         } // Is playing?
         case PS_PLAYING:
         { // Ignore if there is no source
           if(!sCptr) { spsState = PS_STANDBY; return; }
           // Stopped playing and should be playing? Start playing again.
-          if(!IsPlaying())
+          if(!StreamIsPlaying())
           { // Unqueue all buffers
-            sCptr->UnQueueAllBuffers();
+            sCptr->SourceUnQueueAllBuffers();
             // Do a full rebuffer of those buffers and if we can't rebuffer
-            if(!FullRebuffer())
+            if(!StreamFullRebuffer())
             { // Full stop!
-              Stop(SR_REBUFFAIL);
+              StreamStop(SR_REBUFFAIL);
               // Log problem
               cLog->LogWarningExSafe(
                 "Stream '$' was stopped and was unable to be rebuffered!",
@@ -399,13 +406,15 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
               "Stream '$' stopped unexpectedly and is being replayed!",
               fmFile.NameGet());
             // Replay the buffers
-            sCptr->Play();
+            sCptr->SourcePlay();
             // Done
             return;
           } // Until all the buffers have finished processing
-          if(const ALsizei alsiBuffersProcessed = sCptr->GetBuffersProcessed())
+          if(const ALsizei alsiBuffersProcessed =
+            sCptr->SourceGetBuffersProcessed())
           { // Unqueue the buffers and if we unqueued any?
-            sCptr->UnQueueBuffers(aluvUnQBuffers.data(), alsiBuffersProcessed);
+            sCptr->SourceUnQueueBuffers(aluvUnQBuffers.data(),
+              alsiBuffersProcessed);
             // For each unqueued buffer
             StdForEach(seq, aluvUnQBuffers.cbegin(),
               next(aluvUnQBuffers.cbegin(), alsiBuffersProcessed),
@@ -416,13 +425,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
               // the decoder position which will be way after the live
               // playback position.
               llLivePos +=
-                cOal->GetBufferInt<ogg_int64_t>(aluBuffer, AL_SIZE) /
+                cOal->OalGetBufferInt<ogg_int64_t>(aluBuffer, AL_SIZE) /
                 // This could be 16 (if no AL_EXT_FLOAT32) or 32.
-                (cOal->GetBufferInt<ogg_int64_t>(aluBuffer, AL_BITS) / 8) /
+                (cOal->OalGetBufferInt<ogg_int64_t>(aluBuffer, AL_BITS) / 8) /
                 // This should always be 1 or 2.
-                (cOal->GetBufferInt<ogg_int64_t>(aluBuffer, AL_CHANNELS));
+                (cOal->OalGetBufferInt<ogg_int64_t>(aluBuffer, AL_CHANNELS));
               // Try to rebuffer data to it and if succeeded?
-              if(Rebuffer(aluBuffer))
+              if(StreamRebuffer(aluBuffer))
               { // Add to queue rebuffer list and goto next unqueued buffer
                 aluvReQBuffers.push_back(aluBuffer);
                 return;
@@ -430,24 +439,25 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
               if(!llLoop)
               { // Finish playing, reset position and break
                 spsState = PS_FINISHING;
-                SetPosition(0);
+                StreamSetPosition(0);
                 return;
               } // Seek to start and try rebuffer again and if failed still?
-              SetPosition(llLoopBegin);
-              if(!Rebuffer(aluBuffer))
+              StreamSetPosition(llLoopBegin);
+              if(!StreamRebuffer(aluBuffer))
               { // Stop playing, reset position and break
-                Stop(SR_RWREBUFFAIL);
-                SetPosition(0);
+                StreamStop(SR_RWREBUFFAIL);
+                StreamSetPosition(0);
                 return;
               } // We have a buffer to re-queue
               aluvReQBuffers.push_back(aluBuffer);
               // If not looping forever? Reduce count and if zero play to end
-              if(llLoop != -1 && !--llLoop) SetLoopEnd(GetSamples());
+              if(llLoop != -1 && !--llLoop)
+                StreamSetLoopEnd(StreamGetSamples());
             });
             // Have buffers to re-queue?
             if(aluvReQBuffers.size())
             { // Re-queue them
-              sCptr->QueueBuffers(aluvReQBuffers.data(),
+              sCptr->SourceQueueBuffers(aluvReQBuffers.data(),
                 static_cast<ALsizei>(aluvReQBuffers.size()));
               // Clear the re-queue
               aluvReQBuffers.clear();
@@ -460,15 +470,15 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     });
   }
   /* -- Load source and buffers during a reinit ---------------------------- */
-  void GenerateSourceAndBuffers()
+  void StreamGenerateSourceAndBuffers()
   { // Protect modifications from audio main thread
     MutexCall([this](){
       // Generate buffer id's
-      GenerateBuffers();
+      StreamGenerateBuffers();
       // Ignore and set to standby if wasn't playing before
       if(spsState != PS_WASPLAYING) { spsState = PS_STANDBY; return; }
       // Lock the source and return with message if we can't
-      if(!LockSource())
+      if(!StreamLockSource())
       { // Log problem
         cLog->LogWarningExSafe(
           "Stream '$' could not be allocated a source after reset!",
@@ -478,42 +488,43 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
         // Done
         return;
       } // If we didn't rebuffer anything then no point playing
-      if(!FullRebuffer())
+      if(!StreamFullRebuffer())
       { // Log problem
         cLog->LogWarningExSafe(
           "Stream '$' could not be rebuffered after reset!",
           fmFile.NameGet());
         // Set fully stopped and return
-        return Stop(SR_GENBUFFAIL);
+        return StreamStop(SR_GENBUFFAIL);
       } // Update volume
-      UpdateVolume();
+      StreamUpdateVolume();
       // Play the buffers
-      sCptr->Play();
+      sCptr->SourcePlay();
       // Set internal state to playing
       spsState = PS_PLAYING;
     });
   }
   /* -- Unload source and buffers ------------------------------------------ */
-  void UnloadSourceAndBuffers() { UnloadSource(); UnloadBuffers(); }
+  void StreamUnloadSourceAndBuffers()
+    { StreamUnloadSource(); StreamUnloadBuffers(); }
   /* -- Update volume ------------------------------------------------------ */
-  void UpdateVolume()
+  void StreamUpdateVolume()
     { if(sCptr)
-        sCptr->SetGain(alfVolume * cMixer->MixerGetAdjStreamVolume()); }
+        sCptr->SourceSetGain(alfVolume * cMixer->MixerGetAdjStreamVolume()); }
   /* -- Update and apply volume -------------------------------------------- */
-  void SetVolume(const ALfloat fNewVolume)
-    { alfVolume = fNewVolume; UpdateVolume(); }
+  void StreamSetVolume(const ALfloat fNewVolume)
+    { alfVolume = fNewVolume; StreamUpdateVolume(); }
   /* -- Fully rebuffer stream data ----------------------------------------- */
-  bool FullRebuffer()
+  bool StreamFullRebuffer()
   { // Start from buffer at index 0
     size_t stIndex = 0;
     // Until we run out of buffers allocated
     while(stIndex < aluvBuffers.size())
     { // If we could not rebuffer then we maybe at the end of file
-      if(!Rebuffer(aluvBuffers[stIndex]))
+      if(!StreamRebuffer(aluvBuffers[stIndex]))
       { // Try to buffer from the loop start
-        SetPosition(llLoopBegin);
+        StreamSetPosition(llLoopBegin);
         // Try to rebuffer again and if failed then throw an error
-        if(!Rebuffer(aluvBuffers[stIndex]))
+        if(!StreamRebuffer(aluvBuffers[stIndex]))
           XC("Full rebuffer from loop start failed!",
             "Name", fmFile.NameGet(),
             "LoopBegin", static_cast<uint64_t>(llLoopBegin));
@@ -522,17 +533,18 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     } // We can't play anything if we couldn't decode to one buffer
     if(!stIndex) return false;
     // Queue the buffers and play them
-    sCptr->QueueBuffers(aluvBuffers.data(), static_cast<ALsizei>(stIndex));
+    sCptr->SourceQueueBuffers(aluvBuffers.data(),
+      static_cast<ALsizei>(stIndex));
     // We buffered something
     return true;
   }
   /* -- Play with lock ----------------------------------------------------- */
-  void PlaySafe() { MutexCall([this](){ Play(); }); }
+  void StreamPlaySafe() { MutexCall([this](){ StreamPlay(); }); }
   /* -- Stop with lock ----------------------------------------------------- */
-  void StopSafe(const StreamStopReason ssrReason)
-    { MutexCall([this, ssrReason](){ Stop(ssrReason); }); }
+  void StreamStopSafe(const StreamStopReason ssrReason)
+    { MutexCall([this, ssrReason](){ StreamStop(ssrReason); }); }
   /* -- Load from memory --------------------------------------------------- */
-  void AsyncReady(FileMap &fmData)
+  bool AsyncReady(FileMap &fmData)
   { // Set file class
     fmFile.FileMapSwap(fmData);
     // Initialise context and test for error
@@ -547,7 +559,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     // a stream with no data.
     aluvBuffers.resize(
       UtilClamp(static_cast<size_t>(ceil(static_cast<ALdouble>
-      (GetSamples()) / static_cast<ALdouble>(ctParent.stBufSize))), 1,
+      (StreamGetSamples()) / static_cast<ALdouble>(ctParent.stBufSize))), 1,
       ctParent.stBufCount));
     // Get info about ogg and copy it into our static buffer if succeeded,
     // else show an exception if failed. This removes dereferencing of the
@@ -556,18 +568,18 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
       StdMemCopy(&viData, viPtr, sizeof(viData));
     else XC("Failed to get vorbis info!", "Name", NameGet());
     // Only 1-2 channels supported
-    if(GetChannels() < 1 || GetChannels() > 2)
+    if(StreamGetChannels() < 1 || StreamGetChannels() > 2)
       XC("Unsupported channel count!",
-        "Name", NameGet(), "Channels", GetChannels());
+        "Name", NameGet(), "Channels", StreamGetChannels());
     // Compare number of channels in file to set appropriate format
-    aleFormat = GetChannels() == 1 ?
+    aleFormat = StreamGetChannels() == 1 ?
       (cOal->Have32FPPB() ? AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_MONO16) :
       (cOal->Have32FPPB() ? AL_FORMAT_STEREO_FLOAT32 : AL_FORMAT_STEREO16);
     // Allocate the buffer with size from global setting. We can re-use the
     // 'Memory' class from the 'AsyncLoader' class.
     MemInitBlank(ctParent.stBufSize);
     // Set default loop position to the end
-    SetLoopRange(0, GetSamples());
+    StreamSetLoopRange(0, StreamGetSamples());
     // Parse vorbis comments and if we got them?
     if(vorbis_comment*const vcStrings = ov_comment(&ovfContext, -1))
     { // Parse the comments and then free the strings
@@ -580,17 +592,19 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
           cLog->LogNLCDebugExSafe("- Vorbis comment: $ -> $.",
             sncsmpPair.first, sncsmpPair.second);
     } // Generate buffers, recommending this amount
-    GenerateBuffers();
+    StreamGenerateBuffers();
     // Log ogg loaded
     cLog->LogInfoExSafe(
       "Stream loaded '$' (C=$;R=$;BR=$:$:$:$;D$=$;B=$;BS=$;V=$$).",
-      NameGet(), GetChannels(), GetRate(), viData.bitrate_upper,
+      NameGet(), StreamGetChannels(), StreamGetRate(), viData.bitrate_upper,
       viData.bitrate_nominal, viData.bitrate_lower, viData.bitrate_window,
-      StdIOSFixed, GetDuration(), aluvBuffers.size(), MemSize(), StdIOSHex,
-      GetVersion());
+      StdIOSFixed, StreamGetDuration(), aluvBuffers.size(), MemSize(),
+      StdIOSHex, StreamGetVersion());
+    // FileMap references the 'Memory' base class so don't free it
+    return false;
   }
   /* -- Return metadata as table ------------------------------------------- */
-  const StrNCStrMap &GetMetaData() const { return ssMetaData; }
+  const StrNCStrMap &StreamGetMetaData() const { return ssMetaData; }
   /* -- Constructor -------------------------------------------------------- */
   Stream() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -622,10 +636,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     // If there is a source?
     if(sCptr)
     { // Stop the source, unqueue all buffers, unlock and
-      sCptr->StopAndUnQueueAllBuffers();
-      sCptr->Unlock();
+      sCptr->SourceStopAndUnQueueAllBuffers();
+      sCptr->SourceUnlock();
     } // Unload the buffers
-    UnloadBuffers();
+    StreamUnloadBuffers();
     // If stream opened? Clear ogg state
     if(ovfContext.datasource) ov_clear(&ovfContext);
     // Log that the stream was unloaded
@@ -656,14 +670,14 @@ CTOR_END_ASYNC_NOFUNCS(Streams, Stream, STREAM, STREAM,
 static void StreamManage()
 { // Lock access to streams collector list and process logic for each stream
   cStreams->MutexCall([](){
-    for(Stream*const sPtr : *cStreams) sPtr->Main();
+    for(Stream*const sPtr : *cStreams) sPtr->StreamMain();
   });
 }
 /* == Unload all source and buffers ======================================== */
 static void StreamDeInit()
 { // Lock access to streams collector list and uninitialise all buffers
   cStreams->MutexCall([](){
-    for(Stream*const sPtr : *cStreams) sPtr->UnloadSourceAndBuffers();
+    for(Stream*const sPtr : *cStreams) sPtr->StreamUnloadSourceAndBuffers();
   });
 }
 /* == Clear event callbacks on all streams ================================= */
@@ -677,21 +691,21 @@ static void StreamClearEvents()
 static void StreamReInit()
 { // Lock access to bitmap collector list and uninitialise source/buffers
   cStreams->MutexCall([](){
-    for(Stream*const sPtr : *cStreams) sPtr->GenerateSourceAndBuffers();
+    for(Stream*const sPtr : *cStreams) sPtr->StreamGenerateSourceAndBuffers();
   });
 }
 /* == Stop all streams ===================================================== */
 static void StreamStop()
 { // Lock access to bitmap collector list and stop all streams
   cStreams->MutexCall([](){
-    for(Stream*const sPtr : *cStreams) sPtr->StopSafe(SR_STOPALL);
+    for(Stream*const sPtr : *cStreams) sPtr->StreamStopSafe(SR_STOPALL);
   });
 }
 /* == Update all streams base volume======================================== */
 static void StreamCommitVolume()
 { // Lock access to bitmap collector list and update all stream volumes
   cStreams->MutexCall([](){
-    for(Stream*const sPtr : *cStreams) sPtr->UpdateVolume();
+    for(Stream*const sPtr : *cStreams) sPtr->StreamUpdateVolume();
   });
 }
 /* == Set number of buffers to allocate per stream ========================= */

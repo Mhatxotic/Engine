@@ -42,7 +42,7 @@ class GlFWCursor
   void CursorDeInit() { CursorDoDeInit(); gcContext = nullptr; }
   /* -- Return the context ------------------------------------------------- */
   GLFWcursor *CursorGetContext() const { return gcContext; }
-  /* -- Destruct that de-initialises the cursor ---------------------------- */
+  /* -- Destruct that deinitialises the cursor ----------------------------- */
   ~GlFWCursor() { if(CursorGetContext()) CursorDoDeInit(); }
   /* -- Standby constructor ------------------------------------------------ */
   explicit GlFWCursor(const int iId) :

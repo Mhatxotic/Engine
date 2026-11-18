@@ -165,7 +165,8 @@ class Log :                            // The actual class body
   { // Bail if initialised
     if(FStreamClosed()) return;
     // Log file closure
-    LogWriteString(StrFormat("Log file closed at $.", cmSys.FormatTime()));
+    LogWriteString(StrFormat("Log file closed at $.",
+      cmSys.ClockFormatTime()));
     // Done so close the file
     FStreamClose();
   }
@@ -298,7 +299,8 @@ class Log :                            // The actual class body
   bool LogInit(const StdStringView &ssvFN)
   { // Try to create the file, or open append it and return if failure
     if(FStreamOpen(ssvFN, fsmMode)) return false;
-    LogWriteStringEx("Log file is '$' at $.", NameGet(), cmSys.FormatTime());
+    LogWriteStringEx("Log file is '$' at $.", NameGet(),
+      cmSys.ClockFormatTime());
     return true;
   }
   /* -- Constructor --------------------------------------------- */ protected:
@@ -365,7 +367,7 @@ class Log :                            // The actual class body
             case '+':
               // Create automatically generated filename and return if failed
               if(!LogInit(StrAppend(cMetadata->MetadataGetShortTitle(),
-                   cmSys.FormatTime(cCommon->CommonFileTs().data()),
+                   cmSys.ClockFormatTime(cCommon->CommonFileTs().data()),
                    ssvLogExt)))
                 return DENY;
               break;

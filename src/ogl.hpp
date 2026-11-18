@@ -316,7 +316,12 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   }
   /* -- Load GL extensions ------------------------------------------------- */
   void LoadFunctions()
-  { // Helper macro
+  { // Number of functions we're loading
+    const size_t stFunctions = sizeof(sAPI) / sizeof(void*);
+    // Log functions initialising
+    cLog->LogDebugExSafe(
+      "Ogl initialising $ function addresses...", stFunctions);
+    // Helper macro
 #define GETPTR(v,t) LoadFunc(sAPI.v, #v)
     // Get basic ARB functions
     GETPTR(glActiveTexture, PFNGLACTIVETEXTUREPROC);
@@ -388,8 +393,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Done with this
 #undef GETPTR
     // Log functions initialised
-    cLog->LogDebugExSafe("Ogl loaded $ function addresses.",
-      sizeof(sAPI) / sizeof(void*));
+    cLog->LogDebugExSafe("Ogl initialised $ function addresses.", stFunctions);
   }
   /* == OpenGL features ============================================ */ public:
   template<typename IntType = decltype(gluTexSize)>
@@ -1011,61 +1015,6 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- GL is initialised? ------------------------------------------------- */
   bool IsGLInitialised() const { return FlagIsSet(GFL_INITIALISED); }
   bool IsGLNotInitialised() const { return !IsGLInitialised(); }
-  void SetInitialised(const bool bState, const bool bForce=false)
-  { // De-Initialising?
-    if(!bState)
-    { // If not initialised?
-      if(IsGLNotInitialised())
-      { // Only destructor allowed to continue
-        if(bForce) return;
-        // Show error
-        XC("Ogl is not initialised!");
-      } // Log as de-initialised
-      cLog->LogInfoSafe("Ogl set to de-initialised.");
-      // Return cleared flag
-      return FlagClear(GFL_INITIALISED);
-    } // Initialised and already initialised? Throw error
-    if(!bForce && IsGLInitialised()) XC("Ogl was already initialised!");
-    // Detect GL capabilities
-    DetectCapabilities();
-    // Show change in state
-    cLog->LogInfoExSafe(
-      "Ogl set initialised with capabilities 0x$$...\n"
-      "- Renderer: $.\n"
-      "- Version: $.\n"
-      "- Vendor: $.",
-      StdIOSHex, FlagGet(), GetRenderer(), GetVersion(), GetVendor());
-    // If debug log level?
-    if(cLog->LogHasLevel(LH_DEBUG))
-    { // Get number of extensions and return if we're not interested in them?
-      const GLuint gluExts = GetExtensionCount();
-      // Report device selected and basic capabilities
-      cLog->LogNLCDebugExSafe(
-        "- Clear colour: $,$,$,$; "      "Blend: $,$,$,$.\n"
-        "- Maximum texture size: $$^2; " "Pack alignment: $.\n"
-        "- Unpack alignment: $; "        "Unpack row length: $.\n"
-        "- Vertex attributes: $; "       "Texture units: $.\n"
-        "- Extensions count: $.",
-        ColourGetRed(),        ColourGetGreen(),      ColourGetBlue(),
-        ColourGetAlpha(),      FboBlendGetSrcRGB(),   FboBlendGetDstRGB(),
-        FboBlendGetSrcAlpha(), FboBlendGetDstAlpha(), StdIOSDec,
-        MaxTexSize(),          PackAlign(),           UnpackAlign(),
-        UnpackRowLength(),     MaxVertexAttribs(),    gluTexUnits,
-        gluExts);
-      // Build sorted list of extensions and log them all
-      StrUIntMap suimExts;
-      for(GLuint gluIndex = 0; gluIndex < gluExts; ++gluIndex)
-        suimExts.insert({ GetExtension(gluIndex), gluIndex });
-      for(const StrUIntMapPair &suimpPair : suimExts)
-        cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
-          suimpPair.first, suimpPair.second);
-    } // Show warning if not enough texture units
-    if(gluTexUnits < 3)
-      cLog->LogWarningSafe("Ogl detected only $ of the three texture units "
-        "that are required for video playback!");
-    // Set the initialised flag
-    FlagSet(GFL_INITIALISED);
-  }
   /* -- Set texture mode by filter id -------------------------------------- */
   void SetFilterById(const OglFilterEnum ofeId, GLint &gliMin, GLint &gliMag)
     const
@@ -1238,11 +1187,11 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       uHMax ? UtilMinimum(uHMax, MaxTexSize()) : MaxTexSize());
   }
   /* -- Initialise --------------------------------------------------------- */
-  void OglInit(const int iRefresh, const bool bForce=false)
+  void OglInit(const int iRefresh)
   { // Class initialised
-    if(!bForce) IHInitialise();
+    IHInitialise();
     // Log class initialising
-    cLog->LogDebugSafe("Ogl subsystem initialising...");
+    cLog->LogDebugSafe("Ogl class initialising...");
     // Set opengl context to engine thread
     cGlFW->WinSetContext();
     // Load GL functions and throw exception with reason if not all loaded
@@ -1254,8 +1203,43 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     // Set frame limit
     cdLimit = duration_cast<ClkDuration>(duration<double>(
       UtilPerSec(static_cast<double>(iRefresh))));
-    // OpenGL is now initialised
-    SetInitialised(true, bForce);
+    // Detect GL capabilities
+    DetectCapabilities();
+    // Show change in state
+    cLog->LogInfoExSafe(
+      "Ogl set to initialised with capabilities 0x$$...\n"
+      "- Renderer: $.\n"
+      "- Version: $.\n"
+      "- Vendor: $.",
+      StdIOSHex, FlagGet(), GetRenderer(), GetVersion(), GetVendor());
+    // If debug log level?
+    if(cLog->LogHasLevel(LH_DEBUG))
+    { // Get number of extensions and return if we're not interested in them?
+      const GLuint gluExts = GetExtensionCount();
+      // Report device selected and basic capabilities
+      cLog->LogNLCDebugExSafe(
+        "- Clear colour: $,$,$,$; "      "Blend: $,$,$,$.\n"
+        "- Maximum texture size: $$^2; " "Pack alignment: $.\n"
+        "- Unpack alignment: $; "        "Unpack row length: $.\n"
+        "- Vertex attributes: $; "       "Texture units: $.\n"
+        "- Extensions count: $.",
+        ColourGetRed(),        ColourGetGreen(),      ColourGetBlue(),
+        ColourGetAlpha(),      FboBlendGetSrcRGB(),   FboBlendGetDstRGB(),
+        FboBlendGetSrcAlpha(), FboBlendGetDstAlpha(), StdIOSDec,
+        MaxTexSize(),          PackAlign(),           UnpackAlign(),
+        UnpackRowLength(),     MaxVertexAttribs(),    gluTexUnits,
+        gluExts);
+      // Build sorted list of extensions and log them all
+      StrUIntMap suimExts;
+      for(GLuint gluIndex = 0; gluIndex < gluExts; ++gluIndex)
+        suimExts.insert({ GetExtension(gluIndex), gluIndex });
+      for(const StrUIntMapPair &suimpPair : suimExts)
+        cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
+          suimpPair.first, suimpPair.second);
+    } // Show warning if not enough texture units
+    if(gluTexUnits < 3)
+      cLog->LogWarningExSafe("Ogl detected only $ of the three texture units "
+        "that are required for video playback!", gluTexUnits);
     // Check that there is enough VRAM available if requested
     VerifyVRAMConstraints();
     // Init vsync
@@ -1298,58 +1282,61 @@ class Ogl :                            // OGL class for OpenGL use simplicity
       "Generate default Vbos failed!", "Count", ovhVbo.size());
     IGL(BindStaticVertexBuffer(gluVboGlobal),
       "Bind global Vbo failed!", "Index", gluVboGlobal);
+    // Set the initialised flag
+    FlagSet(GFL_INITIALISED);
     // Log class initialising
-    cLog->LogInfoSafe("Ogl subsystem initialised.");
+    cLog->LogInfoSafe("Ogl class initialised.");
   }
   /* -- DeInitialise ------------------------------------------------------- */
-  void OglDeInit(const bool bForce=false)
+  void OglDeInit()
   { // Ignore if class not initialised
     if(IHNotDeInitialise()) return;
-    // OpenGL is now de-initialised
-    SetInitialised(false, bForce);
     // Log class initialising
-    cLog->LogDebugSafe("Ogl subsystem de-initialising...");
+    cLog->LogDebugSafe("Ogl class deinitialising...");
     // Reset all binds
     OglResetBinds();
     // Have textures to delete?
     if(!gluivTextures.empty())
     { // Delete the texture handles
-      cLog->LogDebugExSafe("Ogl deleting $ marked texture handles...",
+      cLog->LogDebugExSafe("Ogl deinitialising $ marked texture handles...",
         gluivTextures.size());
       DeleteMarkedTextureHandles();
-      cLog->LogInfoSafe("Ogl deleted marked texture handles.");
+      cLog->LogInfoSafe("Ogl deinitialised marked texture handles.");
     } // Have Fbo's to delete?
     if(!gluivFbos.empty())
     { // Delete the Fbo handles
-      cLog->LogDebugExSafe("Ogl deleting $ marked Fbo handles...",
+      cLog->LogDebugExSafe("Ogl deinitialising $ marked Fbo handles...",
         gluivFbos.size());
       DeleteMarkedFboHandles();
-      cLog->LogInfoSafe("Ogl deleted marked Fbo handles.");
+      cLog->LogInfoSafe("Ogl deinitialised marked Fbo handles.");
     } // Vertex buffer object created?
-    if(gluVboGlobal && gluVboMain)
+    if(gluVboGlobal)
     { // Delete vertex buffer object
-      cLog->LogDebugExSafe("Ogl deleting $ vertex buffer objects $ and $...",
+      cLog->LogDebugExSafe(
+        "Ogl deinitialising $ vertex buffer objects $ and $...",
         ovhVbo.size(), gluVboGlobal, gluVboMain);
       IGLL(DeleteVertexBuffers(
         static_cast<GLsizei>(ovhVbo.size()), ovhVbo.data()),
-          "Failed to delete vertex buffer objects!",
-          "Global", gluVboGlobal, "Main", gluVboMain);
+        "Failed to deinitialise vertex buffer objects!",
+        "Global", gluVboGlobal);
       StdFill(seq, ovhVbo.begin(), ovhVbo.end(), 0);
-      cLog->LogInfoExSafe("Ogl deleted $ vertex buffer objects.",
+      cLog->LogInfoExSafe("Ogl deinitialised $ vertex buffer objects.",
         ovhVbo.size());
     } // Vertex array object created?
-    if(gluVaoGlobal && gluVaoMain)
+    if(gluVaoGlobal)
     { // Delete vertex array object
-      cLog->LogDebugExSafe("Ogl deleting $ vertex array objects $ and $...",
+      cLog->LogDebugExSafe(
+        "Ogl deinitialising $ vertex array objects $ and $...",
         ovhVao.size(), gluVaoGlobal, gluVaoMain);
       IGLL(DeleteVertexArrays(
         static_cast<GLsizei>(ovhVao.size()), ovhVao.data()),
-          "Failed to delete vertex array object!", "Index", gluVaoGlobal);
+        "Failed to deinitialise vertex array objects!",
+        "Index", gluVaoGlobal);
       StdFill(seq, ovhVao.begin(), ovhVao.end(), 0);
-      cLog->LogInfoExSafe("Ogl deleted $ vertex array objects.",
+      cLog->LogInfoExSafe("Ogl deinitialised $ vertex array objects.",
         ovhVao.size());
     } // Release opengl context from engine thread
-    GlFWSetContext();
+    cGlFW->WinClearContext();
     // Init flags
     FlagReset(GFL_NONE);
     // Pack alignment and texture size and caches
@@ -1361,8 +1348,10 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     ssvVendor = cCommon->CommonNull();
     ssvVersion = cCommon->CommonNull();
     ssvRenderer = cCommon->CommonNull();
+    // Clear initialised flag
+    FlagClear(GFL_INITIALISED);
     // Log class initialising
-    cLog->LogInfoSafe("Ogl subsystem de-initialised.");
+    cLog->LogInfoSafe("Ogl class deinitialised.");
   }
   /* -- Constructor --------------------------------------------- */ protected:
   Ogl() :
@@ -1422,14 +1411,14 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     /* -- Engine filter ID to OpenGL filter ID initialiser ----------------- */
     tflMM{{ { GL_NEAREST, GL_NEAREST }, { GL_NEAREST, GL_LINEAR }, // 00-01
             { GL_LINEAR,  GL_NEAREST }, { GL_LINEAR,  GL_LINEAR }, // 02-03
-            { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST },    // 04
-            { GL_LINEAR,  GL_NEAREST_MIPMAP_NEAREST },    // 05
-            { GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR  },    // 06
-            { GL_LINEAR,  GL_NEAREST_MIPMAP_LINEAR  },    // 07
-            { GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST  },    // 08
-            { GL_LINEAR,  GL_LINEAR_MIPMAP_NEAREST  },    // 09
-            { GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR   },    // 10
-            { GL_LINEAR,  GL_LINEAR_MIPMAP_LINEAR   } }}, // 11
+            { GL_NEAREST, GL_NEAREST_MIPMAP_NEAREST },             // 04
+            { GL_LINEAR,  GL_NEAREST_MIPMAP_NEAREST },             // 05
+            { GL_NEAREST, GL_NEAREST_MIPMAP_LINEAR  },             // 06
+            { GL_LINEAR,  GL_NEAREST_MIPMAP_LINEAR  },             // 07
+            { GL_NEAREST, GL_LINEAR_MIPMAP_NEAREST  },             // 08
+            { GL_LINEAR,  GL_LINEAR_MIPMAP_NEAREST  },             // 09
+            { GL_NEAREST, GL_LINEAR_MIPMAP_LINEAR   },             // 10
+            { GL_LINEAR,  GL_LINEAR_MIPMAP_LINEAR   } }},          // 11
     /* -- Other initialisers ----------------------------------------------- */
     ovhVao{ 0, 0 },                    // Initialise vertex array objects
     ovhVbo{ 0, 0 },                    // Initialise vertex buffer objects
@@ -1464,7 +1453,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     /* -- Set global pointer to static class ------------------------------- */
     { cOgl = this; }
   /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Ogl, OglDeInit(true))
+  DTORHELPER(~Ogl, OglDeInit())
   /* -- Setup VSync ------------------------------------------------ */ public:
   CVarReturn SetVSyncMode(const int iValue)
   { // Deny if the value is not valid

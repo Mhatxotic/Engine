@@ -250,7 +250,7 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
     return rjvRoot;
   }
   /* -- When file data has loaded ---------------------------------- */ public:
-  void AsyncReady(const FileMap &fmData)
+  bool AsyncReady(const FileMap &fmData)
   { // The memory isn't null-terminated so we have to do that and also this
     // could be a file map so we can't modify it so we'll load it all properly
     // and null-terminate it and place it into a RapidJson StringStream object
@@ -265,8 +265,10 @@ CTOR_BEGIN_ASYNC_DUO(Jsons, Json, CLHelperUnsafe, ICHelperUnsafe),
         "Name",   fmData.NameGet(), "Line", cswStream.GetLine(),
         "Column", cswStream.GetColumn());
     // Write that we parsed this stream
-    cLog->LogDebugExSafe("Json parsed $ bytes from '$' successfully.",
+    cLog->LogDebugExSafe("Json parsed $ bytes from '$'.",
       fmData.MemSize(), fmData.NameGet());
+    // Data was parsed so it can be cleared
+    return true;
   }
   /* -- Convert LUA table to rapidjson::Value and assign it as root key ---- */
   void ParseTableSafe(lua_State*const lS, const int iTIndex)

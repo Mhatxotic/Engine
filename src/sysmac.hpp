@@ -96,7 +96,7 @@ class SysCore :
       ullSystemTime = static_cast<uint64_t>(ttiInfo.system_time.seconds) *
         1000000ULL + static_cast<uint64_t>(ttiInfo.system_time.microseconds),
       ullTotalTime = ullUserTime + ullSystemTime,
-      ullTimeNow = cmHiRes.GetTimeUS();
+      ullTimeNow = cmHiRes.ClockGetTimeMicroseconds();
     // Persistent last times
     static uint64_t ullTimeNowL = 0, ullTotalTimeL = 0;
     // Calculate cpu usage. Sometimes total time can be less.
@@ -173,7 +173,7 @@ class SysCore :
   void UpdateCPUUsageData()
     { UpdateSystemCpuUsage(); UpdateProcessCpuUsage(); }
   /* -- Get uptime from clock class ---------------------------------------- */
-  StdTimeT GetUptime() const { return cmHiRes.GetTimeS(); }
+  StdTimeT GetUptime() const { return cmHiRes.ClockGetTimeSeconds(); }
   /* ----------------------------------------------------------------------- */
   StdString LibGetName(void*const vpModule, const char *cpAltName) const
   { // Return nothing if no module

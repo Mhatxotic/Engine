@@ -142,7 +142,7 @@ cConsole->ConsoleAddLineF(
    "Library: OpenAL $; Flags: $ (0x$$$).\n"
    "Playback: $.\n"
    "Sources: $ allocated (Max $ Stereo; $ Mono).",
-  cOal->GetVersion(),
+  cOal->OalGetVersion(),
   StrFromEvalTokens({
     { cOal->FlagIsSet(AFL_INITCONTEXT),     'C' },
     { cOal->FlagIsSet(AFL_INITDEVICE),      'D' },
@@ -213,7 +213,7 @@ Statistic sTable;
 sTable.Header("X").Header().Header("FILE", false).Header("C", false)
       .Header("CN", false).Reserve(cSockets->GetCertListSize());
 // Get current time
-StdTimeT stTime = cmSys.GetTimeS();
+StdTimeT stTime = cmSys.ClockGetTimeSeconds();
 // Walk shader list
 for(const Certs::X509Pair &xPair : cSockets->GetCertList())
 { // Get if certificate expired
@@ -603,7 +603,7 @@ sTable.Header("#").Header().Header("SIZE").Header().Header("CA").Header("MA")
       .Reserve(silDirs.size() + silFiles.size());
 // For each directory we found
 size_t stIndex = 0;
-const StdTimeT ttTime = cmSys.GetTimeS();
+const StdTimeT ttTime = cmSys.ClockGetTimeSeconds();
 for(const StrItemPair &sipPair : silDirs)
 { // Get item data and add directory information
   const Item &itData = sipPair.second;
@@ -1748,14 +1748,15 @@ cConsole->ConsoleAddLine(aArgs.size() == 2 ?
 /* ------------------------------------------------------------------------- */
 // Make a table to automatically format our data neatly
 Statistic sTable;
-sTable.Header("ID").Header("BID").Header("PFMT").Header("SFMT")
+sTable.Header("ID").Header("LBI").Header("RBI").Header("PFMT").Header("SFMT")
       .Header("NAME", false).Reserve(cSamples->size());
 // Walk sample object list
 for(const Sample*const sPtr : *cSamples)
 { // Get reference to class and write its data to the table
   const Sample &sRef = *sPtr;
-  sTable.DataN(sRef.Serial()).DataN(sRef.aluvNames.front())
-        .DataH(sRef.GetFormat(),4).DataH(sRef.GetSFormat(),4)
+  sTable.DataN(sRef.Serial()).DataN(sRef.SampleLeftName())
+        .DataN(sRef.SampleNameCount() >= 2 ? sRef.SampleRightName() : 0)
+        .DataH(sRef.SampleGetFormat(),4).DataH(sRef.SampleGetSFormat(),4)
         .Data(sRef.NameGet());
 } // Number of items in buffer
 cConsole->ConsoleAddLineA(sTable.Finish(),
@@ -1869,13 +1870,13 @@ if(aArgs.size() == 2)
   const double dConnect = sfcFlags.FlagIsSet(SS_STANDBY) ?
     ClockTimePointRangeToClampedDouble(sRef.GetTDisconnected(),
       sRef.GetTConnected()) :
-    cmHiRes.TimePointToClampedDouble(sRef.GetTConnected()),
+    cmHiRes.ClockTimePointToClampedDouble(sRef.GetTConnected()),
   // Set connected to connection time
   dInitial = ClockTimePointRangeToClampedDouble(sRef.GetTConnected(),
     sRef.GetTConnect()),
   // Get last read and write time
-  dRead = cmHiRes.TimePointToClampedDouble(sRef.GetTRead()),
-  dWrite = cmHiRes.TimePointToClampedDouble(sRef.GetTWrite());
+  dRead = cmHiRes.ClockTimePointToClampedDouble(sRef.GetTRead()),
+  dWrite = cmHiRes.ClockTimePointToClampedDouble(sRef.GetTWrite());
   // Write connected information
   return cConsole->ConsoleAddLineF("$\n"
     "- RX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
@@ -1968,23 +1969,29 @@ for(const Source*const sPtr : *cSources)
 { // Get reference to class
   const Source &sRef = *sPtr;
   // Get source play state and type
-  const ALenum alState = sRef.GetState();
-  const ALuint uType = sRef.GetType();
+  const ALenum alState = sRef.SourceGetState();
+  const ALuint uType = sRef.SourceGetType();
   // Add data to text table
-  sTable.DataN(sRef.Serial()).DataN(sRef.GetSource())
-        .DataE({{ sRef.GetClass(),    'C' }, { sRef.LockIsSet(),   'L' },
-                { sRef.GetLooping(),  'O' }, { sRef.GetRelative(), 'R' },
-                { sRef.GetExternal(), 'X' }})
+  sTable.DataN(sRef.Serial()).DataN(sRef.SourceGet())
+        .DataE({{ sRef.SourceGetClass(),    'C' },
+                { sRef.LockIsSet(),   'L' },
+                { sRef.SourceGetLooping(),  'O' },
+                { sRef.SourceGetRelative(), 'R' },
+                { sRef.SourceGetExternal(), 'X' }})
         .DataC(alState == AL_INITIAL ? 'I' : (alState == AL_PLAYING ? 'P' :
               (alState == AL_PAUSED  ? 'H' : (alState == AL_STOPPED ? 'S' :
                                        '?'))))
         .DataC(uType == AL_UNDETERMINED ? 'U' : (uType == AL_STATIC ? 'T' :
               (uType == AL_STREAMING    ? 'S' : '?')))
-        .DataN(sRef.GetBuffersQueued()).DataN(sRef.GetBuffersProcessed())
-        .DataN(sRef.GetBuffer())       .DataN(sRef.GetGain(), 6)
-        .DataN(sRef.GetMinGain(), 6)   .DataN(sRef.GetMaxGain(), 6)
-        .DataN(sRef.GetPitch(), 6)     .DataN(sRef.GetRefDist(), 6)
-        .DataN(sRef.GetMaxDist(), 6);
+        .DataN(sRef.SourceGetBuffersQueued())
+        .DataN(sRef.SourceGetBuffersProcessed())
+        .DataN(sRef.SourceGetBuffer())
+        .DataN(sRef.SourceGetGain(), 6)
+        .DataN(sRef.SourceGetMinGain(), 6)
+        .DataN(sRef.SourceGetMaxGain(), 6)
+        .DataN(sRef.SourceGetPitch(), 6)
+        .DataN(sRef.SourceGetRefDist(), 6)
+        .DataN(sRef.SourceGetMaxDist(), 6);
 } // Show total
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cSources->size(), "source.", "sources."));
@@ -2260,16 +2267,17 @@ for(Stream*const sPtr : *cStreams)
 { // Get reference to class and write its data to the table
   Stream &sRef = *sPtr;
   sTable.DataN(sRef.Serial()).DataE({
-    { sRef.LuaRefIsSet(), 'E' },       { sRef.LockIsSet(),   'L' },
-    { sRef.IsPlaying(),   'P' }
-  }).Data(sRef.GetLoop() == -1 ? "INF" : StrFromNum(sRef.GetLoop()))
-    .DataN(sRef.GetOggBytes()).DataN(sRef.GetElapsedSafe(), 1)
-    .DataN(sRef.GetDurationSafe(), 1).DataN(sRef.GetPositionSafe())
-    .DataN(sRef.GetSamplesSafe()).DataN(sRef.GetVolume(), 2)
-    .DataN(sRef.GetChannels()).DataN(sRef.GetRate())
-    .Data(sRef.GetFormatName()).DataN(sRef.GetBitRateUpper())
-    .DataN(sRef.GetBitRateNominal()).DataN(sRef.GetBitRateLower())
-    .DataN(sRef.GetBitRateWindow()).Data(sRef.NameGet());
+    { sRef.LuaRefIsSet(),     'E' }, { sRef.LockIsSet(),   'L' },
+    { sRef.StreamIsPlaying(), 'P' }
+  }).Data(sRef.StreamGetLoop() == -1 ?
+       "INF" : StrFromNum(sRef.StreamGetLoop()))
+    .DataN(sRef.StreamGetOggBytes()).DataN(sRef.StreamGetElapsedSafe(), 1)
+    .DataN(sRef.StreamGetDurationSafe(), 1).DataN(sRef.StreamGetPositionSafe())
+    .DataN(sRef.StreamGetSamplesSafe()).DataN(sRef.StreamGetVolume(), 2)
+    .DataN(sRef.StreamGetChannels()).DataN(sRef.StreamGetRate())
+    .Data(sRef.StreamGetFormatName()).DataN(sRef.StreamGetBitRateUpper())
+    .DataN(sRef.StreamGetBitRateNominal()).DataN(sRef.StreamGetBitRateLower())
+    .DataN(sRef.StreamGetBitRateWindow()).Data(sRef.NameGet());
 } // Show stream classes count
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cStreams->size(), "stream.", "streams."));
@@ -2408,7 +2416,7 @@ for(const Thread*const tPtr : *cThreads)
     .Data(TimeToShortDuration(cLog->
       CCDeltaToClampedDouble(tRef.ThreadGetEndTime())))
     .Data(TimeToShortDuration(tRef.ThreadIsRunning()
-       ? cmHiRes.TimePointToClampedDouble(tRef.ThreadGetStartTime())
+       ? cmHiRes.ClockTimePointToClampedDouble(tRef.ThreadGetStartTime())
        : ClockTimePointRangeToClampedDouble(tRef.ThreadGetEndTime(),
            tRef.ThreadGetStartTime())))
     .Data(tRef.NameGet());
@@ -2427,7 +2435,7 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 // Timestamp to use
 const char*const cpFmt = "%a %b %d %H:%M:%S %Y %z";
 // Get current time
-const StdTimeT tTime = cmSys.GetTimeS();
+const StdTimeT tTime = cmSys.ClockGetTimeSeconds();
 // Check if timezone's are different, if they are the same? Show local time
 if(TimeLocalTTtoStr(tTime, "%z") == TimeUTCTTtoStr(tTime, "%z"))
   cConsole->ConsoleAddLineF("Local and universal time is $.",
@@ -2478,21 +2486,26 @@ for(const Video*const vPtr : *cVideos)
   const Video &vRef = *vPtr;
   sTable.DataN(vRef.Serial())
     .DataE({
-      { vRef.Get709(),            '7' }, { vRef.IsSourceAvailable(), 'A' },
-      { vRef.FlagIsSet(FL_FILTER),'F' }, { vRef.GetKeyed(),          'K' },
-      { vRef.LuaRefIsSet(),       'L' }, { vRef.FlagIsSet(FL_PLAY),  'P' },
-      { vRef.GetFDR(),            'R' }, { vRef.FlagIsSet(FL_STOP),  'S' },
-      { vRef.FlagIsSet(FL_THEORA),'T' }, { vRef.FlagIsSet(FL_VORBIS),'V' },
+      { vRef.VideoGet709(),            '7' },
+      { vRef.VideoIsSourceAvailable(), 'A' },
+      { vRef.FlagIsSet(FL_FILTER),     'F' },
+      { vRef.VideoGetKeyed(),          'K' },
+      { vRef.LuaRefIsSet(),            'L' },
+      { vRef.FlagIsSet(FL_PLAY),       'P' },
+      { vRef.VideoGetFDR(),            'R' },
+      { vRef.FlagIsSet(FL_STOP),       'S' },
+      { vRef.FlagIsSet(FL_THEORA),     'T' },
+      { vRef.FlagIsSet(FL_VORBIS),     'V' },
     })
-    .Data(vRef.GetFormatAsIdentifier()).DataH(vRef.GetPixelFormat(),4)
-    .DataN(vRef.GetColourSpace())      .DataN(vRef.GetFrameWidth())
-    .DataN(vRef.GetFrameHeight())      .DataN(vRef.GetWidth())
-    .DataN(vRef.GetHeight())           .DataN(vRef.GetOriginX())
-    .DataN(vRef.GetOriginY())          .DataN(vRef.GetFPS(), 2)
-    .DataN(vRef.GetVideoTime(), 3)     .DataN(vRef.GetFrame())
-    .DataN(vRef.GetFrames())           .DataN(vRef.GetFramesSkipped())
-    .DataN(vRef.GetDrift(), 2)         .DataN(vRef.GetLength())
-    .Data(vRef.NameGet());
+    .Data(vRef.VideoGetFormatAsIdentifier())
+    .DataH(vRef.VideoGetPixelFormat(),4).DataN(vRef.VideoGetColourSpace())
+    .DataN(vRef.VideoGetFrameWidth()).DataN(vRef.VideoGetFrameHeight())
+    .DataN(vRef.VideoGetWidth()).DataN(vRef.VideoGetHeight())
+    .DataN(vRef.VideoGetOriginX()).DataN(vRef.VideoGetOriginY())
+    .DataN(vRef.VideoGetFPS(), 2).DataN(vRef.VideoGetTime(), 3)
+    .DataN(vRef.VideoGetFrame()).DataN(vRef.VideoGetFrames())
+    .DataN(vRef.VideoGetFramesSkipped()).DataN(vRef.VideoGetDrift(), 2)
+    .DataN(vRef.VideoGetLength()).Data(vRef.NameGet());
 } // Log counts
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cVideos->size(), "video.", "videos."));

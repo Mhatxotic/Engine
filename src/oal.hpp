@@ -16,22 +16,22 @@ namespace IOal {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFlags::P;
-using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace IMemory::P;            using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace Lib::OpenAL;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace IMemory::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace Lib::OpenAL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
 #define ALEX(EF,F,M,...)  do{ F; EF(M, ## __VA_ARGS__); }while(false) // :(
-#define ALL(F,M,...)      ALEX(cOal->LogALError, F, M, ## __VA_ARGS__)
-#define AL(F,M,...)       ALEX(cOal->CheckALError, F, M, ## __VA_ARGS__)
+#define ALL(F,M,...)      ALEX(cOal->OalLogALError, F, M, ## __VA_ARGS__)
+#define AL(F,M,...)       ALEX(cOal->OalCheckALError, F, M, ## __VA_ARGS__)
 #define ALNF(M,...)       AL(static_cast<void>(0), M, ## __VA_ARGS__)
 /* -- GL context error checking wrapper macros ----------------------------- */
-#define ALCL(F,M,...)     ALEX(cOal->LogALCError, F, M, ## __VA_ARGS__)
+#define ALCL(F,M,...)     ALEX(cOal->OalLogALCError, F, M, ## __VA_ARGS__)
 #define ALCLNF(M,...)     ALCL(static_cast<void>(0), M, ## __VA_ARGS__)
-#define ALC(F,M,...)      ALEX(cOal->CheckALCError, F, M, ## __VA_ARGS__)
+#define ALC(F,M,...)      ALEX(cOal->OalCheckALCError, F, M, ## __VA_ARGS__)
 #define ALCNF(M,...)      ALC(static_cast<void>(0), M, ## __VA_ARGS__)
 /* -- Typedefs ------------------------------------------------------------- */
 using ALUIntVector = StdVector<ALuint>; // A vector of ALuint's
@@ -54,21 +54,18 @@ BUILD_FLAGS(Oal,                       // OpenAL flags
   AFL_HAVESECADR           {Flag(13)}, // Capture remove device event?
   AFL_REINIT               {Flag(14)}, // Audio system is resetting?
   AFL_HRTFREQ              {Flag(15)}, // HRTF is requested enabled?
-  AFL_HRTFINIT             {Flag(16)}, // HRTF init was successful?
-  /* -- Masks -------------------------------------------------------------- */
-  AFL_VOLATILE{ AFL_INITDEVICE|AFL_INITCONTEXT|AFL_INFINITESOURCES|
-                AFL_CONTEXTCURRENT|AFL_INITIALISED|AFL_HAVE32FPPB|
-                AFL_HAVEENUMEXT }
+  AFL_HRTFINIT             {Flag(16)}  // HRTF init was successful?
 );/* == Oal class ========================================================== */
 class Oal;                             // Class prototype
 static Oal *cOal = nullptr;            // Pointer to global class
 class Oal :                            // Actual class body
   /* -- Base classes ------------------------------------------------------- */
+  private InitHelper,                  // Initialisation helper
   public OalFlags                      // OpenAL flags
 { /* -- Error macros for use inside the class only ------------------------- */
-#define IAL(F,M,...)  ALEX(CheckALError, F, M, ## __VA_ARGS__)
+#define IAL(F,M,...)  ALEX(OalCheckALError, F, M, ## __VA_ARGS__)
 #define IALNF(M,...)  IAL(static_cast<void>(0), M, ## __VA_ARGS__)
-#define IALC(F,M,...) ALEX(CheckALCError, F, M, ## __VA_ARGS__)
+#define IALC(F,M,...) ALEX(OalCheckALCError, F, M, ## __VA_ARGS__)
 #define IALCNF(M,...) IALC(static_cast<void>(0), M, ## __VA_ARGS__)
   /* ----------------------------------------------------------------------- */
   using ALenumMap = LookupMap<ALenum>; // A map of ALenum integers
@@ -89,129 +86,205 @@ class Oal :                            // Actual class body
   /* -- Public Variables --------------------------------------------------- */
   ALenum           aleQuery;           // Device query devices command
   /* -- AL generic context error logger ------------------------------------ */
-  template<ALenum aleNoErr, typename FuncTypeErr, typename FuncTypeStr,
-    typename StrType, typename ...VarArgs>
-  void LogErrorGeneric(FuncTypeErr fteFunc, FuncTypeStr ftsFunc,
-    const char*const cpPrefix, StrType &&strFormat, VarArgs &&...vaArgs) const
-  { // Enumerate all queued OpenAL errors and print them
-    for(ALenum aleError = fteFunc();
-               aleError != aleNoErr;
-               aleError = fteFunc())
-      cLog->LogWarningExSafe("AL$ call failed: $ ($/0x$$).", cpPrefix,
-        StrFormat(StdForward<StrType>(strFormat),
-        StdForward<VarArgs>(vaArgs)...), ftsFunc(aleError),
-        StdIOSHex, aleError);
+  template<typename ALEnumType, ALEnumType aletNoErr, typename FuncTypeErr,
+    typename FuncTypeStr, typename StrType, typename ...VarArgs>
+  void OalLogErrorGeneric(FuncTypeErr fteFunc, FuncTypeStr ftsFunc,
+    const StdStringView &ssvPrefix, StrType &&strFormat,
+    VarArgs &&...vaArgs) const
+  { // Run the error function and store and compare the result
+    switch(const ALEnumType aletError = fteFunc())
+    { // No error so return
+      case aletNoErr: return;
+      // Anything else is an error
+      default: cLog->LogWarningExSafe("AL$ call failed: $ ($/0x$$).",
+        ssvPrefix, StrFormat(StdForward<StrType>(strFormat),
+        StdForward<VarArgs>(vaArgs)...), ftsFunc(aletError),
+        StdIOSHex, aletError);
+    } // Executing never gets here. Note that al(c)GetError() isn't a queue
   }
   /* -- AL generic exception handler --------------------------------------- */
-  template<ALenum aleNoErr, typename FuncTypeErr, typename FuncTypeStr,
-    typename ...VarArgs>
-  void CheckErrorGeneric(FuncTypeErr fteFunc, FuncTypeStr ftsFunc,
+  template<typename ALEnumType, ALEnumType aletNoErr, typename FuncTypeErr,
+    typename FuncTypeStr, typename ...VarArgs>
+  void OalCheckErrorGeneric(FuncTypeErr fteFunc, FuncTypeStr ftsFunc,
     const char*const cpType, const char*const cpReason, VarArgs &&...vaArgs)
       const
-  { // Get error and return if error is good
-    const ALenum aleError = fteFunc();
-    if(aleError == aleNoErr) [[likely]] return;
-    // Build an exception object to show why the call failed
-    XC(StrFormat("AL$ call failed: $", cpType, cpReason),
-      StdForward<VarArgs>(vaArgs)...,
-      "Code", aleError, "Reason", ftsFunc(aleError));
+  { // Run the error function and store and compare the result
+    switch(const ALEnumType aletError = fteFunc())
+    { // No error so return
+      case aletNoErr: return;
+      // Anything else build an exception object to show why the call failed
+      default: XC(StrFormat("AL$ call failed: $", cpType, cpReason),
+                    StdForward<VarArgs>(vaArgs)...,
+                    "Code", aletError, "Reason", ftsFunc(aletError));
+    } // Executing never gets here. Note that al(c)GetError() isn't a queue
   }
-  /* -- Destroy the set context and device --------------------------------- */
-  void DestroyContext() { alcMakeContextCurrent(nullptr);
-                          alcDestroyContext(alcContext); }
-  void DestroyDevice() { alcCloseDevice(alcDevice); }
+  /* -- Set context -------------------------------------------------------- */
+  static void OalMakeContextCurrent(ALCcontext*const alcNContext = nullptr)
+    { alcMakeContextCurrent(alcNContext); }
+  /* -- Destroy the context ------------------------------------------------ */
+  bool OalDestroyContext()
+  { // If context is set?
+    if(alcContext)
+    { // Context is acquired
+      if(FlagIsSet(AFL_CONTEXTCURRENT))
+      { // Release the context
+        cLog->LogDebugSafe("Oal releasing playback context...");
+        OalMakeContextCurrent();
+        OalLogALCError("Oal failed to release context with flags 0x$$!",
+          StdIOSHex, FlagGet());
+        cLog->LogDebugSafe("Oal released playback context.");
+      } // Destroy the context
+      cLog->LogDebugSafe("Oal deinitialising playback context...");
+      alcDestroyContext(alcContext);
+      OalLogALCError("Oal failed to deinitialise context with flags 0x$$!",
+        StdIOSHex, FlagGet());
+      cLog->LogDebugSafe("Oal deinitialising playback context.");
+      // Success
+      return true;
+    } // Context is not set but init and acquire flag is set
+    if(FlagIsAnyOfSet(AFL_CONTEXTCURRENT | AFL_INITCONTEXT))
+    { // Clear the context flag and show warning
+      cLog->LogWarningExSafe(
+        "Oal cannot destroy a null context with flags 0x$$!",
+        StdIOSHex, FlagGet());
+      // Already unloaded but success anyway
+      return true;
+    } // Nothing unloaded
+    return false;
+  }
+  /* -- Destroy the device ------------------------------------------------- */
+  bool OalDestroyDevice()
+  { // If device is set?
+    if(alcDevice)
+    { // Log that we're closing the device
+      cLog->LogDebugSafe("Oal destroying playback device...");
+      // Close the device
+      alcCloseDevice(alcDevice);
+      // Because alcDevice is now invalidated we can't use it anymore and
+      // therefore we can't use the standed LogALCError() function
+      switch(const ALCenum alceError = alcGetError(nullptr))
+      { // Success
+        case ALC_NO_ERROR: cLog->LogDebugSafe(
+          "Oal destroyed playback device.");
+           break;
+        // Failed so report as warning in log
+        default: cLog->LogWarningExSafe(
+          "Oal destroy device failed with $[0x$$]!",
+          GetALCErr(alceError), StdIOSHex, alceError);
+          break;
+      } // Success
+      return true;
+    } // Device is not set but init and acquire flag is set
+    else if(FlagIsAnyOfSet(AFL_INITDEVICE))
+    { // Clear the context flag and show warning
+      cLog->LogWarningExSafe(
+        "Oal cannot destroy a null device with flags 0x$$!",
+        StdIOSHex, FlagGet());
+      // Already unloaded but success anyway
+      return true;
+    } // Nothing unloaded
+    return false;
+  }
+  /* -- Do deInitialise ---------------------------------------------------- */
+  void OalDeInitNoReset()
+  { // Log that we're deinitialising
+    cLog->LogDebugSafe("Oal class deinitialising...");
+    // Destroy the context before the device
+    OalDestroyContext();
+    OalDestroyDevice();
+    // Finished so log that we did
+    cLog->LogDebugSafe("Oal class deinitialised.");
+  }
+  /* -- Return current error for specified device -------------------------- */
+  ALenum OalGetContextError() const { return alcGetError(alcDevice); }
   /* -- Return error status ---------------------------------------- */ public:
-  ALenum GetContextError() const { return alcGetError(alcDevice); }
-  bool HaveContextError() const { return GetContextError() != ALC_NO_ERROR; }
-  bool HaveNoContextError() const { return !HaveContextError(); }
-  static ALenum GetError() { return alGetError(); }
-  static bool HaveError() { return GetError() != AL_NO_ERROR; }
-  static bool HaveNoError() { return !HaveError(); }
+  static ALenum OalGetError() { return alGetError(); }
+  static bool OalHaveError() { return OalGetError() != AL_NO_ERROR; }
   /* -- Get query method --------------------------------------------------- */
-  ALenum GetQueryMethod() const { return aleQuery; }
+  ALenum OalGetQueryMethod() const { return aleQuery; }
   /* -- Return version information ----------------------------------------- */
-  const StdString &GetVersion() const { return strVersion; }
+  const StdString &OalGetVersion() const { return strVersion; }
   /* -- AL context error logger -------------------------------------------- */
   template<typename StrType, typename ...VarArgs>
-    void LogALCError(StrType &&strFormat, VarArgs &&...vaArgs) const
-  { LogErrorGeneric<ALC_NO_ERROR>(
-      [this]()->ALenum{ return GetContextError(); },
-      [this](const ALenum aleError){ return GetALCErr(aleError); },
+    void OalLogALCError(StrType &&strFormat, VarArgs &&...vaArgs) const
+  { OalLogErrorGeneric<ALCenum, ALC_NO_ERROR>(
+      [this]()->ALCenum{ return OalGetContextError(); },
+      [this](const ALCenum alceError){ return GetALCErr(alceError); },
       " context", StdForward<StrType>(strFormat),
       StdForward<VarArgs>(vaArgs)...); }
   /* -- AL error logger ---------------------------------------------------- */
   template<typename StrType, typename ...VarArgs>
-    void LogALError(StrType &&strFormat, VarArgs &&...vaArgs) const
-  { LogErrorGeneric<AL_NO_ERROR>(
-      []()->ALenum{ return GetError(); },
+    void OalLogALError(StrType &&strFormat, VarArgs &&...vaArgs) const
+  { OalLogErrorGeneric<ALenum, AL_NO_ERROR>(
+      []()->ALenum{ return OalGetError(); },
       [this](const ALenum aleError){ return GetALErr(aleError); },
-      caBlank, StdForward<StrType>(strFormat),
+      cCommon->CommonBlank(), StdForward<StrType>(strFormat),
       StdForward<VarArgs>(vaArgs)...); }
   /* -- AL context error handler ------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckALCError(const char*const cpReason, VarArgs &&...vaArgs) const
-  { CheckErrorGeneric<ALC_NO_ERROR>(
-      [this]()->ALenum{ return GetContextError(); },
-      [this](const ALenum aleError) { return GetALCErr(aleError); },
+    void OalCheckALCError(const char*const cpReason, VarArgs &&...vaArgs) const
+  { OalCheckErrorGeneric<ALCenum, ALC_NO_ERROR>(
+      [this]()->ALCenum{ return OalGetContextError(); },
+      [this](const ALCenum alceError) { return GetALCErr(alceError); },
       " context", cpReason, StdForward<VarArgs>(vaArgs)...); }
   /* -- AL error handler --------------------------------------------------- */
   template<typename ...VarArgs>
-    void CheckALError(const char*const cpReason, VarArgs &&...vaArgs) const
-  { CheckErrorGeneric<AL_NO_ERROR>(
-      []()->ALenum{ return GetError(); },
+    void OalCheckALError(const char*const cpReason, VarArgs &&...vaArgs) const
+  { OalCheckErrorGeneric<ALenum, AL_NO_ERROR>(
+      []()->ALenum{ return OalGetError(); },
       [this](const ALenum aleError) { return GetALErr(aleError); },
       caBlank, cpReason, StdForward<VarArgs>(vaArgs)...); }
   /* -- Upload data to audio device ---------------------------------------- */
-  static void BufferData(const ALuint aluBuffer, const ALenum aleFormat,
+  static void OalBufferData(const ALuint aluBuffer, const ALenum aleFormat,
     const ALvoid*const vpData, const ALsizei siSize,
     const ALsizei alsiFrequency)
   { alBufferData(aluBuffer, aleFormat, vpData, siSize, alsiFrequency); }
   /* -- Upload data to audio device ---------------------------------------- */
-  static void BufferData(const ALuint aluBuffer, const ALenum aleFormat,
+  static void OalBufferData(const ALuint aluBuffer, const ALenum aleFormat,
     const MemConst &mcSrc, const ALsizei alsiFrequency)
-  { BufferData(aluBuffer, aleFormat, mcSrc.MemPtr<ALvoid>(),
+  { OalBufferData(aluBuffer, aleFormat, mcSrc.MemPtr<ALvoid>(),
       mcSrc.MemSize<ALsizei>(), alsiFrequency); }
   /* -- Queue specified buffer count into source --------------------------- */
-  static void QueueBuffers(const ALuint aluSource, const ALsizei alsiCount,
+  static void OalQueueBuffers(const ALuint aluSource, const ALsizei alsiCount,
     ALuint*const alupBuffer)
   { alSourceQueueBuffers(aluSource, alsiCount, alupBuffer); }
   /* -- Queue one buffer count into source --------------------------------- */
-  static void QueueBuffer(const ALuint aluSource, ALuint aluBuffer)
-    { QueueBuffers(aluSource, 1, &aluBuffer); }
+  static void OalQueueBuffer(const ALuint aluSource, ALuint aluBuffer)
+    { OalQueueBuffers(aluSource, 1, &aluBuffer); }
   /* -- Unqueue specified buffer count from source and place into buffers -- */
-  static void UnQueueBuffers(const ALuint aluSource,
+  static void OalUnQueueBuffers(const ALuint aluSource,
     const ALsizei alsiCount, ALuint*const alupBuffer)
   { alSourceUnqueueBuffers(aluSource, alsiCount, alupBuffer); }
   /* -- Unqueue one buffer from source and place into buffers -------------- */
-  static void UnQueueBuffer(const ALuint aluSource, ALuint &aluBuffer)
-    { UnQueueBuffers(aluSource, 1, &aluBuffer); }
+  static void OalUnQueueBuffer(const ALuint aluSource, ALuint &aluBuffer)
+    { OalUnQueueBuffers(aluSource, 1, &aluBuffer); }
   /* -- Unqueue one buffer from source and return it ----------------------- */
-  static ALuint UnQueueBuffer(const ALuint aluSource)
+  static ALuint OalUnQueueBuffer(const ALuint aluSource)
     { ALuint aluBuffer;
-      UnQueueBuffer(aluSource, aluBuffer);
+      OalUnQueueBuffer(aluSource, aluBuffer);
       return aluBuffer; }
   /* -- Set source value as float ------------------------------------------ */
-  static void SetSourceFloat(const ALuint aluSource, const ALenum aleWhat,
+  static void OalSetSourceFloat(const ALuint aluSource, const ALenum aleWhat,
     const ALfloat fValue)
   { alSourcef(aluSource, aleWhat, fValue); }
   /* -- Get source value as float ------------------------------------------ */
-  static void GetSourceFloat(const ALuint aluSource, const ALenum aleWhat,
+  static void OalGetSourceFloat(const ALuint aluSource, const ALenum aleWhat,
     ALfloat*const fpDestValue)
   { alGetSourcef(aluSource, aleWhat, fpDestValue); }
   /* -- Set source value as int -------------------------------------------- */
-  static void SetSourceInt(const ALuint aluSource, const ALenum aleWhat,
+  static void OalSetSourceInt(const ALuint aluSource, const ALenum aleWhat,
     const ALint iValue)
   { alSourcei(aluSource, aleWhat, iValue); }
   /* -- Get source value as int -------------------------------------------- */
-  static void GetSourceInt(const ALuint aluSource, const ALenum aleWhat,
+  static void OalGetSourceInt(const ALuint aluSource, const ALenum aleWhat,
     ALint*const alipDestValue)
   { alGetSourcei(aluSource, aleWhat, alipDestValue); }
   /* -- Get source value as a float vector --------------------------------- */
-  static void GetSourceVector(const ALuint aluSource, const ALenum aleWhat,
+  static void OalGetSourceVector(const ALuint aluSource, const ALenum aleWhat,
     ALfloat*const alfpDX, ALfloat*const alfpDY, ALfloat*const alfpDZ)
   { alGetSource3f(aluSource, aleWhat, alfpDX, alfpDY, alfpDZ); }
   /* -- Set source value as a float vector --------------------------------- */
-  static void SetSourceVector(const ALuint aluSource, const ALenum aleWhat,
+  static void OalSetSourceVector(const ALuint aluSource, const ALenum aleWhat,
     const ALfloat alfDX, const ALfloat alfDY, const ALfloat alfDZ)
       { alSource3f(aluSource, aleWhat, alfDX, alfDY, alfDZ); }
   /* -- Stop a source from playing ----------------------------------------- */
@@ -280,16 +353,16 @@ class Oal :                            // Actual class body
   static bool IsBuffer(const ALuint aluBuffer)
     { return alIsBuffer(aluBuffer) == AL_TRUE; }
   /* -- Get buffer parameter as integer ------------------------------------ */
-  static void GetBufferInt(const ALuint aluBuffer, const ALenum aleId,
+  static void OalGetBufferInt(const ALuint aluBuffer, const ALenum aleId,
     ALint*const alipDest)
   { alGetBufferi(aluBuffer, aleId, alipDest); }
   /* -- Get buffer information --------------------------------------------- */
   template<typename IntType = ALint>
     requires StdIsIntegral<IntType>
-  static IntType GetBufferInt(const ALuint aluBuffer, const ALenum aleId)
+  static IntType OalGetBufferInt(const ALuint aluBuffer, const ALenum aleId)
   { // Create storage, populate and retun it
     ALint aliV;
-    GetBufferInt(aluBuffer, aleId, &aliV);
+    OalGetBufferInt(aluBuffer, aleId, &aliV);
     return static_cast<IntType>(aliV);
   }
   /* -- Set distance model ------------------------------------------------- */
@@ -383,54 +456,49 @@ class Oal :                            // Actual class body
   }
   /* -- Report floating point playback to other classes -------------------- */
   bool Have32FPPB() const { return bHave32FPPB; } // Accessed in audio thread!!
-  /* -- Get openAL string -------------------------------------------------- */
-  template<typename IntType = ALchar>
-    requires StdIsIntegral<IntType>
-  const IntType *GetString(const ALenum aleId) const
+  /* -- Get openAL string from currently selected device and context ------- */
+  template<typename PtrType = ALchar*>
+    requires StdIsPointer<PtrType>
+  const PtrType OalGetString(const ALenum aleId) const
   { // Get the checked variable and return it
-    const ALchar*const ucpStr = alGetString(aleId);
+    const ALchar*const alchStr = alGetString(aleId);
     IALNF("Get string failed!", "Index", aleId);
-    if(StdIsCStringNotValid(ucpStr))
-      XC("Invalid string returned!", "Index", aleId, "String", ucpStr);
-    return reinterpret_cast<const IntType*>(ucpStr);
+    if(StdIsCStringNotValid(alchStr))
+      XC("Invalid string returned!", "Index", aleId, "String", alchStr);
+    return StdToNonConstCast<const PtrType>(alchStr);
   }
   /* -- Get context openAL string ------------------------------------------ */
-  template<typename IntType = const ALCchar*>
-    requires StdIsPointer<IntType>
-  static IntType ContextGetString(ALCdevice*const alcDevice,
-    const ALCenum alcEnum)
-  { return reinterpret_cast<IntType>(alcGetString(alcDevice, alcEnum)); }
-  /* ----------------------------------------------------------------------- */
-  template<typename IntType = const ALCchar*>
-    requires StdIsPointer<IntType>
-  static IntType GetCString(ALCdevice*const alcDev, const ALenum aleId)
-    { return reinterpret_cast<IntType>(ContextGetString(alcDev, aleId)); }
-  /* -- Get context openAL string ------------------------------------------ */
-  template<typename StrType = const ALCchar*>
-    requires StdIsPointer<StrType>
-  StrType GetCString(const ALenum aleId) const
-    { return GetCString<StrType>(alcDevice, aleId); }
+  template<typename PtrType = ALCchar*>
+    requires StdIsPointer<PtrType>
+  static const PtrType OalGetContextString(ALCdevice*const alcDev,
+    const ALCenum alcId)
+  { return StdToNonConstCast<const PtrType>(alcGetString(alcDev, alcId)); }
+  /* -- Get context openAL string (current device) ------------------------- */
+  template<typename PtrType = ALCchar*>
+    requires StdIsPointer<PtrType>
+  const PtrType OalGetContextString(const ALCenum alceId) const
+    { return OalGetContextString<PtrType>(alcDevice, alceId); }
   /* -- Get nullptr context openAL string ---------------------------------- */
-  template<typename StrType = const ALCchar*>
-    requires StdIsPointer<StrType>
-  static StrType GetNCString(const ALenum aleId)
-    { return reinterpret_cast<StrType>(ContextGetString(nullptr, aleId)); }
+  template<typename PtrType = ALCchar*>
+    requires StdIsPointer<PtrType>
+  static const PtrType OalGetNullContextString(const ALCenum alceId)
+    { return OalGetContextString<PtrType>(nullptr, alceId); }
   /* -- Get openAL int array ----------------------------------------------- */
   template<size_t stCount, class IntType = StdArray<ALCint, stCount>>
-    const IntType GetIntegerArray(const ALenum aleId) const
+    const IntType OalGetContextIntArray(const ALCenum alceId) const
   { // Create array, check, populate and return it
-    IntType aData;
-    IALC(alcGetIntegerv(alcDevice, aleId, sizeof(IntType), aData.data()),
-      "Get integer array failed!", "Index", aleId, "Count", stCount);
-    return aData;
+    IntType itData;
+    IALC(alcGetIntegerv(alcDevice, alceId, sizeof(IntType), itData.data()),
+      "Get integer array failed!", "Index", alceId, "Count", stCount);
+    return itData;
   }
   /* -- Get openAL int ----------------------------------------------------- */
   template<typename IntType = ALCint>
     requires StdIsIntegral<IntType>
-  IntType GetInteger(const ALenum aleId) const
-    { return static_cast<IntType>(GetIntegerArray<1>(aleId)[0]); }
+  IntType OalGetContextInt(const ALCenum alceId) const
+    { return static_cast<IntType>(OalGetContextIntArray<1>(alceId)[0]); }
   /* -- Convert PCM format identifier to short identifier string ----------- */
-  const StdStringView &GetALFormat(const ALenum aleFormat) const
+  const StdStringView &OalFormatToString(const ALenum aleFormat) const
     { return alemFormatCodes.Get(aleFormat); }
   /* -- Get source counts -------------------------------------------------- */
   size_t GetMaxMonoSources() const { return stMaxMonoSources; }
@@ -476,46 +544,70 @@ class Oal :                            // Actual class body
   /* -- AL is initialised? ------------------------------------------------- */
   bool IsInitialised() const { return alcDevice && alcContext; }
   bool IsNotInitialised() const { return !IsInitialised(); }
-  /* -- Update device ------------------------------------------------------ */
-  void UpdateDevice(ALCdevice*const alcNDevice) { alcDevice = alcNDevice; }
-  /* -- Update playback device name ---------------------------------------- */
-  void UpdatePlaybackDeviceName()
-    { ssvPlayback = GetCString(FlagIsSet(AFL_HAVEENUMEXT) ?
-        ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER); }
-  /* -- Initialise HRTF override ------------------------------------------- */
-  void InitHRTFOverride()
-  { // Set HRTF setting and return if failed
-    const StdArray<const ALCint,3> alciAttrs{
-      ALC_HRTF_SOFT, FlagIsSet(AFL_HRTFREQ) ? AL_TRUE : AL_FALSE, 0 };
-    FlagSetOrClear(AFL_HRTFINIT,
-      alcResetDeviceSOFT(alcDevice, alciAttrs.data()) == AL_FALSE);
+  /* -- DeInitialise context ----------------------------------------------- */
+  void DeInitContext()
+  { // Release and destroy context and if successful?
+    if(OalDestroyContext())
+    { // Clear the flags associated with context
+      FlagClear(AFL_CONTEXTCURRENT | AFL_INITCONTEXT);
+      ssvPlayback = cCommon->CommonNull();
+      alcContext = nullptr;
+    }
   }
-  /* -- Initialise device -------------------------------------------------- */
-  void InitDevice(const char*const cpDevice)
-  { // Open the specified device and if successful?
+  /* -- Initialise with specified device ----------------------------------- */
+  void OalInit(const char*const cpDevice)
+  { // Class initialised
+    IHInitialise();
+    // Log that we're loading the device
+    cLog->LogDebugExSafe("Oal class initialising device '$'...",
+      cpDevice ? cpDevice : "<Default>");
+    // Open the specified device and if successful?
     if(ALCdevice*const alcNDevice = alcOpenDevice(cpDevice)) [[likely]]
     { // Unload previous device if it is set (impossible)
       if(alcDevice) [[unlikely]] DeInitContext();
       // Device is now initialise
       else FlagSet(AFL_INITDEVICE);
       // Set the new active device
-      UpdateDevice(alcNDevice);
-    }
-  }
-  /* -- DeInitialise device ------------------------------------------------ */
-  bool DeInitDevice()
-  { // Bail if no context
-    if(!alcDevice) return false;
-    // Close device and nullify handle
-    DestroyDevice();
-    UpdateDevice(nullptr);
-    FlagClear(AFL_INITDEVICE);
-    // Succeeded
-    return true;
-  }
-  /* -- Initialise context ------------------------------------------------- */
-  void InitContext()
-  { // Set the context for the specified device and if successful?
+      alcDevice = alcNDevice;
+    } // Failed so retry with default device?
+    else if(cpDevice != nullptr)
+    { // Log that this failed
+      cLog->LogDebugExSafe("Oal failed to initialise playback device '$', ",
+        "retrying with default device...");
+      // Re-initialise with default device
+      return OalInit(nullptr);
+    } // Hard fail with default device
+    else if(!alcDevice) XC("Failed to initialise default OpenAL device!");
+    // Update playback device name
+    ssvPlayback = OalGetContextString(FlagIsSet(AFL_HAVEENUMEXT) ?
+      ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER);
+    // Log context initialisation
+    cLog->LogInfoExSafe("Oal context initialised on device '$'.",
+      GetPlaybackDevice());
+    // Log that we're changing HRTF setting
+    cLog->LogDebugExSafe(
+      "Oal changing head related transfer function status to $...",
+      StrFromBoolTF(cOal->FlagIsSet(AFL_HRTFREQ)));
+    // Set HRTF setting and if succeeded?
+    const StdArray<const ALCint, 3> alciAttrs{
+      ALC_HRTF_SOFT, FlagIsSet(AFL_HRTFREQ) ? AL_TRUE : AL_FALSE, 0 };
+    if(alcResetDeviceSOFT(alcDevice, alciAttrs.data()) == AL_TRUE)
+    { // Log that we change the HRTF setting and set the flag
+      cLog->LogDebugExSafe(
+        "Oal set head related transfer function status to $.",
+        StrFromBoolTF(cOal->FlagIsSet(AFL_HRTFREQ)));
+      FlagSet(AFL_HRTFINIT);
+    } // Setting HRTF did not work?
+    else
+    { // Log that we could not change the HRTF setting and clear the flag
+      cLog->LogWarningExSafe(
+        "Oal failed to set head related transfer function status to $.",
+        StrFromBoolTF(cOal->FlagIsSet(AFL_HRTFREQ)));
+      FlagClear(AFL_HRTFINIT);
+    } // Set that we're intilaising the context now
+    cLog->LogDebugExSafe("Oal creating context from device...",
+      StrFromBoolTF(cOal->FlagIsSet(AFL_HRTFREQ)));
+    // Set the context for the specified device and if successful?
     if(ALCcontext*const alcNContext =
       alcCreateContext(alcDevice, nullptr)) [[likely]]
     { // Unload previous context if it is set (impossible)
@@ -524,13 +616,13 @@ class Oal :                            // Actual class body
       else FlagSet(AFL_INITCONTEXT);
       // Set the new active context
       alcContext = alcNContext;
-    } // Do nothing else
-    else return;
+    } // We could not create the context
+    else XC("Failed to initialise OpenAL context!");
     // Get maximum number of sources (dynamic on Apple implementation).
     stMaxMonoSources =
-      GetInteger<decltype(stMaxMonoSources)>(ALC_MONO_SOURCES);
+      OalGetContextInt<decltype(stMaxMonoSources)>(ALC_MONO_SOURCES);
     stMaxStereoSources =
-      GetInteger<decltype(stMaxStereoSources)>(ALC_STEREO_SOURCES);
+      OalGetContextInt<decltype(stMaxStereoSources)>(ALC_STEREO_SOURCES);
     // Zero mono sources?
     if(!stMaxMonoSources)
     { // Zero stereo sources?
@@ -589,12 +681,7 @@ class Oal :                            // Actual class body
           "DeviceType", eciItem.aleDeviceType,
           "Result",     aleResult);
       }
-    }// Update playback device name
-    UpdatePlaybackDeviceName();
-    // Log context initialisation
-    cLog->LogInfoExSafe("Oal context initialised on device '$'.",
-      GetPlaybackDevice());
-    // Extension logging types
+    } // Extension logging types
     using ExtPair = StdPair<const StdStringView, const size_t>;
     using ExtMap = StdMap<ExtPair::first_type, ExtPair::second_type>;
     // Return if debug logging not enabled
@@ -603,12 +690,13 @@ class Oal :                            // Actual class body
       ExtMap emExts;
       // Build context extensions list
       size_t stCount = 0;
-      Tokeniser<StdStringView>(GetCString(ALC_EXTENSIONS),
+      Tokeniser<StdStringView>(OalGetContextString(ALC_EXTENSIONS),
         cCommon->CommonSpace(),
         [&emExts, &stCount](const StdStringView &ssvExt)
           { emExts.insert({ StdMove(ssvExt), stCount++ }); });
       // Log context initialisation
       cLog->LogNLCDebugExSafe(
+        "Oal context capabilities...\n"
         "- Maximum mono sources: $.\n"
         "- Maximum stereo sources: $.\n"
         "- Playback events: !$ +$ -$.\n"
@@ -630,31 +718,30 @@ class Oal :                            // Actual class body
       for(const ExtPair &epExt : emExts)
         cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
           epExt.first, epExt.second);
-    } // Return if context already set current
-    if(FlagIsSet(AFL_INITIALISED)) XC("OpenAL was already initialised!");
-    // Activate the context (We can use alGetError() from now on)
-    IALC(alcMakeContextCurrent(alcContext),
+    } // Activate the context (We can use alGetError() from now on)
+    cLog->LogDebugSafe("Oal acquiring playback context...");
+    IALC(OalMakeContextCurrent(alcContext),
       "Failed to make OpenAL context current!");
     FlagSet(AFL_CONTEXTCURRENT);
+    cLog->LogDebugSafe("Oal acquired playback context.");
     // Set if we have 32-bit floating-point playback
     FlagSetOrClear(AFL_HAVE32FPPB, alIsExtensionPresent("AL_EXT_FLOAT32"));
     // This is a thread safe version of this bool since the audio thread will
     // need access to this processing Stream objects.
     bHave32FPPB = FlagIsSet(AFL_HAVE32FPPB);
-    // Set the flag
-    FlagSet(AFL_INITIALISED);
     // Return if debug logging not enabled
     if(cLog->LogHasLevel(LH_DEBUG))
     { // Build sorted list of extensions and log them all
       ExtMap emExts;
       // Build extensions list
       size_t stCount = 0;
-      Tokeniser<StdStringView>(GetString(AL_EXTENSIONS),
+      Tokeniser<StdStringView>(OalGetString(AL_EXTENSIONS),
         cCommon->CommonSpace(),
         [&emExts, &stCount](const StdStringView &ssvExt)
           { emExts.insert({ StdMove(ssvExt), stCount++ }); });
       // Log device info and basic capabilities
       cLog->LogNLCDebugExSafe(
+        "Oal device capabilities...\n"
         "- Floating-point playback: $.\n"
         "- Device extensions count: $...",
         StrFromBoolTF(Have32FPPB()),
@@ -663,38 +750,39 @@ class Oal :                            // Actual class body
       for(const ExtPair &epExt : emExts)
         cLog->LogNLCDebugExSafe("- Have extension '$' (#$).",
           epExt.first, epExt.second);
-    }
-  }
-  /* -- DeInitialise context ----------------------------------------------- */
-  bool DeInitContext()
-  { // Bail if no context
-    if(!alcContext) return false;
-    // Clear context
-    alcMakeContextCurrent(nullptr);
-    FlagClear(AFL_CONTEXTCURRENT);
-    // Destroy context and nullify handle
-    DestroyContext();
-    alcContext = nullptr;
-    FlagClear(AFL_INITCONTEXT);
-    ssvPlayback = cCommon->CommonNull();
-    // Succeeded
-    return true;
+    } // Set the flag
+    FlagSet(AFL_INITIALISED);
+    // Log that we've completed initialisation
+    cLog->LogDebugSafe("Oal class initialised.");
   }
   /* -- DeInitialise ------------------------------------------------------- */
-  void DeInit()
-  { // De-init context and device if they're not gone already. The audio
+  void OalDeInit()
+  { // Return if not intiialised
+    if(IHNotDeInitialise()) return;
+    // Log that we're deinitialising
+    cLog->LogDebugSafe("Oal class deinitialising...");
+    // De-init context and device if they're not gone already. The audio
     // class should be responsible for this, but just incase.
     DeInitContext();
-    DeInitDevice();
-    // Clear only volatile flags
-    FlagClear(AFL_VOLATILE);
-    // Clear everything else
+    // Destroy the device and if succeeded?
+    if(OalDestroyDevice())
+    { // Close device and nullify handle
+      FlagClear(AFL_INITDEVICE);
+      alcDevice = nullptr;
+    } // Clear everything else
     aleQuery = AL_NONE;
     stMaxStereoSources = stMaxMonoSources = 0;
+    // Clear only volatile flags
+    FlagClear(AFL_INITDEVICE | AFL_INITCONTEXT | AFL_INFINITESOURCES |
+              AFL_CONTEXTCURRENT | AFL_INITIALISED | AFL_HAVE32FPPB |
+              AFL_HAVEENUMEXT);
+    // Finished so log that we did
+    cLog->LogDebugSafe("Oal class deinitialised.");
   }
   /* -- Constructor --------------------------------------------- */ protected:
   Oal() :
     /* -- Initialisers ----------------------------------------------------- */
+    InitHelper{ __FUNCTION__ },        // Send name to InitHelper
     OalFlags{ AFL_NONE },              // Flags not initialised yet
     /* -- Const members ---------------------------------------------------- */
     alemOALCodes{{                     // Init OpenAL error codes
@@ -724,8 +812,7 @@ class Oal :                            // Actual class body
     /* --------------------------------------------------------------------- */
     { cOal = this; }
   /* -- Destructor that unloads context and device ------------------------- */
-  DTORHELPER(~Oal, if(alcContext) DestroyContext();
-                   if(alcDevice) DestroyDevice())
+  DTORHELPER(~Oal, OalDeInitNoReset())
   /* -- Update hints ----------------------------------------------- */ public:
   CVarReturn OalSetHRTF(const bool bState)
     { FlagSetOrClear(AFL_HRTFREQ, bState); return ACCEPT; }
@@ -734,9 +821,9 @@ class Oal :                            // Actual class body
   { // Prepare version information. Partially initialises OpenALSoft too.
     const ALuint
       aluVersionMajor =
-        GetInteger<decltype(aluVersionMajor)>(ALC_MAJOR_VERSION),
+        OalGetContextInt<decltype(aluVersionMajor)>(ALC_MAJOR_VERSION),
       aluVersionMinor =
-        GetInteger<decltype(aluVersionMinor)>(ALC_MINOR_VERSION);
+        OalGetContextInt<decltype(aluVersionMinor)>(ALC_MINOR_VERSION);
     strVersion = StrAppend(aluVersionMajor, '.', aluVersionMinor);
     // Split version
     double dIntegral, dFractional = modf(dVersion, &dIntegral);
@@ -749,7 +836,7 @@ class Oal :                            // Actual class body
         "MajorActual",    aluVersionMajor, "MinorActual",    aluVersionMinor);
     // Log context initialisation
     cLog->LogDebugExSafe("Oal library version $ initialised.",
-      GetVersion(), StdIOSHex, FlagGet());
+      OalGetVersion(), StdIOSHex, FlagGet());
     // Done
     return ACCEPT;
   }

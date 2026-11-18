@@ -772,8 +772,8 @@ class SysCon :                         // Members initially private
   void SysConDeInit()
   { // Done if console not opened
     if(IsNotWindowHandleSet()) return;
-    // System console is de-initialising
-    cLog->LogDebugSafe("SysCon de-initialising...");
+    // System console is deinitialising
+    cLog->LogDebugSafe("SysCon deinitialising...");
     // Unset control and break handler
     if(!SetConsoleCtrlHandler(CtrlHandlerStatic, FALSE))
       cLog->LogErrorExSafe(
@@ -786,8 +786,8 @@ class SysCon :                         // Members initially private
     SetWindowDestroyed();
     // Clear screen buffer
     civBuf.clear();
-    // System console is de-initialised
-    cLog->LogDebugSafe("SysCon de-initialised.");
+    // System console is deinitialised
+    cLog->LogDebugSafe("SysCon deinitialised.");
   }
   /* -- Initialise --------------------------------------------------------- */
   void SysConInit(const char*const cpTitle, const size_t _stW,

@@ -236,7 +236,7 @@ CTOR_MEM_BEGIN_CSLAVE(LuaFuncs, LuaFunc, ICHelperUnsafe),
         iLiveReference, NameGet());
     } // If last item on stack is a regular function?
     else if(LuaBaseIsFunc(LuaFuncGetState(), iIndex))
-    { // Set reference to c function. Do NOT de-initialise empty function
+    { // Set reference to c function. Do NOT deinitialise empty function
       LuaFuncClearRef();
       // Set reference to regular function
       iLiveReference = LuaBaseRef(LuaFuncGetState());
@@ -302,21 +302,21 @@ static void LuaFuncDeInitRef()
 { // Ignore if no state or function
   if(!cLuaFuncs->LuaRefStateIsSet()) return;
   // Write to log that we're deinitialising
-  cLog->LogDebugSafe("LuaFuncs de-initialising...");
+  cLog->LogDebugSafe("LuaFuncs deinitialising...");
   // If there are references?
   if(!cLuaFuncs->empty())
   { // DeInit all references
-    cLog->LogDebugExSafe("LuaFuncs de-initialising $ engine event refids...",
+    cLog->LogDebugExSafe("LuaFuncs deinitialising $ engine event refids...",
       cLuaFuncs->size());
     for(LuaFunc*const lCptr : *cLuaFuncs) lCptr->LuaFuncDeInit();
-    cLog->LogInfoExSafe("LuaFuncs de-initialised $ engine event refids.",
+    cLog->LogInfoExSafe("LuaFuncs deinitialised $ engine event refids.",
       cLuaFuncs->size());
   } // De-initialise the empty function and log the result
   cLog->LogDebugSafe(cLuaFuncs->LuaRefDeInit() ?
-    "LuaFuncs de-initialised empty function refid." :
-    "LuaFuncs failed to de-init empty function refid.");
+    "LuaFuncs deinitialised empty function refid." :
+    "LuaFuncs failed to deinit empty function refid.");
   // Write to log that we're deinitialising
-  cLog->LogDebugSafe("LuaFuncs de-initialised.");
+  cLog->LogDebugSafe("LuaFuncs deinitialised.");
 }
 /* -- Empty function ------------------------------------------------------- */
 static int LuaFuncEmptyCFunction(lua_State*const) { return 0; }

@@ -658,8 +658,8 @@ class SysCon :                         // All members initially private
   { // Include curses namespace
     using namespace ICurses;
     if(IHNotDeInitialise()) return;
-    // System console is de-initialising
-    cLog->LogDebugSafe("SysCon de-initialising...");
+    // System console is deinitialising
+    cLog->LogDebugSafe("SysCon deinitialising...");
     // If we have a context?
     if(stdscr)
     { // If we can use colour?
@@ -683,14 +683,14 @@ class SysCon :                         // All members initially private
           iResult);
       // Log that we ended the ncurses session
       else cLog->LogDebugSafe("SysCon ncurses session ended.");
-    } // System console is de-initialised
-    cLog->LogDebugSafe("SysCon de-initialised.");
+    } // System console is deinitialised
+    cLog->LogDebugSafe("SysCon deinitialised.");
   }
   /* -- Reinitialise ------------------------------------------------------- */
   void SysConReInit()
   { // Ignore if not enabled
     using namespace ICurses;
-    // Return if already de-initialised
+    // Return if already deinitialised
     if(isendwin()) return;
     // Detect the new size
     CheckAndUpdateSize();
@@ -699,7 +699,7 @@ class SysCon :                         // All members initially private
     { // Break if OK
       case OK: break;
       // Any other value
-      default: XC("Failed to de-initialise ncurses!", "Code", iResult);
+      default: XC("Failed to deinitialise ncurses!", "Code", iResult);
     } // Reinitialise ncurses
     if(!initscr()) XC("Failed to reinitialise ncurses!");
   }

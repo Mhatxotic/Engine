@@ -333,7 +333,7 @@ class ConGfx :                         // Members initially private
   { // Ignore if already deinitialised
     if(IHNotDeInitialise()) return;
     // Log progress
-    cLog->LogDebugSafe("ConGraph de-initialising...");
+    cLog->LogDebugSafe("ConGraph deinitialising...");
     // Remove graphics support flag
     cConsole->FlagClear(RD_GRAPHICS);
     // Unload console texture and font.
@@ -341,7 +341,7 @@ class ConGfx :                         // Members initially private
     // Remove font ftf
     ConGfxGetFontRef().FtfDeInit();
     // Log progress
-    cLog->LogInfoSafe("ConGraph de-initialised.");
+    cLog->LogInfoSafe("ConGraph deinitialised.");
   }
   /* -- Constructor --------------------------------------------- */ protected:
   explicit ConGfx() :

@@ -137,8 +137,8 @@ static void CryptAddEntropyStr(StrType &&strStr)
 /* ------------------------------------------------------------------------- */
 static void CryptAddEntropy()
 { // Grab some data from the system
-  CryptAddEntropyInt(cmSys.GetTimeUS());
-  CryptAddEntropyInt(cmHiRes.GetTimeUS());
+  CryptAddEntropyInt(cmSys.ClockGetTimeMicroseconds());
+  CryptAddEntropyInt(cmHiRes.ClockGetTimeMicroseconds());
   CryptAddEntropyInt(cLog->CCDeltaUS());
   cSystem->SysUpdateCPUUsage();
   CryptAddEntropyInt(cSystem->CPUUsage());

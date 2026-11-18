@@ -29,9 +29,9 @@ class FreeType :                       // Members initially private
   { // Return failed if library not available
     if(FreeTypeIsLibraryNotAvailable()) return false;
     // Unload freetype library
-    cLog->LogDebugSafe("FreeType subsystem deinitialising...");
+    cLog->LogDebugSafe("FreeType class deinitialising...");
     FT_Done_Library(ftlContext);
-    cLog->LogDebugSafe("FreeType subsystem deinitialised.");
+    cLog->LogDebugSafe("FreeType class deinitialised.");
     // Success
     return true;
   }
@@ -89,7 +89,7 @@ class FreeType :                       // Members initially private
   { // Class initialised
     if(FreeTypeIsLibraryAvailable()) XC("Freetype already initialised!");
     // Log initialisation and do the init
-    cLog->LogDebugSafe("FreeType subsystem initialising...");
+    cLog->LogDebugSafe("FreeType class initialising...");
     // Create the memory
     FreeTypeCheckError(FT_New_Library(&ftmrAlloc, &ftlContext),
       "Failed to initialise FreeType!");
@@ -97,7 +97,7 @@ class FreeType :                       // Members initially private
     // https://www.freetype.org/freetype2/docs/design/design-4.html
     FT_Add_Default_Modules(ftlContext);
     // Log successful initialisation
-    cLog->LogDebugSafe("FreeType subsystem initialised.");
+    cLog->LogDebugSafe("FreeType class initialised.");
   }
   /* ----------------------------------------------------------------------- */
   void FreeTypeDeInit() { if(FreeTypeDoDeInit()) ftlContext = nullptr; }

@@ -980,7 +980,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     cOgl->SetDeleteTextures(gluvTexture);
     // Texture has been marked for deleting
     FlagSet(TF_DELETE);
-    // Report de-initialisation and texture memory
+    // Report deinitialisation and texture memory
     cLog->LogInfoExSafe("Texture '$' with $ textures marked for deletion.",
       NameGet(), GetSubCount());
   }
@@ -1009,10 +1009,10 @@ static void TextureDeInitTextures()
 { // Ignore if no textures
   if(cTextures->empty()) return;
   // De-init all the textures and log the pre/post init of them
-  cLog->LogDebugExSafe("Textures de-initialising $ objects...",
+  cLog->LogDebugExSafe("Textures deinitialising $ objects...",
     cTextures->size());
   for(Texture*const tCptr : *cTextures) tCptr->DeInit();
-  cLog->LogDebugExSafe("Textures de-initialised $ objects.",
+  cLog->LogDebugExSafe("Textures deinitialised $ objects.",
     cTextures->size());
 }
 /* -- Reload Textures ------------------------------------------------------ */

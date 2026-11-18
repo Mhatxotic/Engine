@@ -47,14 +47,15 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroy<Source>(lS, cSources))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetDirection, 3,
   ALfloat fX, fY, fZ;
-  AgSource{lS, 1}().GetDirection(fX, fY, fZ);
+  AgSource{lS, 1}().SourceGetDirection(fX, fY, fZ);
   LuaUtilPushVar(lS, fX, fY, fZ))
 /* ========================================================================= */
 // $ Source:GetElapsed
 // < Seconds:number=Number of seconds elapsed.
 // ? Returns the number of seconds elapsed in the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetElapsed, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetElapsed()))
+LLFUNC(GetElapsed, 1,
+  LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetElapsed()))
 /* ========================================================================= */
 // $ Source:GetId
 // < Id:integer=The id number of the Source object.
@@ -66,37 +67,37 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().Serial()))
 // < Gain:number=The current gain value.
 // ? Returns the current gain of the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetGain, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetGain()))
+LLFUNC(GetGain, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetGain()))
 /* ========================================================================= */
 // $ Source:GetLooping
 // < State:boolean=Is the source looping?
 // ? Returns if the source is looping.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetLooping, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetLooping()))
+LLFUNC(GetLooping, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetLooping()))
 /* ========================================================================= */
 // $ Source:GetMaxDist
 // < Distance:number=The current maximum distance.
 // ? Returns the current maximum distance of the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetMaxDist, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetMaxDist()))
+LLFUNC(GetMaxDist, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetMaxDist()))
 /* ========================================================================= */
 // $ Source:GetMaxGain
 // < Gain:number=The current gain value.
 // ? Returns the current maximum gain of the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetMaxGain, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetMaxGain()))
+LLFUNC(GetMaxGain, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetMaxGain()))
 /* ========================================================================= */
 // $ Source:GetMinGain
 // < Gain:number=The current gain value.
 // ? Returns the current minimum gain of the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetMinGain, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetMinGain()))
+LLFUNC(GetMinGain, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetMinGain()))
 /* ========================================================================= */
 // $ Source:GetPitch
 // < Pitch:number=The current pitch value.
 // ? Returns the current pitch of the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetPitch, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetPitch()))
+LLFUNC(GetPitch, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetPitch()))
 /* ========================================================================= */
 // $ Source:GetPosition
 // < X:number=Current X position.
@@ -106,32 +107,33 @@ LLFUNC(GetPitch, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetPitch()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetPosition, 3,
   ALfloat fX, fY, fZ;
-  AgSource{lS, 1}().GetPosition(fX, fY, fZ);
+  AgSource{lS, 1}().SourceGetPosition(fX, fY, fZ);
   LuaUtilPushVar(lS, fX, fY, fZ))
 /* ========================================================================= */
 // $ Source:GetRefDist
 // < Distance:number=The current reference distance.
 // ? Returns the current reference distance of the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRefDist, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetRefDist()))
+LLFUNC(GetRefDist, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetRefDist()))
 /* ========================================================================= */
 // $ Source:GetRelative
 // < State:boolean=Is the source relative?
 // ? Returns if the source is relative.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRelative, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetRelative()))
+LLFUNC(GetRelative, 1,
+  LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetRelative()))
 /* ========================================================================= */
 // $ Source:GetRollOff
 // < RollOff:number=The current rolloff.
 // ? Returns the current rolloff of the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRollOff, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetRollOff()))
+LLFUNC(GetRollOff, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetRollOff()))
 /* ========================================================================= */
 // $ Source:GetState
 // < State:integer=The current playback state.
 // ? Returns if current playback state.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetState, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetState()))
+LLFUNC(GetState, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetState()))
 /* ========================================================================= */
 // $ Source:GetVelocity
 // < X:number=Current X velocity.
@@ -141,7 +143,7 @@ LLFUNC(GetState, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().GetState()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetVelocity, 3,
   ALfloat fX, fY, fZ;
-  AgSource{lS, 1}().GetVelocity(fX, fY, fZ);
+  AgSource{lS, 1}().SourceGetVelocity(fX, fY, fZ);
   LuaUtilPushVar(lS, fX, fY, fZ))
 /* ========================================================================= */
 // $ Source:IsDestroyed
@@ -155,13 +157,13 @@ LLFUNC(IsDestroyed, 1,
 // < Playing:boolean=Is the source playing?
 // ? Return if source is playing.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsPlaying, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().IsPlaying()))
+LLFUNC(IsPlaying, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceIsPlaying()))
 /* ========================================================================= */
 // $ Source:IsStopped
 // < Stopped:boolean=Is the source playing?
 // ? Return if source is stopped.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsStopped, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().IsStopped()))
+LLFUNC(IsStopped, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceIsStopped()))
 /* ========================================================================= */
 // $ Source:IsValid
 // < Valid:boolean=Is the buffer attached to the source valid?
@@ -170,13 +172,13 @@ LLFUNC(IsStopped, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().IsStopped()))
 // ? keep a 'Sample' class created until the 'Source' class it spawned is
 // ? destroyed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsValid, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().IsValid()))
+LLFUNC(IsValid, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceIsValid()))
 /* ========================================================================= */
 // $ Source:Play
 // < Success:boolean=Is the source now playing?
 // ? Plays the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Play, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().Play()))
+LLFUNC(Play, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourcePlay()))
 /* ========================================================================= */
 // $ Source:PlayTwo
 // < Success:boolean=Are the sources now playing?
@@ -185,7 +187,7 @@ LLFUNC(Play, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().Play()))
 LLFUNC(PlayTwo, 0,
   AgSource aLeft{lS, 1},
            aRight{lS, 2};
-  LuaUtilPushVar(lS, aLeft().Play(aRight())))
+  LuaUtilPushVar(lS, aLeft().SourcePlay(aRight())))
 /* ========================================================================= */
 // $ Source:SetDirection
 // > X:number=The new X direction.
@@ -196,7 +198,7 @@ LLFUNC(PlayTwo, 0,
 LLFUNC(SetDirection, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aX{lS, 2}, aY{lS, 3}, aZ{lS, 4};
-  aSource().SetDirection(aX, aY, aZ))
+  aSource().SourceSetDirection(aX, aY, aZ))
 /* ========================================================================= */
 // $ Source:SetElapsed
 // > Seconds:number=Number of seconds elapsed.
@@ -205,7 +207,7 @@ LLFUNC(SetDirection, 0,
 LLFUNC(SetElapsed, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aSeconds{lS, 2};
-  aSource().SetElapsed(aSeconds))
+  aSource().SourceSetElapsed(aSeconds))
 /* ========================================================================= */
 // $ Source:SetGain
 // > Gain:number=The new gain value.
@@ -214,7 +216,7 @@ LLFUNC(SetElapsed, 0,
 LLFUNC(SetGain, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aGain{lS, 2};
-  aSource().SetGain(aGain))
+  aSource().SourceSetGain(aGain))
 /* ========================================================================= */
 // $ Source:SetMaxGain
 // > Gain:number=The new maximum  gain value.
@@ -223,7 +225,7 @@ LLFUNC(SetGain, 0,
 LLFUNC(SetMaxGain, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aMaxGain{lS, 2};
-  aSource().SetMaxGain(aMaxGain))
+  aSource().SourceSetMaxGain(aMaxGain))
 /* ========================================================================= */
 // $ Source:SetMinGain
 // > Gain:number=The new minimum gain value.
@@ -232,7 +234,7 @@ LLFUNC(SetMaxGain, 0,
 LLFUNC(SetMinGain, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aMinGain{lS, 2};
-  aSource().SetMinGain(aMinGain))
+  aSource().SourceSetMinGain(aMinGain))
 /* ========================================================================= */
 // $ Source:SetPitch
 // > Pitch:number=The new pitch value.
@@ -241,7 +243,7 @@ LLFUNC(SetMinGain, 0,
 LLFUNC(SetPitch, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aPitch{lS, 2};
-  aSource().SetPitch(aPitch))
+  aSource().SourceSetPitch(aPitch))
 /* ========================================================================= */
 // $ Source:SetRefDist
 // > Distance:number=The new reference distance.
@@ -250,7 +252,7 @@ LLFUNC(SetPitch, 0,
 LLFUNC(SetRefDist, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aRefDistance{lS, 2};
-  aSource().SetRefDist(aRefDistance))
+  aSource().SourceSetRefDist(aRefDistance))
 /* ========================================================================= */
 // $ Source:SetRollOff
 // > RollOff:number=The new rolloff.
@@ -259,7 +261,7 @@ LLFUNC(SetRefDist, 0,
 LLFUNC(SetRollOff, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aRollOff{lS, 2};
-  aSource().SetRollOff(aRollOff))
+  aSource().SourceSetRollOff(aRollOff))
 /* ========================================================================= */
 // $ Source:SetLooping
 // > Looping:boolean=The new looping state
@@ -268,7 +270,7 @@ LLFUNC(SetRollOff, 0,
 LLFUNC(SetLooping, 0,
   const AgSource aSource{lS, 1};
   const AgBoolean aLooping{lS, 2};
-  aSource().SetLooping(aLooping))
+  aSource().SourceSetLooping(aLooping))
 /* ========================================================================= */
 // $ Source:SetMaxDist
 // > Distance:number=The new maximum distance.
@@ -277,7 +279,7 @@ LLFUNC(SetLooping, 0,
 LLFUNC(SetMaxDist, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aMaxDistance{lS, 2};
-  aSource().SetMaxDist(aMaxDistance))
+  aSource().SourceSetMaxDist(aMaxDistance))
 /* ========================================================================= */
 // $ Source:SetPosition
 // < X:number=The new X position.
@@ -288,7 +290,7 @@ LLFUNC(SetMaxDist, 0,
 LLFUNC(SetPosition, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aX{lS, 2}, aY{lS, 3}, aZ{lS, 4};
-  aSource().SetPosition(aX, aY, aZ))
+  aSource().SourceSetPosition(aX, aY, aZ))
 /* ========================================================================= */
 // $ Source:SetRelative
 // > Relative:boolean=Sets if the source is relative.
@@ -297,7 +299,7 @@ LLFUNC(SetPosition, 0,
 LLFUNC(SetRelative, 0,
   const AgSource aSource{lS, 1};
   const AgBoolean aRelative{lS, 2};
-  aSource().SetRelative(aRelative))
+  aSource().SourceSetRelative(aRelative))
 /* ========================================================================= */
 // $ Source:SetVelocity
 // < X:number=The new X velocity.
@@ -308,12 +310,12 @@ LLFUNC(SetRelative, 0,
 LLFUNC(SetVelocity, 0,
   const AgSource aSource{lS, 1};
   const AgALfloat aX{lS, 2}, aY{lS, 3}, aZ{lS, 4};
-  aSource().SetVelocity(aX, aY, aZ))
+  aSource().SourceSetVelocity(aX, aY, aZ))
 /* ========================================================================= */
 // $ Source:Stop
 // ? Stops the source.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Stop, 0, AgSource{lS, 1}().Stop())
+LLFUNC(Stop, 0, AgSource{lS, 1}().SourceStop())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Source:* methods structure                                          ## **

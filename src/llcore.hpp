@@ -214,33 +214,34 @@ LLFUNC(GetOS, 6,
 // ? Returns the time elapsed in microseconds since the OS started. Precision
 // ? will be lost over time.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetOSMicroTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeUS()))
+LLFUNC(GetOSMicroTime, 1, LuaUtilPushVar(lS, cmSys.ClockGetTimeMicroseconds()))
 /* ========================================================================= */
 // $ Core.GetOSMilliTime
 // < Time:integer=The time in milliseconds.
 // ? Returns the time elapsed in milliseconds since the OS started. Precision
 // ? will be lost over time.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetOSMilliTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeMS()))
+LLFUNC(GetOSMilliTime, 1, LuaUtilPushVar(lS, cmSys.ClockGetTimeMilliseconds()))
 /* ========================================================================= */
 // $ Core.GetOSNanoTime
 // < Time:integer=The time in nanoseconds.
 // ? Returns the time elapsed in nanoseconds since the OS started. Precision
 // ? will be lost over time.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetOSNanoTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeNS()))
+LLFUNC(GetOSNanoTime, 1, LuaUtilPushVar(lS, cmSys.ClockGetTimeNanoseconds()))
 /* ========================================================================= */
 // $ Core.GetOSNumTime
 // < Timestamp:number=The UNIX timestamp as a number.
 // ? Returns a unix timestamp of the current time in seconds as a number.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetOSNumTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS<lua_Number>()))
+LLFUNC(GetOSNumTime, 1,
+  LuaUtilPushVar(lS, cmSys.ClockGetTimeSeconds<lua_Number>()))
 /* ========================================================================= */
 // $ Core.GetOSTime
 // < Timestamp:integer=The UNIX timestamp.
 // ? Returns a unix timestamp of the current time in seconds.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetOSTime, 1, LuaUtilPushVar(lS, cmSys.GetTimeS()))
+LLFUNC(GetOSTime, 1, LuaUtilPushVar(lS, cmSys.ClockGetTimeSeconds()))
 /* ========================================================================= */
 // $ Core.GetRAM
 // < Load:number=% load of total physical memory.
@@ -279,7 +280,7 @@ LLFUNC(GetTicks, 1, LuaUtilPushVar(lS, cFrame->FrameGetTicks()))
 // ? counter can be reset with Core.Update() as it will lose precision over
 // ? time.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetTime, 1, LuaUtilPushVar(lS, cmHiRes.GetTimeDouble()))
+LLFUNC(GetTime, 1, LuaUtilPushVar(lS, cmHiRes.ClockGetTimeDouble()))
 /* ========================================================================= */
 // $ Core.GetUptime
 // < Ticks:number=Uptime in seconds

@@ -109,7 +109,7 @@ class CodecJPG :                       // JPEG codec object
                 "$ ($) v$.$.$.$ ($-bit $) by $ on $ ($ by $). $. $.",
         cMetadata->MetadataGetTitle(), cMetadata->MetadataGetShortTitle(),
         cMetadata->MetadataGetVersion(), cMetadata->MetadataGetAuthor(),
-        cmSys.FormatTime(), cMetadata->MetadataGetWebsite(),
+        cmSys.ClockFormatTime(), cMetadata->MetadataGetWebsite(),
         cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
         cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
         cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor(),
@@ -175,7 +175,7 @@ class CodecJPG :                       // JPEG codec object
         cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor(),
       cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor(),
       cSystem->OSLocale(),
-      TimeLocalTTtoStr(cmSys.GetTimeS(), "%Y-%m-%dT%H:%M:%S%z"),
+      TimeLocalTTtoStr(cmSys.ClockGetTimeSeconds(), "%Y-%m-%dT%H:%M:%S%z"),
       cMetadata->MetadataGetShortTitle(),
       cMetadata->MetadataGetWebsite())
     }; // Commit XMP metadata

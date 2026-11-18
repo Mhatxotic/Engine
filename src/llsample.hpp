@@ -51,7 +51,8 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Sample>(lS, cSamples))
 // < Duration:number=Duration of buffer in seconds
 // ? Returns the duration of the buffer in seconds
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetDuration, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().GetDuration()))
+LLFUNC(GetDuration, 1,
+ LuaUtilPushVar(lS, AgSample{lS, 1}().SampleGetDuration()))
 /* ========================================================================= */
 // $ Sample:GetId
 // < Id:integer=The id number of the Sample object.
@@ -88,7 +89,7 @@ LLFUNC(Play, 0,
                     aPan{lS, 3, -1.0f, 1.0f};
   const AgALfloat aPitch{lS, 4};
   const AgBoolean aLooping{lS, 5};
-  aSample().Play(aGain, aPan, aPitch, aLooping))
+  aSample().SamplePlay(aGain, aPan, aPitch, aLooping))
 /* ========================================================================= */
 // $ Sample:PlayEx
 // > Gain:number=Volume of sample to play at.
@@ -108,7 +109,7 @@ LLFUNCBEGIN(PlayEx)
   const AgALfloat aPitch{lS, 4};
   const AgBoolean aLooping{lS, 5};
   const int iReturn =
-    static_cast<int>(aSample().Play(lS, aGain, aPan, aPitch, aLooping));
+    static_cast<int>(aSample().SamplePlay(lS, aGain, aPan, aPitch, aLooping));
 LLFUNCENDEX(iReturn)
 /* ========================================================================= */
 // $ Sample:Spawn
@@ -118,14 +119,14 @@ LLFUNCENDEX(iReturn)
 // ? uninitialised in a 3-D state.
 /* ------------------------------------------------------------------------- */
 LLFUNCBEGIN(Spawn)
-  const int iReturn = static_cast<int>(AgSample{lS, 1}().Spawn(lS));
+  const int iReturn = static_cast<int>(AgSample{lS, 1}().SampleSpawn(lS));
 LLFUNCENDEX(iReturn)
 /* ========================================================================= */
 // $ Sample:Stop
 // < Count:integer=Number of source buffers stopped;
 // ? Stops playing the specified sample.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().Stop()))
+LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgSample{lS, 1}().SampleStop()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Sample:* methods structure                                          ## **
@@ -148,7 +149,7 @@ LLRSEND                                // Sample:* methods end
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
   const AgPcmUnlocked aPcm{lS,1};
-  AcSample{lS}().InitSample(aPcm))
+  AcSample{lS}().SampleInit(aPcm))
 /* ========================================================================= */
 // $ Sample.GetClasses
 // < Count:integer=Total number of samples created.

@@ -182,7 +182,7 @@ class SysBase :                        // Safe exception handler namespace
     // Begin message
     StdOStringStream osS;
     osS << "Received signal 'SIG" << cpSignal << "' at "
-        << cmSys.FormatTime();
+        << cmSys.ClockFormatTime();
     // Dump the stack
     DumpStack(osS);
     // Add extra information if set
@@ -207,9 +207,10 @@ class SysBase :                        // Safe exception handler namespace
     const StdString strMsg{ StrAppend(osS.str(), '\n') };
     // Message box string
     StdOStringStream osTS;
-    osTS << "Received signal SIG" << cpSignal << " at " << cmSys.FormatTime()
-         << ". This means that the engine must now terminate and we apologise "
-            "for the inconvenience with the loss of any unsaved progress. ";
+    osTS << "Received signal SIG" << cpSignal << " at "
+         << cmSys.ClockFormatTime() << ". This means that the engine must now "
+            "terminate and we apologise for the inconvenience with the loss "
+            "of any unsaved progress. ";
     // Create the debug log and exit if failed
     if(FStream fOut{ StdMove(strFileName), FM_W_T })
     { // Write to crash output file

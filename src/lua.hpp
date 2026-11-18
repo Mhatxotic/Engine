@@ -503,7 +503,7 @@ class Lua :                            // Actual class body
     cLog->LogInfoExSafe("Lua execution took $.",
       durLong.Parse(CCDeltaToDouble()));
     // Report progress
-    cLog->LogDebugSafe("Lua sandbox de-initialising...");
+    cLog->LogDebugSafe("Lua sandbox deinitialising...");
     // Disable garbage collector
     LuaStopGC();
     // De-init instruction count hook?
@@ -518,7 +518,7 @@ class Lua :                            // Actual class body
     uLuaPaused = 0;
     FlagClear(LUF_EXITING);
     // Report progress
-    cLog->LogDebugSafe("Lua sandbox successfully deinitialised.");
+    cLog->LogDebugSafe("Lua sandbox deinitialised.");
   }
   /* -- Lua end execution helper ------------------------------------------- */
   bool LuaTryEventOrForce(const EvtMainCmd emcCmd)

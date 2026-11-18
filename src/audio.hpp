@@ -67,18 +67,18 @@ class Audio :                          // Audio manager class
   }
   /* -- DeInit thread ------------------------------------------------------ */
   void AudioDeInitThread()
-  { // Stop and de-init the thread and log progress
-    cLog->LogDebugSafe("Audio monitoring thread de-initialising...");
+  { // Stop and deinit the thread and log progress
+    cLog->LogDebugSafe("Audio monitoring thread deinitialising...");
     tThread.ThreadDeInit();
     ctpNextCheck = std::chrono::high_resolution_clock::time_point::max();
-    cLog->LogDebugSafe("Audio monitoring thread de-initialised.");
+    cLog->LogDebugSafe("Audio monitoring thread deinitialised.");
   }
   /* -- Reset timer interval ----------------------------------------------- */
   void AudioResetCheckTime()
-    { ctpNextCheck = cmHiRes.GetTime() + acdCheckRate.load(); }
+    { ctpNextCheck = cmHiRes.ClockGetTime() + acdCheckRate.load(); }
   /* -- ReInit requested --------------------------------------------------- */
   void AudioDoReInit() try
-  { // Log re-initialisation
+  { // Log reinitialisation
     cLog->LogDebugSafe("Audio class reinitialising...");
     // De-initialise audio thread
     cAudio->AudioDeInitThread();
@@ -105,7 +105,7 @@ class Audio :                          // Audio manager class
     // Remove reinitialisation flag
     cOal->FlagClear(AFL_REINIT);
     // Log status
-    cLog->LogInfoSafe("Audio class reinitialised successfully.");
+    cLog->LogInfoSafe("Audio class reinitialised.");
     // Send lua event with the device type not set
     lfOnUpdate.LuaFuncDispatch();
   } // Exception occured
@@ -136,13 +136,14 @@ class Audio :                          // Audio manager class
   /* -- Verification of context -------------------------------------------- */
   bool AudioVerify()
   { // Ignore if next check time not met
-    if(cmHiRes.GetTime() < ctpNextCheck) return true;
+    if(cmHiRes.ClockGetTime() < ctpNextCheck) return true;
     // Number of discrepancies found. If there is no such device in the current
     // device list, or the current device item does not equal to the newly
     // detected item, then that is a discrepancy.
     size_t stDiscrepancies = 0;
     // Grab list of playback devices and if we found them?
-    if(const char *cpList = cOal->GetNCString(cOal->GetQueryMethod()))
+    if(const char *cpList =
+      cOal->OalGetNullContextString(cOal->OalGetQueryMethod()))
     { // Number of new items detected
       size_t stIndex = 0;
       // For each playback device, is the first character valid?
@@ -254,7 +255,7 @@ class Audio :                          // Audio manager class
   /* -- Init context ------------------------------------------------------- */
   void AudioInitContext()
   { // Log that we are initialising
-    cLog->LogDebugSafe("Audio subsystem initialising...");
+    cLog->LogDebugSafe("Audio context initialising...");
     // Enumerate devices
     AudioEnumPlaybackDevices();
     AudioEnumCaptureDevices();
@@ -271,19 +272,8 @@ class Audio :                          // Audio manager class
         stDevice = 0;
       } // Set device
       strDevice = AudioGetPbkDeviceById(stDevice);
-    } // Get pointer to device name and log device being used
-    const char*const cpDevice = strDevice.empty() ? nullptr : strDevice.data();
-    cLog->LogDebugExSafe("Audio trying to initialise playback device '$'...",
-      cpDevice ? cpDevice : "<Default>");
-    // Open the device
-    ALC(cOal->InitDevice(cpDevice), "Failed to open al playback device!",
-      "Name", strDevice, "Index", stDevice);
-    // Reopen the device to set requested HRTF state and log the result
-    ALCL(cOal->InitHRTFOverride(), "Audio failed to reset HTRF function to $!",
-      StrFromBoolTF(cOal->FlagIsSet(AFL_HRTFREQ)));
-    // Create the context
-    ALC(cOal->InitContext(), "Failed to create al context!",
-      "Name", strDevice, "Index", stDevice);
+    } // Initialise the audio device and context
+    cOal->OalInit(strDevice.empty() ? nullptr : strDevice.data());
     // Allocate sources data and log error if invalid
     if(!SourceAlloc(cSources->stSources))
       cLog->LogWarningExSafe(
@@ -294,11 +284,13 @@ class Audio :                          // Audio manager class
     AudioSetPosition(0.0f, 0.0f, 0.0f);
     AudioSetVelocity(0.0f, 0.0f, 0.0f);
     AudioSetOrientation(0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 0.0f);
+    // Log that we are initialised
+    cLog->LogDebugSafe("Audio context initialised.");
   }
   /* -- De-initialise the context ------------------------------------------ */
   void AudioDeInitContext()
-  { // De-initialise the context and re-init members
-    cOal->DeInit();
+  { // De-initialise the context and reinit members
+    cOal->OalDeInit();
     svPBDevices.clear();
     svCTDevices.clear();
   }
@@ -313,7 +305,8 @@ class Audio :                          // Audio manager class
     // Try to grab list of playback devices three times before failing.
     for(size_t stIndex = 0; stIndex < 3; ++stIndex, StdSuspend())
     { // Get list of devices and break if succeeded
-      if(const char *cpList = cOal->GetNCString<const char*const>(eQueryType))
+      if(const char *cpList =
+        cOal->OalGetNullContextString<const char*const>(eQueryType))
       { // Parse the first item and if it is not empty?
         Next: const StdStringView &ssvRef = cpList;
         if(!ssvRef.empty())
@@ -343,7 +336,7 @@ class Audio :                          // Audio manager class
   /* -- Enumerate playback devices ----------------------------------------- */
   void AudioEnumPlaybackDevices()
     { cOal->DetectEnumerationMethod();
-      AudioEnumDevices("playback", cOal->GetQueryMethod(), svPBDevices); }
+      AudioEnumDevices("playback", cOal->OalGetQueryMethod(), svPBDevices); }
   /* -- Set distance model ------------------------------------------------- */
   void AudioSetDistanceModel(const ALenum eModel) const
     { AL(cOal->SetDistanceModel(eModel),
@@ -408,7 +401,7 @@ class Audio :                          // Audio manager class
   static void AudioStopAll() { VideoStop(); StreamStop(); SampleStop(); }
   /* -- Init --------------------------------------------------------------- */
   void AudioDeInit()
-  { // Ignore if class already de-initialised
+  { // Ignore if class already deinitialised
     if(IHNotDeInitialise()) return;
     // Log subsystem
     cLog->LogDebugSafe("Audio class shutting down...");
@@ -431,7 +424,7 @@ class Audio :                          // Audio manager class
   { // Class initialised
     IHInitialise();
     // Log subsystem
-    cLog->LogDebugSafe("Audio class starting up...");
+    cLog->LogDebugSafe("Audio class initialising...");
     // Init context and thread
     AudioInitContext();
     // Enable the audio device change event
@@ -441,7 +434,7 @@ class Audio :                          // Audio manager class
     // Start the monitoring thread
     AudioInitThread();
     // Log status
-    cLog->LogDebugSafe("Audio class started successfully.");
+    cLog->LogDebugSafe("Audio class initialised.");
   }
   /* -- Default constructor ------------------------------------- */ protected:
   Audio() :

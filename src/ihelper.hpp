@@ -3,7 +3,7 @@
 ** ## Mhatxotic Engine          (c) Mhatxotic Design, All Rights Reserved ## **
 ** ######################################################################### **
 ** ## This class holds the name of a class and the time it has been       ## **
-** ## initialised and de-initialised. It also stops classes being         ## **
+** ## initialised and deinitialised. It also stops classes being          ## **
 ** ## initialised twice due to potential programming errors.              ## **
 ** ######################################################################### **
 ** ========================================================================= */
@@ -23,8 +23,8 @@ class InitHelper :                     // The Init Helper class
   ClkTimePoint     ctInitialised,      // Time class was initialised
                    ctDeinitialised;    // Time class was deinitialised
   /* ----------------------------------------------------------------------- */
-  void IHSetInitialised() { ctInitialised = cmHiRes.GetTime(); }
-  void IHSetDeInitialised() { ctDeinitialised = cmHiRes.GetTime(); }
+  void IHSetInitialised() { ctInitialised = cmHiRes.ClockGetTime(); }
+  void IHSetDeInitialised() { ctDeinitialised = cmHiRes.ClockGetTime(); }
   /* --------------------------------------------------------------- */ public:
   bool IHIsInitialised() const { return ctInitialised > ctDeinitialised; }
   bool IHIsNotInitialised() const { return !IHIsInitialised(); }
@@ -35,7 +35,7 @@ class InitHelper :                     // The Init Helper class
       XC("Object already initialised!",
         "Name", NameGet(),
         "Age",  TimeToShortDuration(
-                  cmHiRes.TimePointToClampedDouble(ctInitialised)));
+                  cmHiRes.ClockTimePointToClampedDouble(ctInitialised)));
     // Class now initialised
     IHSetInitialised();
   }
@@ -43,7 +43,7 @@ class InitHelper :                     // The Init Helper class
   bool IHDeInitialise()
   { // Return if class already initialised
     if(IHIsNotInitialised()) return false;
-    // Class now de-initialised
+    // Class now deinitialised
     IHSetDeInitialised();
     // Success
     return true;
@@ -55,7 +55,7 @@ class InitHelper :                     // The Init Helper class
     /* -- Initialisers ----------------------------------------------------- */
     NameConst{ ssvName },              // Initialise name
     ctInitialised{ cd0 },              // Clear initialised time
-    ctDeinitialised{ cmHiRes.GetTime() } // Set deinitialised time
+    ctDeinitialised{ cd0 }             // Set deinitialised time
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */

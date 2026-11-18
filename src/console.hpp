@@ -854,7 +854,7 @@ struct Console :                       // Members initially private
         StdIOSSetPrecision(0), cFrame->FrameGetFPS(),
         StrToBytes(cSystem->RAMProcUse(), 0), cSockets->astConnected.load(),
         TimeToShortDuration(cLog->CCDeltaToDouble(), 0)),
-        cmSys.FormatTime(ssvTimeFormat.data()));
+        cmSys.ClockFormatTime(ssvTimeFormat.data()));
       // Not redrawing?
       if(GetRedrawFlags().FlagIsClear(RD_TEXT))
       { // Redraw status if imput empty. Input redraw handled elseware.
@@ -964,7 +964,8 @@ struct Console :                       // Members initially private
       cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
       cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
       cSystem->ENGTarget(), cSystem->ENGCompiled(), cSystem->ENGCompiler(),
-      cSystem->ENGCompVer(), cSystem->ENGAuthor(), cmSys.FormatTime("%Y"));
+      cSystem->ENGCompVer(), cSystem->ENGAuthor(),
+      cmSys.ClockFormatTime("%Y"));
     // Add disclaimer that the author of the engine disclaims all liability for
     // guest software actions and user usage.
     ConsoleAddLine(COLOUR_RED, "Disclaimer: This scripting ENGINE is designed "
@@ -1026,7 +1027,7 @@ struct Console :                       // Members initially private
   { // Ignore if already deinitialised
     if(IHNotDeInitialise()) return;
     // Log progress
-    cLog->LogDebugSafe("Console de-initialising...");
+    cLog->LogDebugSafe("Console deinitialising...");
     // Initially shown and not closable. All other flags removed.
     FlagReset(CF_LOCKED|CF_ENABLED|CF_INSERT);
     // If commands registered?
@@ -1046,7 +1047,7 @@ struct Console :                       // Members initially private
     ClearInputHistory();
     DoFlush();
     // Log progress
-    cLog->LogInfoSafe("Console de-initialised successfully.");
+    cLog->LogInfoSafe("Console deinitialised.");
   }
   /* -- Constructor --------------------------------------------- */ protected:
   explicit Console(const ConCmdStaticList &ccslDef) :
@@ -1088,7 +1089,7 @@ struct Console :                       // Members initially private
   CVarReturn SetTimeFormat(const StdString &strFmt, const StdString &strV)
   { // Verify the new time format and log it
     cLog->LogInfoExSafe("Console time from format '$' is '$'.",
-      strFmt, cmSys.FormatTime(strFmt.data()));
+      strFmt, cmSys.ClockFormatTime(strFmt.data()));
     // Accept the new time format
     ssvTimeFormat = strV;
     // Done

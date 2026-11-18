@@ -156,7 +156,7 @@ class System :                         // The main system class
         IsOSNameExSet() ? StrAppend(" via ", OSNameEx()) :
                           cCommon->CommonBlankStr(),
       durLong.Parse(GetUptime()),
-      cmSys.FormatTime(), cmSys.FormatTimeUTC(),
+      cmSys.ClockFormatTime(), cmSys.ClockFormatTimeUTC(),
       StrFromBoolTF(OSIsAdmin()), StrFromBoolTF(EXEBundled()));
   }
   /* -- Update minimum RAM ----------------------------------------- */ public:

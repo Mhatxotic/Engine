@@ -216,7 +216,7 @@ static LuaCompResult LuaCodeCompileBuffer(lua_State*const lS,
          "INSERT or REPLACE into `$`(`$`,`$`,`$`,`$`) VALUES(?,?,?,?)",
          cSqls->ssvLCTable, cSqls->ssvLCCRCColumn, cSqls->ssvLCTimeColumn,
          cSqls->ssvLCRefColumn, cSqls->ssvLCCodeColumn),
-       uCRC, cmSys.GetTimeNS<sqlite3_int64>(), ssvRef, mbData))
+       uCRC, cmSys.ClockGetTimeNanoseconds<sqlite3_int64>(), ssvRef, mbData))
     return LCR_RECOMPILE;
   // Show error
   cLog->LogWarningExSafe(

@@ -366,7 +366,7 @@ class SysCore :
         sizeof(dwW)) < 0 ? 2 : 0);
   }
   /* -- Get uptime from clock class ---------------------------------------- */
-  StdTimeT GetUptime() const { return cmHiRes.GetTimeS(); }
+  StdTimeT GetUptime() const { return cmHiRes.ClockGetTimeSeconds(); }
   /* -- Terminate a process ------------------------------------------------ */
   bool TerminatePid(const unsigned uPid) const
   { // Return result

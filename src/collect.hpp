@@ -84,7 +84,7 @@ namespace P {                          // Start of public module namespace
                     m,                 /* The child (member) class type     */\
                     e,                 /* Lua class id enum (luadef.hpp)    */\
                     i,                 /* Constructor initialisation code   */\
-                    d,                 /* Destructor de-initialisation code */\
+                    d,                 /* Destructor deinitialisation code  */\
                     ...)               /* Constructor initialisers code     */\
   DTORHELPER(p::~p, if(IHDeInitialise()){d;} ) \
   p::p() : LuaIdent{#m, LMT_ ## e}, __VA_ARGS__ \

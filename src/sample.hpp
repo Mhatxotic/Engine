@@ -26,70 +26,77 @@ CTOR_BEGIN_NOBB(Samples, Sample, CLHelperUnsafe)
 CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
   /* -- Base classes ------------------------------------------------------- */
   public Pcm                           // Loaded pcm data
-{ /* -- Variables -------------------------------------------------- */ public:
+{ /* -- Variables ---------------------------------------------------------- */
   ALUIntVector      aluvNames;         // OpenAL buffer handle ids
   ALenum            aleFormat,         // Format type for openal
                     aleSFormat;        // Single channel format for openal
   /* ----------------------------------------------------------------------- */
-  ALenum GetFormat() const { return aleFormat; }
-  /* ----------------------------------------------------------------------- */
-  ALenum GetSFormat() const { return aleSFormat; }
+  ALuint SamplePrepareSource(Source &scSource, const ALuint aluBufId,
+    const ALfloat alfGain, const ALfloat alfPan, const ALfloat alfPitch,
+    const bool bLoop, const bool bLuaManaged)
+  { // Set parameters
+    scSource.SourceSetBuffer(static_cast<ALint>(aluBufId));
+    scSource.SourceSetRelative(true);
+    scSource.SourceSetPosition(alfPan, 0.0f, -sqrtf(1.0f - alfPan * alfPan));
+    scSource.SourceSetLooping(bLoop);
+    scSource.SourceSetPitch(alfPitch);
+    scSource.SourceSetGain(alfGain);
+    scSource.SourceSetExternal(bLuaManaged);
+    // Return source id
+    return scSource.SourceGet();
+  }
+  /* -- Load a single buffer from memory ----------------------------------- */
+  void SampleLoad(Pcm &pcmSrc)
+  { // Allocate and generate openal buffers
+    aluvNames.resize(pcmSrc.PcmDataGetChannels());
+    AL(cOal->CreateBuffers(aluvNames), "Error creating sample buffers!",
+      "Name", pcmSrc.NameGet(), "Count", SampleNameCount());
+    // Buffer the left or mono channel
+    AL(cOal->OalBufferData(SampleLeftName(), SampleGetSFormat(),
+      pcmSrc.PcmDataGetLeft(), static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
+      "Error buffering left channel/mono PCM audio data!",
+      "Name",   pcmSrc.NameGet(),        "Buffer",  SampleLeftName(),
+      "Format", SampleGetFormat(),       "MFormat", SampleGetSFormat(),
+      "Rate",   pcmSrc.PcmDataGetRate(),
+      "Size",   pcmSrc.PcmDataGetLeftSize());
+    // Log and return if mono sample
+    if(pcmSrc.PcmDataGetChannels() == PCT_MONO)
+      return cLog->LogDebugExSafe(
+        "Sample '$' uploaded as $[$] at $Hz as $.",
+        pcmSrc.NameGet(), SampleLeftName(), pcmSrc.PcmDataGetLeftSize(),
+        StrToGrouped(pcmSrc.PcmDataGetRate(), 1),
+        cOal->OalFormatToString(SampleGetFormat()));
+    // Buffer the right stereo channel
+    AL(cOal->OalBufferData(SampleRightName(), SampleGetSFormat(),
+      pcmSrc.PcmDataGetRight(), static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
+      "Error buffering right/stereo channel PCM audio data!",
+      "Name",   pcmSrc.NameGet(),  "Buffer",  SampleRightName(),
+      "Format", SampleGetFormat(), "MFormat", SampleGetSFormat(),
+      "Rate",   pcmSrc.PcmDataGetRate(),
+      "Size",   pcmSrc.PcmDataGetRightSize());
+    // Log progress
+    cLog->LogDebugExSafe(
+      "Sample '$' uploaded as L:$[$] and R:$[$] at $Hz as $.",
+      pcmSrc.NameGet(), SampleLeftName(), pcmSrc.PcmDataGetLeftSize(),
+      SampleRightName(), pcmSrc.PcmDataGetRightSize(),
+      StrToGrouped(pcmSrc.PcmDataGetRate(), 1),
+      cOal->OalFormatToString(SampleGetFormat()));
+  }
   /* -- Get AL buffer index from the specified physical buffer index ------- */
   template<typename IntType = ALint>
     requires StdIsIntegral<IntType>
-  IntType GetBufferInt(const ALenum aleId, const size_t stId=0) const
+  IntType SampleGetBufferInt(const ALenum aleId, const size_t stId = 0) const
   { // Hold state
     ALint iValue;
     // Store state
-    AL(cOal->GetBufferInt(aluvNames[stId], aleId, &iValue),
+    AL(cOal->OalGetBufferInt(aluvNames[stId], aleId, &iValue),
       "Get buffer integer failed!",
       "Name", NameGet(), "Param", aleId, "Index", stId);
     // Return state
     return static_cast<IntType>(iValue);
   }
-  /* -- Get buffer information --------------------------------------------- */
-  ALsizei GetALFrequency() const
-    { return GetBufferInt<ALsizei>(AL_FREQUENCY); }
-  ALsizei GetALBits() const
-    { return GetBufferInt<ALsizei>(AL_BITS); }
-  ALsizei GetALChannels() const
-    { return GetBufferInt<ALsizei>(AL_CHANNELS); }
-  ALsizei GetALSize() const
-    { return GetBufferInt<ALsizei>(AL_SIZE); }
-  ALdouble GetDuration() const
-    { return static_cast<ALdouble>(GetALSize()) * 8 /
-        GetALChannels() / GetALBits() / GetALFrequency(); }
-  /* -- Unload buffers ----------------------------------------------------- */
-  void UnloadBuffer()
-  { // Bail if buffers not allocated
-    if(aluvNames.empty()) return;
-    // Stop this sample from playing in its entirety
-    if(const unsigned uStopped = Stop())
-      cLog->LogDebugExSafe("Sample '$' cleared $ sources using it!",
-        NameGet(), uStopped);
-    // Delete the buffers
-    ALL(cOal->DeleteBuffers(aluvNames),
-      "Sample '$' failed to delete $ buffers", NameGet(), aluvNames.size());
-    // Reset buffer
-    aluvNames.clear();
-  }
   /* ----------------------------------------------------------------------- */
-  ALuint PrepareSource(Source &scSource, const ALuint aluBufId,
-    const ALfloat alfGain, const ALfloat alfPan, const ALfloat alfPitch,
-    const bool bLoop, const bool bLuaManaged)
-  { // Set parameters
-    scSource.SetBuffer(static_cast<ALint>(aluBufId));
-    scSource.SetRelative(true);
-    scSource.SetPosition(alfPan, 0.0f, -sqrtf(1.0f - alfPan * alfPan));
-    scSource.SetLooping(bLoop);
-    scSource.SetPitch(alfPitch);
-    scSource.SetGain(alfGain);
-    scSource.SetExternal(bLuaManaged);
-    // Return source id
-    return scSource.GetSource();
-  }
-  /* ----------------------------------------------------------------------- */
-  void PlayStereoSource(ALfloat alfGain, ALfloat alfPan,
+  void SamplePlayStereoSource(ALfloat alfGain, ALfloat alfPan,
     const ALfloat alfPitch, const bool bLoop, Source &sCLref, Source &sCRref,
     const bool bLuaManaged)
   { // Adjust gain from global volumes
@@ -99,67 +106,107 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     // Prepare sources
     const StdArray<const ALuint,2> aSourceIds{
       // [0] Left channel
-      PrepareSource(sCLref, aluvNames.front(), alfGain, -0.5f + alfPan,
+      SamplePrepareSource(sCLref, SampleLeftName(), alfGain, -0.5f + alfPan,
         alfPitch, bLoop, bLuaManaged),
       // [1] Right channel
-      PrepareSource(sCRref, aluvNames.back(), alfGain, 0.5f + alfPan,
+      SamplePrepareSource(sCRref, SampleRightName(), alfGain, 0.5f + alfPan,
         alfPitch, bLoop, bLuaManaged)
     }; // Play all the sources together
     ALL(cOal->PlaySources(aSourceIds),
       "Sample '$' failed to play stereo sources!", NameGet());
   }
   /* -- Play a mono source ------------------------------------------------- */
-  void PlayMonoSource(const ALfloat alfGain, ALfloat alfPan,
+  void SamplePlayMonoSource(const ALfloat alfGain, ALfloat alfPan,
     const ALfloat alfPitch, const bool bLoop, Source &sCMref,
     const bool bLuaManaged)
-  { ALL(cOal->PlaySource(PrepareSource(sCMref, aluvNames.front(),
+  { ALL(cOal->PlaySource(SamplePrepareSource(sCMref, SampleLeftName(),
       alfGain * cMixer->MixerGetAdjSampleVolume(), alfPan, alfPitch, bLoop,
       bLuaManaged)), "Sample '$' failed to play mono source!", NameGet()); }
+  /* --------------------------------------------------------------- */ public:
+  ALenum SampleGetFormat() const { return aleFormat; }
+  /* ----------------------------------------------------------------------- */
+  size_t SampleNameCount() const { return aluvNames.size(); }
+  /* ----------------------------------------------------------------------- */
+  template<typename RetType = ALuint>
+    RetType SampleLeftName() const
+  { return static_cast<RetType>(aluvNames.front()); }
+  /* ----------------------------------------------------------------------- */
+  template<typename RetType = ALuint>
+    RetType SampleRightName() const
+  { return static_cast<RetType>(aluvNames.back()); }
+  /* ----------------------------------------------------------------------- */
+  ALenum SampleGetSFormat() const { return aleSFormat; }
+  /* -- Get buffer information --------------------------------------------- */
+  ALsizei SampleGetALFrequency() const
+    { return SampleGetBufferInt<ALsizei>(AL_FREQUENCY); }
+  ALsizei SampleGetALBits() const
+    { return SampleGetBufferInt<ALsizei>(AL_BITS); }
+  ALsizei SampleGetALChannels() const
+    { return SampleGetBufferInt<ALsizei>(AL_CHANNELS); }
+  ALsizei SampleGetALSize() const
+    { return SampleGetBufferInt<ALsizei>(AL_SIZE); }
+  ALdouble SampleGetDuration() const
+    { return static_cast<ALdouble>(SampleGetALSize()) * 8 /
+        SampleGetALChannels() / SampleGetALBits() / SampleGetALFrequency(); }
   /* -- Spawn new sources in Lua ------------------------------------------- */
-  size_t Spawn(lua_State*const lS)
+  size_t SampleSpawn(lua_State*const lS)
   { // How many sources do we need?
-    switch(aluvNames.size())
+    switch(SampleNameCount())
     { // 1? (Mono source?) Create a new mono source and set buffer if succeeded
       case 1: if(const Source*const sCMptr = SourceGetFromLua(lS))
-                sCMptr->SetBuffer(static_cast<ALint>(aluvNames.front()));
+                sCMptr->SourceSetBuffer(SampleLeftName<ALint>());
               // Failed? Log the failure
               else cLog->LogWarningExSafe("Sample cannot get a free source "
                 "for spawning '$'!", NameGet());
               break;
       // 2? (Stereo sources) Get the left channel and set buffer if succeeded
       case 2: if(const Source*const sCLptr = SourceGetFromLua(lS))
-                sCLptr->SetBuffer(static_cast<ALint>(aluvNames.front()));
+                sCLptr->SourceSetBuffer(SampleLeftName<ALint>());
               // Failed? Log the failure
               else cLog->LogWarningExSafe("Sample cannot get a free source "
                 "for spawning '$' left channel!", NameGet());
               // Get a right channel source and set buffer if succeeded
               if(const Source*const sCRptr = SourceGetFromLua(lS))
-                sCRptr->SetBuffer(static_cast<ALint>(aluvNames.back()));
+                sCRptr->SourceSetBuffer(SampleRightName<ALint>());
               // Failed? Log the failure
               else cLog->LogWarningExSafe("Sample cannot get a free source "
                 "for spawning '$' right channel!", NameGet());
               break;
       // Unsupported amount of channels
       default: XC("Unsupported amount of channels!",
-        "Name", NameGet(), "Channels", aluvNames.size());
+        "Name", NameGet(), "Channels", SampleNameCount());
     } // Return number of channels
-    return aluvNames.size();
+    return SampleNameCount();
+  }
+  /* -- Unload buffers ----------------------------------------------------- */
+  void SampleUnloadBuffer()
+  { // Bail if buffers not allocated
+    if(aluvNames.empty()) return;
+    // Stop this sample from playing in its entirety
+    if(const unsigned uStopped = SampleStop())
+      cLog->LogDebugExSafe("Sample '$' cleared $ sources using it!",
+        NameGet(), uStopped);
+    // Delete the buffers
+    ALL(cOal->DeleteBuffers(aluvNames),
+      "Sample '$' failed to delete $ buffers", NameGet(), SampleNameCount());
+    // Reset buffer
+    aluvNames.clear();
   }
   /* ----------------------------------------------------------------------- */
-  void Play(const ALfloat alfGain, const ALfloat alfPan,
+  void SamplePlay(const ALfloat alfGain, const ALfloat alfPan,
     const ALfloat alfPitch, const bool bLoop)
   { // How many sources do we need?
-    switch(aluvNames.size())
+    switch(SampleNameCount())
     { // 1? (Mono source?) Create a new mono source and if we got it? Play it!
-      case 1: if(Source*const sCMptr = GetSource())
-                PlayMonoSource(alfGain, alfPan, alfPitch, bLoop, *sCMptr,
+      case 1: if(Source*const sCMptr = SourceGet())
+                SamplePlayMonoSource(alfGain, alfPan, alfPitch, bLoop, *sCMptr,
                   false);
               break;
       // 2? (Stereo sources) Get the left channel and if we got it?
-      case 2: if(Source*const sCLptr = GetSource())
+      case 2: if(Source*const sCLptr = SourceGet())
               { // Get a right channel source and if we got it? Play it
-                if(Source*const sCRptr = GetSource())
-                  PlayStereoSource(alfGain, alfPan, alfPitch, bLoop,
+                if(Source*const sCRptr = SourceGet())
+                  SamplePlayStereoSource(alfGain, alfPan, alfPitch, bLoop,
                     *sCLptr, *sCRptr, false);
                 // Could not grab a right channel source? Log failure
                 else cLog->LogWarningExSafe("Sample cannot get a free source "
@@ -174,19 +221,20 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
         break;
       // Unsupported amount of channels
       default: XC("Unsupported amount of channels!",
-        "Name", NameGet(), "Channels",   aluvNames.size());
+        "Name", NameGet(), "Channels", SampleNameCount());
     }
   }
   /* -- Play with a pre-allocated sources by Lua --------------------------- */
-  size_t Play(lua_State*const lS, const ALfloat alfGain, const ALfloat alfPan,
-    const ALfloat alfPitch, const bool bLoop)
+  size_t SamplePlay(lua_State*const lS, const ALfloat alfGain,
+    const ALfloat alfPan, const ALfloat alfPitch, const bool bLoop)
   { // How many sources do we need?
-    switch(aluvNames.size())
+    switch(SampleNameCount())
     { // 1 (Mono source?)?
       case 1:
         // Create a new mono source and if we got it? Play it
         if(Source*const sCMptr = SourceGetFromLua(lS))
-          PlayMonoSource(alfGain, alfPan, alfPitch, bLoop, *sCMptr, true);
+          SamplePlayMonoSource(alfGain,
+            alfPan, alfPitch, bLoop, *sCMptr, true);
         // Could not grab a mono channel source? Log failure
         else cLog->LogWarningExSafe(
           "Sample cannot get a free source for playing '$'!", NameGet());
@@ -197,7 +245,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
         if(Source*const sCLptr = SourceGetFromLua(lS))
         { // Get a right channel source and if we got it? Play sources
           if(Source*const sCRptr = SourceGetFromLua(lS))
-            PlayStereoSource(alfGain, alfPan, alfPitch, bLoop, *sCLptr,
+            SamplePlayStereoSource(alfGain, alfPan, alfPitch, bLoop, *sCLptr,
               *sCRptr, true);
           // Could not grab a right channel source? Log failure
           else cLog->LogWarningExSafe(
@@ -217,67 +265,30 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
         break;
       // Unsupported amount of channels
       default: XC("Unsupported amount of channels!",
-        "Name", NameGet(), "Channels",   aluvNames.size());
+        "Name", NameGet(), "Channels", SampleNameCount());
     } // Return number of channels
-    return aluvNames.size();
+    return SampleNameCount();
   }
   /* == Stop the buffer ==================================================== */
-  unsigned Stop() const { return SourceStop(aluvNames); }
-  /* -- Load a single buffer from memory ----------------------------------- */
-  void LoadSample(Pcm &pcmSrc)
-  { // Allocate and generate openal buffers
-    aluvNames.resize(pcmSrc.PcmDataGetChannels());
-    AL(cOal->CreateBuffers(aluvNames), "Error creating sample buffers!",
-      "Name", pcmSrc.NameGet(), "Count", aluvNames.size());
-    // Buffer the left or mono channel
-    AL(cOal->BufferData(aluvNames.front(), GetSFormat(),
-      pcmSrc.PcmDataGetLeft(), static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
-      "Error buffering left channel/mono PCM audio data!",
-      "Name",   pcmSrc.NameGet(),        "Buffer",  aluvNames.front(),
-      "Format", GetFormat(),             "MFormat", GetSFormat(),
-      "Rate",   pcmSrc.PcmDataGetRate(),
-      "Size",   pcmSrc.PcmDataGetLeftSize());
-    // Log and return if mono sample
-    if(pcmSrc.PcmDataGetChannels() == PCT_MONO)
-      return cLog->LogDebugExSafe(
-        "Sample '$' uploaded as $[$] at $Hz as $.",
-        pcmSrc.NameGet(), aluvNames.front(), pcmSrc.PcmDataGetLeftSize(),
-        StrToGrouped(pcmSrc.PcmDataGetRate(), 1),
-        cOal->GetALFormat(GetFormat()));
-    // Buffer the right stereo channel
-    AL(cOal->BufferData(aluvNames.back(), GetSFormat(),
-      pcmSrc.PcmDataGetRight(), static_cast<ALsizei>(pcmSrc.PcmDataGetRate())),
-      "Error buffering right/stereo channel PCM audio data!",
-      "Name",   pcmSrc.NameGet(), "Buffer",  aluvNames.back(),
-      "Format", GetFormat(),      "MFormat", GetSFormat(),
-      "Rate",   pcmSrc.PcmDataGetRate(),
-      "Size",   pcmSrc.PcmDataGetRightSize());
-    // Log progress
-    cLog->LogDebugExSafe(
-      "Sample '$' uploaded as L:$[$] and R:$[$] at $Hz as $.",
-      pcmSrc.NameGet(), aluvNames.front(), pcmSrc.PcmDataGetLeftSize(),
-      aluvNames.back(), pcmSrc.PcmDataGetRightSize(),
-      StrToGrouped(pcmSrc.PcmDataGetRate(), 1),
-      cOal->GetALFormat(GetFormat()));
-  }
+  unsigned SampleStop() const { return SourceStop(aluvNames); }
   /* -- Load a single buffer ----------------------------------------------- */
-  void ReloadSample()
+  void SampleReloadSample()
   { // If pcm sample was not loaded from disk? Just (re)load the bitmap data
     // that already should be there and should NEVER be released.
-    if(PcmDataIsDynamic()) LoadSample(*this);
+    if(PcmDataIsDynamic()) SampleLoad(*this);
     // Pcm sample is static?
     else
     { // It can just be reloaded from disk
       PcmReloadData();
       // Load the bitmap into memory
-      LoadSample(*this);
+      SampleLoad(*this);
       // Clear memory because we can just reload from file
       PcmDataClearData();
     } // Show what was loaded
     cLog->LogInfoExSafe("Sample loaded '$'!", NameGet());
   }
   /* -- Init from a bitmap class ------------------------------------------- */
-  void InitSample(Pcm &pcmSrc)
+  void SampleInit(Pcm &pcmSrc)
   { // Show filename progress
     cLog->LogDebugExSafe("Sample loading from pcm '$'[$] ($;$;$)...",
       pcmSrc.NameGet(), pcmSrc.PcmDataGetAlloc(), pcmSrc.PcmDataGetRate(),
@@ -295,7 +306,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     // Set purpose of the PCM object as a sample
     FlagSet(PP_SAMPLE);
     // Initialise
-    LoadSample(*this);
+    SampleLoad(*this);
     // Remove all sample data because we can just load it from file again
     // and theres no point taking up precious memory for it.
     if(PcmDataIsNotDynamic()) PcmDataClearData();
@@ -309,24 +320,24 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Sample, UnloadBuffer())
+  DTORHELPER(~Sample, SampleUnloadBuffer())
 };/* -- End ---------------------------------------------------------------- */
 CTOR_END_NOINITS(Samples, Sample, SAMPLE) // Finish collector class
 /* ========================================================================= */
 static void SampleStop()
 { // Stop all samples from playing
   if(cSamples->empty()) return;
-  for(const Sample*const scPtr : *cSamples) scPtr->Stop();
+  for(const Sample*const scPtr : *cSamples) scPtr->SampleStop();
 }
 /* ========================================================================= */
 static void SampleDeInit()
 { // Done if empty
   if(cSamples->empty()) return;
-  // Re-create buffers for all the samples and log pre/post de-init
-  cLog->LogDebugExSafe("Samples de-initialising $ objects...",
+  // Re-create buffers for all the samples and log pre/post deinit
+  cLog->LogDebugExSafe("Samples deinitialising $ objects...",
     cSamples->size());
-  for(Sample*const scPtr : *cSamples) scPtr->UnloadBuffer();
-  cLog->LogInfoExSafe("Samples de-initialised $ objects.",
+  for(Sample*const scPtr : *cSamples) scPtr->SampleUnloadBuffer();
+  cLog->LogInfoExSafe("Samples deinitialised $ objects.",
     cSamples->size());
 }
 /* ========================================================================= */
@@ -336,7 +347,7 @@ static void SampleReInit()
   // Re-create buffers for all the samples and log pre/post reinit
   cLog->LogDebugExSafe("Samples reinitialising $ objects...",
     cSamples->size());
-  for(Sample*const scPtr : *cSamples) scPtr->ReloadSample();
+  for(Sample*const scPtr : *cSamples) scPtr->SampleReloadSample();
   cLog->LogInfoExSafe("Samples reinitialised $ objects.", cSamples->size());
 }
 /* == Update all streams base volume======================================== */
@@ -348,9 +359,9 @@ static void SampleUpdateVolume()
     { // Get class
       const Source &scRef = *scPtr;
       // If it is locked then its a sample so ignore it
-      if(scRef.GetExternal()) continue;
+      if(scRef.SourceGetExternal()) continue;
       // Set new sample volume
-      scRef.SetGain(cMixer->MixerGetAdjSampleVolume());
+      scRef.SourceSetGain(cMixer->MixerGetAdjSampleVolume());
     }
   });
 }

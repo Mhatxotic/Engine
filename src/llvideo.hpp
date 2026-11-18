@@ -41,13 +41,13 @@ struct AcVideo : public ArClass<Video> {
 // ? Advances one frame. The video must be paused or stopped and it only
 // ? happens in the engine thread and not its own thread.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Advance, 0, AgVideo{lS, 1}().Advance())
+LLFUNC(Advance, 0, AgVideo{lS, 1}().VideoAdvance())
 /* ========================================================================= */
 // $ Video:Awaken
 // ? Initialises the audio and video structures after loading or after being
 // ? manually stopped.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Awaken, 0, AgVideo{lS, 1}().Awaken())
+LLFUNC(Awaken, 0, AgVideo{lS, 1}().VideoAwaken())
 /** ======================================================================== */
 // $ Video:Blit
 // ? Blits the specified video texture frame to the currently ACTIVE FBO. This
@@ -55,7 +55,7 @@ LLFUNC(Awaken, 0, AgVideo{lS, 1}().Awaken())
 // ? until the active FBO is finished and rendered. The currently stored
 // ? vertex, texcoord, colour and matrix values are used.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Blit, 0, AgVideo{lS, 1}().Blit())
+LLFUNC(Blit, 0, AgVideo{lS, 1}().VideoBlit())
 /* ========================================================================= */
 // $ Video:BlitT
 // ? TriIndex:integer=The specified triangle id.
@@ -67,7 +67,7 @@ LLFUNC(Blit, 0, AgVideo{lS, 1}().Blit())
 LLFUNC(BlitT, 0,
   const AgVideo aVideo{lS, 1};
   const AgTriangleId aTriangleId{lS, 2};
-  aVideo().BlitTri(aTriangleId))
+  aVideo().VideoBlitTri(aTriangleId))
 /* ========================================================================= */
 // $ Video:Destroy
 // ? Stops and destroys the stream object and frees all the memory associated
@@ -81,44 +81,44 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Video>(lS, cVideos))
 // < Seconds:Number=Returns the elapsed audio time in seconds
 // ? Returns the elapsed video time in seconds
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetATime, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetAudioTime()))
+LLFUNC(GetATime, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetAudioTime()))
 /* ========================================================================= */
 // $ Video:GetDrift
 // < Seconds:Number=Drift time in seconds.
 // ? Returns the drift between audio and video sync.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetDrift, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetDrift()))
+LLFUNC(GetDrift, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetDrift()))
 /* ========================================================================= */
 // $ Video:GetFrame
 // < Frame:Integer=The current frame
 // ? Returns the current frame number
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetFrame, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetFrame()))
+LLFUNC(GetFrame, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetFrame()))
 /* ========================================================================= */
 // $ Video:GetFrames
 // < Frames:Integer=Returns the frames decoded
 // ? Returns the number of frames decoded
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetFrames, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetFrames()))
+LLFUNC(GetFrames, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetFrames()))
 /* ========================================================================= */
 // $ Video:GetFramesLost
 // < Frames:Integer=Returns the frames that were skipped
 // ? Returns the number of skipped frames decoded
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetFramesLost, 1,
-  LuaUtilPushVar(lS, AgVideo{lS, 1}().GetFramesSkipped()))
+  LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetFramesSkipped()))
 /* ========================================================================= */
 // $ Video:GetFPS
 // < FPS:Number=The FPS rate of the video
 // ? Returns the FPS rate of the video
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetFPS, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetFPS()))
+LLFUNC(GetFPS, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetFPS()))
 /* ========================================================================= */
 // $ Video:GetHeight
 // < Width:integer=The height of the video
 // ? Returns the height of the video
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetHeight()))
+LLFUNC(GetHeight, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetHeight()))
 /* ========================================================================= */
 // $ Video:GetId
 // < Id:integer=The id number of the Video object.
@@ -130,7 +130,7 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Serial()))
 // < Count:integer=Number of loops left.
 // ? Returns the number of loops remaining of playback.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetLoop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetLoop()))
+LLFUNC(GetLoop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetLoop()))
 /* ========================================================================= */
 // $ Video:GetName
 // < Id:string=The video identifier
@@ -142,13 +142,13 @@ LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().NameGet()))
 // < Seconds:Number=Returns the elapsed video time in seconds
 // ? Returns the elapsed audio time in seconds
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetTime, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetVideoTime()))
+LLFUNC(GetTime, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetTime()))
 /* ========================================================================= */
 // $ Video:GetWidth
 // < Width:integer=The width of the video
 // ? Returns the width of the video
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().GetWidth()))
+LLFUNC(GetWidth, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoGetWidth()))
 /* ========================================================================= */
 // $ Video:IsDestroyed
 // < Destroyed:boolean=If the Video class is destroyed
@@ -161,7 +161,7 @@ LLFUNC(IsDestroyed, 1,
 // < Status:boolean=Playback status
 // ? Returns the playback status
 /* ------------------------------------------------------------------------- */
-LLFUNC(IsPlaying, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().IsPlaying()))
+LLFUNC(IsPlaying, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoIsPlaying()))
 /* ========================================================================= */
 // $ Video:OnEvent
 // > Func:function=The callback function to call when an event occurds. This
@@ -175,18 +175,18 @@ LLFUNC(OnEvent, 0, AgVideo{lS, 1}().LuaEvtInit(lS))
 // < Success:boolean=Did the video pause playback?
 // ? Pauses the specified video.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Pause, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Pause()))
+LLFUNC(Pause, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoPause()))
 /* ========================================================================= */
 // $ Video:Play
 // < Success:boolean=Did the video start playing?
 // ? Plays the specified video.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Play, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Play()))
+LLFUNC(Play, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoPlay()))
 /* ========================================================================= */
 // $ Video:Rewind
 // ? Rewinds the specified video back to the beginning.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Rewind, 0, AgVideo{lS, 1}().Rewind())
+LLFUNC(Rewind, 0, AgVideo{lS, 1}().VideoRewind())
 /* ========================================================================= */
 // $ Video:SetKeyed
 // < Keyed:boolean=Video should be keyed with the set colour
@@ -195,7 +195,7 @@ LLFUNC(Rewind, 0, AgVideo{lS, 1}().Rewind())
 // ? will set the colour to be keyed. If the pixel is greater or equal then the
 // ? specified colour then the pixel is set to the specified alpha.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetKeyed, 0, AgVideo{lS, 1}().SetKeyed(AgBoolean{lS, 2}))
+LLFUNC(SetKeyed, 0, AgVideo{lS, 1}().VideoSetKeyed(AgBoolean{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetCRGBA
 // > Red:number=The entire FBO texture red colour intensity (0 to 1).
@@ -245,13 +245,13 @@ LLFUNC(SetCX, 0,
 // ? Enabling this changes the shader to adjust for full-dynamic range else
 // ? uses the defaul partial dynamic range.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetFDR, 0, AgVideo{lS, 1}().SetFDR(AgBoolean{lS, 2}))
+LLFUNC(SetFDR, 0, AgVideo{lS, 1}().VideoSetFDR(AgBoolean{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetFilter
 // < Filter:boolean=Video should be filtered by OpenGL
 // ? Sets GL_LINEAR filtering on the video if true, GL_NEAREST if not.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetFilter, 0, AgVideo{lS, 1}().SetFilter(AgBoolean{lS, 2}))
+LLFUNC(SetFilter, 0, AgVideo{lS, 1}().VideoSetFilter(AgBoolean{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetKeyColour
 // > Red:number=The R component to phase out
@@ -273,14 +273,14 @@ LLFUNC(SetKeyColour, 0,
 // > Count:integer=New playback loop count (-1 = infinity).
 // ? Sets the new playback loop count.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetLoop, 0, AgVideo{lS, 1}().SetLoop(AgSizeT{lS, 2}))
+LLFUNC(SetLoop, 0, AgVideo{lS, 1}().VideoSetLoop(AgSizeT{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetRec709
 // < Enabled:boolean=Video should be Rec.709?
 // ? Enabling this changes the shader to use Rec.709 calculations if true else
 // ? uses Rec.601 calculations if false.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetRec709, 0, AgVideo{lS, 1}().Set709(AgBoolean{lS, 2}))
+LLFUNC(SetRec709, 0, AgVideo{lS, 1}().VideoSet709(AgBoolean{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetTCLTRB
 // > Left:number=The left co-ordinate.
@@ -338,7 +338,7 @@ LLFUNC(SetTCX, 0,
 // > Volume:number=New video volume (0 to 1).
 // ? Sets the volume of the video class even if it is playing.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetVolume, 0, AgVideo{lS, 1}().SetVolume(AgVolume{lS, 2}))
+LLFUNC(SetVolume, 0, AgVideo{lS, 1}().VideoSetVolume(AgVolume{lS, 2}))
 /* ========================================================================= */
 // $ Video:SetVLTRB
 // > Left:number=The destination left co-ordinate.
@@ -415,7 +415,7 @@ LLFUNC(SetVX, 0,
 // ? Stops and unloads the specified video, this also unloads the audio and
 // ? video output structures.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().Stop()))
+LLFUNC(Stop, 1, LuaUtilPushVar(lS, AgVideo{lS, 1}().VideoStop()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Video:* methods structure                                           ## **

@@ -20,13 +20,13 @@ class Interval
   ClkTimePoint     ctpNext;            // Next trigger
   /* -- Returns if time + this duration not elapsed yet ------------ */ public:
   bool CIIsNotTriggeredIn(const ClkDuration &cdT) const
-    { return cmHiRes.GetTime() + cdT < ctpNext; }
+    { return cmHiRes.ClockGetTime() + cdT < ctpNext; }
   /* -- Returns if timepoint not elapsed yet ------------------------------- */
   bool CIIsNotTriggered(const ClkTimePoint &ctpT) const
     { return ctpT < ctpNext; }
   /* -- Returns if current timepoint not elapsed yet ----------------------- */
   bool CIIsNotTriggered() const
-    { return CIIsNotTriggered(cmHiRes.GetTime()); }
+    { return CIIsNotTriggered(cmHiRes.ClockGetTime()); }
   /* -- Returns if current timepoint elapsed ------------------------------- */
   bool CIIsTriggered() const { return !CIIsNotTriggered(); }
   /* -- Add time to next limit --------------------------------------------- */
@@ -34,7 +34,7 @@ class Interval
   /* -- Time elapsed? ------------------------------------------------------ */
   bool CIIsTrigger()
   { // Get current high res time
-    const ClkTimePoint ctpNow{ cmHiRes.GetTime() };
+    const ClkTimePoint ctpNow{ cmHiRes.ClockGetTime() };
     // Return false if time hasn't elapsed yet
     if(CIIsNotTriggered(ctpNow)) return false;
     // Set next time strictly and not accumulate it
@@ -45,11 +45,12 @@ class Interval
   /* -- Time not elapsed? -------------------------------------------------- */
   bool CIIsNotTrigger() { return !CIIsTrigger(); }
   /* -- Reset trigger ------------------------------------------------------ */
-  void CIReset() { ctpNext = cmHiRes.GetTime() + cdLimit; }
+  void CIReset() { ctpNext = cmHiRes.ClockGetTime() + cdLimit; }
   /* -- Return time left --------------------------------------------------- */
-  const ClkDuration CIDelta() const { return cmHiRes.GetTime() - ctpNext; }
+  const ClkDuration CIDelta() const
+    { return cmHiRes.ClockGetTime() - ctpNext; }
   /* -- Sync now ----------------------------------------------------------- */
-  void CISync() { ctpNext = cmHiRes.GetTime(); }
+  void CISync() { ctpNext = cmHiRes.ClockGetTime(); }
   /* -- Update limit and time now do a duration object --------------------- */
   void CISetLimit(const ClkDuration &duL) { cdLimit = duL; CISync(); }
   /* -- Update limit and time now to a double ------------------------------ */
@@ -58,14 +59,14 @@ class Interval
   /* -- Constructor -------------------------------------------------------- */
   Interval() :
     /* -- Initialisers ----------------------------------------------------- */
-    ctpNext{ cmHiRes.GetTime() }      // Will trigger next check
+    ctpNext{ cmHiRes.ClockGetTime() }  // Will trigger next check
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor (set limit by lvalue) ---------------------------------- */
   explicit Interval(const ClkDuration &duL) :
     /* -- Initialisers ----------------------------------------------------- */
     cdLimit{ duL },                    // Copy limit from other class
-    ctpNext{ cmHiRes.GetTime() }       // Will trigger next check
+    ctpNext{ cmHiRes.ClockGetTime() }  // Will trigger next check
     /* -- No code ---------------------------------------------------------- */
     {}
 }; /* -- End --------------------------------------------------------------- */

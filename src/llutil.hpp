@@ -44,7 +44,7 @@ using AgTimeT = AgInteger<StdTimeT>;
 // ? 'Www Mmm dd hh:mm:ss yyyy zzz'. There maybe a slight differences across
 // ? different operating systems. Note that time will be in local time format.
 /* ------------------------------------------------------------------------- */
-LLFUNC(AscNTime, 1, LuaUtilPushVar(lS, cmSys.FormatTime()))
+LLFUNC(AscNTime, 1, LuaUtilPushVar(lS, cmSys.ClockFormatTime()))
 /* ========================================================================= */
 // $ Util.AscNTimeUTC
 // < Date:string=The timestamp converted to a string.
@@ -52,7 +52,7 @@ LLFUNC(AscNTime, 1, LuaUtilPushVar(lS, cmSys.FormatTime()))
 // ? 'Www Mmm dd hh:mm:ss yyyy zzz'. There maybe a slight differences across
 // ? different operating systems. Note that time will be in UTC time format.
 /* ------------------------------------------------------------------------- */
-LLFUNC(AscNTimeUTC, 1, LuaUtilPushVar(lS, cmSys.FormatTimeUTC()))
+LLFUNC(AscNTimeUTC, 1, LuaUtilPushVar(lS, cmSys.ClockFormatTimeUTC()))
 /* ========================================================================= */
 // $ Util.AscTime
 // > Timestamp:integer=The timestamp to convert to string
@@ -398,7 +398,7 @@ LLFUNC(FlushTables, 0, LuaUtilClearTables(lS, 1));
 // ? Note that time will be in local time format.
 /* ------------------------------------------------------------------------- */
 LLFUNC(FormatNTime, 1,
-  LuaUtilPushVar(lS, cmSys.FormatTime(AgCStringChar{lS, 1})))
+  LuaUtilPushVar(lS, cmSys.ClockFormatTime(AgCStringChar{lS, 1})))
 /* ========================================================================= */
 // $ Util.FormatNTimeUTC
 // > Format:stringr=The strftime format string.
@@ -408,7 +408,7 @@ LLFUNC(FormatNTime, 1,
 // ? time will be in UTC time format.
 /* ------------------------------------------------------------------------- */
 LLFUNC(FormatNTimeUTC, 1,
-  LuaUtilPushVar(lS, cmSys.FormatTimeUTC(AgCStringChar{lS, 1})))
+  LuaUtilPushVar(lS, cmSys.ClockFormatTimeUTC(AgCStringChar{lS, 1})))
 /* ========================================================================= */
 // $ Util.FormatNumber
 // > Value:number=A number value, it will be converted to a string.
@@ -962,7 +962,8 @@ LLFUNC(RegexSafe, 1,
 // ? Subtracts the specified time with the current time and converts it to a
 // ? human readable string showing the time duration between the two.
 /* ------------------------------------------------------------------------- */
-LLFUNC(RelTime, 1, LuaUtilPushVar(lS, cmSys.ToDurationRel(AgTimeT{lS, 1})))
+LLFUNC(RelTime, 1,
+  LuaUtilPushVar(lS, cmSys.ClockToDurationRelative(AgTimeT{lS, 1})))
 /* ========================================================================= */
 // $ Util.Random
 // < Result:Integer=The random number returned.
@@ -992,7 +993,7 @@ LLFUNC(RandomA, 1, AcAsset{lS}().MemSwap(CryptRandomBlock(AgSizeT{lS, 1})))
 LLFUNC(RelTimeEx, 1,
   const AgTimeT aTimestamp{lS, 1};
   const AgUInt aComponents{lS, 2};
-  LuaUtilPushVar(lS, cmSys.ToDurationRel(aTimestamp, aComponents)))
+  LuaUtilPushVar(lS, cmSys.ClockToDurationRelative(aTimestamp, aComponents)))
 /* ========================================================================= */
 // $ Util.Replace
 // > String:string=The string to search from.

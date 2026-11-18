@@ -6,7 +6,7 @@
 ** ## Do not use class directly. It must be derived with another class.   ## **
 ** ######################################################################### **
 ** ## This class requires the parent class to have these functions...     ## **
-** ##   void AsyncReady(FileMap &fmData)                                  ## **
+** ##   bool AsyncReady(FileMap &fmData)                                  ## **
 ** ##     - Fired when file is loading from memory (data block)           ## **
 ** ######################################################################### **
 ** ## It also requires the parent class' collector class to also register ## **
@@ -147,17 +147,15 @@ template<class MemberType, class ColType>class AsyncLoader :
     AsyncProgress(APC_EXECDATAWRITE,
       static_cast<uint64_t>(stPosition), static_cast<uint64_t>(MemSize()));
   }
-  /* -- Get thread ---------------------------------------------- */ protected:
+  /* -- Get thread class ---------------------------------------- */ protected:
   Thread &AsyncGetThread() { return tAsyncThread; }
   const Thread &AsyncGetThread() const { return tAsyncThread; }
-  bool AsyncThreadIsCurrent() const
-    { return AsyncGetThread().ThreadIsCurrent(); }
   /* -- Prepend message to the full stack message -------------------------- */
-  void AsyncDoAddStackMessage(const char*const cpMsg)
-    { strAsyncError.insert(0, cpMsg); }
-  void AsyncDoAddStackMessage(const StdString &strMsg)
-    { strAsyncError.insert(0, strMsg); }
-  /* -- Execute function (returns exit code) ----------------------- */ public:
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void AsyncDoAddStackMessage(StrType &&strMsg)
+    { strAsyncError.insert(0, StdMove(strMsg)); }
+  /* -- Execute function (returns exit code) ------------------------------- */
   int64_t AsyncExecute()
   { // Duration of execution
     const Chrono chExecute;
@@ -233,6 +231,12 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Return exit code
     return spProcess.SysPipeBaseGetStatus();
   }
+  /* -- Executes the class callback when data is ready --------------------- */
+  void AsyncExecuteReadyCallback(FileMap &fmData)
+  { // Execute the callback and if it returns true then it is done with the raw
+    // data we sent to it.
+    if(mtAsyncOwner.AsyncReady(fmData)) MemDeInit();
+  }
   /* -- Process a file map and dispatch events ----------------------------- */
   void AsyncParseFileMap(FileMap &fmData)
   { // Send progress event with the file size
@@ -241,11 +245,11 @@ template<class MemberType, class ColType>class AsyncLoader :
       static_cast<uint64_t>(fmData.FileMapModifiedTime()),
       static_cast<uint64_t>(fmData.FileMapCreationTime()));
     // Move our memory block into a file map and send it to loader
-    mtAsyncOwner.AsyncReady(fmData);
+    AsyncExecuteReadyCallback(fmData);
   }
   /* -- Move the stored memory block into a new filemap and parse it ------- */
   void AsyncParseMemory()
-    { FileMap fmData{ NameGet(), StdMove(*this), cmSys.GetTimeS() };
+    { FileMap fmData{ NameGet(), StdMove(*this), cmSys.ClockGetTimeSeconds() };
       AsyncParseFileMap(fmData); }
   /* -- Load the specified file and parse it ------------------------------- */
   void AsyncParseFile()
@@ -254,7 +258,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   /* -- Async off-main thread function ------------------------------------- */
   ThreadFlagsType AsyncThreadMain(Thread&)
   { // Capture exceptions. Remember that after these operations the memory at
-    // mAsyncLoadData should be de-initialised. So don't use it again.
+    // mAsyncLoadData should be deinitialised. So don't use it again.
     try
     { // How are we loading?
       switch(asctAsyncType)
@@ -262,7 +266,7 @@ template<class MemberType, class ColType>class AsyncLoader :
         case BA_NONE:
         { // Just send a blank file and signal completion
           FileMap fmData;
-          mtAsyncOwner.AsyncReady(fmData);
+          AsyncExecuteReadyCallback(fmData);
           AsyncCompletion();
           break;
         } // Loading from a file?
@@ -406,7 +410,115 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Clear Lua stack string and recover memory as we are done with it. If
     AsyncCleanupVariables();
   }
-  /* -- Async thread event callback (called by LuaEvtMaster) ------------- */
+  /* -- The thread only calls LoadData() and thats it -------------- */ public:
+  template<class StrTypeIdent, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeIdent> && StdIsStrOrCStr<StrTypeLabel>
+  void AsyncInitNone(lua_State*const lS, StrTypeIdent &&strIdent,
+    StrTypeLabel &&strLabel)
+  { // Loading from memory
+    asctAsyncType = BA_NONE;
+    // Init rest of members
+    AsyncInit(lS, StdForward<StrTypeIdent>(strIdent),
+                  StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- The thread loads from a filemap and calls LoadData() --------------- */
+  template<class StrTypeFile, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
+  void AsyncInitFile(lua_State*const lS, StrTypeFile &&strFile,
+    StrTypeLabel &&strLabel)
+  { // Loading from file
+    asctAsyncType = BA_FILE;
+    // Init rest of members
+    AsyncInit(lS, StdForward<StrTypeFile>(strFile),
+                  StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- The thread loads from the command-line ----------------------------- */
+  template<class StrTypeCmdLine, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeCmdLine> && StdIsStrOrCStr<StrTypeLabel>
+  void AsyncInitCmdLine(lua_State*const lS, StrTypeCmdLine &&strCmdLine,
+    StrTypeLabel &&strLabel, Memory &mbInput)
+  { // Loading from command-line
+    asctAsyncType = BA_EXECUTE;
+    // Set memory sent to stdin
+    MemSwap(mbInput);
+    // Init rest of members
+    AsyncInit(lS, StdForward<StrTypeCmdLine>(strCmdLine),
+                  StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- The thread loads from existing memory and calls LoadData() --------- */
+  template<class StrTypeIdent, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeIdent> && StdIsStrOrCStr<StrTypeLabel>
+  void AsyncInitArray(lua_State*const lS, StrTypeIdent &&strIdent,
+    StrTypeLabel &&strLabel, Memory &mData)
+  { // Set data to load from
+    MemSwap(mData);
+    // Loading from memory
+    asctAsyncType = BA_MEMORY;
+    // Init rest of members
+    AsyncInit(lS, StdForward<StrTypeIdent>(strIdent),
+                  StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- Send load data update and register in collector -------------------- */
+  template<class StrType>
+    requires StdIsStrOrCStr<StrType>
+  void SyncLoadDataAndRegister(FileMap &fmData, StrType &&strLabel)
+  { // Set a generic thread name incase the caller still wants to useit
+    AsyncGetThread().NameSet(StrAppend(strLabel, ':', mtAsyncOwner.Serial()));
+    // Send file map to derived class
+    AsyncExecuteReadyCallback(fmData);
+    // Load succeeded so register the block.
+    static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
+  }
+  /* -- Init from file synchronously from disk only ------------------------ */
+  template<class StrTypeFile, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
+  void SyncInitFileDisk(StrTypeFile &&strFile, StrTypeLabel &&strLabel)
+  { // Set filename
+    NameSet(StdForward<StrTypeFile>(strFile));
+    // Load from specified file
+    FileMap fmData{ AssetLoadFromDisk(NameGet()) };
+    // Send to derived class and register
+    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- Init from file synchronously --------------------------------------- */
+  template<class StrTypeFile, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
+  void SyncInitFile(StrTypeFile &&strFile, StrTypeLabel &&strLabel)
+  { // Set filename
+    NameSet(StdForward<StrTypeFile>(strFile));
+    // Load from specified file
+    FileMap fmData{ AssetExtract(NameGet()) };
+    // Send to derived class and register
+    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- Init from array synchronously -------------------------------------- */
+  template<class StrTypeIdent, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeIdent> && StdIsStrOrCStr<StrTypeLabel>
+  void SyncInitArray(StrTypeIdent &&strIdent, StrTypeLabel &&strLabel,
+    Memory &mData)
+  { // Set identifier
+    NameSet(StdForward<StrTypeIdent>(strIdent));
+    // Put the memory block into a file map and load the block
+    FileMap fmData{ NameGet(), StdMove(mData), cmSys.ClockGetTimeSeconds() };
+    // Send to derived class and register
+    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- Init from file synchronously with filename checking ---------------- */
+  template<class StrTypeFile, class StrTypeLabel>
+    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
+  void SyncInitFileSafe(StrTypeFile &&strFile, StrTypeLabel &&strLabel)
+  { // Set filename
+    NameSet(StdForward<StrTypeFile>(strFile));
+    // Load from specified file from archives or disk
+    FileMap fmData{ AssetExtract(NameGet()) };
+    // Send to derived class and register
+    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
+  }
+  /* -- Wait for the thread to terminate ----------------------------------- */
+  void AsyncWait() { AsyncGetThread().ThreadWait(); }
+  /* -- Wait for the thread to stop and dereference the class -------------- */
+  void AsyncCancel() { AsyncStop(); lecAsync.LuaEvtDeInit(); }
+  /* -- Async thread event callback (called by LuaEvtMaster) --------------- */
   void LuaEvtCallbackAsync(const EvtMainEvent &emeEvent) try
   { // Get reference to string vector and we need three parameters
     // [0]=Pointer to class, [1]=Event list id, [2]=Status
@@ -539,115 +651,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Re-throw the exception to the sandbox exception handler in 'core.hpp'.
     throw;
   }
-  /* -- The thread only calls LoadData() and thats it -------------- */ public:
-  template<class StrTypeIdent, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeIdent> && StdIsStrOrCStr<StrTypeLabel>
-  void AsyncInitNone(lua_State*const lS, StrTypeIdent &&strIdent,
-    StrTypeLabel &&strLabel)
-  { // Loading from memory
-    asctAsyncType = BA_NONE;
-    // Init rest of members
-    AsyncInit(lS, StdForward<StrTypeIdent>(strIdent),
-                  StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- The thread loads from a filemap and calls LoadData() --------------- */
-  template<class StrTypeFile, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
-  void AsyncInitFile(lua_State*const lS, StrTypeFile &&strFile,
-    StrTypeLabel &&strLabel)
-  { // Loading from file
-    asctAsyncType = BA_FILE;
-    // Init rest of members
-    AsyncInit(lS, StdForward<StrTypeFile>(strFile),
-                  StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- The thread loads from the command-line ----------------------------- */
-  template<class StrTypeCmdLine, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeCmdLine> && StdIsStrOrCStr<StrTypeLabel>
-  void AsyncInitCmdLine(lua_State*const lS, StrTypeCmdLine &&strCmdLine,
-    StrTypeLabel &&strLabel, Memory &mbInput)
-  { // Loading from command-line
-    asctAsyncType = BA_EXECUTE;
-    // Set memory sent to stdin
-    MemSwap(mbInput);
-    // Init rest of members
-    AsyncInit(lS, StdForward<StrTypeCmdLine>(strCmdLine),
-                  StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- The thread loads from existing memory and calls LoadData() --------- */
-  template<class StrTypeIdent, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeIdent> && StdIsStrOrCStr<StrTypeLabel>
-  void AsyncInitArray(lua_State*const lS, StrTypeIdent &&strIdent,
-    StrTypeLabel &&strLabel, Memory &mData)
-  { // Set data to load from
-    MemSwap(mData);
-    // Loading from memory
-    asctAsyncType = BA_MEMORY;
-    // Init rest of members
-    AsyncInit(lS, StdForward<StrTypeIdent>(strIdent),
-                  StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- Send load data update and register in collector -------------------- */
-  template<class StrType>
-    requires StdIsStrOrCStr<StrType>
-  void SyncLoadDataAndRegister(FileMap &fmData, StrType &&strLabel)
-  { // Set a generic thread name incase the caller still wants to useit
-    AsyncGetThread().NameSet(StrAppend(strLabel, ':', mtAsyncOwner.Serial()));
-    // Send file map to derived class
-    mtAsyncOwner.AsyncReady(fmData);
-    // Load succeeded so register the block.
-    static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
-  }
-  /* -- Init from file synchronously from disk only ------------------------ */
-  template<class StrTypeFile, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
-  void SyncInitFileDisk(StrTypeFile &&strFile, StrTypeLabel &&strLabel)
-  { // Set filename
-    NameSet(StdForward<StrTypeFile>(strFile));
-    // Load from specified file
-    FileMap fmData{ AssetLoadFromDisk(NameGet()) };
-    // Send to derived class and register
-    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- Init from file synchronously --------------------------------------- */
-  template<class StrTypeFile, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
-  void SyncInitFile(StrTypeFile &&strFile, StrTypeLabel &&strLabel)
-  { // Set filename
-    NameSet(StdForward<StrTypeFile>(strFile));
-    // Load from specified file
-    FileMap fmData{ AssetExtract(NameGet()) };
-    // Send to derived class and register
-    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- Init from array synchronously -------------------------------------- */
-  template<class StrTypeIdent, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeIdent> && StdIsStrOrCStr<StrTypeLabel>
-  void SyncInitArray(StrTypeIdent &&strIdent, StrTypeLabel &&strLabel,
-    Memory &mData)
-  { // Set identifier
-    NameSet(StdForward<StrTypeIdent>(strIdent));
-    // Put the memory block into a file map and load the block
-    FileMap fmData{ NameGet(), StdMove(mData), cmSys.GetTimeS() };
-    // Send to derived class and register
-    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- Init from file synchronously with filename checking ---------------- */
-  template<class StrTypeFile, class StrTypeLabel>
-    requires StdIsStrOrCStr<StrTypeFile> && StdIsStrOrCStr<StrTypeLabel>
-  void SyncInitFileSafe(StrTypeFile &&strFile, StrTypeLabel &&strLabel)
-  { // Set filename
-    NameSet(StdForward<StrTypeFile>(strFile));
-    // Load from specified file from archives or disk
-    FileMap fmData{ AssetExtract(NameGet()) };
-    // Send to derived class and register
-    SyncLoadDataAndRegister(fmData, StdForward<StrTypeLabel>(strLabel));
-  }
-  /* -- Wait for the thread to terminate ----------------------------------- */
-  void AsyncWait() { AsyncGetThread().ThreadWait(); }
-  /* -- Wait for the thread to stop and dereference the class -------------- */
-  void AsyncCancel() { AsyncStop(); lecAsync.LuaEvtDeInit(); }
-  /* -- Main constructor ---------------------------------------- */ protected:
+  /* -- Main constructor --------------------------------------------------- */
   AsyncLoader(
     /* -- Arguments -------------------------------------------------------- */
     MemberType*const mtNAsyncOwner,    // The pointer to the class

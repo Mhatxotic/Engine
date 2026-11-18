@@ -140,26 +140,6 @@ class GlFWWindow :                     // GLFW window class
     int iHeight)
   { cEvtMain->Add(EMC_WIN_RESIZED,
       reinterpret_cast<void*>(glfwWindow), iWidth, iHeight); }
-  /* -- Register window events --------------------------------------------- */
-  void WinRegisterEvents() const
-  { // Register glfw event callbacks which will use our event system to
-    // process these events.
-    glfwSetCharCallback(WinGetHandle(), WinOnInputChar);
-    glfwSetCursorEnterCallback(WinGetHandle(), WinOnMouseFocus);
-    glfwSetCursorPosCallback(WinGetHandle(), WinOnMouseMove);
-    glfwSetDropCallback(WinGetHandle(), WinOnDragDrop);
-    glfwSetFramebufferSizeCallback(WinGetHandle(), WinOnFrameBufferSize);
-    glfwSetKeyCallback(WinGetHandle(), WinOnKeyPress);
-    glfwSetMouseButtonCallback(WinGetHandle(), WinOnMousePress);
-    glfwSetScrollCallback(WinGetHandle(), WinOnMouseScroll);
-    glfwSetWindowCloseCallback(WinGetHandle(), WinOnWindowClose);
-    glfwSetWindowContentScaleCallback(WinGetHandle(), WinOnWindowScale);
-    glfwSetWindowFocusCallback(WinGetHandle(), WinOnWindowFocus);
-    glfwSetWindowIconifyCallback(WinGetHandle(), WinOnWindowIconify);
-    glfwSetWindowPosCallback(WinGetHandle(), WinOnWindowMove);
-    glfwSetWindowRefreshCallback(WinGetHandle(), WinOnWindowRefresh);
-    glfwSetWindowSizeCallback(WinGetHandle(), WinOnWindowResize);
-  }
   /* -- Get files -------------------------------------------------- */ public:
   StrVector &WinGetFiles() { return svFiles; }
   /* -- Is the window handle set? ------------------------------------------ */
@@ -207,37 +187,36 @@ class GlFWWindow :                     // GLFW window class
   void WinHide() const { glfwHideWindow(WinGetHandle()); }
   /* -- Send dummy mouse position ------------------------------------------ */
   void WinSendMousePosition() const
-  { // Get current cursor position
+  { // Get current cursor position and dispatch it to the engine thread
     double dX, dY; WinGetCursorPos(dX, dY);
-    // Dispatch it to the engine thread
     WinOnMouseMove(WinGetHandle(), dX, dY);
   }
   /* -- Get window size ---------------------------------------------------- */
   DimInt WinGetSize() const
   { // Put window dimensions inside the dimensions class and return it
     DimInt diDimensions;
-    glfwGetWindowSize(WinGetHandle(), &diDimensions.DimGetWidthRef(),
-                                      &diDimensions.DimGetHeightRef());
+    glfwGetWindowSize(WinGetHandle(),
+      &diDimensions.DimGetWidthRef(), &diDimensions.DimGetHeightRef());
     return diDimensions;
   }
   /* -- Set window size ---------------------------------------------------- */
   void WinSetSize(const DimInt diSize) const
-    { glfwSetWindowSize(WinGetHandle(), diSize.DimGetWidth(),
-                                        diSize.DimGetHeight()); }
+    { glfwSetWindowSize(WinGetHandle(),
+        diSize.DimGetWidth(), diSize.DimGetHeight()); }
   /* -- Get window DPI scale ----------------------------------------------- */
   DimFloat WinGetScale() const
   { // Put window scale inside the dimensions class and return it
     DimFloat dfScale;
-    glfwGetWindowContentScale(WinGetHandle(), &dfScale.DimGetWidthRef(),
-                                              &dfScale.DimGetHeightRef());
+    glfwGetWindowContentScale(WinGetHandle(),
+      &dfScale.DimGetWidthRef(), &dfScale.DimGetHeightRef());
     return dfScale;
   }
   /* -- Get framebuffer size ----------------------------------------------- */
   DimInt WinGetFBSize() const
   { // Put window dimensions inside the dimensions class and return it
     DimInt diDimensions;
-    glfwGetFramebufferSize(WinGetHandle(), &diDimensions.DimGetWidthRef(),
-                                           &diDimensions.DimGetHeightRef());
+    glfwGetFramebufferSize(WinGetHandle(),
+      &diDimensions.DimGetWidthRef(), &diDimensions.DimGetHeightRef());
     return diDimensions;
   }
   /* -- Set or clear cursor graphic ---------------------------------------- */
@@ -260,10 +239,9 @@ class GlFWWindow :                     // GLFW window class
     { WinSetClipboard(strT.data()); }
   /* -- Get clipboard c-string --------------------------------------------- */
   const char *WinGetClipboard() const
-  { // Return clipboard string if available
+  { // Return clipboard string if available else return empty string
     if(const char*const cpData =
       glfwGetClipboardString(WinGetHandle())) return cpData;
-    // Return empty string
     return caBlank;
   }
   /* -- Get clipboard C++ string ------------------------------------------- */
@@ -310,8 +288,9 @@ class GlFWWindow :                     // GLFW window class
     // If using wayland then this functionality is not supported
     if(GlFWIsWayland()) return;
 #endif
-    glfwSetWindowPos(WinGetHandle(), ciPosition.CoordGetX(),
-                                     ciPosition.CoordGetY());
+    // On Linux X11, Windows and MacOS this function is supported
+    glfwSetWindowPos(WinGetHandle(),
+      ciPosition.CoordGetX(), ciPosition.CoordGetY());
   }
   /* -- Get window size ---------------------------------------------------- */
   CoordInt WinGetPos() const
@@ -322,8 +301,8 @@ class GlFWWindow :                     // GLFW window class
 #endif
     // Put window position inside the coordinates class and return it
     CoordInt ciCoord;
-    glfwGetWindowPos(WinGetHandle(), &ciCoord.CoordGetXRef(),
-                                     &ciCoord.CoordGetYRef());
+    glfwGetWindowPos(WinGetHandle(),
+      &ciCoord.CoordGetXRef(), &ciCoord.CoordGetYRef());
     return ciCoord;
   }
   /* -- Swap GL buffers ---------------------------------------------------- */
@@ -379,8 +358,23 @@ class GlFWWindow :                     // GLFW window class
   /* -- Check current context ---------------------------------------------- */
   bool WinIsCurrentContext() const
     { return GlFWContext() == WinGetHandle(); }
+  /* -- Clear current context ---------------------------------------------- */
+  void WinClearContext() const
+  { // Return if context not acquired else clear it
+    if(!WinIsCurrentContext())
+      return cLog->LogDebugSafe("GlFW rendering context is not acquired.");
+    // Log that we're releasing the opengl context and then release it
+    cLog->LogDebugSafe("GlFW releasing the rendering context...");
+    GlFWSetContext();
+    cLog->LogDebugSafe("GlFW released the rendering context.");
+  }
   /* -- Make current context ----------------------------------------------- */
-  void WinSetContext() const { GlFWSetContext(WinGetHandle()); }
+  void WinSetContext() const
+  { // Log that we're acquring the opengl context and the acquire it
+    cLog->LogDebugSafe("GlFW acquiring the rendering context...");
+    GlFWSetContext(WinGetHandle());
+    cLog->LogDebugSafe("GlFW acquired the rendering context.");
+  }
   /* -- Set window size limits --------------------------------------------- */
   void WinSetLimits(const int iMinW, const int iMinH,
     const int iMaxW, const int iMaxH) const
@@ -425,24 +419,51 @@ class GlFWWindow :                     // GLFW window class
   void WinDeInit()
   { // Done if theres no window class
     if(WinIsNotAvailable()) return;
+    // Log that we are deinitialising the window
+    cLog->LogDebugSafe("GlFW deinitialising window...");
     // Unregister remaining events and destroy the window
     GlFWBaseDestroyWindow(WinGetHandle());
     // Nullify the handle
     WinClearHandle();
+    // Log that we deinitialised the window
+    cLog->LogDebugSafe("GlFW deinitialised the window.");
   }
   /* -- Create the window -------------------------------------------------- */
-  GLFWwindow *WinInit(const char*const cpT, GLFWmonitor*const mM)
-  { // Bail if handle already set
+  GLFWwindow *WinInit(const char*const cpTitle, GLFWmonitor*const glfwmDest)
+  { // Log that we are initialising the window
+    cLog->LogDebugExSafe(
+      "GlFW initialising window with title '$' and monitor '$'...",
+      StrFromBoolTF(cpTitle != nullptr), StrFromBoolTF(glfwmDest != nullptr));
+    // Bail if handle already set
     if(WinIsAvailable())
-      XC("Window already created!",
-        "Class", WinGetHandle(), "Title", cpT, "Monitor", mM);
+      XC("Window has already been created!",
+        "Class", WinGetHandle(), "Title", cpTitle, "Monitor", glfwmDest);
     // Set handle and create window, throw exception if failed
-    if(!WinSetHandleResult(GlFWBaseCreateWindow(1, 1, cpT, mM)))
-      XC("Failed to create window!", "Title", cpT, "Monitor", mM);
+    if(!WinSetHandleResult(GlFWBaseCreateWindow(1, 1, cpTitle, glfwmDest)))
+      XC("Failed to create window!", "Title", cpTitle, "Monitor", glfwmDest);
     // Set user pointer to this class
     WinSetData(this);
-    // Register window events
-    WinRegisterEvents();
+    // Log that we created th ewindow
+    cLog->LogDebugSafe("GlFW window initialised, registering events...");
+    // Register glfw event callbacks which will use our event system to
+    // process these events.
+    glfwSetCharCallback(WinGetHandle(), WinOnInputChar);
+    glfwSetCursorEnterCallback(WinGetHandle(), WinOnMouseFocus);
+    glfwSetCursorPosCallback(WinGetHandle(), WinOnMouseMove);
+    glfwSetDropCallback(WinGetHandle(), WinOnDragDrop);
+    glfwSetFramebufferSizeCallback(WinGetHandle(), WinOnFrameBufferSize);
+    glfwSetKeyCallback(WinGetHandle(), WinOnKeyPress);
+    glfwSetMouseButtonCallback(WinGetHandle(), WinOnMousePress);
+    glfwSetScrollCallback(WinGetHandle(), WinOnMouseScroll);
+    glfwSetWindowCloseCallback(WinGetHandle(), WinOnWindowClose);
+    glfwSetWindowContentScaleCallback(WinGetHandle(), WinOnWindowScale);
+    glfwSetWindowFocusCallback(WinGetHandle(), WinOnWindowFocus);
+    glfwSetWindowIconifyCallback(WinGetHandle(), WinOnWindowIconify);
+    glfwSetWindowPosCallback(WinGetHandle(), WinOnWindowMove);
+    glfwSetWindowRefreshCallback(WinGetHandle(), WinOnWindowRefresh);
+    glfwSetWindowSizeCallback(WinGetHandle(), WinOnWindowResize);
+    // Log that we finished initialising
+    cLog->LogDebugSafe("GlFW window events initialised.");
     // Return the class we created
     return WinGetHandle();
   }

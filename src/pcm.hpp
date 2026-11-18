@@ -170,7 +170,7 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
           cCommon->CommonBlankStr());
   }
   /* -- Load sample from memory ------------------------------------ */ public:
-  void AsyncReady(FileMap &fmData)
+  bool AsyncReady(FileMap &fmData)
   { // Force load a certain type of audio (for speed?) but in Async mode,
     // force detection doesn't really matter as much, but overall, still
     // needed if speed is absolutely neccesary.
@@ -183,6 +183,8 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     PcmApplyFilters();
     // Split into two channels if audio in stereo
     PcmSplitAndSetAlloc();
+    // The 'Memory' class data was moved so we can free the memory
+    return true;
   }
   /* -- Reload data -------------------------------------------------------- */
   void PcmReloadData()

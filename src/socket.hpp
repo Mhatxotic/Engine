@@ -236,7 +236,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         ctParent.aullRX += stRead;
         ++ctParent.aullRXp;
         // Set last received timestamp
-        acdRead = cmHiRes.GetEpochTime();
+        acdRead = cmHiRes.ClockGetEpochTime();
         // Return bytes read
         return stRead;
     }
@@ -268,7 +268,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
         ctParent.aullTX += stWritten;
         ++ctParent.aullTXp;
         // Set last sent timestamp
-        acdWrite = cmHiRes.GetEpochTime();
+        acdWrite = cmHiRes.ClockGetEpochTime();
         // Make sure we sent the same bytes as requested. This should never
         // happen, but if we did? Return the number of bytes written
         if(stWritten == stSize) return stWritten;
@@ -314,7 +314,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void PushData(PacketList &plList, size_t &stTotal, const char*const cpData,
     const size_t stSize)
   { // Insert a new entry into the specified packet list
-    plList.push_back({ cmHiRes.GetTime(), { stSize, cpData } });
+    plList.push_back({ cmHiRes.ClockGetTime(), { stSize, cpData } });
     // Increase counter for bytes processed
     stTotal += stSize;
   }
@@ -1067,7 +1067,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sockets, Socket, ICHelperUnsafe),
   void AddStatus(const SocketFlagsConst &ssNS, AtomicClkDuration &duDest)
   { // Set the timestamp. We cannot have an StdAtomic<ClkTimePoint> so we have
     // to store the time point as a duration instead. :-(
-    duDest = cmHiRes.GetEpochTime();
+    duDest = cmHiRes.ClockGetEpochTime();
     // Set the event
     AddStatus(ssNS);
   }

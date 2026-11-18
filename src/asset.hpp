@@ -146,7 +146,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
        (FlagIsSet(CD_LEVEL_MODERATE) ? 5 : (FlagIsSet(CD_LEVEL_SLOW) ? 7 :
        (FlagIsSet(CD_LEVEL_SLOWEST)  ? 9 : 1))))); }
   /* -- Load asset from memory ------------------------------------- */ public:
-  void AsyncReady(FileMap &fmData)
+  bool AsyncReady(FileMap &fmData)
   { // Guest wants data put into a raw magic block (no user flags)
     if(FlagIsSet(CD_ENCODE_RAW))
       AssetCodecExec<RAWEncoder>(fmData);
@@ -168,8 +168,10 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Assets, Asset, ICHelperUnsafe),
     // Guest wants data decoded from a magic block (no user flags)
     else if(FlagIsSet(CD_DECODE))
       AssetCodecExec<CoDecoder>(fmData);
-    // Guest wants data untouched? Load in all the data in the map
+    // Guest wants data untouched? Fully load the data and return don't free
     else MemSwap(fmData.FileMapDecouple());
+    // Do not free memory
+    return false;
   }
   /* -- Load asset from asset asynchronously ------------------------------- */
   void AssetInitAsyncAsset(lua_State*const lS, const StdStringView &ssvName,

@@ -271,16 +271,16 @@ struct ShaderCore                      // Actual body
   void ShadersDeInit()
   { // De-init built-in shaders
     cLog->LogDebugExSafe(
-      "ShaderCore de-initialising $ built-in 3D shader objects...",
+      "ShaderCore deinitialising $ built-in 3D shader objects...",
       sh3DBuiltIns.size());
     StdForEach(seq, sh3DBuiltIns.rbegin(), sh3DBuiltIns.rend(),
       [](Shader &shS) { shS.DeInit(); });
     cLog->LogDebugExSafe(
-      "ShaderCore de-initialising $ built-in 2D shader objects...",
+      "ShaderCore deinitialising $ built-in 2D shader objects...",
       sh2DBuiltIns.size());
     StdForEach(seq, sh2DBuiltIns.rbegin(), sh2DBuiltIns.rend(),
       [](Shader &shS) { shS.DeInit(); });
-    cLog->LogInfoExSafe("ShaderCore de-initialised $ built-in shader objects.",
+    cLog->LogInfoExSafe("ShaderCore deinitialised $ built-in shader objects.",
       sh3DBuiltIns.size() + sh2DBuiltIns.size());
   }
   /* -- Default constructor ------------------------------------- */ protected:

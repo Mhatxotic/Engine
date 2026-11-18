@@ -300,7 +300,7 @@ static StdTimeT CertGetExpiry(const X509*const x509)
 /* -- Returns if the certificate is expired -------------------------------- */
 static bool CertIsExpired(const X509*const x509)
 { // Get current time and check expired begin and end date
-  const StdTimeT tTime = cmSys.GetTimeS();
+  const StdTimeT tTime = cmSys.ClockGetTimeSeconds();
   return tTime < CertGetTime(*X509_get0_notBefore(x509)) ||
          tTime > CertGetExpiry(x509);
 }

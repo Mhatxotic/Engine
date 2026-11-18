@@ -392,7 +392,7 @@ class Core final :                     // Members initially private
   }
   /* -- Lua deinitialiser helper which updates all the classes that use it - */
   void CoreLuaDeInitHelper()
-  { // De-init lua and update systems that use Lua
+  { // Deinit lua and update systems that use Lua
     LuaDeInit();
     // Reset environment (leaving)
     CoreResetEnvironment(true);
@@ -400,7 +400,7 @@ class Core final :                     // Members initially private
   /* -- DeInitialise engine components ------------------------------------- */
   void CoreDeInitComponents() try
   { // Log reason for deinit
-    cLog->LogDebugExSafe("Engine de-initialising interfaces with code $<$>.",
+    cLog->LogDebugExSafe("Engine deinitialising interfaces with code $<$>.",
       GetExitReasonStr(), GetExitReason());
     // Whats the exit reason code?
     switch(GetExitReason())
@@ -408,7 +408,7 @@ class Core final :                     // Members initially private
       case EMC_QUIT_HWREINIT: [[fallthrough]];
       case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD:
-        // Not interactive mode? Nothing to de-initialise
+        // Not interactive mode? Nothing to deinitialise
         if(MetadataIsNotGraphicalMode()) return;
         // Unload console background and font textures
         ConGfxDeInitTextureAndFont();
@@ -418,33 +418,33 @@ class Core final :                     // Members initially private
         TextureDeInitTextures();
         // Done
         break;
-      // Were exiting to de-initialise everything
+      // Were exiting to deinitialise everything
       default:
-        // De-initialise Lua
+        // Deinitialise Lua
         CoreLuaDeInitHelper();
-        // If in graphical mode? De-init console graphics and input
+        // If in graphical mode? Deinit console graphics and input
         if(MetadataIsGraphicalMode()) { ConGfxDeInit(); InputDeInit(); }
         // DeInitialise console class and freetype
         ConsoleDeInit();
         FreeTypeDeInit();
-        // De-init audio
+        // Deinit audio
         if(MetadataIsAudioMode()) AudioDeInit();
         // Done
         break;
     } // Unload all FBO's (NOT destroy);
     FboCoreDeInit();
-    // De-init core shaders
+    // Deinit core shaders
     ShadersDeInit();
-    // OpenGL de-initialised (do not throw error if de-initialised)
-    OglDeInit(true);
+    // Deinit opengl
+    OglDeInit();
   } // exception occured?
   catch(const StdException &eReason)
   { // Make sure the exception is logged
     cLog->LogErrorExSafe("(ENGINE THREAD DE-INIT EXCEPTION) $", eReason);
   }
-  /* -- De-initialise everything ------------------------------------------- */
+  /* -- Deinitialise everything ------------------------------------------- */
   void CoreDeInitEverything()
-  { // De-initialise components
+  { // Deinitialise components
     CoreDeInitComponents();
     // If not in graphical mode, we're done
     if(MetadataIsNotGraphicalMode()) return;
@@ -577,7 +577,7 @@ class Core final :                     // Members initially private
             // Lua executing is reinitialising? (i.e. lreset).
             case EMC_LUA_REINIT:
               // Write exception to log.
-              cLog->LogErrorExSafe("Core sandbox de-init exception: $",
+              cLog->LogErrorExSafe("Core sandbox deinit exception: $",
                 eReason);
               // Break
               break;
@@ -611,7 +611,7 @@ class Core final :                     // Members initially private
         case EMC_QUIT_RESTART: [[fallthrough]];
         // Quitting and restarting without params? Shouldn't happen.
         case EMC_QUIT_RESTARTNP: [[fallthrough]];
-        // Thread and main thread should quit. De-init components and rethrow.
+        // Thread and main thread should quit. Deinit components and rethrow.
         case EMC_QUIT: CoreDeInitComponents(); throw;
       } // We get here to process lua event as normal.
     } // Why did LUA break out of the sandbox?
@@ -620,7 +620,7 @@ class Core final :                     // Members initially private
       case EMC_LUA_END:
         // Add message to say the execution ended
         ConsoleAddLine("Execution ended! Type 'lreset' to restart.");
-        // De-initialis lua
+        // Deinitialis lua
         CoreLuaDeInitHelper();
         // Reinitialise lua and go back into the sandbox
         goto SandBoxInit;
@@ -628,7 +628,7 @@ class Core final :                     // Members initially private
       case EMC_LUA_REINIT:
         // Add message to say the execution is restarting
         ConsoleAddLine("Execution restarting...");
-        // De-initialis lua
+        // Deinitialis lua
         CoreLuaDeInitHelper();
         // Reinitialise lua and go back into the sandbox
         goto SandBoxInit;
@@ -640,13 +640,13 @@ class Core final :                     // Members initially private
       // Restarting engine completely? Fall through.
       case EMC_QUIT_RESTART: [[fallthrough]];
       case EMC_QUIT_RESTARTNP: [[fallthrough]];
-      // Quitting the engine completely? De-initialise lua and fall through.
+      // Quitting the engine completely? Deinitialise lua and fall through.
       case EMC_QUIT: [[fallthrough]];
       // Restarting engine subsystems. i.e. 'vreset'? Fall through.
       case EMC_QUIT_HWREINIT: [[fallthrough]];
       case EMC_QUIT_VREINIT: [[fallthrough]];
       case EMC_QUIT_THREAD: break;
-    } // De-initilise everything
+    } // Deinitilise everything
     CoreDeInitEverything();
     // Kill thread
     return TS_OK;
@@ -658,7 +658,7 @@ class Core final :                     // Members initially private
     cLog->LogErrorExSafe("(ENGINE THREAD FATAL EXCEPTION) $", eReason);
     // Show error
     SysMsgEx("Engine Thread Fatal Exception!", eReason.what(), MB_ICONSTOP);
-    // De-init everything
+    // Deinit everything
     CoreDeInitEverything();
     // Kill thread
     return TS_ERROR;
@@ -677,13 +677,13 @@ class Core final :                     // Members initially private
   }
   /* -- Initialise graphical mode ------------------------------------------ */
   void CoreEnterGraphicalMode()
-  { // De-initialise GLFW when this scope exists
+  { // Deinitialise GLFW when this scope exists
     const auto sgGDeInit{ MakeScopeGuard([this]{ GlFWDeInit(); }) };
     // Initialise GLFW
     GlFWInit();
     // Until engine should terminate.
     while(CoreShouldEngineContinue()) try
-    { // De-initialise display and thread when this scope exists
+    { // Deinitialise display and thread when this scope exists
       const auto sgWDeInit{
         MakeScopeGuard([this]{
           GetEngThread().ThreadDeInit();
@@ -701,13 +701,13 @@ class Core final :                     // Members initially private
         GlFWWaitEvents();
       } // Compare exit reason
       switch(GetExitReason())
-      { // If the window is being re-initialised due to HW change?
+      { // If the window is being reinitialised due to HW change?
         case EMC_QUIT_HWREINIT:
           // Fall through to quit
           [[fallthrough]];
         // The graphics subsystem was reinitialised due to 'greset' command?
         case EMC_QUIT_VREINIT:
-          // De-initialise the engine thread and wait for it to complete
+          // Deinitialise the engine thread and wait for it to complete
           GetEngThread().ThreadDeInit();
           // Soft reinitialise the window
           DisplayReInit();
@@ -719,11 +719,11 @@ class Core final :                     // Members initially private
           cLog->LogWarningSafe("Core processing abrupt window close event...");
           // Force quit reason because it wasn't set yet
           SetExitReason(EMC_QUIT);
-          // De-initialise the engine thread and wait for it to complete
+          // Deinitialise the engine thread and wait for it to complete
           GetEngThread().ThreadDeInit();
           // Fall through to quit
           [[fallthrough]];
-        // Anything else just de-init the window and reload it
+        // Anything else just deinit the window and reload it
         default: continue;
       }
     } // Error occured
@@ -758,7 +758,7 @@ class Core final :                     // Members initially private
       // the text mode from working properly
       if(cLog->LogIsRedirectedToDevice())
         XC("Text console cannot be used when logging to standard output!");
-      // De-init text mode console when leaving scope
+      // Deinit text mode console when leaving scope
       const auto sgTDeInit{ MakeScopeGuard([this]{
         GetEngThread().ThreadDeInit();
         SetWindowDestroyed();
@@ -799,7 +799,7 @@ class Core final :                     // Members initially private
     else if(MetadataIsGraphicalMode()) CoreEnterGraphicalMode();
     // No front-end requested so we just use stdout
     else
-    { // De-init window when leaving scope
+    { // Deinit window when leaving scope
       const auto sgWDeInit{ MakeScopeGuard([this]{
         GetEngThread().ThreadDeInit();
         SetWindowDestroyed();
@@ -893,7 +893,7 @@ class Core final :                     // Members initially private
   CVarReturn CoreSetOneInstance(const bool bEnabled)
   { // Ignore check if not needed or global mutex creation succeeded.
     if(!bEnabled || InitGlobalMutex(MetadataGetTitle())) return ACCEPT;
-    // De-initialise the log as we are about to exit.
+    // Deinitialise the log as we are about to exit.
     cLog->LogDeInitSafe();
     // Global mutex creation failed so exit program now.
     exit(5);

@@ -58,14 +58,14 @@ class GlFW :                           // Root engine class
         nullptr, GlFWGetMonitorUserPointer<void*>(mAffected));
     // Invalid event
     else
-    { // Log invalid event and ask engine thread to quit and re-init window
+    { // Log invalid event and ask engine thread to quit and reinit window
       cLog->LogWarningExSafe("GlFW got invalid monitor change action of 0x$$!",
         StdIOSHex, iAction);
       cEvtMain->RequestQuitThread();
     }
   } // Exceptions we have to handle since func could be in a thread GlFW owns.
   catch(const StdException &e)
-  { // Write error and ask engine thread to quit and re-init window
+  { // Write error and ask engine thread to quit and reinit window
     cLog->LogWarningExSafe("GlFW monitor event exception: $", e.what());
     cEvtMain->RequestQuitThread();
   }
@@ -105,9 +105,9 @@ class GlFW :                           // Root engine class
   /* -- DeInitialise all standard cursors ---------------------------------- */
   void GlFWDeInitCursors()
   { // Enumerate each created cursor and deinitialise it (NOT destroy it)
-    cLog->LogDebugExSafe("GlFW de-initialising $ standard cursors...", size());
+    cLog->LogDebugExSafe("GlFW deinitialising $ standard cursors...", size());
     for(GlFWCursor &gcObj : *this) gcObj.CursorDeInit();
-    cLog->LogInfoExSafe("GlFW de-initialised $ standard cursors.", size());
+    cLog->LogInfoExSafe("GlFW deinitialised $ standard cursors.", size());
   }
   /* -- Initialise all standard cursors ------------------------------------ */
   void GlFWInitCursors()
@@ -147,8 +147,8 @@ class GlFW :                           // Root engine class
   void GlFWDeInit()
   { // Ignore if class not initialised
     if(IHNotDeInitialise()) return;
-    // Report de-initialisation attempt
-    cLog->LogDebugSafe("GlFW subsystem de-initialising...");
+    // Report deinitialisation attempt
+    cLog->LogDebugSafe("GlFW class deinitialising...");
     // Destroy window if created
     this->WinDeInit();
     // Clear monitor change callback
@@ -159,13 +159,13 @@ class GlFW :                           // Root engine class
     glfwTerminate();
     // Delete error handler
     glfwSetErrorCallback(nullptr);
-    // Report de-initialisation successful
-    cLog->LogInfoSafe("GlFW subsystem de-initialised.");
+    // Report deinitialisation successful
+    cLog->LogInfoSafe("GlFW class deinitialised.");
   }
   /* -- Initialiser -------------------------------------------------------- */
   void GlFWInit()
   { // Report initialisation attempt
-    cLog->LogDebugSafe("GlFW subsystem initialising...");
+    cLog->LogDebugSafe("GlFW class initialising...");
     // Setup custom allocator
     const GLFWallocator gaInfo{ GlFWAlloc, GlFWReAlloc, GlFWFree, this };
     glfwInitAllocator(&gaInfo);
@@ -187,7 +187,7 @@ class GlFW :                           // Root engine class
     // Set monitor change callback
     GlFWSetMonitorCallback(GlFWOnMonitorChangedStatic);
     // Report initialisation successful
-    cLog->LogInfoSafe("GlFW subsystem initialised.");
+    cLog->LogInfoSafe("GlFW class initialised.");
   }
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~GlFW, GlFWDeInit())

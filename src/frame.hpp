@@ -41,7 +41,7 @@ class Frame                            // Members initially private
   /* -- Do time calculations ----------------------------------------------- */
   void FrameCalculateTime()
   { // Set end time
-    ctpEnd = cmHiRes.GetTime();
+    ctpEnd = cmHiRes.ClockGetTime();
     // Get duration we had to wait since end of last game loop
     cdTick = ctpEnd - ctpStart;
     // Set new start time
@@ -124,11 +124,11 @@ class Frame                            // Members initially private
     // Reset tick and frame duration to limit
     cdFrame = cdTick = cdLimit;
     // Update new tick start and end time and start frame time
-    ctpStart = ctpEnd = cmHiRes.GetTime();
+    ctpStart = ctpEnd = cmHiRes.ClockGetTime();
   }
   /* -- Return if script timer has not timed out yet ----------------------- */
   bool FrameIsNotTimedOut()
-    { ++ullTriggers; return cmHiRes.GetTime() < ctpTimeOut; }
+    { ++ullTriggers; return cmHiRes.ClockGetTime() < ctpTimeOut; }
   /* -- Return how many times the script trigger was checked --------------- */
   uint64_t FrameGetTriggers() const { return ullTriggers; }
   /* -- Return the current script timeout ---------------------------------- */

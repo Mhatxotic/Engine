@@ -99,7 +99,7 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
     { return FT_Load_Glyph(ftfFace, ftuIndex,
         FT_LOAD_CROP_BITMAP|FT_LOAD_NO_AUTOHINT|FT_LOAD_NO_HINTING); }
   /* -- Load ftf from memory ----------------------------------------------- */
-  void AsyncReady(FileMap &fmData)
+  bool AsyncReady(FileMap &fmData)
   { // Take ownership of the file data
     FileMapSwap(fmData);
     // Load font
@@ -128,6 +128,8 @@ CTOR_BEGIN_ASYNC_DUO(Ftfs, Ftf, CLHelperUnsafe, ICHelperUnsafe),
       NameGet(), FtfGetFamily(), FtfGetStyle(), StdIOSSetPrecision(0),
       StdIOSFixed, DimGetWidth(), DimGetHeight(), FtfGetDPIWidth(),
       FtfGetDPIHeight(), FtfGetOutline());
+    // Do not free memory
+    return false;
   }
   /* -- Load pcm from memory asynchronously -------------------------------- */
   template<class StrType>

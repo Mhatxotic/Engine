@@ -315,7 +315,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   bool ArchiveFileExists(const StdStringView &ssvFile) const
     { return ArchiveGetFileIterator(ssvFile) != suimFiles.cend(); }
   /* -- Loads the specified archive ---------------------------------------- */
-  void AsyncReady(FileMap &)
+  bool AsyncReady(FileMap &)
   { // Open archive and throw and show errno if it failed
     if(const int iCode = ArchiveOpenFile(&cfisData.file))
       XCS("Error opening archive!", "Archive", NameGet(), "Code", iCode);
@@ -338,11 +338,14 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
     // Init lzma data
     SzArEx_Init(&csaeData);
     FlagSet(AE_ARCHIVEINIT);
-    // Initialise archive database and if failed, just log it
+    // Initialise archive database and if failed?
     if(const int iCode = SzArEx_Open(&csaeData, &cltrData.vt,
        &ctParent.isaData, &ctParent.isaData))
-      return cLog->LogWarningExSafe("Archive '$' not opened with $<$>!",
+    { // Log the error and free the memory
+      cLog->LogWarningExSafe("Archive '$' not opened with $<$>!",
         NameGet(), CodecGetLzmaErrString(iCode), iCode);
+      return true;
+    }
     // Alocate memory for quick access via index vector. 7-zip won't tell us
     // how many files and directories there are individually so we'll reserve
     // memory for the maximum amount of entries in the 7-zip file. We'll shrink
@@ -395,6 +398,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         ArchiveGetNumDirsString());
     // Archive is empty?
     else cLog->LogWarningExSafe("Archive loaded empty '$'!", NameGet());
+    // Do not free memory
+    return false;
   }
   /* -- Loads archive synchronously at specified position ------------------ */
   template<class StrType>
@@ -446,7 +451,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
       cLog->LogWarningExSafe("Archive failed to close archive '$': $!",
         NameGet(), SysError());
     // Log shutdown
-    cLog->LogInfoExSafe("Archive unloaded '$' successfully.", NameGet());
+    cLog->LogInfoExSafe("Archive unloaded '$'.", NameGet());
   )
 };/* ----------------------------------------------------------------------- */
 CTOR_END_ASYNC_NOFUNCS(Archives, Archive, ARCHIVE, ARCHIVE, // Finish collector

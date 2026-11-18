@@ -82,7 +82,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
   { // Add the exiting flag
     FlagSetAndClear(tfcCode | TS_FINISHED, TS_RUNNING);
     // Set shutdown time
-    acdEnd = cmHiRes.GetEpochTime();
+    acdEnd = cmHiRes.ClockGetEpochTime();
     // Reduce thread count
     --ctParent.astRunning;
   }
@@ -97,7 +97,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // Thread starting up in log
     cLog->LogDebugExSafe("Thread $<$> started.", Serial(), NameGet());
     // Set the start time and initialise the end time
-    acdStart = cmHiRes.GetEpochTime();
+    acdStart = cmHiRes.ClockGetEpochTime();
     acdEnd = cd0;
     // Loop forever...
     while(ThreadShouldNotExit())
@@ -254,7 +254,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     // The thread is suspended until it sees this flag
     FlagReset(TS_INIT);
   }
-  /* -- Stop and de-initialise the thread ---------------------------------- */
+  /* -- Stop and deinitialise the thread ---------------------------------- */
   void ThreadDeInit()
   { // Return if thread is not running
     if(ThreadIsNotJoinable()) return;
@@ -283,7 +283,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
     requires StdIsStrOrCStr<StrType>
   void ThreadInit(StrType &&strIdent, const CbThFunc &cbfCb, void*const vpPtr)
     { ThreadInit(StdForward<StrType>(strIdent), cbfCb); ThreadStart(vpPtr); }
-  /* -- Initialise with callback, parameter and start execute (video.hpp)--------- */
+  /* -- Initialise with callback, parameter and start execute (video.hpp) -- */
   void ThreadInit(const CbThFunc &cbfCb, void*const vpPtr)
     { ThreadInit(cbfCb); ThreadStart(vpPtr); }
   /* -- Full initialise and execute constructor ---------------------------- */

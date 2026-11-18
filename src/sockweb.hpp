@@ -224,7 +224,7 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
           } // Ping? event?
           case OC_PING:
           { // Save ping time
-            cdPing = cmHiRes.GetEpochTime();
+            cdPing = cmHiRes.ClockGetEpochTime();
             // Compact data segments and send it back
             Memory mTemp;
             Compact(mTemp, plTemp, stPLCurrent);

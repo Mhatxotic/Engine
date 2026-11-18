@@ -761,7 +761,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
           cCommon->CommonBlankStr());
   }
   /* -- Load specified image ----------------------------------------------- */
-  void AsyncReady(FileMap &fmData)
+  bool AsyncReady(FileMap &fmData)
   { // Force load a certain type of image (for speed?) but in Async mode,
     // force detection doesn't really matter as much, but overall, still
     // needed if speed is absolutely neccesary.
@@ -776,6 +776,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     if(IsNotCompressed() && IsNotMipmaps()) ApplyFilters();
     // Recover slots memory if they were modified
     CompactSlots();
+    // Free any loaded memory
+    return true;
   }
   /* -- Reload specified image --------------------------------------------- */
   void ReloadData()
