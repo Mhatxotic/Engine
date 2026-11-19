@@ -216,7 +216,7 @@ LLFUNC(Table, 1, AcJson{lS}().ParseTableSafe(lS, 1))
 // $ Json.WaitAsync
 // ? Halts main-thread execution until all json pcm events have completed
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cJsons->WaitAsync())
+LLFUNC(WaitAsync, 0, cJsons->CollectorWaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Json.* non-member functions structure                               ## **

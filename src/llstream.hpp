@@ -383,7 +383,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cStreams->CollectorCount()))
 // $ Stream.WaitAsync
 // ? Halts main-thread execution until all async stream mevents have completed
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cStreams->WaitAsync())
+LLFUNC(WaitAsync, 0, cStreams->CollectorWaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Stream.* non-member functions structure                             ## **

@@ -744,9 +744,7 @@ class Core final :                     // Members initially private
         Archives::size() + AssetsCtr::size() + FtfsCtr::size() +
         ImagesCtr::size() + JsonsCtr::size() + PcmsCtr::size() +
         SourcesCtr::size() + StreamsCtr::size() + VideosCtr::size());
-    }, Assets::MutexGet(), Ftfs::MutexGet(), Images::MutexGet(),
-       Jsons::MutexGet(), Pcms::MutexGet(), Sources::MutexGet(),
-       Streams::MutexGet(), Videos::MutexGet());
+    }, Sources::MutexGet(), Streams::MutexGet(), Videos::MutexGet());
   }
   /* -- Main function ------------------------------------------------------ */
   int CoreMain()

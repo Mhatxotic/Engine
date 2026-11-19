@@ -505,7 +505,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cVideos->CollectorCount()))
 // ? Halts main-thread execution until all async video stream events have
 // ? completed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cVideos->WaitAsync())
+LLFUNC(WaitAsync, 0, cVideos->CollectorWaitAsync())
 /* ========================================================================= */
 // $ Video.ClearEvents
 // ? Clear the OnEvent callback on all Video objects. This might be useful for

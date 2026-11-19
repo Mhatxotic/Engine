@@ -250,7 +250,7 @@ LLFUNC(Raw, 1,
 // $ Image.WaitAsync
 // ? Halts main-thread execution until all async image events have completed
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cImages->WaitAsync())
+LLFUNC(WaitAsync, 0, cImages->CollectorWaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Image.* non-member functions structure                              ## **

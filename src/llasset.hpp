@@ -826,7 +826,7 @@ LLFUNC(String, 1,
 // $ Asset.WaitAsync
 // ? Halts main-thread execution until all async asset events have completed
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cAssets->WaitAsync())
+LLFUNC(WaitAsync, 0, cAssets->CollectorWaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Asset.* non-member functions structure                              ## **

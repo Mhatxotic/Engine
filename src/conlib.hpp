@@ -63,8 +63,6 @@ cConsole->ConsoleAddLineA("Audio subsystem reset ",
 /* ------------------------------------------------------------------------- */
 { "assets", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Get reference to arrays collector class and lock it so it's not changed
-const LockGuard lgAssetsSync{ cAssets->MutexGet() };
 // Size of all blocks
 size_t stTotal = 0;
 // Number of bytes to show
@@ -812,8 +810,6 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 /* ========================================================================= */
 { "ftfs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Get reference to fonts collector class and lock it so it's not changed
-const LockGuard lgFtfsSync{ cFtfs->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("GLYPH").Header("FW").Header("FH")
@@ -910,8 +906,6 @@ cEvtMain->RequestGLReInit();
 /* ========================================================================= */
 { "images", 1, 2, CFL_BASIC, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
-// Get reference to images collector class and lock it so it's not changed
-const LockGuard lgImagesSync{ cImages->MutexGet() };
 // If we have more than one parameter?
 if(aArgs.size() == 2)
 { // Get slot data and return if it is a bad slot
@@ -1092,8 +1086,6 @@ cConsole->ConsoleAddLineF("$$ connected ($ supported).\n"
 /* ========================================================================= */
 { "jsons", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Get reference to jsons collector class and lock it so it's not changed
-const LockGuard lgJsonsSync{ cJsons->MutexGet() };
 // Print totals
 cConsole->ConsoleAddLineA(StrPluraliseNum(cJsons->size(), "json.", "jsons."));
 /* ------------------------------------------------------------------------- */
@@ -1670,8 +1662,6 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 /* ------------------------------------------------------------------------- */
 // Required pcm definition namespace
 using namespace IPcmDef::P;
-// Get reference to pcms collector class and lock it so it's not changed
-const LockGuard lgPcmsSync{ cPcms->MutexGet() };
 // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("RATE")

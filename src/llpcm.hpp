@@ -172,7 +172,7 @@ LLFUNC(Raw, 1,
 // $ Pcm.WaitAsync
 // ? Halts main-thread execution until all async pcm events have completed
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cPcms->WaitAsync())
+LLFUNC(WaitAsync, 0, cPcms->CollectorWaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Pcm.* non-member functions structure                                ## **

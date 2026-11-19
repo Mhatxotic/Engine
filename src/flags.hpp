@@ -24,7 +24,7 @@ class FlagsStorageUnsafe
 { /* -- Values storage ------------------------------------------ */ protected:
   IntType          itV;                // The simple value
   /* -- Reset with specified value ----------------------------------------- */
-  template<typename AnyType> requires StdIsIntegral<IntType>
+  template<typename AnyType>
     constexpr void FlagSetInt(const AnyType atValue)
   { itV = static_cast<IntType>(atValue); }
   /* -- Swap values -------------------------------------------------------- */
@@ -37,7 +37,7 @@ class FlagsStorageUnsafe
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType = IntType>requires StdIsIntegral<IntType>
+  template<typename AnyType = IntType>
     constexpr AnyType FlagGet() const { return static_cast<AnyType>(itV); }
   /* -- Type --------------------------------------------------------------- */
   using ValueType = IntType;
@@ -46,16 +46,17 @@ class FlagsStorageUnsafe
 ** ######################################################################### **
 ** ## Thread safe integer based flags.                                    ## **
 ** ######################################################################### */
-template<typename IntType,
-         typename SafeType = StdAtomic<IntType>>
-requires StdIsIntegral<IntType> &&
-         StdIsAtomicV<SafeType> &&
-         StdIsIntegral<typename SafeType::value_type>
+template<typename IntType>
+  requires StdIsIntegral<IntType> &&
+           StdIsAtomicV<StdAtomic<IntType>> &&
+           StdIsIntegral<typename StdAtomic<IntType>::value_type>
 class FlagsStorageSafe :
   /* -- Base classes (note that StdAtomic will never throw) ---------------- */
-  private SafeType
+  private StdAtomic<IntType>
 { /* -- Set values ---------------------------------------------- */ protected:
-  template<typename AnyType>constexpr void FlagSetInt(const AnyType atValue)
+  using SafeType = StdAtomic<IntType>;
+  template<typename AnyType>
+    constexpr void FlagSetInt(const AnyType atValue)
     { this->store(static_cast<IntType>(atValue)); }
   /* -- Swap values (This way round to stop CppCheck warning) -------------- */
   constexpr void FlagSwapStorage(FlagsStorageSafe &fssOther)
@@ -64,20 +65,26 @@ class FlagsStorageSafe :
   constexpr explicit FlagsStorageSafe(const IntType itValue) :
     SafeType{ itValue } {}
   /* -- Get values ------------------------------------------------- */ public:
-  template<typename AnyType=IntType>constexpr AnyType FlagGet() const
+  template<typename AnyType = IntType>
+    constexpr AnyType FlagGet() const
     { return static_cast<AnyType>(this->load()); }
 };/* ----------------------------------------------------------------------- */
 /* == Read-only flags helper class ========================================= **
 ** ######################################################################### **
 ** ## If only read-only access is desired.                                ## **
-** ######################################################################### */
-template<typename IntType,
-         class StorageType = FlagsStorageUnsafe<IntType>>
-requires StdIsIntegral<IntType>
-class FlagsConst :
+** ######################################################################### **
+** -- Traits struct -------------------------------------------------------- */
+template<typename IntType> struct FlagsConstTraits
+  { using Storage = FlagsStorageUnsafe<IntType>; };
+/* -- Main class ----------------------------------------------------------- */
+template<typename IntType>
+  requires StdIsIntegral<IntType>
+struct FlagsConst :
   /* -- Base classes ------------------------------------------------------- */
-  public StorageType
-{ /* -- Is bits lesser than specified value? ----------------------- */ public:
+  public FlagsConstTraits<IntType>::Storage
+{ /* -- Types -------------------------------------------------------------- */
+  using StorageType = typename FlagsConstTraits<IntType>::Storage;
+  /* -- Is bits lesser than specified value? ----------------------- */ public:
   constexpr bool FlagIsLesser(const FlagsConst &fcValue) const
     { return this->FlagGet() < fcValue.FlagGet(); }
   /* -- Is bits lesser or equal to specified value? ------------------------ */
@@ -154,15 +161,22 @@ class FlagsConst :
 /* == Flags helper class =================================================== **
 ** ######################################################################### **
 ** ## Read-write acesss for specified type.                               ## **
-** ######################################################################### */
-template<typename IntType,
-         class StorageType = FlagsStorageUnsafe<IntType>,
-         class ConstType = FlagsConst<IntType, StorageType>>
-requires StdIsIntegral<IntType>
-struct Flags :
+** ######################################################################### **
+** -- Traits struct -------------------------------------------------------- */
+template<typename IntType> struct FlagsTraits
+{ /* ----------------------------------------------------------------------- */
+  using UnsafeStorage = FlagsStorageUnsafe<IntType>;
+  using ConstBase     = FlagsConst<IntType>;
+};/* -- Main class --------------------------------------------------------- */
+template<typename IntType>
+  requires StdIsIntegral<IntType>
+class Flags :
   /* -- Base classes ------------------------------------------------------- */
-  public ConstType
-{ /* -- Swap function ------------------------------------------------------ */
+  public FlagsTraits<IntType>::ConstBase
+{ /* -- Types -------------------------------------------------------------- */
+  using TraitsType = FlagsTraits<IntType>;
+  using ConstType  = typename TraitsType::ConstBase;
+  /* -- Swap function ---------------------------------------------- */ public:
   constexpr void FlagSwap(Flags &fValue)
     { this->FlagSwapStorage(fValue); }
   /* -- Set bits ----------------------------------------------------------- */
@@ -211,22 +225,28 @@ struct Flags :
 /* == Safe flags helper class ============================================== **
 ** ######################################################################### **
 ** ## Uses atomic storage for safe access.                                ## **
-** ######################################################################### */
-template<typename IntType,
-         class StorageType = FlagsStorageSafe<IntType>,
-         class UStorageType = FlagsStorageUnsafe<IntType>,
-         class UConstType = FlagsConst<IntType, UStorageType>,
-         class FlagsType = Flags<IntType, StorageType, UConstType>,
-         class ConstType = FlagsConst<IntType, StorageType>>
-requires StdIsIntegral<IntType>
-class SafeFlags :
+** ######################################################################### **
+** -- Traits struct -------------------------------------------------------- */
+template<typename IntType> struct FlagsSafeTraits
+{ /* ----------------------------------------------------------------------- */
+  using SafeStorage = FlagsStorageSafe<IntType>;
+  using ConstBase   = FlagsConst<IntType>;
+  using FlagsBase   = Flags<IntType>;
+};/* -- Main class --------------------------------------------------------- */
+template<typename IntType>
+  requires StdIsIntegral<IntType>
+class FlagsSafe :
   /* -- Base classes ------------------------------------------------------- */
-  public FlagsType
-{ /* -- Implicit init constructor (todo, make explicit!) ----------- */ public:
-  constexpr explicit SafeFlags(const ConstType &fcValue) :
+  public FlagsSafeTraits<IntType>::FlagsBase
+{ /* -- Types -------------------------------------------------------------- */
+  using TraitsType = FlagsSafeTraits<IntType>;
+  using ConstType  = typename TraitsType::ConstBase;
+  using FlagsType  = typename TraitsType::FlagsBase;
+  /* -- Implicit init constructor (todo, make explicit!) ----------- */ public:
+  constexpr explicit FlagsSafe(const ConstType &fcValue) :
     FlagsType{ fcValue } {}
-  constexpr explicit SafeFlags(const UConstType &fcValue) :
-    FlagsType{ fcValue } {}
+  constexpr explicit FlagsSafe(const IntType itValue = 0) :
+    FlagsType{ itValue } {}
 };/* ----------------------------------------------------------------------- */
 /* == Flags helper macro =================================================== */
 #define BUILD_FLAGS_EX(n, s, ...) \
@@ -235,7 +255,7 @@ class SafeFlags :
   using n ## FlagsConst = FlagsConst<n ## FlagsType>; \
   constexpr static const n ## FlagsConst __VA_ARGS__
 #define BUILD_FLAGS(n, ...) BUILD_FLAGS_EX(n, Flags, __VA_ARGS__)
-#define BUILD_SECURE_FLAGS(n, ...) BUILD_FLAGS_EX(n, SafeFlags, __VA_ARGS__)
+#define BUILD_SECURE_FLAGS(n, ...) BUILD_FLAGS_EX(n, FlagsSafe, __VA_ARGS__)
 /* -- Helper for defining flags -------------------------------------------- */
 constexpr static uint64_t Flag(const size_t stIndex)
   { return stIndex ? 1ULL << (stIndex - 1) : 0; };

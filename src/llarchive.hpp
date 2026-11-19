@@ -199,7 +199,7 @@ LLFUNC(LoadAsync, 0,
 // $ Archive.WaitAsync
 // ? Halts main-thread execution until all async archive events have completed
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cArchives->WaitAsync())
+LLFUNC(WaitAsync, 0, cArchives->CollectorWaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Archive.* non-member functions structure                            ## **

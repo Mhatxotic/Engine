@@ -55,12 +55,14 @@ enum ASyncProgressCommand : unsigned   // For lua callback events
   APC_EXECDATAWRITE,                   // Exec writing data (2=Pos,3=Total)
   APC_FILESTART,                       // File opened (2=Siz,3=MTime,4=CTime)
 };/* ----------------------------------------------------------------------- */
-template<class MemberType, class ColType>class AsyncLoader :
+template<class ParentType>class AsyncLoader :
   /* -- Base classes ------------------------------------------------------- */
   public virtual NameStr,              // Reference to name of object
   public Memory,                       // Loading from memory data (reusable)
   public RefCtrMaster<>                // Ref counter to protect from destructs
-{ /* -- Private typedefs ------------------------------------------ */ private:
+{ /* -- Private typedefs --------------------------------------------------- */
+  using MemberType = ParentType::MemberType;
+  /* ----------------------------------------------------------------------- */
   enum AsyncResult : unsigned          // Async loading results
   { /* --------------------------------------------------------------------- */
     AR_STANDBY,                        // Loading has not started
@@ -234,8 +236,11 @@ template<class MemberType, class ColType>class AsyncLoader :
   /* -- Executes the class callback when data is ready --------------------- */
   void AsyncExecuteReadyCallback(FileMap &fmData)
   { // Execute the callback and if it returns true then it is done with the raw
-    // data we sent to it.
-    if(mtAsyncOwner.AsyncReady(fmData)) MemDeInit();
+    // data we sent to it. Cppcheck says this always returns false, but it
+    // doesn't as Pcm::AsyncReady() always returns true.
+    if(mtAsyncOwner.
+      AsyncReady(fmData))          // cppcheck-suppress knownConditionTrueFalse
+        MemDeInit();
   }
   /* -- Process a file map and dispatch events ----------------------------- */
   void AsyncParseFileMap(FileMap &fmData)
@@ -403,7 +408,7 @@ template<class MemberType, class ColType>class AsyncLoader :
   { // Wait for thread to finish if not already
     AsyncStop();
     // Register the class from the requested collector type
-    static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
+    static_cast<ParentType&>(mtAsyncOwner).CollectorRegister();
     // Now do the callback. An exception could occur here as well and it
     // should be protected.
     AsyncDoLuaProtectedDispatch(emeEvent, iParam, iHandler);
@@ -467,7 +472,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Send file map to derived class
     AsyncExecuteReadyCallback(fmData);
     // Load succeeded so register the block.
-    static_cast<ColType&>(mtAsyncOwner).CollectorRegister();
+    static_cast<ParentType&>(mtAsyncOwner).CollectorRegister();
   }
   /* -- Init from file synchronously from disk only ------------------------ */
   template<class StrTypeFile, class StrTypeLabel>
@@ -662,7 +667,7 @@ template<class MemberType, class ColType>class AsyncLoader :
     lecAsync{ mtNAsyncOwner,           // Initialise Lua event class...
               emcNAsyncCmd },          // ...with owner class and event cmd.
     tAsyncThread{ STP_LOW,             // Initialise low priority thread
-      bind(&AsyncLoader<MemberType, ColType>::AsyncThreadMain, this, _1) },
+      bind(&AsyncLoader<ParentType>::AsyncThreadMain, this, _1) },
     asctAsyncType(BA_NONE),            // Initialise load source type
     auAsyncPid(0)                      // Initialise pid for BA_EXECUTE
     /* -- No code ---------------------------------------------------------- */
@@ -682,32 +687,25 @@ template<class MemberType, class ColType>class AsyncLoader :
     // Wait for the thread to stop
     AsyncStop();
   )
-};/* -- Function to wait for async of all members in a collector ----------- */
-template<class MemberType,
-  class LockType,
-  class ListType,
-  class IteratorType,
-  class CLHelperType = CLHelperSafe<MemberType, ListType, IteratorType>,
-  class BaseType = CLHelper<MemberType, CLHelperType, ListType, IteratorType>>
-class CLHelperAsync :
+};
+/* -- Detail struct collector async helper --------------------------------- */
+template<class LockType> struct CLHelperAsyncTraits
+  { using HelperType = CLHelper<LockType>; };
+/* -- Function to wait for async of all members in a collector ------------- */
+template<class LockType> class CLHelperAsync :
   /* -- Derivced classes --------------------------------------------------- */
-  public BaseType                      // CLHelper
+  public CLHelperAsyncTraits<LockType>::HelperType
 { /* -- Private typedefs --------------------------------------------------- */
+  using HelperType = CLHelperAsyncTraits<LockType>::HelperType;
+  using MemberType = typename LockType::MemberType;
   using LuaEvtSlaveType  = LuaEvtTypeAsync<MemberType>;
   using LuaEvtMasterType = LuaEvtMaster<MemberType, LuaEvtSlaveType>;
   /* -- Public variables ------------------------------------------- */ public:
   const LuaEvtMasterType lemtAsync;    // Event name id
-  /* -- Functions ---------------------------------------------------------- */
-  void WaitAsync()
-  { // Lock the collector's mutex and sync all members
-    this->MutexCall([this](){
-      for(MemberType*const cChild : *this) cChild->AsyncWait();
-    });
-  }
   /* -- Constructor -------------------------------------------------------- */
   CLHelperAsync(const char*const cpName, const EvtMainCmd emcCmd) :
     /* -- Initialisers ----------------------------------------------------- */
-    BaseType{ cpName },                // Initialise name of base tpye
+    HelperType{ cpName },              // Initialise name of base tpye
     lemtAsync{ emcCmd }                // Initialise event name
     /* -- No code ---------------------------------------------------------- */
     {}

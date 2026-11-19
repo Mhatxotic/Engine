@@ -211,7 +211,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFtfs->CollectorCount()))
 // $ Ftf.WaitAsync
 // ? Halts main-thread execution until all async Ftf events have completed
 /* ------------------------------------------------------------------------- */
-LLFUNC(WaitAsync, 0, cFtfs->WaitAsync())
+LLFUNC(WaitAsync, 0, cFtfs->CollectorWaitAsync())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Ftf.* non-member functions structure                                ## **
