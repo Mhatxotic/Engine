@@ -17,7 +17,7 @@ using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtil::P;              using namespace Lib::GlFW::Types;
+using namespace IUtil::P;              using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 using CoordsGLuint = Coords<GLuint>;   // GLuint co-ordinates
 /* ------------------------------------------------------------------------- */
@@ -257,7 +257,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     const GLuint uSize =
       TextureGetMaxSizeFromBounds(ipData.DimGetWidth<GLuint>(),
         ipData.DimGetHeight<GLuint>(), uTPWidth, uTPHeight, 2);
-    const GLuint uMaximum = cOgl->MaxTexSize();
+    const GLuint uMaximum = cOgl->OglMaxTexSize();
     // Make sure the size is supported by graphics. !FIXME. Make a new
     // OpenGL surface in a sub-texture slot here but this may require a bit
     // of work.
@@ -284,7 +284,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
         "TileWidth",     uTWidth,   "TileHeight",     uTHeight,
         "TileWidth+Pad", uTPWidth,  "TileHeight+Pad", uTPHeight,
         "Occupancy",     ipData.Occupancy(),
-        "Maximum",       cOgl->MaxTexSize());
+        "Maximum",       cOgl->OglMaxTexSize());
     // THe result rect will include padding so remove it
     iprNew.DimDec(static_cast<int>(uPadding));
     // Convert new surface size to size_t
@@ -349,12 +349,13 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     DimSet(uISize ? uISize :
       TextureGetMaxSizeFromBounds(0, 0, uTWidth, uTHeight, 1));
     // Check if texture size is valid
-    if(DimGetWidth() > cOgl->MaxTexSize() || uTWidth > cOgl->MaxTexSize())
+    if(DimGetWidth() > cOgl->OglMaxTexSize() ||
+       uTWidth > cOgl->OglMaxTexSize())
       XC("Atlas dimensions not supported by graphics processor!",
         "Name",      ssvIdent,      "Requested",  uISize,
         "Width",     DimGetWidth(), "Height",     DimGetHeight(),
         "TileWidth", uTWidth,       "TileHeight", uTHeight,
-        "Maximum",   cOgl->MaxTexSize());
+        "Maximum",   cOgl->OglMaxTexSize());
     // Estimate how many glyphs we're fitting in here to prevent unnecessary
     // alocations
     const size_t stGColumns = DimGetWidth() / uTWidth,

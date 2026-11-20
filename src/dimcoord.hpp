@@ -13,32 +13,32 @@ using namespace ICoord::P;             using namespace IDim::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename DInt,                // Dimensions integer type
-  typename CInt = DInt,                // Coords class integer type
-  class DClass = Dimensions<DInt>,     // Dimensions class to use
-  class CClass = Coord<CInt>>          // Coords class to use
-requires StdIsArithmatic<DInt> &&      // Dimension type must be int/float
-  StdIsArithmatic<CInt>                // Coords type must be int/float
+template<typename IntType>             // Dimensions integer type
+  requires StdIsArithmatic<IntType>    // Dimension type must be int/float
 struct DimCoords :                     // Members initially public
   /* -- Base classes ------------------------------------------------------- */
-  public CClass,                       // Co-ordinates class
-  public DClass                        // Dimensions class
-{ /* -- Set co-ordinates and dimensions ------------------------------------ */
-  void DimCoSet(const CInt ciX, const CInt ciY, const DInt diW, const DInt diH)
-    { this->CoordSet(ciX, ciY); this->DimSet(diW, diH); }
+  public Coord<IntType>,               // Co-ordinates class
+  public Dimensions<IntType>           // Dimensions class
+{ /* -- Public typedefs ---------------------------------------------------- */
+  using CClass = Coord<IntType>;       // Shortcut to coord class
+  using DClass = Dimensions<IntType>;  // Shortcut to dimensions class
+  /* -- Set co-ordinates and dimensions ------------------------------------ */
+  void DimCoSet(const IntType itX, const IntType itY,
+                const IntType itW, const IntType itH)
+    { this->CoordSet(itX, itY); this->DimSet(itW, itH); }
   /* -- Constructor to fill all parameters --------------------------------- */
-  DimCoords(const CClass &ciOther, const DClass &diOther) :
+  DimCoords(const CClass &cOther, const DClass &dOther) :
     /* -- Initialisers ----------------------------------------------------- */
-    CClass{ ciOther },                 // Initialise co-ordinates
-    DClass{ diOther }                  // Initialise dimensions
+    CClass{ cOther },                  // Initialise co-ordinates
+    DClass{ dOther }                   // Initialise dimensions
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Constructor to fill all parameters --------------------------------- */
-  DimCoords(const CInt ciX, const CInt ciY,
-            const DInt diW, const DInt diH) :
+  DimCoords(const IntType itX, const IntType itY,
+            const IntType itW, const IntType itH) :
     /* -- Initialisers ----------------------------------------------------- */
-    CClass{ ciX, ciY },                // Initialise co-ordinates
-    DClass{ diW, diH }                 // Initialise dimensions
+    CClass{ itX, itY },                // Initialise co-ordinates
+    DClass{ itW, itH }                 // Initialise dimensions
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Default constructor that zero initialises everything --------------- */

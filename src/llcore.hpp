@@ -125,7 +125,7 @@ LLFUNC(GetEnv, 1,
 // ? Returns the number of events in the engine event system. Helps with
 // ? synchronising 'Video' or 'Stream' class events.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetEvents, 1, LuaUtilPushVar(lS, cEvtMain->SizeSafe()))
+LLFUNC(GetEvents, 1, LuaUtilPushVar(lS, cEvtMain->EvtCoreSizeSafe()))
 /* ========================================================================= */
 // $ Core.GetLibrary
 // > Id:integer=The index of the license.
@@ -338,7 +338,7 @@ LLFUNC(GetVersion, 12,
 // $ Core.End
 // ? Ends LUA execution and enables the console.
 /* ------------------------------------------------------------------------- */
-LLFUNC(End, 0, cEvtMain->Add(EMC_LUA_END))
+LLFUNC(End, 0, cEvtMain->EvtCoreAdd(EMC_LUA_END))
 /* ========================================================================= */
 // $ Core.IsOSLinux
 // < Boolean:boolean=True if using Linux, false if not.
@@ -442,12 +442,12 @@ LLFUNC(OnEnd, 0, cLua->LuaSetRef(lS, cLua->LuaGetEndFunc()))
 // $ Core.Pause
 // ? Pauses LUA execution. Obviously, you can't resume and must do it manually!
 /* ------------------------------------------------------------------------- */
-LLFUNC(Pause, 0, cEvtMain->Add(EMC_LUA_PAUSE))
+LLFUNC(Pause, 0, cEvtMain->EvtCoreAdd(EMC_LUA_PAUSE))
 /* ========================================================================= */
 // $ Core.Quit
 // ? Terminates the engine process cleanly.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Quit, 0, cEvtMain->RequestQuit())
+LLFUNC(Quit, 0, cEvtMain->EvtMainRequestQuit())
 /* ========================================================================= */
 // $ Core.Reset
 // < Result:boolean = Was the event sent successfully?
@@ -459,12 +459,12 @@ LLFUNC(Reset, 1, LuaUtilPushVar(lS, cLua->LuaReInit()))
 // $ Core.Restart
 // ? Restarts the engine process cleanly.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Restart, 0, cEvtMain->Add(EMC_QUIT_RESTART))
+LLFUNC(Restart, 0, cEvtMain->EvtCoreAdd(EMC_QUIT_RESTART))
 /* ========================================================================= */
 // $ Core.RestartNP
 // ? Restarts the engine process cleanly without command-line arguments.
 /* ------------------------------------------------------------------------- */
-LLFUNC(RestartNP, 0, cEvtMain->Add(EMC_QUIT_RESTARTNP))
+LLFUNC(RestartNP, 0, cEvtMain->EvtCoreAdd(EMC_QUIT_RESTARTNP))
 /* ========================================================================= */
 // $ Core.SetDefaultDelay
 // ? Restores the frame thread suspend value set via cvars
@@ -484,7 +484,7 @@ LLFUNC(SetDelay, 0, const AgUIntLG aMilliseconds{lS, 1, 0, 1000};
 // ? clean up actions in your own time by setting Core.SetEnd(), then calling
 // ? this function to confirm you're done.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetDone, 0, cEvtMain->ConfirmExit())
+LLFUNC(SetDone, 0, cEvtMain->EvtMainConfirmExit())
 /* ========================================================================= */
 // $ Core.SetIcon
 // > Filename:string=The filenames of the large icon to set.

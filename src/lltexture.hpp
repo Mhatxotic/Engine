@@ -1128,7 +1128,7 @@ LLFUNC(Manifest, 1,
 // < Size:integer=Maximum supported texture size.
 // ? Returns the maximum texture size supported by the rendering system.
 /* ------------------------------------------------------------------------- */
-LLFUNC(MaxSize, 1, LuaUtilPushVar(lS, cOgl->MaxTexSize()))
+LLFUNC(MaxSize, 1, LuaUtilPushVar(lS, cOgl->OglMaxTexSize()))
 /* ========================================================================= */
 // $ Texture.CreateTS
 // > Source:Image=The image class to load from.

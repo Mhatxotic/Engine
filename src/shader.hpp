@@ -17,7 +17,7 @@ using namespace ILuaLib::P;            using namespace IName::P;
 using namespace IOgl::P;               using namespace ISerial::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace Lib::GlFW::Types;
+using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Shader list class ---------------------------------------------------- */
@@ -69,12 +69,12 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Verify the specified attribute is at the specified location -------- */
   void VerifyAttribLocation(const char *cpAttr, const ShaderAttributeId saiId)
   { // Verify that the id is valid (impossible but just incase)
-    if(saiId >= cOgl->MaxVertexAttribs())
+    if(saiId >= cOgl->OglMaxVertexAttribs())
       XC("Invalid shader attribute location index!",
         "Attrib",  cpAttr, "Program", uProgram, "Index", saiId,
-        "Maximum", cOgl->MaxVertexAttribs(),     "MaximumEngine", A_MAX);
+        "Maximum", cOgl->OglMaxVertexAttribs(), "MaximumEngine", A_MAX);
     // Get attribute location
-    GL(cOgl->BindAttribLocation(uProgram, saiId, cpAttr),
+    GL(cOgl->OglBindAttribLocation(uProgram, saiId, cpAttr),
       "Failed to get attribute location from shader!",
       "Attrib", cpAttr, "Program", uProgram, "Index", saiId);
     // Enable the vertex attrib array. Keep an eye on this if you have problems
@@ -82,7 +82,7 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     // attrib pointers before both glDrawArrays calls if you add more shaders
     // and this call fails. Note that this is VAO depedent so whee this is
     // called, we should already be in the global VAO.
-    GL(cOgl->EnableVertexAttribArray(saiId),
+    GL(cOgl->OglEnableVertexAttribArray(saiId),
       "Failed to enable vertex attrib array!",
       "Attrib", cpAttr, "Program", uProgram, "Index", saiId);
     // Report location in log
@@ -102,16 +102,16 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Update palette ----------------------------------------------------- */
   void UpdatePalette(const size_t stSize, const GLfloat*const fpData) const
   { // Activate shader (no error checking)
-    cOgl->UseProgram(GetProgram());
+    cOgl->OglUseProgram(GetProgram());
     // Commit palette
-    cOgl->Uniform(GetUID(U_PALETTE), static_cast<GLsizei>(stSize), fpData);
+    cOgl->OglUniform(GetUID(U_PALETTE), static_cast<GLsizei>(stSize), fpData);
   }
   /* -- Update shader matrix ----------------------------------------------- */
   void UpdateMatrix(const CoordsGLFloat &cglfRef) const
   { // Activate shader (no error checking)
-    cOgl->UseProgram(GetProgram());
+    cOgl->OglUseProgram(GetProgram());
     // Commit matrix bounds (no error checking)
-    cOgl->Uniform(GetUID(U_MATRIX), cglfRef.CoordsGetX1(),
+    cOgl->OglUniform(GetUID(U_MATRIX), cglfRef.CoordsGetX1(),
       cglfRef.CoordsGetY1(), cglfRef.CoordsGetX2(), cglfRef.CoordsGetY2());
   }
   /* -- Linkage ------------------------------------------------------------ */
@@ -123,12 +123,12 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     VerifyAttribLocation("vertex", A_VERTEX);
     VerifyAttribLocation("colour", A_COLOUR);
     // Do the link
-    GL(cOgl->LinkProgram(uProgram), "Link shader program failed!",
+    GL(cOgl->OglLinkProgram(uProgram), "Link shader program failed!",
       "Program", uProgram);
     // Get link result and show reason if failed
-    if(cOgl->GetLinkStatus(uProgram) == GL_FALSE)
+    if(cOgl->OglGetLinkStatus(uProgram) == GL_FALSE)
       XC("Shader program linkage failed!", "Program", uProgram,
-        "Reason", cOgl->GetLinkFailureReason(uProgram));
+        "Reason", cOgl->OglGetLinkFailureReason(uProgram));
     // Program linked
     bLinked = true;
     // Activate
@@ -139,13 +139,13 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Activate program --------------------------------------------------- */
   void Activate()
   { // Do activate the program
-    GL(cOgl->UseProgram(uProgram), "Failed to select shader program!",
+    GL(cOgl->OglUseProgram(uProgram), "Failed to select shader program!",
       "Program", uProgram);
   }
   /* -- Deselect program --------------------------------------------------- */
   void Deactivate()
-    { if(cOgl->GetProgram() == uProgram)
-        GLL(cOgl->UseProgram(0), "Failed to deselect active program!",
+    { if(cOgl->OglGetProgram() == uProgram)
+        GLL(cOgl->OglUseProgram(0), "Failed to deselect active program!",
           "Program", uProgram); }
   /* -- Get shader program name -------------------------------------------- */
   GLuint GetProgram() const { return uProgram; }
@@ -153,7 +153,7 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
   GLint GetUID(const ShaderUniformId suiId) const { return aUniforms[suiId]; }
   /* -- Variable location -------------------------------------------------- */
   GLint GetUniformLocation(const char*const cpVar) const
-    { return cOgl->GetUniformLocation(uProgram, cpVar); }
+    { return cOgl->OglGetUniformLocation(uProgram, cpVar); }
   /* -- Shader initialiser ------------------------------------------------- */
   void AddShader(const StdString &strName, const GLenum eT,
     const StdString &strC)
@@ -163,36 +163,36 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
     // destructor can clean up any created data.
     const size_t stIndex = size();
     const ShaderCell &scItem = *insert(cend(), { strName,
-      StrAppend("#version 150\n", strC), eT, cOgl->CreateShader(eT) });
+      StrAppend("#version 150\n", strC), eT, cOgl->OglCreateShader(eT) });
     // Check the shader
     if(!scItem.GetHandle())
       XC("Failed to create GL shader!",
         "Name", scItem.NameGet(), "Type", scItem.GetType());
     // Set shader source code
-    GL(cOgl->ShaderSource(scItem.GetHandle(), scItem.GetCodeCStr()),
+    GL(cOgl->OglShaderSource(scItem.GetHandle(), scItem.GetCodeCStr()),
       "Failed to set shader source code!",
       "Name",   scItem.NameGet(),   "Type",   scItem.GetType(),
       "Shader", scItem.GetHandle(), "Source", scItem.GetCode());
     // Compile the shader source code
-    GL(cOgl->CompileShader(scItem.GetHandle()),
+    GL(cOgl->OglCompileShader(scItem.GetHandle()),
       "Failed to compile shader source code!",
       "Type", eT, "Shader", scItem.GetHandle(), "Source", scItem.GetCode());
     // Get compiler result and show reason if failed
-    if(cOgl->GetCompileStatus(scItem.GetHandle()) == GL_FALSE)
+    if(cOgl->OglGetCompileStatus(scItem.GetHandle()) == GL_FALSE)
       XC("Shader compilation failed!",
         "Name",   scItem.NameGet(), "Program", uProgram,
         "Type",   scItem.GetType(), "Shader",  scItem.GetHandle(),
-        "Reason", cOgl->GetCompileFailureReason(scItem.GetHandle()));
+        "Reason", cOgl->OglGetCompileFailureReason(scItem.GetHandle()));
     // If the program hasn't been setup yet?
     if(!uProgram)
     { // Create the shader program, and if failed? We should bail out.
-      uProgram = cOgl->CreateProgram();
+      uProgram = cOgl->OglCreateProgram();
       if(!uProgram)
         XC("Failed to create shader program!",
           "Name",   scItem.NameGet(), "Type", scItem.GetType(),
           "Shader", scItem.GetHandle());
     } // Attach the shader to the program
-    GL(cOgl->AttachShader(uProgram, scItem.GetHandle()),
+    GL(cOgl->OglAttachShader(uProgram, scItem.GetHandle()),
       "Failed to attach shader to program!",
       "Name", scItem.NameGet(), "Program", uProgram,
       "Type", scItem.GetType(), "Shader",  scItem.GetHandle());
@@ -216,18 +216,18 @@ CTOR_BEGIN_DUO(Shaders, Shader, CLHelperUnsafe, ICHelperUnsafe),
       if(!scItem.GetHandle()) continue;
       // If we have a program. Detach the shader if we have the program
       if(uProgram)
-        GLL(cOgl->DetachShader(uProgram, scItem.GetHandle()),
+        GLL(cOgl->OglDetachShader(uProgram, scItem.GetHandle()),
           "Shader $ not detached from program $!",
           uProgram, scItem.GetHandle());
       // Delete the shader
-      GLL(cOgl->DeleteShader(scItem.GetHandle()),
+      GLL(cOgl->OglDeleteShader(scItem.GetHandle()),
         "Shader $ could not be deleted!", scItem.GetHandle());
     } // Done if no program
     if(!uProgram) return;
     // Deselect program
     Deactivate();
     // Delete the program
-    GLL(cOgl->DeleteProgram(uProgram),
+    GLL(cOgl->OglDeleteProgram(uProgram),
       "Shader program $ could not be deleted!", uProgram);
   }
   /* -- Shader deinitialiser ----------------------------------------------- */

@@ -13,7 +13,7 @@ using namespace IError::P;             using namespace IFileMap::P;
 using namespace IImageData::P;         using namespace IImageDef::P;
 using namespace IImageLib::P;          using namespace IImageSlot::P;
 using namespace IMemory::P;            using namespace IStd::P;
-using namespace ITexDef::P;            using namespace Lib::WebP;
+using namespace ITexDef::P;            using namespace LWebP;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -45,7 +45,7 @@ class CodecWEBP :                      // WEBP codec object
     { // Get and set dimensions
       size_t stWidth = 0, stHeight = 0;
       simplewebp_get_dimensions(swpData, &stWidth, &stHeight);
-      using Lib::GlFW::GLuint;
+      using LGL::GLuint;
       idData.DimSet(static_cast<GLuint>(stWidth),
         static_cast<GLuint>(stHeight));
       // Decode the stream and clear it after

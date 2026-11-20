@@ -20,7 +20,7 @@ using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtfCodepoint::P;
 using namespace IUtfDecoder::P;        using namespace IUtil::P;
-using namespace Lib::GlFW::Types;
+using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -227,10 +227,10 @@ class Input :                          // Handles keyboard, mouse & controllers
   LuaFunc &InputGetCharFunc() { return lfOnChar; }
   /* -- Request from alternative thread to fullscreen toggle without save -- */
   void InputRequestFSToggle(const bool bState)
-    { cEvtWin->AddUnblock(EWC_WIN_TOGGLEFS, bState); }
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_TOGGLEFS, bState); }
   /* -- Commit cursor visibility ------------------------------------------- */
   void InputCommitCursor()
-    { cEvtWin->AddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_CURSETVIS, FlagIsSet(IF_CURSOR)); }
   /* -- Set visibility of mouse cursor ------------------------------------- */
   void InputSetCursor(const bool bState)
   { // Set member var incase window needs to reinit so we can restore the
@@ -248,7 +248,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   }
   /* -- Request input state ------------------------------------------------ */
   void InputRequestMousePosition() const
-    { cEvtWin->AddUnblock(EWC_WIN_CURPOSGET); }
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_CURPOSGET); }
   /* -- Forcefully move the cursor ----------------------------------------- */
   void InputSetCursorPos(const GLfloat fX, const GLfloat fY)
   { // Expand the stage co-ordinates to actual desktop window co-ordinates
@@ -261,7 +261,7 @@ class Input :                          // Handles keyboard, mouse & controllers
       fNewX = UtilClamp(fAdjX, 0.0f, DimGetWidth<GLfloat>() - 1.0f),
       fNewY = UtilClamp(fAdjY, 0.0f, DimGetHeight<GLfloat>() - 1.0f);
     // Dispatch the request to set the cursor
-    cEvtWin->AddUnblock(EWC_WIN_CURPOSSET,
+    cEvtWin->EvtWinAddUnblock(EWC_WIN_CURPOSSET,
       static_cast<double>(fNewX), static_cast<double>(fNewY));
     // Dispatch an event to the mouse moved since GlFW won't send an update
     lfOnMouseMove.LuaFuncDispatch(static_cast<double>(fX),
@@ -344,28 +344,32 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- CVar callback to toggle raw mouse -------------------------- */ public:
   CVarReturn InputSetRawMouseEnabled(const bool bState)
   { // Send request to set raw mouse motion state if enabled
-    if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETRAWMOUSE, bState);
+    if(IHIsInitialised())
+      cEvtWin->EvtWinAddUnblock(EWC_WIN_SETRAWMOUSE, bState);
     // CVar allowed to be set
     return ACCEPT;
   }
   // -- CVar callback to toggle sticky keys -------------------------------- */
   CVarReturn InputSetStickyKeyEnabled(const bool bState)
   { // Send request to set sticky keys state if enabled
-    if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETSTKKEYS, bState);
+    if(IHIsInitialised())
+      cEvtWin->EvtWinAddUnblock(EWC_WIN_SETSTKKEYS, bState);
     // CVar allowed to be set
     return ACCEPT;
   }
   // -- CVar callback to toggle lock key mod bits -------------------------- */
   CVarReturn InputSetLockKeyModEnabled(const bool bState)
   { // Send request to set lock key mods state if enabled
-    if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETLKMODS, bState);
+    if(IHIsInitialised())
+      cEvtWin->EvtWinAddUnblock(EWC_WIN_SETLKMODS, bState);
     // CVar allowed to be set
     return ACCEPT;
   }
   // -- CVar callback to toggle sticky mouse ------------------------------- */
   CVarReturn InputSetStickyMouseEnabled(const bool bState)
   { // Send request to set sticky mouse if enabled
-    if(IHIsInitialised()) cEvtWin->AddUnblock(EWC_WIN_SETSTKMOUSE, bState);
+    if(IHIsInitialised())
+      cEvtWin->EvtWinAddUnblock(EWC_WIN_SETSTKMOUSE, bState);
     // CVar allowed to be set
     return ACCEPT;
   }

@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IShaderDef {                 // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace Lib::GlFW::Types;
+using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

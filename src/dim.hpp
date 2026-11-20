@@ -10,17 +10,18 @@
 /* ------------------------------------------------------------------------- */
 namespace IDim {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IIntPair::P;           using namespace Lib::GlFW::Types;
+using namespace IIntPair::P;           using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntType,             // Integer type to use
-  class Base = IntPair<IntType>>       // Base class type to use
-requires StdIsArithmatic<IntType>      // Must be be integer or float
+template<typename IntType>             // Integer type to use
+  requires StdIsArithmatic<IntType>    // Must be be integer or float
 struct Dimensions :                    // Members initially public
   /* -- Base classes ------------------------------------------------------- */
-  private Base                         // Base double value class
-{ /* -- Test --------------------------------------------------------------- */
+  private IntPair<IntType>             // Base double value class
+{ /* -- Public typedefs ---------------------------------------------------- */
+  using Base = IntPair<IntType>;       // Base class type to use
+  /* -- Test --------------------------------------------------------------- */
   bool DimIsWidthSet() const { return this->IPIsOneSet(); }
   bool DimIsNotWidthSet() const { return this->IPIsNotOneSet(); }
   bool DimIsHeightSet() const { return this->IPIsTwoSet(); }

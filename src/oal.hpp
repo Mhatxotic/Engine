@@ -20,7 +20,7 @@ using namespace IHelper::P;            using namespace ILog::P;
 using namespace ILookupMap::P;         using namespace IMemory::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace Lib::OpenAL;
+using namespace IToken::P;             using namespace LAL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
@@ -170,7 +170,7 @@ class Oal :                            // Actual class body
         // Failed so report as warning in log
         default: cLog->LogWarningExSafe(
           "Oal destroy device failed with $[0x$$]!",
-          GetALCErr(alceError), StdIOSHex, alceError);
+          OalGetALCErr(alceError), StdIOSHex, alceError);
           break;
       } // Success
       return true;
@@ -197,6 +197,26 @@ class Oal :                            // Actual class body
   }
   /* -- Return current error for specified device -------------------------- */
   ALenum OalGetContextError() const { return alcGetError(alcDevice); }
+  /* -- Enable or disable system events ------------------------------------ */
+  ALenum OalSetEventState(const ALCenum alceEvent,
+    const ALCboolean alcbEnabled)
+  { // Keeping Ubuntu 26.04 compatibility for now until supported
+#if defined(LINUX)
+    return AL_FALSE;
+#else
+    return alcEventControlSOFT(1, &alceEvent, alcbEnabled);
+#endif
+  }
+  /* -- Is system event supported ------------------------------------------ */
+  ALenum OalIsEventSupported(const ALenum aleEventType,
+    const ALenum aleDeviceType)
+  { // Keeping Ubuntu 26.04 compatibility for now until supported
+#if defined(LINUX)
+    return ALC_EVENT_NOT_SUPPORTED_SOFT;
+#else
+    return alcEventIsSupportedSOFT(aleEventType, aleDeviceType);
+#endif
+  }
   /* -- Return error status ---------------------------------------- */ public:
   static ALenum OalGetError() { return alGetError(); }
   static bool OalHaveError() { return OalGetError() != AL_NO_ERROR; }
@@ -209,7 +229,7 @@ class Oal :                            // Actual class body
     void OalLogALCError(StrType &&strFormat, VarArgs &&...vaArgs) const
   { OalLogErrorGeneric<ALCenum, ALC_NO_ERROR>(
       [this]()->ALCenum{ return OalGetContextError(); },
-      [this](const ALCenum alceError){ return GetALCErr(alceError); },
+      [this](const ALCenum alceError){ return OalGetALCErr(alceError); },
       " context", StdForward<StrType>(strFormat),
       StdForward<VarArgs>(vaArgs)...); }
   /* -- AL error logger ---------------------------------------------------- */
@@ -217,7 +237,7 @@ class Oal :                            // Actual class body
     void OalLogALError(StrType &&strFormat, VarArgs &&...vaArgs) const
   { OalLogErrorGeneric<ALenum, AL_NO_ERROR>(
       []()->ALenum{ return OalGetError(); },
-      [this](const ALenum aleError){ return GetALErr(aleError); },
+      [this](const ALenum aleError){ return OalGetALErr(aleError); },
       cCommon->CommonBlank(), StdForward<StrType>(strFormat),
       StdForward<VarArgs>(vaArgs)...); }
   /* -- AL context error handler ------------------------------------------- */
@@ -225,14 +245,14 @@ class Oal :                            // Actual class body
     void OalCheckALCError(const char*const cpReason, VarArgs &&...vaArgs) const
   { OalCheckErrorGeneric<ALCenum, ALC_NO_ERROR>(
       [this]()->ALCenum{ return OalGetContextError(); },
-      [this](const ALCenum alceError) { return GetALCErr(alceError); },
+      [this](const ALCenum alceError) { return OalGetALCErr(alceError); },
       " context", cpReason, StdForward<VarArgs>(vaArgs)...); }
   /* -- AL error handler --------------------------------------------------- */
   template<typename ...VarArgs>
     void OalCheckALError(const char*const cpReason, VarArgs &&...vaArgs) const
   { OalCheckErrorGeneric<ALenum, AL_NO_ERROR>(
       []()->ALenum{ return OalGetError(); },
-      [this](const ALenum aleError) { return GetALErr(aleError); },
+      [this](const ALenum aleError) { return OalGetALErr(aleError); },
       caBlank, cpReason, StdForward<VarArgs>(vaArgs)...); }
   /* -- Upload data to audio device ---------------------------------------- */
   static void OalBufferData(const ALuint aluBuffer, const ALenum aleFormat,
@@ -288,69 +308,77 @@ class Oal :                            // Actual class body
     const ALfloat alfDX, const ALfloat alfDY, const ALfloat alfDZ)
       { alSource3f(aluSource, aleWhat, alfDX, alfDY, alfDZ); }
   /* -- Stop a source from playing ----------------------------------------- */
-  static void StopSource(const ALuint aluSource) { alSourceStop(aluSource); }
+  static void OalStopSource(const ALuint aluSource)
+    { alSourceStop(aluSource); }
   /* -- Play a source ------------------------------------------------------ */
-  static void PlaySource(const ALuint aluSource) { alSourcePlay(aluSource); }
-  /* -- Rewind a source ---------------------------------------------------- */
-  static void RewindSource(const ALuint aluSource) {alSourceRewind(aluSource);}
-  /* -- Pause a source ---------------------------------------------------- */
-  static void PauseSource(const ALuint aluSource) { alSourcePause(aluSource); }
+  static void OalPlaySource(const ALuint aluSource)
+    { alSourcePlay(aluSource); }
   /* -- Play more than one source simultaniously --------------------------- */
   template<class ListType>
     requires StdHasDataSize<ListType>
-  static void PlaySources(const ListType &ltSources)
+  static void OalPlaySources(const ListType &ltSources)
     { alSourcePlayv(static_cast<ALsizei>(ltSources.size()),
         ltSources.data()); }
+  /* -- Rewind a source ---------------------------------------------------- */
+  static void OalRewindSource(const ALuint aluSource)
+    {alSourceRewind(aluSource);}
+  /* -- Pause a source ---------------------------------------------------- */
+  static void OalPauseSource(const ALuint aluSource)
+    { alSourcePause(aluSource); }
   /* -- Create multiple sources -------------------------------------------- */
-  static void CreateSources(const ALsizei alsiCount, ALuint*const alupSources)
-    { alGenSources(alsiCount, alupSources); }
+  static void OalCreateSources(const ALsizei alsiCount,
+    ALuint*const alupSources)
+  { alGenSources(alsiCount, alupSources); }
   /* -- Create one source and place it in the specified buffer ------------- */
-  static void CreateSource(ALuint &aluSourceRef)
-    { CreateSources(1, &aluSourceRef); }
+  static void OalCreateSource(ALuint &aluSourceRef)
+    { OalCreateSources(1, &aluSourceRef); }
   /* -- Create and return a source ----------------------------------------- */
-  static ALuint CreateSource()
-    { ALuint aluSource; CreateSource(aluSource); return aluSource; }
+  static ALuint OalCreateSource()
+    { ALuint aluSource; OalCreateSource(aluSource); return aluSource; }
   /* -- Delete multiple sources -------------------------------------------- */
-  static void DeleteSources(const ALsizei alsiCount,
+  static void OalDeleteSources(const ALsizei alsiCount,
     const ALuint*const alupSources)
   { alDeleteSources(alsiCount, alupSources); }
   /* -- Delete multiple sources -------------------------------------------- */
   template<class ListType>
     requires StdHasDataSize<ListType>
-  static void DeleteSources(const ListType &ltSources)
-    { DeleteSources(static_cast<ALsizei>(ltSources.size()),
+  static void OalDeleteSources(const ListType &ltSources)
+    { OalDeleteSources(static_cast<ALsizei>(ltSources.size()),
         ltSources.data()); }
   /* -- Delete one source -------------------------------------------------- */
-  static void DeleteSource(const ALuint &aluSourceRef)
-    { DeleteSources(1, &aluSourceRef); }
+  static void OalDeleteSource(const ALuint &aluSourceRef)
+    { OalDeleteSources(1, &aluSourceRef); }
   /* -- Create multiple buffers -------------------------------------------- */
-  static void CreateBuffers(const ALsizei alsiCount, ALuint*const alupBuffer)
-    { alGenBuffers(alsiCount, alupBuffer); }
+  static void OalCreateBuffers(const ALsizei alsiCount,
+    ALuint*const alupBuffer)
+  { alGenBuffers(alsiCount, alupBuffer); }
   /* -- Create multiple buffers -------------------------------------------- */
   template<class ListType>
     requires StdHasDataSize<ListType>
-  static void CreateBuffers(ListType &ltBuffers)
-  { CreateBuffers(static_cast<ALsizei>(ltBuffers.size()), ltBuffers.data()); }
+  static void OalCreateBuffers(ListType &ltBuffers)
+    { OalCreateBuffers(static_cast<ALsizei>(ltBuffers.size()),
+        ltBuffers.data()); }
   /* -- Create one buffer and place it in the specified variable ----------- */
-  static void CreateBuffer(ALuint &aluBuffer) { CreateBuffers(1, &aluBuffer); }
+  static void OalCreateBuffer(ALuint &aluBuffer)
+    { OalCreateBuffers(1, &aluBuffer); }
   /* -- Create and return a buffer ----------------------------------------- */
-  static ALuint CreateBuffer()
-    { ALuint aluBuffer; CreateBuffer(aluBuffer); return aluBuffer; }
+  static ALuint OalCreateBuffer()
+    { ALuint aluBuffer; OalCreateBuffer(aluBuffer); return aluBuffer; }
   /* -- Delete multiple buffers -------------------------------------------- */
-  static void DeleteBuffers(const ALsizei alsiCount,
+  static void OalDeleteBuffers(const ALsizei alsiCount,
     const ALuint*const alupBuffer)
   { alDeleteBuffers(alsiCount, alupBuffer); }
   /* -- Delete multiple sources -------------------------------------------- */
   template<class ListType>
     requires StdHasDataSize<ListType>
-  static void DeleteBuffers(const ListType &ltBuffers)
-    { DeleteBuffers(static_cast<ALsizei>(ltBuffers.size()),
+  static void OalDeleteBuffers(const ListType &ltBuffers)
+    { OalDeleteBuffers(static_cast<ALsizei>(ltBuffers.size()),
         ltBuffers.data()); }
   /* -- Delete one buffer -------------------------------------------------- */
-  static void DeleteBuffer(const ALuint &aluBufferRef)
-    { DeleteBuffers(1, &aluBufferRef); }
+  static void OalDeleteBuffer(const ALuint &aluBufferRef)
+    { OalDeleteBuffers(1, &aluBufferRef); }
   /* -- Checks if a buffer id is valid ------------------------------------- */
-  static bool IsBuffer(const ALuint aluBuffer)
+  static bool OalIsBuffer(const ALuint aluBuffer)
     { return alIsBuffer(aluBuffer) == AL_TRUE; }
   /* -- Get buffer parameter as integer ------------------------------------ */
   static void OalGetBufferInt(const ALuint aluBuffer, const ALenum aleId,
@@ -366,43 +394,44 @@ class Oal :                            // Actual class body
     return static_cast<IntType>(aliV);
   }
   /* -- Set distance model ------------------------------------------------- */
-  static void SetDistanceModel(const ALenum aleModel)
+  static void OalSetDistanceModel(const ALenum aleModel)
     { alDistanceModel(aleModel); }
   /* -- Set listener vector ------------------------------------------------ */
-  static void SetListenerVector(const ALenum aleParam, const ALfloat fX,
+  static void OalSetListenerVector(const ALenum aleParam, const ALfloat fX,
     const ALfloat fY, const ALfloat fZ)
-      { alListener3f(aleParam, fX, fY, fZ); }
+  { alListener3f(aleParam, fX, fY, fZ); }
   /* -- Set listener position ---------------------------------------------- */
-  static void SetListenerPosition(const ALfloat fX, const ALfloat fY,
+  static void OalSetListenerPosition(const ALfloat fX, const ALfloat fY,
     const ALfloat fZ)
-      { SetListenerVector(AL_POSITION, fX, fY, fZ); }
+  { OalSetListenerVector(AL_POSITION, fX, fY, fZ); }
   /* -- Set listener velocity ---------------------------------------------- */
-  static void SetListenerVelocity(const ALfloat fX, const ALfloat fY,
+  static void OalSetListenerVelocity(const ALfloat fX, const ALfloat fY,
     const ALfloat fZ)
-      { SetListenerVector(AL_VELOCITY, fX, fY, fZ); }
+  { OalSetListenerVector(AL_VELOCITY, fX, fY, fZ); }
   /* -- Set listener velocity ---------------------------------------------- */
-  static void SetListenerVectors(const ALenum aleParam,
+  static void OalSetListenerVectors(const ALenum aleParam,
     const ALfloat*const fpVectors)
   { alListenerfv(aleParam, fpVectors); }
   /* -- Set listener orientation ------------------------------------------- */
-  static void SetListenerOrientation(const ALfloat*const fpVectors)
-    { SetListenerVectors(AL_ORIENTATION, fpVectors); }
+  static void OalSetListenerOrientation(const ALfloat*const fpVectors)
+    { OalSetListenerVectors(AL_ORIENTATION, fpVectors); }
   /* -- Is extension present ----------------------------------------------- */
-  static bool HaveExtension(const char*const cpEnum)
+  static bool OalHaveExtension(const char*const cpEnum)
     { return alIsExtensionPresent(cpEnum) != AL_FALSE; }
   /* ----------------------------------------------------------------------- */
-  static bool HaveCExtension(const char*const cpEnum, ALCdevice*const alcDev)
-    { return alcIsExtensionPresent(alcDev, cpEnum) != AL_FALSE; }
+  static bool OalHaveCExtension(const char*const cpEnum,
+    ALCdevice*const alcDev)
+  { return alcIsExtensionPresent(alcDev, cpEnum) != AL_FALSE; }
   /* ----------------------------------------------------------------------- */
-  bool HaveCExtension(const char*const cpEnum) const
-    { return HaveCExtension(cpEnum, alcDevice); }
+  bool OalHaveCExtension(const char*const cpEnum) const
+    { return OalHaveCExtension(cpEnum, alcDevice); }
   /* ----------------------------------------------------------------------- */
-  static bool HaveNCExtension(const char*const cpEnum)
-    { return HaveCExtension(cpEnum, nullptr); }
+  static bool OalHaveNCExtension(const char*const cpEnum)
+    { return OalHaveCExtension(cpEnum, nullptr); }
   /* -- Detect enumeration method ------------------------------------------ */
-  void DetectEnumerationMethod()
+  void OalDetectEnumerationMethod()
   { // Get if we have ALC_ENUMERATE_ALL_EXT
-    if(HaveNCExtension("ALC_ENUMERATE_ALL_EXT"))
+    if(OalHaveNCExtension("ALC_ENUMERATE_ALL_EXT"))
     { // Set that we have the extension
       FlagSet(AFL_HAVEENUMEXT);
       // Set extended device query extension
@@ -454,8 +483,8 @@ class Oal :                            // Actual class body
       default: return false;
     }
   }
-  /* -- Report floating point playback to other classes -------------------- */
-  bool Have32FPPB() const { return bHave32FPPB; } // Accessed in audio thread!!
+  /* -- Report floating point playback capability (in audio thread!!) ------ */
+  bool OalHave32FPPB() const { return bHave32FPPB; }
   /* -- Get openAL string from currently selected device and context ------- */
   template<typename PtrType = ALchar*>
     requires StdIsPointer<PtrType>
@@ -501,49 +530,31 @@ class Oal :                            // Actual class body
   const StdStringView &OalFormatToString(const ALenum aleFormat) const
     { return alemFormatCodes.Get(aleFormat); }
   /* -- Get source counts -------------------------------------------------- */
-  size_t GetMaxMonoSources() const { return stMaxMonoSources; }
-  size_t GetMaxStereoSources() const { return stMaxStereoSources; }
+  size_t OalGetMaxMonoSources() const { return stMaxMonoSources; }
+  size_t OalGetMaxStereoSources() const { return stMaxStereoSources; }
   /* -- Get current playback device ---------------------------------------- */
-  const StdStringView &GetPlaybackDevice() const { return ssvPlayback; }
+  const StdStringView &OalGetPlaybackDevice() const { return ssvPlayback; }
   /* -- Set system event callback ------------------------------------------ */
-  void SetEventCallback(const ALCEVENTPROCTYPESOFT cbProc, void*const vpParam)
+  void OalSetEventCallback(const ALCEVENTPROCTYPESOFT cbProc,
+    void*const vpParam)
   { // Keeping Ubuntu 26.04 compatibility for now until supported
 #if !defined(LINUX)
     return alcEventCallbackSOFT(cbProc, vpParam);
 #endif
   }
-  /* -- Enable or disable system events ------------------------------------ */
-  ALenum SetEventState(const ALCenum alceEvent, const ALCboolean alcbEnabled)
-  { // Keeping Ubuntu 26.04 compatibility for now until supported
-#if defined(LINUX)
-    return AL_FALSE;
-#else
-    return alcEventControlSOFT(1, &alceEvent, alcbEnabled);
-#endif
-  }
-  /* -- Is system event supported ------------------------------------------ */
-  ALenum IsEventSupported(const ALenum aleEventType,
-    const ALenum aleDeviceType)
-  { // Keeping Ubuntu 26.04 compatibility for now until supported
-#if defined(LINUX)
-    return ALC_EVENT_NOT_SUPPORTED_SOFT;
-#else
-    return alcEventIsSupportedSOFT(aleEventType, aleDeviceType);
-#endif
-  }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
     requires StdIsIntegral<IntType>
-  const StdStringView &GetALErr(const IntType tCode) const
+  const StdStringView &OalGetALErr(const IntType tCode) const
     { return alemOALCodes.Get(static_cast<ALenum>(tCode)); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
     requires StdIsIntegral<IntType>
-  const StdStringView &GetALCErr(const IntType tCode) const
+  const StdStringView &OalGetALCErr(const IntType tCode) const
     { return alemOALCCodes.Get(static_cast<ALenum>(tCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
-  bool IsInitialised() const { return alcDevice && alcContext; }
-  bool IsNotInitialised() const { return !IsInitialised(); }
+  bool OalIsInitialised() const { return alcDevice && alcContext; }
+  bool OalIsNotInitialised() const { return !OalIsInitialised(); }
   /* -- DeInitialise context ----------------------------------------------- */
   void DeInitContext()
   { // Release and destroy context and if successful?
@@ -583,7 +594,7 @@ class Oal :                            // Actual class body
       ALC_ALL_DEVICES_SPECIFIER : ALC_DEVICE_SPECIFIER);
     // Log context initialisation
     cLog->LogInfoExSafe("Oal context initialised on device '$'.",
-      GetPlaybackDevice());
+      OalGetPlaybackDevice());
     // Log that we're changing HRTF setting
     cLog->LogDebugExSafe(
       "Oal changing head related transfer function status to $...",
@@ -657,11 +668,11 @@ class Oal :                            // Actual class body
     }})
     { // Do the test and get result
       switch(const ALenum aleResult =
-        IsEventSupported(eciItem.aleEventType, eciItem.aleDeviceType))
+        OalIsEventSupported(eciItem.aleEventType, eciItem.aleDeviceType))
       { // Event is supported?
         case ALC_EVENT_SUPPORTED_SOFT:
           // Enable system event
-          SetEventState(eciItem.aleEventType, AL_TRUE);
+          OalSetEventState(eciItem.aleEventType, AL_TRUE);
           // Set capability
           FlagSet(eciItem.ofcFlag);
           // Done
@@ -669,7 +680,7 @@ class Oal :                            // Actual class body
         // Event is not supported?
         case ALC_EVENT_NOT_SUPPORTED_SOFT:
           // Disable system event
-          SetEventState(eciItem.aleEventType, AL_FALSE);
+          OalSetEventState(eciItem.aleEventType, AL_FALSE);
           // Clear capability
           FlagClear(eciItem.ofcFlag);
           // Done
@@ -744,7 +755,7 @@ class Oal :                            // Actual class body
         "Oal device capabilities...\n"
         "- Floating-point playback: $.\n"
         "- Device extensions count: $...",
-        StrFromBoolTF(Have32FPPB()),
+        StrFromBoolTF(OalHave32FPPB()),
         emExts.size());
       // Log extensions if debug is enabled
       for(const ExtPair &epExt : emExts)

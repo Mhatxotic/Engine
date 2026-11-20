@@ -111,7 +111,7 @@ class EvtMain :                        // Event list for render thread
   bool             bUnsuspend;         // Waiting for unsuspend signal
   Mutex            mSuspend;           // Mutex for suspending engine thread
   /* -- A suspend event is requested? -------------------------------------- */
-  void OnSuspend(const Event &eEvent)
+  void EvtMainOnSuspend(const Event &eEvent)
   { // Wait for subsequent uses to complete
     mSuspend.MutexUniqueCall([this, &eEvent](UniqueLock &ulLock){
       // Log starting of suspension
@@ -119,8 +119,8 @@ class EvtMain :                        // Event list for render thread
        // Get reference to argument stack
       const EvtArgs &eaArgs = eEvent.eaArgs;
       // Tell requesting thread that it may continue
-      eaArgs[0].Ptr<AtomicBool>()->store(true);
-      eaArgs[1].Ptr<condition_variable>()->notify_one();
+      eaArgs.front().Ptr<AtomicBool>()->store(true);
+      eaArgs.back().Ptr<condition_variable>()->notify_one();
       // Wait for thread termination or calling thread to finish
       wait(ulLock, [this]{ return bUnsuspend; });
       // Reset suspension state and resume execution
@@ -130,11 +130,13 @@ class EvtMain :                        // Event list for render thread
     });
   }
   /* -- Set exit reason code ----------------------------------------------- */
-  void DoSetExitReason(const EvtMainCmd emcReason) { emcExit = emcReason; }
+  void EvtMainDoSetExitReason(const EvtMainCmd emcReason)
+    { emcExit = emcReason; }
   /* -- Return engine thread --------------------------------------- */ public:
-  Thread &GetEngThread() { return tEngThread; }
+  Thread &EvtMainGetEngThread() { return tEngThread; }
+  const Thread &EvtMainGetEngThread() const { return tEngThread; }
   /* -- Unsuspend the thread after a EVT_SUSPEND event --------------------- */
-  void Unsuspend()
+  void EvtMainUnsuspend()
   { // Lock the unlock variable
     mSuspend.MutexCall([this](){
       // Return if already suspended
@@ -148,27 +150,28 @@ class EvtMain :                        // Event list for render thread
     });
   }
   /* -- Get exit reason code ----------------------------------------------- */
-  const StdStringView &GetExitReasonStr() const { return IdToString(emcExit); }
-  EvtMainCmd GetExitReason() const { return emcExit; }
+  const StdStringView &EvtMainGetExitReasonStr() const
+    { return EvtCoreIdToString(emcExit); }
+  EvtMainCmd EvtMainGetExitReason() const { return emcExit; }
   /* -- Check exit reason -------------------------------------------------- */
-  bool IsExitReason(const EvtMainCmd emcReason) const
-    { return GetExitReason() == emcReason; }
-  bool IsNotExitReason(const EvtMainCmd emcReason) const
-    { return !IsExitReason(emcReason); }
+  bool EvtMainIsExitReason(const EvtMainCmd emcReason) const
+    { return EvtMainGetExitReason() == emcReason; }
+  bool EvtMainIsNotExitReason(const EvtMainCmd emcReason) const
+    { return !EvtMainIsExitReason(emcReason); }
   /* -- Set exit reason code ----------------------------------------------- */
-  void SetExitReason(const EvtMainCmd emcReason)
+  void EvtMainSetExitReason(const EvtMainCmd emcReason)
   { // Ignore if this is already the code
-    if(IsExitReason(emcReason)) return;
+    if(EvtMainIsExitReason(emcReason)) return;
     // Set the code
-    DoSetExitReason(emcReason);
+    EvtMainDoSetExitReason(emcReason);
     // Log the change
     cLog->LogDebugExSafe("EvtMain set exit reason to $<$>!",
-      IdToString(emcReason), emcReason);
+      EvtCoreIdToString(emcReason), emcReason);
   }
   /* -- Incase of error we need to update the exit code -------------------- */
-  bool ExitRequested() const { return uConfirm != 0; }
+  bool EvtMainExitRequested() const { return uConfirm != 0; }
   /* -- Incase of error we need to update the exit code -------------------- */
-  void UpdateConfirmExit()
+  void EvtMainUpdateConfirmExit()
   { // Ignore if not in a confirmation request
     if(!uConfirm) return;
     // Reset confirmation
@@ -176,11 +179,11 @@ class EvtMain :                        // Event list for render thread
     // Log confirmation
     cLog->LogDebugExSafe("EvtMain updated exit code to $.", emcPending);
     // Set exit code and clear stored exit code
-    DoSetExitReason(emcPending);
+    EvtMainDoSetExitReason(emcPending);
     emcPending = EMC_NONE;
   }
   /* -- Informs LUA that the user wants to quit ---------------------------- */
-  void ConfirmExit(const EvtMainCmd emcWhat)
+  void EvtMainConfirmExit(const EvtMainCmd emcWhat)
   { // A confirmation request is currently in progress?
     if(uConfirm)
     { // Report override
@@ -193,64 +196,66 @@ class EvtMain :                        // Event list for render thread
     } // Exit confirming
     uConfirm = 1;
     // Send request exit event to Lua class
-    Execute(EMC_LUA_ASKEXIT, emcWhat);
+    EvtCoreExecute(EMC_LUA_ASKEXIT, emcWhat);
     // Set the new exit code
     emcPending = emcWhat;
     // Log confirmation
     cLog->LogDebugExSafe("EvtMain pending exit confirmation with $<$>.",
-      IdToString(emcWhat), emcWhat);
+      EvtCoreIdToString(emcWhat), emcWhat);
   }
   /* -- Handle events from parallel loop ----------------------------------- */
-  bool HandleSafe()
+  bool EvtMainHandleSafe()
   { // Main thread requested break? Why bother managing events?
-    if(tEngThread.ThreadShouldExit()) return false;
+    if(EvtMainGetEngThread().ThreadShouldExit()) return false;
     // Which event?
     switch(Manage())
     { // Thread should quit? Tell main loop to loop again
-      case EMC_QUIT_THREAD: DoSetExitReason(EMC_QUIT_THREAD); break;
+      case EMC_QUIT_THREAD: EvtMainDoSetExitReason(EMC_QUIT_THREAD); break;
       // Thread should quit to reinit opengl? Tell main loop to loop again
-      case EMC_QUIT_VREINIT: DoSetExitReason(EMC_QUIT_VREINIT); break;
+      case EMC_QUIT_VREINIT: EvtMainDoSetExitReason(EMC_QUIT_VREINIT); break;
       // Thread should quit to reinit opengl due to HW change? Tell main loop
-      case EMC_QUIT_HWREINIT: DoSetExitReason(EMC_QUIT_HWREINIT); break;
+      case EMC_QUIT_HWREINIT: EvtMainDoSetExitReason(EMC_QUIT_HWREINIT); break;
       // Thread should quit and main thread should restart completely
-      case EMC_QUIT_RESTART: ConfirmExit(EMC_QUIT_RESTART); goto t;
+      case EMC_QUIT_RESTART: EvtMainConfirmExit(EMC_QUIT_RESTART); goto t;
       // Same as above but without command line parameters
-      case EMC_QUIT_RESTARTNP: ConfirmExit(EMC_QUIT_RESTARTNP); goto t;
+      case EMC_QUIT_RESTARTNP: EvtMainConfirmExit(EMC_QUIT_RESTARTNP); goto t;
       // Lua executing is ending
-      case EMC_LUA_END: ConfirmExit(EMC_LUA_END); goto t;
+      case EMC_LUA_END: EvtMainConfirmExit(EMC_LUA_END); goto t;
       // Lua executing is reinitialising
-      case EMC_LUA_REINIT: ConfirmExit(EMC_LUA_REINIT); goto t;
+      case EMC_LUA_REINIT: EvtMainConfirmExit(EMC_LUA_REINIT); goto t;
       // Lua confirmed exit is allowed now so return the code we recorded
       case EMC_LUA_CONFIRMEXIT: if(!uConfirm) goto t;
         // Restore original exit code, reset exit and confirmation codes
-        DoSetExitReason(emcPending);
+        EvtMainDoSetExitReason(emcPending);
         emcPending = EMC_NONE;
         uConfirm = 0;
         // Log confirmation
         cLog->LogDebugExSafe("EvtMain confirmed exit code $<$>.",
-          GetExitReasonStr(), GetExitReason());
+          EvtMainGetExitReasonStr(), EvtMainGetExitReason());
         // Break main loop
         break;
       // Thread and main thread should quit so tell thread to break.
-      case EMC_QUIT: ConfirmExit(EMC_QUIT); goto t;
+      case EMC_QUIT: EvtMainConfirmExit(EMC_QUIT); goto t;
       // Other event, thread shouldn't break
       default:t: return true;
     } // Thread should terminate
-    tEngThread.ThreadSetExit();
+    EvtMainGetEngThread().ThreadSetExit();
     // Thread should break
     return false;
   }
   /* -- Confirm to the engine that Lua is aborting execution --------------- */
-  void ConfirmExit() { Add(EMC_LUA_CONFIRMEXIT); }
+  void EvtMainConfirmExit() { EvtCoreAdd(EMC_LUA_CONFIRMEXIT); }
   /* -- Add event to quit the engine --------------------------------------- */
-  void RequestQuit() { Add(EMC_QUIT); }
+  void EvtMainRequestQuit() { EvtCoreAdd(EMC_QUIT); }
   /* -- Add event to quit thread and restart window manager ---------------- */
-  void RequestQuitThread() { Add(EMC_QUIT_THREAD); }
+  void EvtMainRequestQuitThread() { EvtCoreAdd(EMC_QUIT_THREAD); }
   /* -- Add event to quit thread and restart opengl ------------------------ */
-  void RequestGLReInit() { Add(EMC_QUIT_VREINIT); }
+  void EvtMainRequestGLReInit() { EvtCoreAdd(EMC_QUIT_VREINIT); }
   /* -- Add event to quit thread and restart opengl and wait --------------- */
-  void RequestGLReInitWait()
-    { Add(EMC_QUIT_HWREINIT); tEngThread.ThreadJoin(); }
+  void EvtMainRequestGLReInitWait()
+    { EvtCoreAdd(EMC_QUIT_HWREINIT); EvtMainGetEngThread().ThreadJoin(); }
+  /* -- Flush all events in the queue -------------------------------------- */
+  void EvtMainFlush() { EvtCoreFlush(); }
   /* -- Constructor --------------------------------------------- */ protected:
   EvtMain() :
     /* -- Initialisers ----------------------------------------------------- */
@@ -279,7 +284,7 @@ class EvtMain :                        // Event list for render thread
     EvtCore{ "EvtMain", *this },       // Construct core
     tEngThread{ "engine", STP_ENGINE },// Set up high perf engine thread
     raEvents{ this, {                  // Initialise custom handled events
-      { EMC_SUSPEND, bind(&EvtMain::OnSuspend, this, _1) },
+      { EMC_SUSPEND, bind(&EvtMain::EvtMainOnSuspend, this, _1) },
       { EMC_QUIT,            nullptr }, { EMC_QUIT_HWREINIT,  nullptr },
       { EMC_QUIT_RESTART,    nullptr }, { EMC_QUIT_RESTARTNP, nullptr },
       { EMC_QUIT_THREAD,     nullptr }, { EMC_QUIT_VREINIT,   nullptr },

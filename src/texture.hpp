@@ -22,7 +22,7 @@ using namespace IMemory::P;            using namespace IOgl::P;
 using namespace ISerial::P;            using namespace IShader::P;
 using namespace IShaders::P;           using namespace IStd::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IUtil::P;              using namespace Lib::GlFW::Types;
+using namespace IUtil::P;              using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Define texture collector class --------------------------------------- */
@@ -104,7 +104,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         const GLint gliMipLevel, const TextureType ttNICFormat,
         const TextureType ttNXCFormat, const ImageSlot &isSlot)
       { // Upload uncompressed texture to video ram
-        GL(cOgl->UploadTextureTT(gliMipLevel, isSlot.DimGetWidth<GLsizei>(),
+        GL(cOgl->OglUploadTextureTT(gliMipLevel, isSlot.DimGetWidth<GLsizei>(),
           isSlot.DimGetHeight<GLsizei>(), ttNICFormat, ttNXCFormat,
           isSlot.MemPtr()),
           "Could not upload uncompressed texture to video ram!",
@@ -125,7 +125,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         const GLint gliMipLevel, const TextureType, const TextureType,
         const ImageSlot &isSlot)
       { // Upload pre-compressed texture to video ram
-        GL(cOgl->UploadCompressedTextureTT(gliMipLevel,
+        GL(cOgl->OglUploadCompressedTextureTT(gliMipLevel,
           tTexture.GetPixelType(), isSlot.DimGetWidth<GLsizei>(),
           isSlot.DimGetHeight<GLsizei>(), isSlot.MemSize<GLsizei>(),
           isSlot.MemPtr()),
@@ -144,7 +144,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   { // Resize array to fit texture names
     gluvTexture.resize(stCount);
     // Make OpenGL to generate texture names and throw error if failed
-    GL(cOgl->CreateTextures(gluvTexture), "Failed to generate textures!",
+    GL(cOgl->OglCreateTextures(gluvTexture), "Failed to generate textures!",
       "Name", NameGet(), "Count", stCount);
   }
   /* -- Generate mipmaps if needed ----------------------------------------- */
@@ -154,7 +154,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     { // Any of the mipmapping settings? Generate mipmaps
       case GL_LINEAR_MIPMAP_LINEAR:  case GL_LINEAR_MIPMAP_NEAREST:
       case GL_NEAREST_MIPMAP_LINEAR: case GL_NEAREST_MIPMAP_NEAREST:
-        GL(cOgl->GenerateMipmaps(),
+        GL(cOgl->OglGenerateMipmaps(),
           "Failed to generate mipmaps!", "Name", NameGet());
         [[fallthrough]];
       // Nothing special
@@ -184,7 +184,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
             "ThisHeight", isRef.DimGetHeight());
         // Get texture id and bind it
         const unsigned gluTexId = GetSubName(stSubTexId);
-        GL(cOgl->BindTexture(gluTexId), "Texture id failed to bind!",
+        GL(cOgl->OglBindTexture(gluTexId), "Texture id failed to bind!",
           "Name",    NameGet(), "Index", stSubTexId,
           "Maximum", stSlots,   "TexId", gluTexId);
         // Configure the texture
@@ -204,13 +204,13 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       // Get texture id
       const unsigned gluTexId = GetSubName();
       // Bind the texture id
-      GL(cOgl->BindTexture(gluTexId), "Mipmapped texture failed to bind!",
+      GL(cOgl->OglBindTexture(gluTexId), "Mipmapped texture failed to bind!",
         "Name", NameGet(), "TexId", gluTexId);
       // Initialise mipmap counter
-      GL(cOgl->SetTexParam(GL_TEXTURE_BASE_LEVEL, 0),
+      GL(cOgl->OglSetTexParam(GL_TEXTURE_BASE_LEVEL, 0),
         "Failed to set max mipmap base level on texture!",
         "Name", NameGet(), "TexId", gluTexId);
-      GL(cOgl->SetTexParam(GL_TEXTURE_MAX_LEVEL, GetMipmaps()),
+      GL(cOgl->OglSetTexParam(GL_TEXTURE_MAX_LEVEL, GetMipmaps()),
         "Failed to set max mipmap max level on texture!",
         "Name", NameGet(), "TexId", gluTexId, "Count", GetMipmaps());
       // Configure the texture
@@ -341,21 +341,21 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   /* -- Configure the specified texture id --------------------------------- */
   void ConfigureTexture(const size_t stSubTexId)
   { // Start configuring the texture.
-    GL(cOgl->SetTexParam(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE),
       "Could not set texture wrapping S!",
       "Name", NameGet(), "Index", stSubTexId);
-    GL(cOgl->SetTexParam(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE),
       "Could not set texture wrapping T!",
       "Name", NameGet(), "Index", stSubTexId);
-    GL(cOgl->SetTexParam(GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE),
       "Could not set texture wrapping R!",
       "Name", NameGet(), "Index", stSubTexId);
     // Set filtering based on developers setting
-    GL(cOgl->SetTexParam(GL_TEXTURE_MIN_FILTER, gliTexMinFilter),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_MIN_FILTER, gliTexMinFilter),
       "Could not set texture minifaction filter!",
       "Name", NameGet(), "Index", stSubTexId,
       "MinFilter",  gliTexMinFilter);
-    GL(cOgl->SetTexParam(GL_TEXTURE_MAG_FILTER, gliTexMagFilter),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_MAG_FILTER, gliTexMagFilter),
       "Could not set texture magnification filter!",
       "Name", NameGet(), "Index", stSubTexId,
       "MagFilter",  gliTexMagFilter);
@@ -371,7 +371,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     // Set image dimensions as float for opengl
     dglfImage.DimSet(DimGetWidth<GLfloat>(), DimGetHeight<GLfloat>());
     // Check width and height's are valid for the graphics device
-    const unsigned uMaxSize = cOgl->MaxTexSize();
+    const unsigned uMaxSize = cOgl->OglMaxTexSize();
     if(isSlot.DimIsNotSet() || isSlot.DimGetWidth() > uMaxSize ||
        isSlot.DimGetHeight() > uMaxSize)
       XC("Image dimensions not supported by graphics hardware!",
@@ -675,10 +675,10 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     const GLsizei glsiWidth, const GLsizei glsiHeight,
     const TextureType ttPixType, const GLvoid*const glvpData)
   { // Bind the specified texture
-    GL(cOgl->BindTexture(gluTexId), "Failed to bind texture to update!",
+    GL(cOgl->OglBindTexture(gluTexId), "Failed to bind texture to update!",
       "Name", NameGet(), "TexId", gluTexId);
     // Upload the texture area
-    GL(cOgl->UploadTextureSubTT(gliX1, gliY1,
+    GL(cOgl->OglUploadTextureSubTT(gliX1, gliY1,
          glsiWidth, glsiHeight, ttPixType, glvpData),
       "Failed to update VRAM with image!",
       "Name",    NameGet(),  "OffsetX", gliX1,
@@ -698,16 +698,16 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     const TextureType ttPixType, const GLvoid*const glvpData,
     const GLsizei glsiStride)
   { // Set stride and alignment
-    GL(cOgl->SetUnpackRowLength(glsiStride),
+    GL(cOgl->OglSetUnpackRowLength(glsiStride),
       "Failed to set unpack row length!",
       "Texture", NameGet(), "Stride", glsiStride);
     // Update the texture
     UpdateEx(gluTexId, gliX1, gliY1, glsiWidth, glsiHeight, ttPixType,
       glvpData);
     // Reset stride and alignment
-    GL(cOgl->SetUnpackRowLength(cOgl->UnpackRowLength()),
+    GL(cOgl->OglSetUnpackRowLength(cOgl->OglUnpackRowLength()),
       "Failed to restore unpack row length!",
-      "Texture", NameGet(), "Stride", cOgl->UnpackRowLength());
+      "Texture", NameGet(), "Stride", cOgl->OglUnpackRowLength());
   }
   /* -- Replace partial texture in VRAM from array ------------------------- */
   void UpdateEx(const size_t stSubTexId, Image &imImage, const GLint gliX1,
@@ -730,13 +730,13 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   Image Download(const size_t stSubTexId, const BitDepth bdDDepth=BD_RGBA,
     const ByteDepth byDDepth = BY_RGBA) const
   { // Get texture id and bind it
-    GL(cOgl->BindTexture(GetSubName(stSubTexId)),
+    GL(cOgl->OglBindTexture(GetSubName(stSubTexId)),
       "Failed to bind texture to download!",
       "Name", NameGet(), "Index", stSubTexId);
     // Create memory block for texture data and read RGBA texture into it
     Memory mOut{ DimGetWidth() * DimGetHeight() * byDDepth };
     const TextureType ttPixType = ImageBYtoTexType(byDDepth);
-    GL(cOgl->ReadTextureTT(ttPixType, mOut.MemPtr<GLvoid>()),
+    GL(cOgl->OglReadTextureTT(ttPixType, mOut.MemPtr<GLvoid>()),
       "Download texture failed!",
       "Name",   NameGet(), "Index", stSubTexId, "Buffer", mOut.MemSize(),
       "Format", ImageGetPixelFormat(ttPixType));
@@ -780,7 +780,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       static_cast<GLfloat>(gluPadY));
     // Set filter
     ofeTexFilter = ofeFilter;
-    cOgl->SetMipMapFilterById(ofeFilter, gliTexMinFilter, gliTexMagFilter);
+    cOgl->OglSetMipMapFilterById(ofeFilter, gliTexMinFilter, gliTexMagFilter);
     // Initialise
     LoadFromImage();
     // Set specified tile dimensions and generate default tileset if needed
@@ -928,7 +928,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       // We're done
       return;
     } // Get the array for user specified tile values
-    using Lib::RapidJson::Value;
+    using LJson::Value;
     const Value &rjvTiles = jsDoc.GetValue("Tiles");
     if(!rjvTiles.IsArray())
       XC("Tiles array not valid in manifest!",
@@ -977,7 +977,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   { // Texture not loaded? return
     if(IsNotInitialised() || FlagIsSet(TF_DELETE)) return;
     // Mark texture for deletion
-    cOgl->SetDeleteTextures(gluvTexture);
+    cOgl->OglSetDeleteTextures(gluvTexture);
     // Texture has been marked for deleting
     FlagSet(TF_DELETE);
     // Report deinitialisation and texture memory

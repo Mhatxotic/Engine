@@ -17,7 +17,7 @@ using namespace IMemory::P;            using namespace IMetadata::P;
 using namespace IOgl::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ITexDef::P;
 using namespace ITime::P;              using namespace IUtil::P;
-using namespace Lib::JpegTurbo;
+using namespace LJpg;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -113,7 +113,7 @@ class CodecJPG :                       // JPEG codec object
         cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
         cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
         cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor(),
-        cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor(),
+        cOgl->OglGetRenderer(), cOgl->OglGetVersion(), cOgl->OglGetVendor(),
         cMetadata->MetadataGetDescription(), cMetadata->MetadataGetCopyright())
     }; // Commit metadata
     jpeg_write_marker(&ciData, JPEG_COM,
@@ -173,7 +173,7 @@ class CodecJPG :                       // JPEG codec object
       cSystem->ENGName(), cSystem->ENGBuildType(), cSystem->ENGMajor(),
         cSystem->ENGMinor(), cSystem->ENGBuild(), cSystem->ENGRevision(),
         cSystem->ENGBits(), cSystem->ENGTarget(), cSystem->ENGAuthor(),
-      cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor(),
+      cOgl->OglGetRenderer(), cOgl->OglGetVersion(), cOgl->OglGetVendor(),
       cSystem->OSLocale(),
       TimeLocalTTtoStr(cmSys.ClockGetTimeSeconds(), "%Y-%m-%dT%H:%M:%S%z"),
       cMetadata->MetadataGetShortTitle(),

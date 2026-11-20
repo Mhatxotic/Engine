@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace ICoord {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IIntPair::P;           using namespace Lib::GlFW::Types;
+using namespace IIntPair::P;           using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

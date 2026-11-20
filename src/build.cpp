@@ -154,20 +154,21 @@ using namespace IUtil::P;              using namespace IUuId::P;
 /* ------------------------------------------------------------------------- */
 static struct Environment              // Preconfigured environment settings
 { /* ----------------------------------------------------*/ const StdStringView
-   cpPerl,  cpCMake,  cpCppCheck, cpCppChkM, cpCppChk32, cpCppChk64,
-   cpDBG,   cp7z,     cpAC4,      cpAC8,     cpACM,      cpACA,
-   cpACB,   cpCCX,    cpCCM,      cpCCMX,    cpCCLIB,    cpCCIncDBG,
-   cpCCASM, cpCCAnal, cpCCAA,     cpCCAB,    cpCCAR,     cpCCPP,
-   cpCC4,   cpCC8,    cpCPPSTD,   cpCCOBJ,   cpCCRES,    cpRCX,
-   cpRCM,   cpRCAA,   cpRCAB,     cpRCAR,    cpRC4,      cpRC8,
-   cpLDX4,  cpLDX8,   cpLDM,      cpLDAA,    cpLDAB,     cpLDAR,
-   cpLDE,   cpLDB,    cpLD4,      cpLD8,     cpLDL,      cpLDMAP,
-   cpLIB,   cpOBJ,    cpASM,      cpPDB,     cpLDEXE,    cpMAP,
-   cpEXE,   cpDBGSUF, cpAR,       cpAR4,     cpAR8,      cpARM,
-   cpARO,   cpARLIB;
+   cpUnzip,    cpPerl,  cpCMake,  cpCppCheck, cpCppChkM, cpCppChk32,
+   cpCppChk64, cpDBG,   cp7z,     cpAC4,      cpAC8,     cpACM,
+   cpACA,      cpACB,   cpCCX,    cpCCM,      cpCCMX,    cpCCLIB,
+   cpCCIncDBG, cpCCASM, cpCCAnal, cpCCAA,     cpCCAB,    cpCCAR,
+   cpCCPP,     cpCC4,   cpCC8,    cpCPPSTD,   cpCCOBJ,   cpCCRES,
+   cpRCX,      cpRCM,   cpRCAA,   cpRCAB,     cpRCAR,    cpRC4,
+   cpRC8,      cpLDX4,  cpLDX8,   cpLDM,      cpLDAA,    cpLDAB,
+   cpLDAR,     cpLDE,   cpLDB,    cpLD4,      cpLD8,     cpLDL,
+   cpLDMAP,    cpLIB,   cpOBJ,    cpASM,      cpPDB,     cpLDEXE,
+   cpMAP,      cpEXE,   cpDBGSUF, cpAR,       cpAR4,     cpAR8,
+   cpARM,      cpARO,   cpARLIB;
 } /* ----------------------------------------------------------------------- */
 envWindowsMSVC =                       // Microsoft Visual C++ environment
 { /* ----------------------------------------------------------------------- */
+  /* UNZIP      */ UTLDIR "/7Z.EXE x -y -aoa \"$\" -o\"$\"",
   /* PERL       */ "D:\\Apps\\Perl\\bin\\PERL.EXE",
   /* CMAKE      */ "D:\\Apps\\CMake\\bin\\CMAKE.EXE",
   /* CPPCHECK   */ "D:\\Apps\\CppCheck\\CPPCHECK.EXE",
@@ -237,6 +238,7 @@ envWindowsMSVC =                       // Microsoft Visual C++ environment
 },/* ----------------------------------------------------------------------- */
 envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
 { /* ----------------------------------------------------------------------- */
+  /* UNZIP      */ envWindowsMSVC.cpUnzip,
   /* PERL       */ envWindowsMSVC.cpPerl,
   /* CMAKE      */ envWindowsMSVC.cpCMake,
   /* CPPCHECK   */ envWindowsMSVC.cpCppCheck,
@@ -302,6 +304,7 @@ envWindowsLLVMcompat =                 // LLVM (MSVC compat) on Windows
 },/* ----------------------------------------------------------------------- */
 envWindowsLLVM =                       // LLVM on Windows
 { /* ----------------------------------------------------------------------- */
+  /* UNZIP      */ envWindowsMSVC.cpUnzip,
   /* PERL       */ envWindowsMSVC.cpPerl,
   /* CMAKE      */ envWindowsMSVC.cpCMake,
   /* CPPCHECK   */ envWindowsMSVC.cpCppCheck,
@@ -370,6 +373,7 @@ envWindowsLLVM =                       // LLVM on Windows
 },/* ----------------------------------------------------------------------- */
 envMacOSLLVM =                         // XCode/LLVM on MacOS
 { /* ----------------------------------------------------------------------- */
+  /* UNZIP      */ "/usr/bin/unzip -o \"$\" -d \"$\"",
   /* PERL       */ "/usr/bin/perl",
   /* CMAKE      */ "/opt/homebrew/bin/cmake",
   /* CPPCHECK   */ "cppcheck",
@@ -457,6 +461,7 @@ envLinuxGCC =                          // GCC on Linux
 #define LINUX_GCCLEDIR32 "/usr/libexec/gcc/" LINUX_ARCH32 "/" STR(__GNUC__) "/"
 #define LINUX_GCCLEDIR64 "/usr/libexec/gcc/" LINUX_ARCH64 "/" STR(__GNUC__) "/"
   /* ----------------------------------------------------------------------- */
+  /* UNZIP      */ envMacOSLLVM.cpUnzip,
   /* PERL       */ "/usr/bin/perl",
   /* CMAKE      */ "/usr/bin/cmake",
   /* CPPCHECK   */ "cppcheck",
@@ -1235,7 +1240,7 @@ static int GenDoc()
   FStream fSrc{ strFile, FM_W_T };
   if(!fSrc.FStreamOpened()) throw StdRunTimeError{ "failed!" };
   // Get date
-  const StdString strDate{ cmSys.FormatTime() };
+  const StdString strDate{ cmSys.ClockFormatTime() };
   // Write header
   fSrc.FStreamWriteStringEx(
     "<!DOCTYPE html>\n"
@@ -1381,10 +1386,10 @@ static int GenDoc()
       strEName, uVer[0], uVer[1], uVer[2], uVer[3],
       strDate,
       strEName, uVer[0], uVer[1], uVer[2], uVer[3],
-      cmSys.FormatTime("%Y"), strEAuthor,
+      cmSys.ClockFormatTime("%Y"), strEAuthor,
       strEName,
       strEAuthor,
-      cmSys.FormatTime("%Y"), strEAuthor,
+      cmSys.ClockFormatTime("%Y"), strEAuthor,
       strEName, uVer[0], uVer[1], uVer[2], uVer[3],
       strEName, uVer[0], uVer[1], uVer[2], uVer[3],
       strEName, uVer[0], uVer[1], uVer[2], uVer[3],
@@ -1698,7 +1703,7 @@ static int GenDoc()
       "\tThis document was generated at $</ADDRESS>\n"
       "</BODY>\n"
       "</HTML>\n",
-        cmSys.FormatTime("%Y"), strEAuthor, strDate));
+        cmSys.ClockFormatTime("%Y"), strEAuthor, strDate));
   // Close file
   cout << "Wrote " << fSrc.FStreamSize() << " bytes.\n";
   fSrc.FStreamClose();
@@ -1978,7 +1983,7 @@ static int SpecialExecute(const StdString strCmd, const size_t stML,
   // Write string tidily
   ConWrite(StrAppend("*** ", strCmd));
   // Record current time
-  const ClkTimePoint tpBegin{ cmHiRes.GetTime() };
+  const ClkTimePoint tpBegin{ cmHiRes.ClockGetTime() };
   // Execute process and capture output. throw StdRunTimeError if failed
   FILE*const fpPipe = POpen(StrAppend(strCmd,
     (ullFlags & PF_SYSNOERR) || bErrOverride ? " 2>&1" : caBlank));
@@ -2019,7 +2024,7 @@ static int SpecialExecute(const StdString strCmd, const size_t stML,
   if(iR) cout << "with status " << iR;
     else cout << "successfully";
   cout << " in " <<
-    durLong.Parse(cmHiRes.TimePointToDouble(tpBegin), 6) << "!\n";
+    durLong.Parse(cmHiRes.ClockTimePointToDouble(tpBegin), 6) << "!\n";
   // Return result
   return iR;
 }
@@ -2373,7 +2378,7 @@ static int BuildDistro()
       "\t</dict>\n"
       "</plist>\n",
       strName, ENGINENAME, strName, strTitle, strVer, uVer[3],
-      strAuthor, cmSys.FormatTime("%Y")))
+      strAuthor, cmSys.ClockFormatTime("%Y")))
         throw StdRunTimeError{ strPList.data() };
     // Convert icons
     const struct _iconlist { const int i; const char *s; } iconlist[] = {
@@ -2417,7 +2422,7 @@ static int BuildDistro()
 /* ------------------------------------------------------------------------- */
 static int CertGen()
 { // Need openssl library
-  using namespace Lib::OpenSSL;
+  using namespace LSsl;
   // Switch to resources directory. Create it if not exists
   MakeAndSetDirectory(CRTDIR);
   // Ready to download
@@ -2684,7 +2689,7 @@ static int BuildLicenses()
     BuildHPPHeader(LICHEADER, StrFormat(
       "This file was automatically generated by build at $ when the license "
       "files are rebuilt. Changes will be lost when this process repeats.",
-        cmSys.FormatTime()))
+        cmSys.ClockFormatTime()))
   };
   // Show counted files
   cout << "Found " << dLicenses.GetFilesSize() << " license files.\n";
@@ -2840,7 +2845,7 @@ static void MakeIncludeFromBin(const StdString &strIn,
                        "// * Destination file...: $.\n"
                        "\n"
                        "$[$] = { ",
-    cmSys.FormatTime(), strIn, strOut, strPrefix, mA.MemSize());
+    cmSys.ClockFormatTime(), strIn, strOut, strPrefix, mA.MemSize());
   for(uint8_t *ucPtr = mA.MemPtr<uint8_t>(),
         *const ucEnd = mA.MemPtrEnd<uint8_t>();
                ucPtr < ucEnd; ++ucPtr)
@@ -2939,13 +2944,23 @@ static void GenericExtLibBuildDuo(const StdString &strCL32Rel,
   FinishLibs(strTmp, strPrefix);
 }
 /* ------------------------------------------------------------------------- */
-static void SetupZipRepo(const StdString &strLibPath, const StdString &strTmp,
-  const StdString &strPSFile, bool bNoDir=false)
+static void Setup7ZipRepo(const StdString &strLibPath, const StdString &strTmp,
+  const StdString &strPSFile, bool bNoDir = false)
 { // Set destination temp directory
-  const StdString strDir{ StrAppend(strTmp, '/', strPSFile) },
-               strDirNo{ StrAppend(strDir, bNoDir ? "" : "/..") };
+  const StdString strDir{ StrAppend(strTmp, '/', strPSFile) };
   // Extract the .7z to the temporary directory
-  SystemF("$ x -y -aoa \"$\" -o\"$\"", envActive.cp7z, strLibPath, strDirNo);
+  SystemF("$ x -y -aoa \"$\" -o\"$\"",
+    envActive.cp7z, strLibPath, bNoDir ? strTmp : strDir);
+  // Set code directory
+  SetDirectory(strDir);
+}
+/* ------------------------------------------------------------------------- */
+static void SetupZipRepo(const StdString &strLibPath, const StdString &strTmp,
+  const StdString &strPSFile, bool bNoDir = false)
+{ // Set destination temp directory
+  const StdString strDir{ StrAppend(strTmp, '/', strPSFile) };
+  // Extract the .7z to the temporary directory
+  SystemF(envActive.cpUnzip, strLibPath, bNoDir ? strTmp : strDir);
   // Set code directory
   SetDirectory(strDir);
 }
@@ -3648,6 +3663,22 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
     // Compile everything
     GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
       "nsgif", 32, 64);
+  } // = SIMPLEWEBP SCRIPT ====================================================
+  else if(strLib.size() >= 11 && strLib.substr(0, 11) == "simplewebp-")
+  { // Set destination temp directory
+    SetupZipRepo(strLibPath, strTmp, PSLib.strFile, true);
+    // Copy file to .c
+    const StdStringView ssvMod{ "simplewebp.c" };
+    SystemF("cp -f simplewebp.h $", ssvMod);
+    // Add sqlite specific flags
+    const StdString strSWPSpecific{ StrAppend(
+      "-DSIMPLEWEBP_DISABLE_STDIO "
+      "-DSIMPLEWEBP_IMPLEMENTATION ", ssvMod) };
+    strRelFlags32 += strSWPSpecific;
+    strRelFlags64 += strSWPSpecific;
+    // Compile
+    GenericExtLibBuildDuo(strRelFlags32, strRelFlags64, strL, strL64, strTmp,
+      "swp", 32, 64);
   } // = SQLITE SCRIPT ========================================================
   else if(strLib.size() >= 20 &&
           strLib.substr(0, 20) == "sqlite-amalgamation-")
@@ -3737,7 +3768,7 @@ static int ExtLibScript(const StdString &strOpt, const StdString &strOpt2)
   } // = LZMA SCRIPT ==========================================================
   else if(strLib.size() >= 4 && strLib.substr(0, 4) == "lzma")
   { // Set destination temp directory
-    SetupZipRepo(strLibPath, strTmp, PSLib.strFile, true);
+    Setup7ZipRepo(strLibPath, strTmp, PSLib.strFile, true);
     // Remove read only flags on directory (sigh!)
     System("chmod -R a+w *");
     // Setup initial compiler flags and source files
@@ -3999,7 +4030,7 @@ static void ReadVersion()
       "Manfiest", jsManifest.NameGet(), "Required", uVersionRequired,
       "Actual",   uVersion);
   // Look for version information and throw error if there is none
-  using Lib::RapidJson::Value;
+  using LJson::Value;
   const Value &rjvConstants = jsManifest.GetValue("Engine");
   if(!rjvConstants.IsArray())
     XC("Constants array not valid!", "Manfiest", jsManifest.NameGet());
@@ -4160,7 +4191,7 @@ static int Compile(const bool bSelf)
     else XC("No architecture specified!", "Flags", ullFlags);
     // Update version information
     { StdTMStruct tD;
-      const StdTimeT tDuration = cmSys.GetTimeS();
+      const StdTimeT tDuration = cmSys.ClockGetTimeSeconds();
       // Lets convert the duration as a time then it will be properly formated
       // in terms of leap years, proper days in a month etc.
       StdLocalTime(&tD, &tDuration);
@@ -4184,7 +4215,7 @@ static int Compile(const bool bSelf)
       strVersion{ StrFormat("$,$,$,$", uVer[0], uVer[1], uVer[2], uVer[3]) },
       strVersionStr{ StrFormat("\"$.$.$.$\"",
        uVer[0], uVer[1], uVer[2], uVer[3]) },
-      strDate{ StrFormat("\"$\"", cmSys.FormatTime()) },
+      strDate{ StrFormat("\"$\"", cmSys.ClockFormatTime()) },
       strFile{ StrAppend(SRCDIR, '/', VERHEADER) },
       strText{ StrFormat(
         "$\n/* $ */\n"
@@ -4522,7 +4553,7 @@ static void ReadProject()
       "Manfiest", jsManifest.NameGet(), "Required", uVersionRequired,
       "Actual",   uVersion);
   // Look for constants and throw if there are none then report them in log
-  using Lib::RapidJson::Value;
+  using LJson::Value;
   const Value &rjvConstants = jsManifest.GetValue("Constants");
   if(!rjvConstants.IsObject())
     XC("Constants array not valid!", "Manfiest", jsManifest.NameGet());
@@ -4587,7 +4618,7 @@ static int Build(const int iArgC, ArgType**const saArgV,
   cout << strEName << "™, Project Management Utility, "
        << cSystem->ENGCompiled()
        << ".\nCopyright © " << strEAuthor << ", 2006-"
-       << cmSys.FormatTime("%Y")
+       << cmSys.ClockFormatTime("%Y")
        << ". All Rights Reserved.\n\n";
   // Initialise default flags
   StdString strExtra1, strExtra2;

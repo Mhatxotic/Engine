@@ -19,7 +19,7 @@ using namespace IStd::P;               using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- LuaFunc ollector class for collector data and custom variables ------- */
-CTOR_BEGIN(LuaFuncs, LuaFunc, CLHelperSafe,,,public LuaRef<1>)
+CTOR_BEGIN(LuaFuncs, LuaFunc, CLHelperUnsafe,,,public LuaRef<1>)
 /* -- LuaFunc base class --------------------------------------------------- */
 class LuaFuncBase                      // Just for de-duplicating initialisers
 { /* -- Private variables -------------------------------------------------- */

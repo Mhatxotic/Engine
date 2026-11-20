@@ -1062,12 +1062,12 @@ class SysCore :
     return mData;
   }
   /* ---------------------------------------------------------------------- */
-  void WindowInitialised(Lib::GlFW::GLFWwindow*const gwWindow)
+  void WindowInitialised(LGL::GLFWwindow*const gwWindow)
   { // If we don't have a GlFW window?
     if(!gwWindow) return;
     // Set handles to the GLFW window that was created, or the console. The
     // handle should be valid 100% of the time but check just incase
-    SetWindowHandle(Lib::GlFW::glfwGetWin32Window(gwWindow));
+    SetWindowHandle(LGL::glfwGetWin32Window(gwWindow));
     if(IsNotWindowHandleSet()) XC("Failed to get window handle from GlFW!");
     // Because GLFW has a horrible white background, let's make it a better
     // colour from the windows theme to not blind people.

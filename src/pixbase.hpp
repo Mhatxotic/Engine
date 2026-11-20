@@ -364,7 +364,7 @@ class SysBase :                        // Safe exception handler namespace
   { // Handle signal and get result
     switch(HandleSignalSafe(iSignal))
     { // Exit safely? Send shutdown to engine and do nothing else
-      case ES_SAFE: cEvtMain->RequestQuit(); return;
+      case ES_SAFE: cEvtMain->EvtMainRequestQuit(); return;
       // Exit unsafely? Send safe shutdown
       case ES_UNSAFE: exit(-1);
       // Exit unsafely and immediately? Shutdown now!

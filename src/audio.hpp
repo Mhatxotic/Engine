@@ -18,7 +18,7 @@ using namespace ISample::P;            using namespace ISource::P;
 using namespace IStd::P;               using namespace IStream::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace IThread::P;            using namespace IVideo::P;
-using namespace Lib::OpenAL::Types;
+using namespace LAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= */
@@ -189,7 +189,7 @@ class Audio :                          // Audio manager class
       cLog->LogWarningExSafe(
         "Audio thread restarting on $ device discrepancies!", stDiscrepancies);
       // Send event to reset audio
-      cEvtMain->Add(EMC_AUD_REINIT);
+      cEvtMain->EvtCoreAdd(EMC_AUD_REINIT);
       // Terminate this thread
       return false;
     } // Check again in a few seconds
@@ -239,12 +239,14 @@ class Audio :                          // Audio manager class
     { // It was a playback device?
       case ALC_PLAYBACK_DEVICE_SOFT:
         // Send playback devices updated event and break
-        cEvtMain->Add(EMC_AUD_PDUPDATED, reinterpret_cast<void*>(alcNDevice));
+        cEvtMain->EvtCoreAdd(EMC_AUD_PDUPDATED,
+          reinterpret_cast<void*>(alcNDevice));
         break;
       // It was a capture device?
       case ALC_CAPTURE_DEVICE_SOFT:
         // Send capture devices updated event and break
-        cEvtMain->Add(EMC_AUD_CDUPDATED, reinterpret_cast<void*>(alcNDevice));
+        cEvtMain->EvtCoreAdd(EMC_AUD_CDUPDATED,
+          reinterpret_cast<void*>(alcNDevice));
         break;
       // Unknown device?
       default: break;
@@ -278,7 +280,7 @@ class Audio :                          // Audio manager class
     if(!SourceAlloc(cSources->stSources))
       cLog->LogWarningExSafe(
         "Source failed to preallocate $ sources ($ maximum)!",
-        cSources->stSources, cOal->GetMaxMonoSources());
+        cSources->stSources, cOal->OalGetMaxMonoSources());
     // Set parameters and check for errors
     AudioSetDistanceModel(AL_NONE);
     AudioSetPosition(0.0f, 0.0f, 0.0f);
@@ -335,22 +337,22 @@ class Audio :                          // Audio manager class
     { AudioEnumDevices("capture", ALC_CAPTURE_DEVICE_SPECIFIER, svCTDevices); }
   /* -- Enumerate playback devices ----------------------------------------- */
   void AudioEnumPlaybackDevices()
-    { cOal->DetectEnumerationMethod();
+    { cOal->OalDetectEnumerationMethod();
       AudioEnumDevices("playback", cOal->OalGetQueryMethod(), svPBDevices); }
   /* -- Set distance model ------------------------------------------------- */
   void AudioSetDistanceModel(const ALenum eModel) const
-    { AL(cOal->SetDistanceModel(eModel),
+    { AL(cOal->OalSetDistanceModel(eModel),
         "Failed to set audio distance model!", "Model", eModel); }
   /* -- Set listener position ---------------------------------------------- */
   void AudioSetPosition(const ALfloat alfX, const ALfloat alfY,
     const ALfloat alfZ) const
-  { AL(cOal->SetListenerPosition(alfX, alfY, alfZ),
+  { AL(cOal->OalSetListenerPosition(alfX, alfY, alfZ),
       "Failed to set audio listener position!",
       "X", alfX, "Y", alfY, "Z", alfZ); }
   /* -- Set listener velocity ---------------------------------------------- */
   void AudioSetVelocity(const ALfloat alfX, const ALfloat alfY,
     const ALfloat alfZ) const
-  { AL(cOal->SetListenerVelocity(alfX, alfY, alfZ),
+  { AL(cOal->OalSetListenerVelocity(alfX, alfY, alfZ),
       "Failed to set audio velocity!",
       "X", alfX, "Y", alfY, "Z", alfZ); }
   /* -- Set listener orientation ------------------------------------------- */
@@ -360,7 +362,7 @@ class Audio :                          // Audio manager class
   { // Build orientation array and commit it
     const StdArray<const ALfloat, 6>
       aOr{ alfX1, alfY1, alfZ1, alfX2, alfY2, alfZ2 };
-    AL(cOal->SetListenerVectors(AL_ORIENTATION, aOr.data()),
+    AL(cOal->OalSetListenerVectors(AL_ORIENTATION, aOr.data()),
       "Failed to set audio orientation!",
       "X1", alfX1, "Y1", alfY1, "Z1", alfZ1,
       "X2", alfX2, "Y2", alfY2, "Z2", alfZ2);
@@ -393,7 +395,7 @@ class Audio :                          // Audio manager class
     // Set the signal to reinit (it will get unset when reinitialised)
     cOal->FlagSet(AFL_REINIT);
     // Send event to reinitialise audio
-    cEvtMain->Add(EMC_AUD_REINIT);
+    cEvtMain->EvtCoreAdd(EMC_AUD_REINIT);
     // Event sent
     return true;
   }
@@ -428,7 +430,7 @@ class Audio :                          // Audio manager class
     // Init context and thread
     AudioInitContext();
     // Enable the audio device change event
-    ALC(cOal->SetEventCallback(
+    ALC(cOal->OalSetEventCallback(
       reinterpret_cast<ALCEVENTPROCTYPESOFT>(AudioOnEvent), this),
       "Failed to set system event callback!");
     // Start the monitoring thread

@@ -17,8 +17,8 @@ using namespace IStd::P;               using namespace IString::P;
 using namespace ISystem::P;            using namespace ISysUtil::P;
 using namespace IToken::P;             using namespace IUtfCodepoint::P;
 using namespace IUtfDecoder::P;        using namespace IUtfEncoder::P;
-using namespace IUtil::P;              using namespace Lib::OpenSSL;
-using namespace Lib::SevenZip;
+using namespace IUtil::P;              using namespace LSsl;
+using namespace L7z;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */

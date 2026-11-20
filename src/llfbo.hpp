@@ -532,8 +532,8 @@ LLFUNC(SetDraw, 0, cFboCore->FboCoreSetDraw())
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetMainSize, 1,
   using namespace IDisplay::P;
-  const AgUIntLG aWidth{lS, 1, 1, cOgl->MaxTexSize() },
-                 aHeight{lS, 2, 1, cOgl->MaxTexSize() };
+  const AgUIntLG aWidth{lS, 1, 1, cOgl->OglMaxTexSize() },
+                 aHeight{lS, 2, 1, cOgl->OglMaxTexSize() };
   LuaUtilPushVar(lS,
     cDisplay->DisplayAlterDefaultMatrix(static_cast<GLfloat>(aWidth()),
       static_cast<GLfloat>(aHeight()))))

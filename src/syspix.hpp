@@ -67,7 +67,7 @@ class SysCorePosix                     // Paired with SysProcess
   /* -- Return window handle (n/a) ----------------------------------------- */
   static void *GetWindowHandle() { return nullptr; }
   /* -- A window was created ----------------------------------------------- */
-  void WindowInitialised(const Lib::GlFW::GLFWwindow*const gwWindow)
+  void WindowInitialised(const LGL::GLFWwindow*const gwWindow)
     { bWindowInitialised = gwWindow != nullptr; }
   /* -- Window was destroyed, nullify handles ------------------------------ */
   void SetWindowDestroyed() { bWindowInitialised = false; }

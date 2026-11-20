@@ -26,7 +26,7 @@ using namespace IStd::P;               using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace ITexture::P;           using namespace IUtfCodepoint::P;
 using namespace IUtfDecoder::P;        using namespace IUtil::P;
-using namespace Lib::FreeType;         using namespace Lib::GlFW::Types;
+using namespace LFt;                   using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */
@@ -366,7 +366,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
         "Name",   imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
         "Filter", ofeFilter);
     // Look for widths and throw if there are none then report them in log
-    using Lib::RapidJson::Value;
+    using LJson::Value;
     const Value &rjvWidths = jsDoc.GetValue("Widths");
     if(!rjvWidths.IsArray())
       XC("Widths array not valid!",
@@ -382,11 +382,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Read size of tile. Texture init will clamp this if needed.
     const GLuint uTW = jsDoc.GetInteger("TileWidth"),
                  uTH = jsDoc.GetInteger("TileHeight");
-    if(uTW > cOgl->MaxTexSize() || uTH > cOgl->MaxTexSize())
+    if(uTW > cOgl->OglMaxTexSize() || uTH > cOgl->OglMaxTexSize())
       XC("Invalid tile dimensions in manifest!",
         "Name",    imSrc.NameGet(), "Manfiest", jsDoc.NameGet(),
         "Width",   uTW,             "Height",   uTH,
-        "Maximum", cOgl->MaxTexSize());
+        "Maximum", cOgl->OglMaxTexSize());
     // Convert to float as we need a float version of this in the next loop
     const GLfloat fW = static_cast<GLfloat>(uTW),
                   fH = static_cast<GLfloat>(uTH);

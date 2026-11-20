@@ -661,7 +661,7 @@ CVarItemStaticList{{
 // ? available.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "err_minvram", "0",
-  CB(cOgl->SetMinVRAM, uint64_t), TUINTEGER|PNOUI },
+  CB(cOgl->OglSetMinVRAM, uint64_t), TUINTEGER|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINRAM
 // ? The engine fails to run if the system does not have this amount of free
@@ -1611,25 +1611,25 @@ CVarItemStaticList{{
 // ? Specifies texture compression quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_qcompress", "3",
-  CB(cOgl->SetQCompressHint, size_t), TUINTEGERSAVE|PANY },
+  CB(cOgl->OglSetQCompressHint, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_QLINE
 // ? Specifies line quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_qline", "0",
-  CB(cOgl->SetQLineHint, size_t), TUINTEGERSAVE|PANY },
+  CB(cOgl->OglSetQLineHint, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_QPOLYGON
 // ? Specifies polygon quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_qpolygon", "0",
-  CB(cOgl->SetQPolygonHint, size_t), TUINTEGERSAVE|PANY },
+  CB(cOgl->OglSetQPolygonHint, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_QSHADER
 // ? Specifies shader quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_qshader", "3",
-  CB(cOgl->SetQShaderHint, size_t), TUINTEGERSAVE|PANY },
+  CB(cOgl->OglSetQShaderHint, size_t), TUINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! VID_RCMDS
 // ? Pre-allocates space for the specified number of OpenGL command structures.
@@ -1646,7 +1646,7 @@ CVarItemStaticList{{
 // ? concerned with this value and can only be set in the application manifest.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_rdfbo", "10",
-  CB(cOgl->SetFboDListReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
+  CB(cOgl->OglSetFboDListReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! VID_RDTEX
 // ? Pre-allocates the specified number of texture names to reserve in the
@@ -1654,7 +1654,7 @@ CVarItemStaticList{{
 // ? concerned with this value and can only be set in the application manifest.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_rdtex", "10",
-  CB(cOgl->SetTexDListReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
+  CB(cOgl->OglSetTexDListReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
 /* ------------------------------------------------------------------------- */
 // ! VID_RELEASE
 // ? Specifies the context release behaviour. This is only used
@@ -1747,7 +1747,7 @@ CVarItemStaticList{{
 // ? refresh rate if you like.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_vsync", "1",
-  CB(cOgl->SetVSyncMode, int), TINTEGERSAVE|PANY },
+  CB(cOgl->OglSetVSyncMode, int), TINTEGERSAVE|PANY },
 /* ------------------------------------------------------------------------- */
 // ! WIN_ALPHA
 // ? Specifies that the window has alpha which is needed for transparent

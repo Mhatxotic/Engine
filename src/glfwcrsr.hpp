@@ -9,7 +9,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFWCursor {                // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IGlFWUtil::P;          using namespace Lib::GlFW;
+using namespace IGlFWUtil::P;          using namespace LGL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

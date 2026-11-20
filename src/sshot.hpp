@@ -19,7 +19,7 @@ using namespace IMemory::P;            using namespace IMetadata::P;
 using namespace IName::P;              using namespace IOgl::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IThread::P;            using namespace Lib::GlFW::Types;
+using namespace IThread::P;            using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Begin collector class ------------------------------------------------ */
@@ -74,12 +74,12 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     Memory mBuffer{ fboRef.DimGetWidth<size_t>() *
       fboRef.DimGetHeight<size_t>() * stBytesPerPixel };
     // Select frame buffer object, its texture and read into it
-    GL(cOgl->BindFbo(fboRef.gluFbo), "Failed to bind Fbo to dump!",
+    GL(cOgl->OglBindFbo(fboRef.gluFbo), "Failed to bind Fbo to dump!",
       "Name", fboRef.NameGet(), "Id", fboRef.gluFbo);
-    GL(cOgl->BindTexture(fboRef.gluFbotex),
+    GL(cOgl->OglBindTexture(fboRef.gluFbotex),
       "Failed to bind Fbo texture to dump!",
       "Name", fboRef.NameGet(), "Id", fboRef.gluFbotex);
-    GL(cOgl->ReadTextureTT(ttMode, mBuffer.MemPtr<GLvoid>()),
+    GL(cOgl->OglReadTextureTT(ttMode, mBuffer.MemPtr<GLvoid>()),
       "Failed to read Fbo pixel data!",
       "Name", fboRef.NameGet(), "Mode", ImageGetPixelFormat(ttMode));
     // Get new filename or original filename

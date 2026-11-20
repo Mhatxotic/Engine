@@ -12,8 +12,8 @@ namespace ICodec {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICrypt::P;             using namespace IError::P;
 using namespace IMemory::P;            using namespace IStd::P;
-using namespace Lib::OpenSSL;          using namespace Lib::SevenZip;
-using namespace Lib::ZLib;
+using namespace LSsl;                  using namespace L7z;
+using namespace LZLib;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

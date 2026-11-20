@@ -774,7 +774,7 @@ LLFUNC(Console, 1,
 /* ========================================================================= */
 LLFUNC(Ftf, 1,
   const AgFtfUnlocked aFtf{lS, 1};
-  const AgGLuintLG aSize{lS, 2, 0, cOgl->MaxTexSize()},
+  const AgGLuintLG aSize{lS, 2, 0, cOgl->OglMaxTexSize()},
                    aPadding{lS, 3, 0, 16};
   const AgFilterId aFilterId{lS, 4};
   const AgFontFlags aFlags{lS, 5};
@@ -802,10 +802,10 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cFonts->CollectorCount()))
 /* ========================================================================= */
 LLFUNC(Image, 1,
   const AgImageUnlocked aImage{lS, 1};
-  const AgGLuintLG aTileWidth{lS, 2, 0, cOgl->MaxTexSize()},
-                   aTileHeight{lS, 3, 0, cOgl->MaxTexSize()},
-                   aPaddingWidth{lS, 4, 0, cOgl->MaxTexSize()},
-                   aPaddingHeight{lS, 5, 0, cOgl->MaxTexSize()};
+  const AgGLuintLG aTileWidth{lS, 2, 0, cOgl->OglMaxTexSize()},
+                   aTileHeight{lS, 3, 0, cOgl->OglMaxTexSize()},
+                   aPaddingWidth{lS, 4, 0, cOgl->OglMaxTexSize()},
+                   aPaddingHeight{lS, 5, 0, cOgl->OglMaxTexSize()};
   const AgFilterId aFilterId{lS, 6};
   const AgCodepoint aCharCount{lS, 7},
                     aCharBegin{lS, 8};

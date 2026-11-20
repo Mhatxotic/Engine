@@ -20,7 +20,8 @@ using namespace ILog::P;               using namespace IMetadata::P;
 using namespace IMutex::P;             using namespace IPSplit::P;
 using namespace ISql::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::Sqlite;
+using namespace IUtil::P;              using namespace LJson;
+using namespace LSql;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -760,7 +761,7 @@ struct CVars :                         // Start of vars class
         "Manfiest", jsManifest.NameGet(), "Required", uVersionRequired,
         "Actual",   uVersion);
     // Look for constants and throw if there are none then report them in log
-    using Lib::RapidJson::Value;
+    using LJson::Value;
     const Value &rjvConstants = jsManifest.GetValue("Constants");
     if(!rjvConstants.IsObject())
       XC("Constants array not valid!", "Manfiest", jsManifest.NameGet());
@@ -778,7 +779,7 @@ struct CVars :                         // Start of vars class
       const Value &rjvKey = rjvItem.name, &rjvValue = rjvItem.value;
       switch(rjvValue.GetType())
       { // Json entry is a number type?
-        case Lib::RapidJson::kNumberType:
+        case LJson::kNumberType:
           if(CVarsSetVarOrInitial(rjvKey.GetString(),
              (rjvValue.IsUint() ? StrFromNum(rjvValue.GetUint()) :
              (rjvValue.IsInt() ? StrFromNum(rjvValue.GetInt()) :
@@ -786,18 +787,18 @@ struct CVars :                         // Start of vars class
             ++stGood; else ++stBad;
           break;
         // Json entry is a string type?
-        case Lib::RapidJson::kStringType:
+        case LJson::kStringType:
           if(CVarsSetVarOrInitial(rjvKey.GetString(), rjvValue.GetString(),
              cvfcFlags, cvcfcFlags))
             ++stGood; else ++stBad;
           break;
         // Json entry is a boolean type?
-        case Lib::RapidJson::kTrueType:
+        case LJson::kTrueType:
           if(CVarsSetVarOrInitial(rjvKey.GetString(),
              cCommon->CommonOne(), cvfcFlags, cvcfcFlags))
             ++stGood; else ++stBad;
           break;
-        case Lib::RapidJson::kFalseType:
+        case LJson::kFalseType:
           if(CVarsSetVarOrInitial(rjvKey.GetString(),
              cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
             ++stGood; else ++stBad;
@@ -847,7 +848,7 @@ struct CVars :                         // Start of vars class
           "Name",    jsManifest.NameGet(), "Set", stIndex,
           "Maximum", rjvActiveSetArray.Size());
       // Throw an exception if the specified value is not an object
-      using Lib::RapidJson::SizeType;
+      using LJson::SizeType;
       const Value &rjvObject =
         rjvActiveSetArray[static_cast<SizeType>(stIndex)];
       if(!rjvObject.IsObject())
@@ -862,7 +863,7 @@ struct CVars :                         // Start of vars class
         const Value &rjvKey = rjvItem.name, &rjvValue = rjvItem.value;
         switch(rjvValue.GetType())
         { // Json entry is a number type?
-          case Lib::RapidJson::kNumberType:
+          case LJson::kNumberType:
             if(CVarsSetVarOrInitial(rjvKey.GetString(),
                  (rjvValue.IsUint() ? StrFromNum(rjvValue.GetUint()) :
                  (rjvValue.IsInt() ? StrFromNum(rjvValue.GetInt()) :
@@ -870,18 +871,18 @@ struct CVars :                         // Start of vars class
               ++stGood; else ++stBad;
             break;
           // Json entry is a string type?
-          case Lib::RapidJson::kStringType:
+          case LJson::kStringType:
             if(CVarsSetVarOrInitial(rjvKey.GetString(), rjvValue.GetString(),
                  cvfcFlags, cvcfcFlags))
               ++stGood; else ++stBad;
             break;
           // Json entry is a boolean type?
-          case Lib::RapidJson::kTrueType:
+          case LJson::kTrueType:
             if(CVarsSetVarOrInitial(rjvKey.GetString(),
                cCommon->CommonOne(), cvfcFlags, cvcfcFlags))
               ++stGood; else ++stBad;
             break;
-          case Lib::RapidJson::kFalseType:
+          case LJson::kFalseType:
             if(CVarsSetVarOrInitial(rjvKey.GetString(),
                cCommon->CommonZero(), cvfcFlags, cvcfcFlags))
               ++stGood; else ++stBad;

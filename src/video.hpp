@@ -26,9 +26,9 @@ using namespace IShader::P;            using namespace IShaders::P;
 using namespace ISource::P;            using namespace IStd::P;
 using namespace IStream::P;            using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IUtil::P;              using namespace Lib::Ogg;
-using namespace Lib::Ogg::Theora;      using namespace Lib::OpenAL::Types;
-using namespace Lib::GlFW::Types;
+using namespace IUtil::P;              using namespace LOgg;
+using namespace LOgg::Theora;          using namespace LAL::Types;
+using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */
@@ -222,7 +222,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
            static_cast<ALdouble>(VideoGetSampleRate()) /
            static_cast<ALdouble>(VideoGetChannels())), 0.0);
       // Delete the buffer that was returned continue if successful
-      ALL(cOal->DeleteBuffer(aluBuffer),
+      ALL(cOal->OalDeleteBuffer(aluBuffer),
         "Video failed to delete unqueued buffer $ in '$'!",
         aluBuffer, NameGet());
     }
@@ -251,7 +251,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         // Length of data (may need to be modified if 16-bit required)
         size_t stFrameSize = sizeof(float) * stFrames * stChannels;
         // If the hardware supports 32-bit (4b) floating point playback?
-        if(cOal->Have32FPPB())
+        if(cOal->OalHave32FPPB())
         { // Allocate required memory and do the conversion
           MemResizeUp(stFrameSize);
           cCodecOGG->F32FromVorbisFrames(alfpaPCM, stFrames, stChannels,
@@ -267,7 +267,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
           cCodecOGG->I16FromVorbisFrames(alfpaPCM, stFrames, stChannels,
             MemPtr<ALshort>());
         } // Generate a buffer for the pcm data and if succeeded?
-        const ALuint aluBuffer = cOal->CreateBuffer();
+        const ALuint aluBuffer = cOal->OalCreateBuffer();
         ALenum aleErr = cOal->OalGetError();
         if(aleErr == AL_NO_ERROR) try
         { // Buffer the data and throw exception if failed
@@ -291,7 +291,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         } // Exception occured?
         catch(const char*const cpReason)
         { // Delete the buffers because of error
-          ALL(cOal->DeleteBuffer(aluBuffer),
+          ALL(cOal->OalDeleteBuffer(aluBuffer),
             "Video failed to delete buffer $ in '$' "
             "after failed data upload attempt!", aluBuffer, NameGet());
           // Log the warning
@@ -299,13 +299,14 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
             "(B:$;F:$<$$$>;A:$;S:$;R:$;AL:$<$$>)!",
             NameGet(), cpReason, aluBuffer, VideoGetFormatAsIdentifier(),
             StdIOSHex, VideoGetAudioFormat(), StdIOSDec, MemPtr(), stFrameSize,
-            VideoGetSampleRate(), cOal->GetALErr(aleErr), StdIOSHex, aleErr);
+            VideoGetSampleRate(), cOal->OalGetALErr(aleErr), StdIOSHex,
+            aleErr);
         } // Create buffers failed?
         else cLog->LogWarningExSafe("Video create buffers failed on '$' "
           "(F:$<$$$>;A:$;S:$;R:$;AL:$<$$>)!",
           NameGet(), aluBuffer, VideoGetFormatAsIdentifier(), StdIOSHex,
           VideoGetAudioFormat(), StdIOSDec, MemPtr(), stFrameSize,
-          VideoGetSampleRate(), cOal->GetALErr(aleErr), StdIOSHex, aleErr);
+          VideoGetSampleRate(), cOal->OalGetALErr(aleErr), StdIOSHex, aleErr);
       } // No audio left so try to feed another packet and break if failed
       else switch(const int iR1 = ogg_stream_packetout(&ostsVorbis, &opkData))
       { // If a packet was assembled normally?
@@ -607,17 +608,17 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // these values.
       for(YCbCr &yccFrame : frFrame.yccaFrames)
       { // Bind the texture for this colour component
-        cOgl->BindTexture(gluaYCbCr[yccFrame.stI]);
+        cOgl->OglBindTexture(gluaYCbCr[yccFrame.stI]);
         // Get data
         th_img_plane &tipD = yccFrame.tipP;
         // Set unpack row length because of how the image data is formatted
         // by the vorbis api
-        cOgl->SetUnpackRowLength(tipD.stride);
+        cOgl->OglSetUnpackRowLength(tipD.stride);
         // Now upload the image data to opengl, the memory is already
         // pre-allocated
-        cOgl->UploadTextureSub(tipD.width, tipD.height, GL_RED, tipD.data);
+        cOgl->OglUploadTextureSub(tipD.width, tipD.height, GL_RED, tipD.data);
       } // Reset unpack row length to default
-      cOgl->SetUnpackRowLength(0);
+      cOgl->OglSetUnpackRowLength(0);
       // Initialise Y texture id, active texture and shader program
       FboResetCache(gluaYCbCr[0], 0, shpProgram->GetProgram());
       // Commit the Y setup and configure the U and V setup
@@ -799,7 +800,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
         XC("Ambiguous frame rate in video!",
           "Name", NameGet(), "FPS", VideoGetFPS());
       // Get maximum texture size to match stored types
-      const ogg_uint32_t uMaxTexSize = cOgl->MaxTexSize<ogg_uint32_t>();
+      const ogg_uint32_t uMaxTexSize = cOgl->OglMaxTexSize<ogg_uint32_t>();
       // Make sure GPU can support texture size
       if(VideoGetFrameWidth() > uMaxTexSize ||
          VideoGetFrameHeight() > uMaxTexSize)
@@ -1073,11 +1074,11 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       // the FP supported audio format flag have changed.
       switch(VideoGetChannels())
       { // 1 channel mono?
-        case 1: aleFormat = cOal->Have32FPPB() ?
+        case 1: aleFormat = cOal->OalHave32FPPB() ?
                   AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_MONO16;
                 break;
         // 2 channel stereo?
-        case 2: aleFormat = cOal->Have32FPPB() ?
+        case 2: aleFormat = cOal->OalHave32FPPB() ?
                   AL_FORMAT_STEREO_FLOAT32 : AL_FORMAT_STEREO16;
                 break;
         // Unknown channel count. Problem should already be handled at init.
@@ -1124,7 +1125,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Deinitialise video ouput ------------------------------------------- */
   void VideoDeInitTexture()
   { // Delete the component textures
-    GLL(cOgl->SetDeleteTextures(gluaYCbCr),
+    GLL(cOgl->OglSetDeleteTextures(gluaYCbCr),
       "Failed to delete $ texture components", gluaYCbCr.size());
     // Clear texture names
     gluaYCbCr.fill(0);
@@ -1135,26 +1136,26 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   { // Get texture id
     GLuint &gluT = gluaYCbCr[gluTU];
     // Bind texture
-    GL(cOgl->BindTexture(gluT), "Failed to bind video component texture!",
+    GL(cOgl->OglBindTexture(gluT), "Failed to bind video component texture!",
       "Name", NameGet(), "Index", gluTU, "Texture", gluT);
     // Allocate VRAM for texture
-    GL(cOgl->UploadTexture(0, glsiW, glsiH, GL_R8, GL_RED, nullptr),
+    GL(cOgl->OglUploadTexture(0, glsiW, glsiH, GL_R8, GL_RED, nullptr),
       "Failed to reserve texture memory for image component!",
         "Name", NameGet(), "Index",  gluTU, "Texture", gluT,
         "Width",      glsiW,      "Height", glsiH);
     // Set filtering. Only need to use GL_NEAREST because the FBO is the same
     // size as the video textures.
-    GL(cOgl->SetTexParam(GL_TEXTURE_MIN_FILTER, GL_LINEAR),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_MIN_FILTER, GL_LINEAR),
       "Failed to set minification filter for video component!",
       "Name", NameGet(), "Index", gluTU, "Texture", gluT);
-    GL(cOgl->SetTexParam(GL_TEXTURE_MAG_FILTER, GL_LINEAR),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_MAG_FILTER, GL_LINEAR),
       "Failed to set magnification filter for video component!",
         "Name", NameGet(), "Index", gluTU, "Texture", gluT);
     // Set to repeat and disable filter
-    GL(cOgl->SetTexParam(GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT),
       "Failed to set texture wrapping S mode for video component!",
         "Name", NameGet(), "Index", gluTU, "Texture", gluT);
-    GL(cOgl->SetTexParam(GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT),
+    GL(cOgl->OglSetTexParam(GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT),
       "Failed to set texture wrapping T mode for video component!",
         "Name", NameGet(), "Index", gluTU, "Texture", gluT);
     // Say what we did
@@ -1214,7 +1215,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
       default: XC("Unknown theora pixel format!",
                   "Name", NameGet(), "PixelFormat", VideoGetPixelFormat());
     } // Create textures for Y/Cb/Cr multitexture
-    GL(cOgl->CreateTextures(gluaYCbCr),
+    GL(cOgl->OglCreateTextures(gluaYCbCr),
       "Failed to create texture components for YCbCr texture!",
       "Name", NameGet(), "Components", gluaYCbCr.size());
     // Cast frame dimensions as they're 64-bit and not compatible with GL.

@@ -6,7 +6,12 @@
 ** ## example. Making the build process compatible with different         ## **
 ** ## compilers.                                                          ## **
 ** ######################################################################### **
-** ========================================================================= */
+** == Compiler standards check ============================================= */
+#if !defined(__cplusplus)              // Must be compiling in C++ mode
+# error Please use a C++ compiler such as GCC, CLANG or MSVC!
+#elif __cplusplus < 202002L            // Must be using a C++20 compiler
+# error Must use a C++ 20 or better compiler!
+#endif                                 // C++ standards checking
 #pragma once                           // Only one incursion allowed
 /* == Build type setup ===================================================== */
 #if defined(RELEASE)                   // Final public release version?
@@ -40,11 +45,7 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 # pragma warning(push, 0)                      // Disable all warnings
 #endif                                         // ...doesn't write strict code.
 /* == Compiled type setup ================================================== */
-#if !defined(__cplusplus)              // Must be compiling in C++ mode
-# error Please use a C++ compiler such as GCC, CLANG or MSVC!
-#elif __cplusplus < 202002L            // Must be using a C++20 compiler
-# error Must use a C++ 20 or better compiler!
-#elif defined(_WIN32)                  // Only applies to MS compiler
+#if defined(_WIN32)                    // Only applies to MS compiler
 # define WINDOWS                       // Using windows
 # if defined(ALPHA)                    // Debugging?
 #  if !defined(_DEBUG)                 // Might not be defined on LLVM
@@ -264,10 +265,11 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #include <type_traits>                 // For aligned storage
 #include <unordered_set>               // Unordered set
 #include <vector>                      // Dynamic arrays
-/* -- More checks ---------------------------------------------------------- */
-#if CHAR_BIT != 8                      // Sanity check bits-per-byte
-# error Target architecture byte size must be eight bits!
-#endif                                 // Sanity checks
+/* -- Sanity checks -------------------------------------------------------- */
+static_assert(CHAR_BIT == 8,           // Sanity check bits-per-byte
+  "Target architecture byte size must be eight bits!");
+static_assert(sizeof(int) >= sizeof(uint32_t), // Sanity check 'int'
+  "Target architecture int size must be at least thirty-two bits!");
 /* -- Useful macros -------------------------------------------------------- */
 #define STR_HELPER(...)  #__VA_ARGS__            // Convert macro integer
 #define STR(...)         STR_HELPER(__VA_ARGS__) // to string
@@ -392,9 +394,9 @@ extern "C" { int z_verbose = 0, z_error = 0; } // Z-Lib API requires this
 #include <lua/lfunc.h>                 // Lua functions
 #undef getstr                          // Ambiguity with ncurses
 /* == Libaries namespace to keep all the API's neat and tidy =============== */
-namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
+namespace E                            // Store libs in engine namespace
 { /* ----------------------------------------------------------------------- */
-  namespace OpenSSL                    // OPENSSL API FUNCTIONS
+  namespace LSsl                       // OpenSSL API functions
   { /* ------------------------------------------------------------------- */
 #define OPENSSL_SUPPRESS_DEPRECATED    // Want deprecated functions
 #include <openssl/conf.h>              // Conf header
@@ -412,7 +414,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <openssl/httperr.h>           // HTTP client errors (ToDo)
 #include <openssl/http.h>              // HTTP client (ToDo)
   } /* ------------------------------------------------------------------- */
-  namespace SevenZip                   // 7-ZIP API FUNCTIONS
+  namespace L7z                        // 7-Zip API functions
   { /* ------------------------------------------------------------------- */
 #include <7z/CpuArch.h>                // CPU configuration
 #include <7z/7z.h>                     // Library core (old p7zip)
@@ -421,7 +423,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <7z/7zVersion.h>              // 7-zip version information
 #include <7z/LzmaLib.h>                // For compression stuff
   } /* ------------------------------------------------------------------- */
-  namespace JpegTurbo                  // LIBJPEGTURBO API FUNCTIONS
+  namespace LJpg                       // LibJPEGTurbo API functions
   { /* ------------------------------------------------------------------- */
 #if defined(WINDOWS)                   // Using windows?
 # define HAVE_BOOLEAN                  // Don't let headers override
@@ -431,11 +433,11 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <jpeg/jerror.h>               // Our error handling
 #include <jpeg/jversion.h>             // Our version information
   } /* ------------------------------------------------------------------- */
-  namespace ZLib                       // ZLIB API FUNCTIONS
+  namespace LZLib                      // ZLib API functions
   { /* ------------------------------------------------------------------- */
 #include <zlib/zlib.h>                 // Main header
   } /* ------------------------------------------------------------------- */
-  namespace GlFW                       // GLFW API FUNCTIONS
+  namespace LGL                        // GLFW API functions
   { /* ------------------------------------------------------------------- */
 #define GLFW_INCLUDE_GLCOREARB         // Include arbitrary OpenGL API
 #include <glfw/glfw3.h>                // Main header
@@ -443,24 +445,24 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     /* ------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ----------------------------------------------------------------- */
-      using GlFW::GLFWimage;           // GLFW specific image type
-      using GlFW::GLFWmonitor;         // GLFW specific monitor type
-      using GlFW::GLFWwindow;          // GLFW specific window type
-      using GlFW::GLchar;              // GL specific char type
-      using GlFW::GLenum;              // GL specific enum type
-      using GlFW::GLfloat;             // GL specific float type
-      using GlFW::GLint;               // GL specific int type
-      using GlFW::GLsizei;             // GL specific sizei type
-      using GlFW::GLubyte;             // GL specific unsigned char type
-      using GlFW::GLuint;              // GL specific unsigned type
-      using GlFW::GLvoid;              // GL specific void type
+      using LGL::GLFWimage;            // GLFW specific image type
+      using LGL::GLFWmonitor;          // GLFW specific monitor type
+      using LGL::GLFWwindow;           // GLFW specific window type
+      using LGL::GLchar;               // GL specific char type
+      using LGL::GLenum;               // GL specific enum type
+      using LGL::GLfloat;              // GL specific float type
+      using LGL::GLint;                // GL specific int type
+      using LGL::GLsizei;              // GL specific sizei type
+      using LGL::GLubyte;              // GL specific unsigned char type
+      using LGL::GLuint;               // GL specific unsigned type
+      using LGL::GLvoid;               // GL specific void type
     } /* ------------------------------------------------------------------- */
 #if defined(MACOS)                     // MacOS defined?
     /* --------------------------------------------------------------------- */
     // This namespace is required to workaround a major crash bug in MacOS. See
     // https://github.com/glfw/glfw/issues/1997 for more information
     /* --------------------------------------------------------------------- */
-    namespace NSGL                     // Begin MacOS NSGL namespace
+    namespace NsGL                     // Begin MacOS NSGL namespace
     { /* ------------------------------------------------------------------- */
 #  include <OpenGL/OpenGL.h>           // Include MacOS NSOpenGL functions
     } /* ------------------------------------------------------------------- */
@@ -472,15 +474,15 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #undef GLFW_EXPOSE_NATIVE_WAYLAND      // Done with this macro
 #undef GLFW_EXPOSE_NATIVE_COCOA        // Done with this macro
   } /* --------------------------------------------------------------------- */
-  namespace NSGif                      // LIBNSGIF API FUNCTIONS
+  namespace LGif                       // LIBNSGIF API FUNCTIONS
   { /* --------------------------------------------------------------------- */
 #include <gif/gif.h>                   // Main header
   } /* --------------------------------------------------------------------- */
-  namespace Png                        // LIBPNG API FUNCTIONS
+  namespace LPng                       // LibPNG API functions
   { /* --------------------------------------------------------------------- */
 #include <png/png.h>                   // Main header
   } /* --------------------------------------------------------------------- */
-  namespace WebP                       // SIMPLEWEBP API FUNCTIONS
+  namespace LWebP                      // SimpleWebP API functions
   { /* --------------------------------------------------------------------- */
 #if defined(MSVC_VANILLA)              // Using Microsoft Visual C++ compiler?
 # pragma warning(push)                 // Save warning settings
@@ -494,9 +496,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 # undef realloc                        // ...safely include simplewebp.
 #endif                                 // MSVC_VANILLA
 #define SIMPLEWEBP_DISABLE_STDIO       // Don't need STDIO functions
-#define SIMPLEWEBP_IMPLEMENTATION      // Define body functions
 #include <swp/simplewebp.h>            // Main header
-#undef SIMPLEWEBP_IMPLEMENTATION       // Done with this define
 #undef SIMPLEWEBP_DISABLE_STDIO        // Done with this define
 #if defined(MSVC_VANILLA)              // Using Microsoft Visual C++ compiler?
 # pragma pop_macro("realloc")          // Restore the original allocation
@@ -505,7 +505,7 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 # pragma warning(pop)                  // Restore original warning settings
 #endif                                 // MSVC_VANILLA
   } /* --------------------------------------------------------------------- */
-  namespace OpenAL                     // OPENAL API FUNCTIONS
+  namespace LAL                        // OpenAL API functions
   { /* --------------------------------------------------------------------- */
 #define AL_ALEXT_PROTOTYPES            // So can get alcResetDevice
 #include <al/alext.h>                  // Main header
@@ -513,22 +513,22 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     /* --------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
-      using OpenAL::ALCEVENTPROCTYPESOFT; // AL specific system event callback
-      using OpenAL::ALCchar;           // AL specific context char type
-      using OpenAL::ALCdevice;         // AL specific device context
-      using OpenAL::ALCenum;           // AL specific context enum type
-      using OpenAL::ALCsizei;          // AL specific context sizei type
-      using OpenAL::ALdouble;          // AL specific double type
-      using OpenAL::ALenum;            // AL specific enum type
-      using OpenAL::ALfloat;           // AL specific float type
-      using OpenAL::ALint;             // AL specific int type
-      using OpenAL::ALshort;           // AL specific short type
-      using OpenAL::ALsizei;           // AL specific sizei type
-      using OpenAL::ALuint;            // AL specific unsigned type
-      using OpenAL::ALvoid;            // AL specific void type
+      using LAL::ALCEVENTPROCTYPESOFT; // AL specific system event callback
+      using LAL::ALCchar;              // AL specific context char type
+      using LAL::ALCdevice;            // AL specific device context
+      using LAL::ALCenum;              // AL specific context enum type
+      using LAL::ALCsizei;             // AL specific context sizei type
+      using LAL::ALdouble;             // AL specific double type
+      using LAL::ALenum;               // AL specific enum type
+      using LAL::ALfloat;              // AL specific float type
+      using LAL::ALint;                // AL specific int type
+      using LAL::ALshort;              // AL specific short type
+      using LAL::ALsizei;              // AL specific sizei type
+      using LAL::ALuint;               // AL specific unsigned type
+      using LAL::ALvoid;               // AL specific void type
     } /* ------------------------------------------------------------------- */
   } /* -- Ogg Includes ----------------------------------------------------- */
-  namespace Ogg                        // OGGVORBIS API FUNCTIONS
+  namespace LOgg                       // OggVorbis API functions
   { /* --------------------------------------------------------------------- */
 #define OV_EXCLUDE_STATIC_CALLBACKS    // We don't need these callbacks
 #include <ogg/vorbisfile.h>            // Vorbis/ogg API headers
@@ -536,25 +536,25 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
     /* --------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
-      using Ogg::ogg_int64_t;          // Ogg specific int64 type
+      using LOgg::ogg_int64_t;         // Ogg specific int64 type
     } /* ------------------------------------------------------------------- */
     /* -- Theora decoder depends on ogg headers ---------------------------- */
-    namespace Theora                   // THEORA API FUNCTIONS
+    namespace Theora                   // Theora API functions
     { /* ------------------------------------------------------------------- */
 #include <theora/theora.h>             // StrFormat codec (+ ogg codec)
 #include <theora/theoradec.h>          // Decoder
     } /* ------------------------------------------------------------------- */
   } /* --------------------------------------------------------------------- */
-  namespace Sqlite                     // SQLITE API FUNCTIONS
+  namespace LSql                       // SqLite API functions
   {/* ---------------------------------------------------------------------- */
 #include <sql/sqlite3.h>               // Main header
     /* --------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
-      using Sqlite::sqlite3_int64;     // Sqlite specific int64 type
+      using LSql::sqlite3_int64;       // Sqlite specific int64 type
     } /* ------------------------------------------------------------------- */
   } /* --------------------------------------------------------------------- */
-  namespace FreeType                   // FREETYPE API FUNCTIONS
+  namespace LFt                        // FreeType API functions
   { /* --------------------------------------------------------------------- */
 #include <ft/ft2build.h>               // Build parameters header
 #include <ft/freetype.h>               // Base header
@@ -563,10 +563,10 @@ namespace Lib                          // LIBRARY OF EXTERNAL API FUNCTIONS
 #include <ft/ftmodapi.h>               // Modification header
   } /* --------------------------------------------------------------------- */
 } /* -- Rapidjson has to be defined here because of C++23 changes ---------- */
-#define RAPIDJSON_NAMESPACE            Lib::RapidJson
+#define RAPIDJSON_NAMESPACE            E::LJson
 #define RAPIDJSON_HAS_STDSTRING      1 // Have std::String
 #define RAPIDJSON_NOEXCEPT             // Have 'noexcept'
-#define RAPIDJSON_NAMESPACE_BEGIN      namespace Lib { namespace RapidJson {
+#define RAPIDJSON_NAMESPACE_BEGIN      namespace E { namespace LJson {
 #define RAPIDJSON_NAMESPACE_END        } }
 #define RAPIDJSON_ASSERT(x)          if(!(x)) throw ::std::runtime_error{(#x)};
 #define RAPIDJSON_HAS_CXX11_RVALUE_REFS 1 // So sorting works

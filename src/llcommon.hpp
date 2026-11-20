@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace Common {                     // Common namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;               using namespace Lib::GlFW::Types;
-using namespace Lib::OpenAL::Types;
+using namespace IStd::P;               using namespace LGL::Types;
+using namespace LAL::Types;
 /* -- Read a LString ------------------------------------------------------- */
 struct AgLCString { size_t stB; const char *cpD;
   explicit AgLCString(lua_State*const lS, const int iArg) :
@@ -213,7 +213,7 @@ struct AgFilterId : public AgIntegerLGE<IOgl::P::OglFilterEnum> {
 /* -- Other types ---------------------------------------------------------- */
 struct AgTextureDimension : public AgIntegerLG<GLsizei>
   { explicit AgTextureDimension(lua_State*const lS, const int iArg) :
-      AgIntegerLG{lS, iArg, 1, IOgl::P::cOgl->MaxTexSize<GLsizei>()}{} };
+      AgIntegerLG{lS, iArg, 1, IOgl::P::cOgl->OglMaxTexSize<GLsizei>()}{} };
 /* -- Read valid UTF-8 codepoint integer ----------------------------------- */
 using IUtfCodepoint::P::UtfCodepoint;
 struct AgCodepoint : public AgIntegerLGE<UtfCodepoint> {

@@ -24,7 +24,7 @@ using namespace IMemory::P;            using namespace IName::P;
 using namespace ISerial::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::Sqlite;
+using namespace LSql;
 /* -- Replacement for SQLITE_TRANSIENT which cases warnings ---------------- */
 static sqlite3_destructor_type fcbSqliteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);

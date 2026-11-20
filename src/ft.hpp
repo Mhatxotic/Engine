@@ -12,7 +12,7 @@ namespace IFreeType {                  // Start of private module namespace
 using namespace IError::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IMutex::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::FreeType;
+using namespace IUtil::P;              using namespace LFt;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Freetype core class -------------------------------------------------- */

@@ -15,7 +15,7 @@ using namespace ICodec::P;             using namespace ICommon::P;
 using namespace ICVarDef::P;           using namespace IGlFW::P;
 using namespace IError::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IString::P;
-using namespace ISystem::P;            using namespace Lib::Ogg::Theora;
+using namespace ISystem::P;            using namespace LOgg::Theora;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Credit library class ------------------------------------------------- */
@@ -158,7 +158,7 @@ class Credits                          // Members initially private
       LD(CL_NCURSES, "NCurses", NCURSES_VERSION,
         "Free Software Foundation", true, NCURSES),
 #endif
-      LD(CL_OGG, "OggVorbis", Lib::Ogg::vorbis_version_string()+19, "Xiph.Org",
+      LD(CL_OGG, "OggVorbis", LOgg::vorbis_version_string()+19, "Xiph.Org",
         false, OGGVORBISTHEORA),
       LD(CL_AL, "OpenALSoft", "1.25.2", "Chris Robinson", false, OPENALSOFT),
       LD(CL_SSL, "OpenSSL", STR(OPENSSL_VERSION_MAJOR) "."

@@ -18,7 +18,7 @@ using namespace IMemory::P;            using namespace IMetadata::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ITexDef::P;            using namespace ITime::P;
-using namespace IUtil::P;              using namespace Lib::Png;
+using namespace IUtil::P;              using namespace LPng;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -118,7 +118,7 @@ class CodecPNG :                       // PNG codec object
     pwC.Meta("Title",
       StrAppend(cMetadata->MetadataGetTitle(), " Exported Image" ));
     pwC.Meta("Contributor", StrFormat("$ with $ ($ by $)",
-      cOgl->GetRenderer(), cOgl->GetVersion(), cOgl->GetVendor()));
+      cOgl->OglGetRenderer(), cOgl->OglGetVersion(), cOgl->OglGetVendor()));
     pwC.Meta("Copyright", cMetadata->MetadataGetCopyright());
     pwC.Meta("Creation Time",
       TimeLocalTTtoStr(cmSys.ClockGetTimeSeconds(), "%Y-%m-%dT%H:%M:%S%z"));

@@ -354,7 +354,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // Set override tile size and count
     duTileOR.DimSet(isFirst);
     // Get maximum texture size allowed
-    const size_t stMaxSize = cOgl->MaxTexSize();
+    const size_t stMaxSize = cOgl->OglMaxTexSize();
     // Setup compatible types needed to do the compaction
     size_t stTexWidth  = 0,            // Current destination texture width
            stTexHeight = 0,            // Current destination texture height

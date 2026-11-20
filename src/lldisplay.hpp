@@ -75,8 +75,8 @@ LLFUNC(GetFSType, 1, LuaUtilPushVar(lS, cDisplay->DisplayGetFSType()))
 // ? Returns info about OpenGL.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetGPU, 3,
-  LuaUtilPushVar(lS, cOgl->GetVendor(), cOgl->GetVersion(),
-    cOgl->GetRenderer()))
+  LuaUtilPushVar(lS, cOgl->OglGetVendor(), cOgl->OglGetVersion(),
+    cOgl->OglGetRenderer()))
 /* ========================================================================= */
 // $ Display.GetGPUFPS
 // < FPS:number=Frames per second.
@@ -160,8 +160,9 @@ LLFUNC(GetVidModes, 1, LuaUtilPushVar(lS, AgMonitorData{lS, 1}().Count()))
 // ? Returns info about the GPU's video memory.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetVRAM, 5,
-  LuaUtilPushVar(lS, cOgl->GetVRAMFreePC(), cOgl->GetVRAMTotal(),
-    cOgl->GetVRAMFree(), cOgl->GetVRAMUsed(), cOgl->FlagIsSet(GFL_SHARERAM)))
+  LuaUtilPushVar(lS, cOgl->OglGetVRAMFreePC(), cOgl->OglGetVRAMTotal(),
+    cOgl->OglGetVRAMFree(), cOgl->OglGetVRAMUsed(),
+    cOgl->FlagIsSet(GFL_SHARERAM)))
 /* ========================================================================= */
 // $ Display.Iconify
 // ? Minimises the window.
@@ -318,7 +319,7 @@ LLFUNC(SetSize, 0,
 // $ Display.VReset
 // ? Resets the video subsystem.
 /* ------------------------------------------------------------------------- */
-LLFUNC(VReset, 0, cEvtMain->RequestQuitThread())
+LLFUNC(VReset, 0, cEvtMain->EvtMainRequestQuitThread())
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Display.* non-member functions structure                            ## **

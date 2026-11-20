@@ -20,7 +20,7 @@ using namespace IOgl::P;               using namespace ISerial::P;
 using namespace IShader::P;            using namespace IShaderDef::P;
 using namespace IShaders::P;           using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::GlFW::Types;
+using namespace IUtil::P;              using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo collector class for collector data and custom variables ========== */
@@ -83,9 +83,9 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public FboBase                       // Fbo base class
 { /* -- Select Fbo ------------------------------------------------- */ public:
-  void FboBindTexture() { cOgl->BindTexture(gluFbotex); }
+  void FboBindTexture() { cOgl->OglBindTexture(gluFbotex); }
   /* -- Bind Fbo ----------------------------------------------------------- */
-  void FboBind() { cOgl->BindFbo(gluFbo); }
+  void FboBind() { cOgl->OglBindFbo(gluFbo); }
   /* -- Bind Fbo and texture ----------------------------------------------- */
   void FboBindAndTexture() { FboBind(); FboBindTexture(); }
   /* -- Set Fbo transparency (must be called before initialisation) -------- */
@@ -180,39 +180,39 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     // Select our Fbo as render target
     FboBind();
     // Set the viewport of the framebuffer to the total visible pixels
-    cOgl->SetViewport(DimGetWidth(), DimGetHeight());
+    cOgl->OglSetViewport(DimGetWidth(), DimGetHeight());
     // Set blending mode
-    cOgl->SetBlendIfChanged(*this);
+    cOgl->OglSetBlendIfChanged(*this);
     // Clear the Fbo if requested
-    if(bClear) cOgl->SetAndClear(*this);
+    if(bClear) cOgl->OglSetAndClear(*this);
     // No point in continuing if there are no vertices
     const GLsizei glsiVertices =
       UtilIntOrMax<GLsizei>(stTrianglesFrame * sizeof(FboTri));
     if(!glsiVertices) [[unlikely]] return;
     // Set polygon fill mode
-    cOgl->SetPolygonMode(glePolyMode);
+    cOgl->OglSetPolygonMode(glePolyMode);
     // Update matrix on each 2D shader...
     for(const Shader &shBuiltIn : cShaderCore->sh2DBuiltIns)
       shBuiltIn.UpdateMatrix(*this);
     // Buffer the new vertex data
-    cOgl->BufferStaticData(glsiVertices, ftvActive.data());
+    cOgl->OglBufferStaticData(glsiVertices, ftvActive.data());
     // Enumerate each command in this order...
     StdForEach(seq, fcvActive.cbegin(),
       StdNext(fcvActive.cbegin(), UtilIntOrMax<ssize_t>(stCommandsFrame)),
         [](const FboCmd &fcData)
     { // Set texture, texture unit and shader program
-      cOgl->ActiveTexture(fcData.gluTUId);
-      cOgl->BindTexture(fcData.gluTexId);
-      cOgl->UseProgram(fcData.gluPrgId);
+      cOgl->OglActiveTexture(fcData.gluTUId);
+      cOgl->OglBindTexture(fcData.gluTexId);
+      cOgl->OglUseProgram(fcData.gluPrgId);
       // Prepare data arrays
-      cOgl->VertexAttribPointer(A_COORD,
+      cOgl->OglVertexAttribPointer(A_COORD,
        stCompsPerCoord, stBytesPerVertex, fcData.vpTCOffset);
-      cOgl->VertexAttribPointer(A_VERTEX,
+      cOgl->OglVertexAttribPointer(A_VERTEX,
         stCompsPerPos, stBytesPerVertex, fcData.vpVOffset);
-      cOgl->VertexAttribPointer(A_COLOUR,
+      cOgl->OglVertexAttribPointer(A_COLOUR,
         stCompsPerColour, stBytesPerVertex, fcData.vpCOffset);
       // Draw data arrays
-      cOgl->DrawArraysTriangles(fcData.glsiVertices);
+      cOgl->OglDrawArraysTriangles(fcData.glsiVertices);
     });
   }
   /* -- Finish and render the graphics ------------------------------------- */
@@ -278,15 +278,15 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   { // Bind Fbo and Fbo texture
     FboBindAndTexture();
     // Procedures to perform
-    cOgl->SetTexParam(GL_TEXTURE_WRAP_S, gliWrapMode);
-    cOgl->SetTexParam(GL_TEXTURE_WRAP_T, gliWrapMode);
-    cOgl->SetTexParam(GL_TEXTURE_WRAP_R, gliWrapMode);
+    cOgl->OglSetTexParam(GL_TEXTURE_WRAP_S, gliWrapMode);
+    cOgl->OglSetTexParam(GL_TEXTURE_WRAP_T, gliWrapMode);
+    cOgl->OglSetTexParam(GL_TEXTURE_WRAP_R, gliWrapMode);
   }
   /* -- Set filtering by ID ------------------------------------------------ */
   OglFilterEnum FboGetFilter() const { return ofeFilterId; }
   void FboSetFilter(const OglFilterEnum ofeId)
   { // Translate our filter id to min and mag filter
-    cOgl->SetFilterById(ofeId, gliMinFilter, gliMagFilter);
+    cOgl->OglSetFilterById(ofeId, gliMinFilter, gliMagFilter);
     // Record filter id
     ofeFilterId = ofeId;
   }
@@ -295,8 +295,8 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
   { // Bind Fbo and Fbo texture
     FboBindAndTexture();
     // Set filtering
-    cOgl->SetTexParam(GL_TEXTURE_MIN_FILTER, gliMinFilter);
-    cOgl->SetTexParam(GL_TEXTURE_MAG_FILTER, gliMagFilter);
+    cOgl->OglSetTexParam(GL_TEXTURE_MIN_FILTER, gliMinFilter);
+    cOgl->OglSetTexParam(GL_TEXTURE_MAG_FILTER, gliMagFilter);
   }
   /* -- Set filtering by ID and commit ------------------------------------- */
   void FboSetFilterCommit(const OglFilterEnum ofeId)
@@ -306,10 +306,10 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     const OglBlendEnum obeDFactorRGB, const OglBlendEnum obeSFactorA,
     const OglBlendEnum obeDFactorA)
   { // Lookup values and store requested blending value
-    FboBlendSetSrcRGB(cOgl->EngineBlendToOglBlend(obeSFactorRGB));
-    FboBlendSetDstRGB(cOgl->EngineBlendToOglBlend(obeDFactorRGB));
-    FboBlendSetSrcAlpha(cOgl->EngineBlendToOglBlend(obeSFactorA));
-    FboBlendSetDstAlpha(cOgl->EngineBlendToOglBlend(obeDFactorA));
+    FboBlendSetSrcRGB(cOgl->OglEngineBlendToOglBlend(obeSFactorRGB));
+    FboBlendSetDstRGB(cOgl->OglEngineBlendToOglBlend(obeDFactorRGB));
+    FboBlendSetSrcAlpha(cOgl->OglEngineBlendToOglBlend(obeSFactorA));
+    FboBlendSetDstAlpha(cOgl->OglEngineBlendToOglBlend(obeDFactorA));
   }
   /* -- Set clear state ---------------------------------------------------- */
   void FboSetClear(const bool bState) { bClear = bState; }
@@ -353,7 +353,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     // Have Fbo texture?
     if(gluFbotex)
     { // Mark texture for deletion (explanation at top)
-      cOgl->SetDeleteTexture(gluFbotex);
+      cOgl->OglSetDeleteTexture(gluFbotex);
       // Log the deinitialised
       cLog->LogDebugExSafe("Fbo '$' at $ removed texture $.",
         NameGet(), gluFbo, gluFbotex);
@@ -362,7 +362,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     } // Have Fbo?
     if(gluFbo)
     { // Mark Fbo for deletion (explanation at top)
-      cOgl->SetDeleteFbo(gluFbo);
+      cOgl->OglSetDeleteFbo(gluFbo);
       // Log the deinitialised
       cLog->LogDebugExSafe("Fbo '$' removed from $.", NameGet(), gluFbo);
       // Done with this Fbo handle
@@ -382,18 +382,18 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     // Reserve memory for triangle and command buffers
     FboReserve(stTri, stCmd);
     // Record dimensions and clamp texture size to maximum supported size.
-    DimSet(UtilMinimum(cOgl->MaxTexSize<GLsizei>(), glsiW),
-           UtilMinimum(cOgl->MaxTexSize<GLsizei>(), glsiH));
+    DimSet(UtilMinimum(cOgl->OglMaxTexSize<GLsizei>(), glsiW),
+           UtilMinimum(cOgl->OglMaxTexSize<GLsizei>(), glsiH));
     // If dimensions are different we need to tell the user that
     if(DimIsNotEqual(glsiW, glsiH))
       cLog->LogWarningExSafe(
         "Fbo '$' dimensions exceed renderer limit ($x$ > $^2)!",
-        NameGet(), glsiW, glsiH, cOgl->MaxTexSize());
+        NameGet(), glsiW, glsiH, cOgl->OglMaxTexSize());
     // Generate framebuffer and throw error if failed.
-    GL(cOgl->CreateFbo(&gluFbo), "Failed to create framebuffer!",
+    GL(cOgl->OglCreateFbo(&gluFbo), "Failed to create framebuffer!",
       "Name", NameGet(), "Width", glsiW, "Height", glsiH);
     // Generate texture name for Fbo and bind it.
-    GL(cOgl->CreateTexture(&gluFbotex),
+    GL(cOgl->OglCreateTexture(&gluFbotex),
      "Failed to create texture for framebuffer!",
      "Name",   NameGet(), "Width",  glsiW,
      "Height", glsiH,     "Buffer", &gluFbotex);
@@ -404,18 +404,18 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     GL(FboBind(), "Failed to select active Fbo!",
       "Name", NameGet(), "Fbo", gluFbo);
     // nullptr means reserve texture memory but to not copy any data to it
-    GL(cOgl->UploadTexture(0, DimGetWidth(), DimGetHeight(), gliPixFormat,
+    GL(cOgl->OglUploadTexture(0, DimGetWidth(), DimGetHeight(), gliPixFormat,
       GL_BGR, nullptr),
         "Failed to allocate video memory for framebuffer texture!",
         "Name",        NameGet(),     "Texture", gluFbotex,
         "Width",       DimGetWidth(), "Height",  DimGetHeight(),
         "PixelFormat", gliPixFormat);
     // Attach 2D texture to this Fbo
-    GL(cOgl->AttachTexFbo(gluFbotex),
+    GL(cOgl->OglAttachTexFbo(gluFbotex),
       "Failed to attach texture to framebuffer!",
       "Name", NameGet(), "Texture", gluFbotex);
     // Make sure framebuffer generation is complete successfully
-    const GLenum gleError = cOgl->VerifyFbo();
+    const GLenum gleError = cOgl->OglVerifyFbo();
     if(gleError != GL_FRAMEBUFFER_COMPLETE)
       XC("Failed to complete framebuffer!",
         "Name", NameGet(), "Error", gleError);
@@ -433,7 +433,7 @@ CTOR_MEM_BEGIN_CSLAVE(Fbos, Fbo, ICHelperUnsafe),
     cLog->LogDebugExSafe("Fbo initialised '$' at $ (S=$x$;A=$;T=$;F=$).",
       NameGet(), gluFbo, DimGetWidth(), DimGetHeight(),
       StrFromRatio(glsiW, glsiH), gluFbotex,
-      cOgl->GetPixelFormat(gliPixFormat));
+      cOgl->OglGetPixelFormat(gliPixFormat));
   }
   /* -- Constructor -------------------------------------------------------- */
   Fbo() :

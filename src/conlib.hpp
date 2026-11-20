@@ -152,8 +152,9 @@ cConsole->ConsoleAddLineF(
     { cOal->FlagIsSet(AFL_INITIALISED),     'I' },
   }),
   StdIOSHex, cOal->FlagGet(), StdIOSDec,
-  cOal->GetPlaybackDevice(),
-  cSources->size(), cOal->GetMaxStereoSources(), cOal->GetMaxMonoSources());
+  cOal->OalGetPlaybackDevice(),
+  cSources->size(), cOal->OalGetMaxStereoSources(),
+    cOal->OalGetMaxMonoSources());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'audio' function
 /* ========================================================================= */
@@ -669,8 +670,10 @@ cConsole->ConsoleAddLineA(sTable.Finish(), StrPluraliseNum(ssmEnv.size(),
 /* ------------------------------------------------------------------------- */
 // Log event counts
 cConsole->ConsoleAddLineF("$ and $.",
-  StrPluraliseNum(cEvtMain->SizeSafe(), "engine event", "engine events"),
-  StrPluraliseNum(cEvtWin->SizeSafe(), "window event", "window events"));
+  StrPluraliseNum(cEvtMain->EvtCoreSizeSafe(),
+    "engine event", "engine events"),
+  StrPluraliseNum(cEvtWin->EvtCoreSizeSafe(),
+    "window event", "window events"));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'events' function
 /* ========================================================================= */
@@ -851,11 +854,11 @@ cConsole->ConsoleAddLineF(
   "- Stage: $,$,$,$; Fbo: $x$; OFlags: 0x$$.\n"
   "- Triangles: $$/$; Commands: $/$.\n"
   "FPS: $$/s ($/s); Eff: $%; Limit: $.",
-  cOgl->GetRenderer(), cDisplay->DisplayGetMonitorName(),
-  cOgl->GetVersion(), cOgl->GetVendor(),
+  cOgl->OglGetRenderer(), cDisplay->DisplayGetMonitorName(),
+  cOgl->OglGetVersion(), cOgl->OglGetVendor(),
   cOgl->FlagIsSet(GFL_HAVEMEM) ?
     StrFormat("Memory: $ mBytes ($ mBytes available).\n",
-      cOgl->GetVRAMTotal() / 1048576, cOgl->GetVRAMFree() / 1048576) :
+      cOgl->OglGetVRAMTotal() / 1048576, cOgl->OglGetVRAMFree() / 1048576) :
     cCommon->CommonBlankStr(),
   cInput->DimGetWidth(), cInput->DimGetHeight(),
     StrFromRatio(cInput->DimGetWidth(), cInput->DimGetHeight()),
@@ -864,7 +867,7 @@ cConsole->ConsoleAddLineF(
     StdIOSHex, cDisplay->FlagGet(),
   StdIOSDec, cDisplay->DisplayGetFSType(),
     cDisplay->DisplayGetFSTypeString(),
-  cOgl->MaxTexSize(), cFboCore->DimGetWidth(), cFboCore->DimGetHeight(),
+  cOgl->OglMaxTexSize(), cFboCore->DimGetWidth(), cFboCore->DimGetHeight(),
     StrFromRatio(cFboCore->DimGetWidth(), cFboCore->DimGetHeight()),
     cFboCore->FboCoreGetMatrixWidth(), cFboCore->FboCoreGetMatrixHeight(),
     StrFromRatio(cFboCore->FboCoreGetMatrixWidth(),
@@ -887,7 +890,7 @@ cConsole->ConsoleAddLineF(
   StdIOSFixed, cFboCore->FboCoreGetFPS(), cDisplay->DisplayGetRefreshRate(),
   UtilMakePercentage(cFboCore->FboCoreGetFPS(),
     cDisplay->DisplayGetRefreshRate()),
-  cOgl->GetLimit());
+  cOgl->OglGetLimit());
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function
 /* ========================================================================= */
@@ -896,7 +899,7 @@ cConsole->ConsoleAddLineF(
 /* ========================================================================= */
 { "greset", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cEvtMain->RequestGLReInit();
+cEvtMain->EvtMainRequestGLReInit();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'gpu' function
 /* ========================================================================= */
@@ -1152,8 +1155,6 @@ cConsole->ConsoleAddLine(cLua->LuaCompileStringAndReturnResult(
 /* ========================================================================= */
 { "lfuncs", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-// Get reference to luarefs collector class and lock it so it's not changed
-const LockGuard lgLuaRefsSync(cLuaFuncs->MutexGet());
 // Make a table to automatically format our data neatly
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("DATA", false).Header("MID")
@@ -1359,7 +1360,7 @@ cConsole->ConsoleAddLine(cLua->LuaTryEventOrForce(EMC_LUA_REINIT) ?
 /* ========================================================================= */
 { "lresume", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cEvtMain->Add(EMC_LUA_RESUME);
+cEvtMain->EvtCoreAdd(EMC_LUA_RESUME);
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'lresume' function
 /* ========================================================================= */
@@ -1472,8 +1473,8 @@ sTable.Header("BYTES", true).Header()
 // If have video memory reporting?
 if(cOgl->FlagIsSet(GFL_HAVEMEM))
 { // Get VRAM info
-  const uint64_t ullAvail = cOgl->GetVRAMFree(),
-                 ullTotal = cOgl->GetVRAMTotal(),
+  const uint64_t ullAvail = cOgl->OglGetVRAMFree(),
+                 ullTotal = cOgl->OglGetVRAMTotal(),
                  ullUsed = ullTotal - ullAvail;
   // Report system memory info
   sTable.DataN(ullAvail).DataB(ullAvail).Data("Renderer free")
@@ -2384,6 +2385,8 @@ cConsole->ConsoleAddLineA(sTable.Finish(),
 /* ========================================================================= */
 { "threads", 1, 1, CFL_BASIC, [](const Args &){
 /* ------------------------------------------------------------------------- */
+// Get reference to threads collector class and lock it so it's not changed
+const LockGuard lgThreadsSync{ cThreads->MutexGet() };
 // Make a table to automatically format our data neatly
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("P").Header("STTIME")
@@ -2550,7 +2553,7 @@ cConsole->ConsoleAddLineF("$$ supported on monitor #$ ($).", sTable.Finish(),
 /* ========================================================================= */
 { "vreset", 1, 1, CFL_VIDEO, [](const Args &){
 /* ------------------------------------------------------------------------- */
-cEvtMain->RequestQuitThread();
+cEvtMain->EvtMainRequestQuitThread();
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'vreset' function
 /* ========================================================================= */

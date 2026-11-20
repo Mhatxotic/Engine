@@ -18,18 +18,19 @@ using namespace IStd::P;               using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-template<typename IntType = int,
-         typename UIntType = StdMakeUnsigned<IntType>,
-         class DimClass = Dimensions<IntType>>
+template<typename IntType = int>
   requires StdIsSigned<IntType>
 class Pack :
-  /* -- Initialisers ------------------------------------------------------- */
-  public DimClass                      // Dimensions of bin in pixels
-{ /* --------------------------------------------------------------- */ public:
+  /* -- Base classes ------------------------------------------------------- */
+  public Dimensions<IntType>           // Dimensions of bin in pixels
+{ /* -- Private typedefs --------------------------------------------------- */
+  using UIntType = StdMakeUnsigned<IntType>; // Unsigned type
+  using DimClass = Dimensions<IntType>;      // Dimensions type
+  /* -- Public variables ------------------------------------------- */ public:
   using Rect     = DimCoords<IntType>; // Rectangle of signed ints
   using RectList = StdVector<Rect>;    // list of rectangles
   constexpr static double dIdle = -0.0;// Uninitialised value
-  /* -------------------------------------------------------------- */ private:
+  /* -- Private variables ----------------------------------------- */ private:
   RectList         rlUsed, rlFree;     // Used and free data
   /* -- Remove a rect (not that this can cause a realloc) ------------------ */
   void PruneFreeRect(const size_t stIndex)

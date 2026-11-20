@@ -235,13 +235,7 @@ template<class ParentType>class AsyncLoader :
   }
   /* -- Executes the class callback when data is ready --------------------- */
   void AsyncExecuteReadyCallback(FileMap &fmData)
-  { // Execute the callback and if it returns true then it is done with the raw
-    // data we sent to it. Cppcheck says this always returns false, but it
-    // doesn't as Pcm::AsyncReady() always returns true.
-    if(mtAsyncOwner.
-      AsyncReady(fmData))          // cppcheck-suppress knownConditionTrueFalse
-        MemDeInit();
-  }
+    { if(mtAsyncOwner.AsyncReady(fmData)) MemDeInit(); }
   /* -- Process a file map and dispatch events ----------------------------- */
   void AsyncParseFileMap(FileMap &fmData)
   { // Send progress event with the file size

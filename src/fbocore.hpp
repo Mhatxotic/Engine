@@ -23,7 +23,7 @@ using namespace ILuaUtil::P;           using namespace IOgl::P;
 using namespace IShader::P;            using namespace IShaders::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace Lib::GlFW::Types;
+using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 using FboDouble = StdArray<Fbo, 2>;    // Main and console Fbo typedef
 /* ------------------------------------------------------------------------- */
@@ -64,19 +64,19 @@ class FboCore :                        // The main Fbo operations manager
   /* -- Render the main Fbo from the engine thread ------------------------- */
   void FboCoreRender()
   { // Unbind current Fbo so we select the back buffer to draw to
-    cOgl->BindFbo();
+    cOgl->OglBindFbo();
     // Set the first active texture unit
-    cOgl->ActiveTexture();
+    cOgl->OglActiveTexture();
     // Bind the texture attached to the Fbo
-    cOgl->BindTexture(fboMain.gluFbotex);
+    cOgl->OglBindTexture(fboMain.gluFbotex);
     // Select our basic 3D transform shader
-    cOgl->UseProgram(cShaderCore->sh3D.GetProgram());
+    cOgl->OglUseProgram(cShaderCore->sh3D.GetProgram());
     // Set the viewport of the Fbo size
-    cOgl->SetViewport(DimGetWidth(), DimGetHeight());
+    cOgl->OglSetViewport(DimGetWidth(), DimGetHeight());
     // Set the default alpha blending mode
-    cOgl->SetBlendIfChanged(*this);
+    cOgl->OglSetBlendIfChanged(*this);
     // Clear back buffer if main Fbo has alpha
-    if(fboMain.FboIsTransparencyEnabled()) cOgl->SetAndClear(*this);
+    if(fboMain.FboIsTransparencyEnabled()) cOgl->OglSetAndClear(*this);
     // Draw the main Fbo to the back buffer
     cOgl->OglDrawArrays();
     // Delete lingering texture and Fbo handles
@@ -99,7 +99,7 @@ class FboCore :                        // The main Fbo operations manager
     // Reset core framebuffer object colour intensities
     for(Fbo &fboRef : *this) fboRef.ColourReset();
     // Commit the default back buffer clear colour
-    cOgl->SetClearColourInt(
+    cOgl->OglSetClearColourInt(
       cCVars->CVarsGetInternal<unsigned>(VID_CLEARCOLOUR));
     // Reactivate main framebuffer for drawing
     FboCoreActivateMain();
@@ -199,17 +199,17 @@ class FboCore :                        // The main Fbo operations manager
     // reset window event might be sent before we've initialised it!
     if((glsiFboWidth != static_cast<GLsizei>(fboMain.CoordsGetX2()) ||
         glsiFboHeight != static_cast<GLsizei>(fboMain.CoordsGetY2()) ||
-        bForce) && cOgl->IsGLInitialised())
+        bForce) && cOgl->OglIsGLInitialised())
     { // Re-initialise the main framebuffer (the reservation is ignored)
       fboMain.FboInit("main", glsiFboWidth, glsiFboHeight, 0, 0);
       // Store new data for drawing main Fbo to the back buffer into VRAM
-      cOgl->MainFboInitDrawData(fboMain.FboItemGetDataSize(),
+      cOgl->OglMainFboInitDrawData(fboMain.FboItemGetDataSize(),
         fboMain.FboItemGetData(), fboMain.FboItemGetTCPos(),
         fboMain.FboItemGetVPos(), fboMain.FboItemGetCPos());
       // Reset fps based on highest possible frames per second
       ctpStart = cFrame->FrameGetStartTime();
       dFps = dFpsSmoothed = UtilPerSec(
-        UtilMaximum(cFrame->FrameGetLimit(), cOgl->GetLimit()));
+        UtilMaximum(cFrame->FrameGetLimit(), cOgl->OglGetLimit()));
       // Log computations
       cLog->LogDebugExSafe(
         "FboCore matrix reinit to $x$[$] (D=$x$,A=$<$-$>,AW=$,S=$:$:$:$).",
@@ -293,7 +293,7 @@ class FboCore :                        // The main Fbo operations manager
     // Set filtering of main and console framebuffer objects
     for(Fbo &fboRef : *this) fboRef.FboSetFilter(ofeV);
     // Accept the change anyway if opengl not initialised
-    if(cOgl->IsGLNotInitialised()) return ACCEPT;
+    if(cOgl->OglIsGLNotInitialised()) return ACCEPT;
     // Commit the filters
     for(Fbo &fboRef : *this) fboRef.FboCommitFilter();
     // Redraw the main frame-buffer

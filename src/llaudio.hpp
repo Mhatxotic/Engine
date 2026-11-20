@@ -125,7 +125,8 @@ LLFUNC(SetVelocity, 0,
 // < Name:string=The name of the active audio playback device.
 // ? Returns the name of the currently active playback audio device.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetPBActiveDeviceName, 1, LuaUtilPushVar(lS, cOal->GetPlaybackDevice()))
+LLFUNC(GetPBActiveDeviceName, 1,
+  LuaUtilPushVar(lS, cOal->OalGetPlaybackDevice()))
 /* ========================================================================= */
 // $ Audio.GetPBDeviceName
 // > Id:integer=The playback audio device id.

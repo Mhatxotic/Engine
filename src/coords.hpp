@@ -10,8 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace ICoords {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICoord::P;             using Lib::GlFW::GLfloat;
-using Lib::GlFW::GLuint;
+using namespace ICoord::P;             using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -61,10 +60,8 @@ class Coords                           // Co-ordinates class
     { CoordsSet(cRef.CoordsGetX1(), cRef.CoordsGetY1(),
                 cRef.CoordsGetX2(), cRef.CoordsGetY2()); }
   /* -- Init constructor --------------------------------------------------- */
-  Coords(const IntType itNX1,          // Left
-         const IntType itNY1,          // Top
-         const IntType itNX2,          // Right
-         const IntType itNY2) :        // Bottom
+  Coords(const IntType itNX1, const IntType itNY1,   // Left / Top
+         const IntType itNX2, const IntType itNY2) : // Right / Bottom
     /* -- Initialisers ----------------------------------------------------- */
     ctXY1{ itNX1, itNY1 },             // X1 & Y1 co-ordinate
     ctXY2{ itNX2, itNY2 }              // X2 & Y2 co-ordinate

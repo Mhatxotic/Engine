@@ -26,7 +26,7 @@ using namespace ILuaFunc::P;           using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
 using namespace IMetadata::P;          using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::Sqlite::Types;
+using namespace IUtil::P;              using namespace LSql::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -89,7 +89,7 @@ class Lua :                            // Actual class body
   }
   /* -- Generic end tick to quit the engine  ------------------------------- */
   static int LuaOnGenericEndTick(lua_State*const)
-    { cEvtMain->ConfirmExit(); return 0; }
+    { cEvtMain->EvtMainConfirmExit(); return 0; }
   /* -- Fired when lua needs to be paused (EMC_LUA_PAUSE) ------------------ */
   void LuaOnPause(const EvtMainEvent &emeEvent)
   { // If we are paused already?
@@ -157,7 +157,7 @@ class Lua :                            // Actual class body
   LuaFunc &LuaGetTickFunc() { return lrMainTick; }
   /* -- Request pause ------------------------------------------------------ */
   void LuaRequestPause(const bool bFromException)
-    { cEvtMain->Add(EMC_LUA_PAUSE, bFromException); }
+    { cEvtMain->EvtCoreAdd(EMC_LUA_PAUSE, bFromException); }
   /* -- Get GC running ----------------------------------------------------- */
   bool LuaIsGCRunning() const { return LuaUtilGCRunning(LuaGetState()); }
   bool LuaIsGCNotRunning() const { return !LuaIsGCRunning(); }
@@ -523,27 +523,27 @@ class Lua :                            // Actual class body
   /* -- Lua end execution helper ------------------------------------------- */
   bool LuaTryEventOrForce(const EvtMainCmd emcCmd)
   { // If exit event already processing?
-    if(cEvtMain->ExitRequested())
+    if(cEvtMain->EvtMainExitRequested())
     { // Log event
       cLog->LogWarningExSafe(
         "Lua sending event $ with forced confirm exit!", emcCmd);
       // Change or confirm exit reason
-      cEvtMain->Add(emcCmd);
+      cEvtMain->EvtCoreAdd(emcCmd);
       // Quit by force instead
-      cEvtMain->ConfirmExit();
+      cEvtMain->EvtMainConfirmExit();
       // Quit forced
       return true;
     } // End lua execution
-    cEvtMain->Add(emcCmd);
+    cEvtMain->EvtCoreAdd(emcCmd);
     // Quit requested normally
     return false;
   }
   /* -- ReInitialise LUA context ------------------------------------------- */
   bool LuaReInit()
   { // If exit event already processing? Ignore sending another event
-    if(cEvtMain->ExitRequested()) return false;
+    if(cEvtMain->EvtMainExitRequested()) return false;
     // Send the event
-    cEvtMain->Add(EMC_LUA_REINIT);
+    cEvtMain->EvtCoreAdd(EMC_LUA_REINIT);
     // Return success
     return true;
   }

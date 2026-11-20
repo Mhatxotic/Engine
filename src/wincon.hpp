@@ -115,12 +115,12 @@ class SysCon :                         // Members initially private
           "application after five seconds of this message. Trying to save as "
           "much as possible to disk...");
         // Send logout event
-        cEvtMain->RequestQuit();
+        cEvtMain->EvtMainRequestQuit();
         // Wait for main thread to clean up so we can exit
         cvExit.wait(ulLock);
       });
     } // Send normal exit event
-    else cEvtMain->RequestQuit();
+    else cEvtMain->EvtMainRequestQuit();
     // Block default event
     return TRUE;
   }
@@ -746,7 +746,7 @@ class SysCon :                         // Members initially private
     DimSet(_stW, _stH);
     CoordSet();
     // Force a console buffer update
-    cEvtMain->Add(EMC_CON_UPDATE, DimGetWidth(), DimGetHeight());
+    cEvtMain->EvtCoreAdd(EMC_CON_UPDATE, DimGetWidth(), DimGetHeight());
   }
   /* -- Initialise --------------------------------------------------------- */
   void LoadDefaults()

@@ -23,7 +23,7 @@ namespace P {                          // Start of public module namespace
 using LuaCmdPair = StdPair<LuaFunc, CmdMapIt>; // Lua id/cvar list
 MAPPACK_BUILD(LuaCmd, const StdString, LuaCmdPair); // Map for lua vars
 /* -- Variables ollector class for collector data and custom variables ----- */
-CTOR_BEGIN(Commands, Command, CLHelperSafe,
+CTOR_BEGIN(Commands, Command, CLHelperUnsafe,
   /* ----------------------------------------------------------------------- */
   LuaCmdMap        lcmMap;             // Lua console command list
 );/* -- Lua command collector and member class ----------------------------- */

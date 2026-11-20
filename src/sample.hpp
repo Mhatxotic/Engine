@@ -17,7 +17,7 @@ using namespace ILuaUtil::P;           using namespace IMixer::P;
 using namespace IOal::P;               using namespace IPcmDef::P;
 using namespace IPcm::P;               using namespace IStd::P;
 using namespace ISource::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace Lib::OpenAL::Types;
+using namespace ISysUtil::P;           using namespace LAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Sample collector and member class ------------------------------------ */
@@ -49,7 +49,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
   void SampleLoad(Pcm &pcmSrc)
   { // Allocate and generate openal buffers
     aluvNames.resize(pcmSrc.PcmDataGetChannels());
-    AL(cOal->CreateBuffers(aluvNames), "Error creating sample buffers!",
+    AL(cOal->OalCreateBuffers(aluvNames), "Error creating sample buffers!",
       "Name", pcmSrc.NameGet(), "Count", SampleNameCount());
     // Buffer the left or mono channel
     AL(cOal->OalBufferData(SampleLeftName(), SampleGetSFormat(),
@@ -112,14 +112,14 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
       SamplePrepareSource(sCRref, SampleRightName(), alfGain, 0.5f + alfPan,
         alfPitch, bLoop, bLuaManaged)
     }; // Play all the sources together
-    ALL(cOal->PlaySources(aSourceIds),
+    ALL(cOal->OalPlaySources(aSourceIds),
       "Sample '$' failed to play stereo sources!", NameGet());
   }
   /* -- Play a mono source ------------------------------------------------- */
   void SamplePlayMonoSource(const ALfloat alfGain, ALfloat alfPan,
     const ALfloat alfPitch, const bool bLoop, Source &sCMref,
     const bool bLuaManaged)
-  { ALL(cOal->PlaySource(SamplePrepareSource(sCMref, SampleLeftName(),
+  { ALL(cOal->OalPlaySource(SamplePrepareSource(sCMref, SampleLeftName(),
       alfGain * cMixer->MixerGetAdjSampleVolume(), alfPan, alfPitch, bLoop,
       bLuaManaged)), "Sample '$' failed to play mono source!", NameGet()); }
   /* --------------------------------------------------------------- */ public:
@@ -187,7 +187,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
       cLog->LogDebugExSafe("Sample '$' cleared $ sources using it!",
         NameGet(), uStopped);
     // Delete the buffers
-    ALL(cOal->DeleteBuffers(aluvNames),
+    ALL(cOal->OalDeleteBuffers(aluvNames),
       "Sample '$' failed to delete $ buffers", NameGet(), SampleNameCount());
     // Reset buffer
     aluvNames.clear();

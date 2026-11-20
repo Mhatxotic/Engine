@@ -14,7 +14,7 @@ using namespace IEvtWin::P;            using namespace IFillCon::P;
 using namespace IFlags::P;             using namespace IGlFWBase::P;
 using namespace IJoyInfo::P;           using namespace ILog::P;
 using namespace ILuaFunc::P;           using namespace IStd::P;
-using namespace IUtil::P;              using namespace Lib::GlFW::Types;
+using namespace IUtil::P;              using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -27,7 +27,7 @@ class Joystick :
   size_t           stConnected;        // Joysticks connected
   /* -- Event handler for 'glfwSetJoystickCallback' ------------------------ */
   static void JoyOnGamePad(int iJId, int iEvent)
-    { cEvtMain->Add(EMC_INP_JOYSTATE, iJId, iEvent); }
+    { cEvtMain->EvtCoreAdd(EMC_INP_JOYSTATE, iJId, iEvent); }
   /* -- Enable or disable joystick polling --------------------------------- */
   void JoyEnablePoll() { bPoll = true; }
   void JoyDisablePoll() { bPoll = false; }

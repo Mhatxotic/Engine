@@ -67,7 +67,7 @@ class ThreadBase :                     // Thread variables class
     /* -- No code ---------------------------------------------------------- */
     {}
 };/* ----------------------------------------------------------------------- */
-CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperUnsafe),
+CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperSafe),
   /* -- Base classes ------------------------------------------------------- */
   public ThreadBase,                   // Thread variables class
   private StdThread                    // The C++11 thread

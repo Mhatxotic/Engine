@@ -283,7 +283,7 @@ struct CLHelperUnsafe :                // Members initially private
   IteratorType CLErase(IteratorType &itObj)
     { return this->CLBaseEraseUnsafe(itObj); }
   /* -- Wait for async operations ------------------------------------------ */
-  void CLWaitAsync() { /* Nothing to sync */ }
+  static void CLWaitAsync() { }
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelperUnsafe(
     /* -- Parameters ------------------------------------------------------- */
@@ -331,7 +331,8 @@ struct CLHelper :                      // Members initially public
   IteratorType CollectorErase(IteratorType &itObj)
     { return this->CLErase(itObj); }
   /* -- Wait for asynchronous operations ----------------------------------- */
-  void CollectorWaitAsync() { this->CLWaitAsync(); }
+  void CollectorWaitAsync()            // cppcheck-suppress functionStatic
+    { this->CLWaitAsync(); }
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelper(
     /* -- Parameters ------------------------------------------------------- */

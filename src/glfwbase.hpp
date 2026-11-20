@@ -15,7 +15,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IGlFWBase {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace Lib::GlFW;
+using namespace LGL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Get monitor data pointer --------------------------------------------- */

@@ -25,7 +25,7 @@ using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 using namespace IToken::P;             using namespace IUtil::P;
-using namespace Lib::OpenSSL;
+using namespace LSsl;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
@@ -1188,24 +1188,7 @@ static void DestroyAllSockets()
     cSockets->size());
 }
 /* ------------------------------------------------------------------------- */
-static void DeInitSockets()
-{ // Deregister event so callbacks cannot fire
-  cEvtMain->Unregister(EMC_MP_SOCKET);
-  // Close all socket
-  DestroyAllSockets();
-}
-/* ------------------------------------------------------------------------- */
-static void InitSockets()
-{ // The operating systems sockets API needs to be initialised here because
-  // we do not want it initialising during connection in other threads as other
-  // connections and threads may not wait for initialisation (*cough* Windows)
-  // and just fail. This fixes that so the sockets are ready to use on demand.
-  // This could be an OpenSSL bug really where they really should be locking
-  // other connections when sockets API intiialisation is needed.
-  BIO_sock_init();
-}
-/* ------------------------------------------------------------------------- */
-CTOR_END(Sockets, Socket, SOCKET, InitSockets(), DeInitSockets(),,
+CTOR_END(Sockets, Socket, SOCKET, BIO_sock_init(), DestroyAllSockets(),,
   /* -- Initialisers ------------------------------------------------------- */
   LuaEvtMaster{ EMC_MP_SOCKET },       // Setup async socket event
   strRegVarREQ{ "\001" },              // Init reg key name for request data

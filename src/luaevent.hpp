@@ -38,8 +38,8 @@ class LuaEvts :
         XC("Invalid event index to remove!",
           "Requested", stId, "Maximum", size());
       // Clear stored event and remove all empty events from the end
-      at(stId) = cEvtMain->Last();
-      while(!empty() && back() == cEvtMain->Last()) pop_back();
+      at(stId) = cEvtMain->EvtCoreLast();
+      while(!empty() && back() == cEvtMain->EvtCoreLast()) pop_back();
     });
   }
   /* -- Check if enough parameters ----------------------------------------- */
@@ -62,7 +62,7 @@ class LuaEvts :
       // Iterator to return
       EvtMain::QueueConstIt qciItem;
       // Create a new params list with the class and the events list size
-      cEvtMain->AddExParam(emcCmd, qciItem, emaArgs, vpClass, size(),
+      cEvtMain->EvtCoreAddExParam(emcCmd, qciItem, emaArgs, vpClass, size(),
         vaArgs...);
       // Insert the iterator the new event.
       emplace_back(StdMove(qciItem));
@@ -80,7 +80,8 @@ class LuaEvts :
         // the app will crash because the class may have been destroyed.
         StdForEach(seq, cbegin(), cend(),
           [](const EvtMain::QueueConstIt &qciIt)
-            { if(qciIt != cEvtMain->Last()) cEvtMain->RemoveUnsafe(qciIt); });
+            { if(qciIt != cEvtMain->EvtCoreLast())
+                cEvtMain->EvtCoreRemoveUnsafe(qciIt); });
         // Clear the list
         clear();
       });
@@ -151,9 +152,9 @@ class LuaEvtMaster :
     /* -- Initialisers ----------------------------------------------------- */
     emcCmd(emcNCmd)                    // Set the event id
     /* -- Register the event ----------------------------------------------- */
-    { cEvtMain->Register(emcCmd, this->OnEvent); }
+    { cEvtMain->EvtCoreRegister(emcCmd, this->OnEvent); }
   /* -- Unregister the event ----------------------------------------------- */
-  DTORHELPER(~LuaEvtMaster, cEvtMain->Unregister(emcCmd))
+  DTORHELPER(~LuaEvtMaster, cEvtMain->EvtCoreUnregister(emcCmd))
 };/* == Routines for a collectors child class ============================== */
 template<class MemberType,             // Member object type
          size_t stRefs = 1>            // Number of references to store
@@ -182,7 +183,7 @@ class LuaEvtSlave :
     if(emaArgs.size() < stMandatory)
       XC("Not enough parameters to generic Lua event callback!",
         "Name",    mtPtr->NameGet(),
-        "Event",   cEvtMain->IdToString(emeEvent.cCmd),
+        "Event",   cEvtMain->EvtCoreIdToString(emeEvent.cCmd),
         "EventId", emeEvent.cCmd,      "Count",   emaArgs.size(),
         "Maximum", stMandatory);
     // Remove iterator from our events dispatched list
@@ -192,14 +193,15 @@ class LuaEvtSlave :
     { // Show error in log and return
       cLog->LogWarningExSafe(
         "LuaEvt for generic event $<$> for '$' ignored because lua is paused!",
-        cEvtMain->IdToString(emeEvent.cCmd), emeEvent.cCmd, mtPtr->NameGet(),
+        cEvtMain->EvtCoreIdToString(emeEvent.cCmd),
+          emeEvent.cCmd, mtPtr->NameGet(),
         this->LuaRefStateIsSet(), this->LuaRefGetId(), emaArgs.size());
       return;
     } // Check to see if we can write the function and it's parameters, if not?
     if(!LuaBaseCheckStack(this->LuaRefGetState(), emaArgs.size() - 1))
       XC("Not enough stack space or memory, or param count overflowed!",
         "Name",      mtPtr->NameGet(),
-        "Event",     cEvtMain->IdToString(emeEvent.cCmd),
+        "Event",     cEvtMain->EvtCoreIdToString(emeEvent.cCmd),
         "EventId",   emeEvent.cCmd,
         "HaveState", this->LuaRefStateIsSet(), "Ref",   this->LuaRefGetId(),
         "Params",    emaArgs.size());
@@ -207,7 +209,7 @@ class LuaEvtSlave :
     if(!this->LuaRefGetFunc())
       XC("Could not get callback function!",
         "Name",      mtPtr->NameGet(),
-        "Event",     cEvtMain->IdToString(emeEvent.cCmd),
+        "Event",     cEvtMain->EvtCoreIdToString(emeEvent.cCmd),
         "EventId",   emeEvent.cCmd,
         "HaveState", this->LuaRefStateIsSet(), "Ref", this->LuaRefGetId(),
         "Params",    emaArgs.size());

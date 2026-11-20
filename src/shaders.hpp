@@ -12,7 +12,7 @@ using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IFboCmd::P;            using namespace ILog::P;
 using namespace IOgl::P;               using namespace IShader::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
-using namespace IString::P;            using namespace Lib::GlFW::Types;
+using namespace IString::P;            using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Shader core class ==================================================== */
@@ -195,7 +195,7 @@ struct ShaderCore                      // Actual body
       const GLint &iUniformId = shDest.GetUniformLocation(cpUniform);
       GLC("Failed to get uniform location from YCbCr shader!",
         "Variable", cpUniform, "Index", stIndex);
-      GL(cOgl->Uniform(iUniformId, static_cast<GLint>(stIndex)),
+      GL(cOgl->OglUniform(iUniformId, static_cast<GLint>(stIndex)),
         "Failed to set YCbCr uniform texture unit!",
         "Variable", cpUniform, "Index", stIndex, "Uniform", iUniformId);
     }

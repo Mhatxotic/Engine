@@ -26,7 +26,7 @@ namespace P {                          // Start of public module namespace
 using LuaCVarPair = StdPair<LuaFunc, CVarMapIt>;
 MAPPACK_BUILD(LuaCVar, const StdString, LuaCVarPair)
 /* -- Variables ollector class for collector data and custom variables ----- */
-CTOR_BEGIN(Variables, Variable, CLHelperSafe,
+CTOR_BEGIN(Variables, Variable, CLHelperUnsafe,
   /* ----------------------------------------------------------------------- */
   LuaCVarMap       lcvmMap;            // Lua cvar list
   /* ----------------------------------------------------------------------- */

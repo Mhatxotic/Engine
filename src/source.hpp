@@ -18,7 +18,7 @@ using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IName::P;
 using namespace IOal::P;               using namespace ISerial::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::OpenAL::Types;
+using namespace IUtil::P;              using namespace LAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -103,7 +103,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   /* -- Reset parameters --------------------------------------------------- */
   void SourceReset() { SourceInit(); SourceSetExternal(true); }
   /* -- Reinitialise the source id ----------------------------------------- */
-  void SourceReInit() { aluId = cOal->CreateSource(); SourceReset(); }
+  void SourceReInit() { aluId = cOal->OalCreateSource(); SourceReset(); }
   /* -- Unlock a source so it can be recycled ------------------------------ */
   void SourceUnlock()
   { // Clear the attached buffer
@@ -252,7 +252,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
       // Unqueue the buffers
       SourceUnQueueBuffers(aluvBuffers.data(), alsiBuffersProcessed);
       // Delete the buffers
-      ALL(cOal->DeleteBuffers(alsiBuffersProcessed, aluvBuffers.data()),
+      ALL(cOal->OalDeleteBuffers(alsiBuffersProcessed, aluvBuffers.data()),
         "Source delete $ buffers failed at $!",
           alsiBuffersProcessed, aluvBuffers.data());
     }
@@ -264,7 +264,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   bool SourceStop()
   { // Ignore if stopped else stop it and return success
     if(SourceIsStopped()) return false;
-    AL(cOal->StopSource(SourceGet()),
+    AL(cOal->OalStopSource(SourceGet()),
       "Source failed to stop!", "Id", SourceGet());
     return true;
   }
@@ -274,16 +274,16 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   bool SourceIsPlaying() const { return SourceGetState() == AL_PLAYING; }
   /* -- Rewind ------------------------------------------------------------- */
   void SourceRewind()
-    { AL(cOal->RewindSource(SourceGet()),
+    { AL(cOal->OalRewindSource(SourceGet()),
         "Rewind failed on source!", "Index", SourceGet()); }
   /* -- Return if buffer is valid ------------------------------------------ */
-  bool SourceIsValid() const { return cOal->IsBuffer(SourceGet()); }
+  bool SourceIsValid() const { return cOal->OalIsBuffer(SourceGet()); }
   bool SourceIsNotValid() const { return !SourceIsValid(); }
   /* -- Play --------------------------------------------------------------- */
   bool SourcePlay()
   { // If playing return else play the source
     if(SourceIsPlaying()) return false;
-    AL(cOal->PlaySource(SourceGet()),
+    AL(cOal->OalPlaySource(SourceGet()),
       "Play failed on source!", "Index", SourceGet());
     return true;
   }
@@ -293,7 +293,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     if(SourceIsPlaying() || soOther.SourceIsPlaying()) return false;
     const StdArray<const ALuint,2>
       aSourceIds{ SourceGet(), soOther.SourceGet() };
-    AL(cOal->PlaySources(aSourceIds), "Play failed on sources!",
+    AL(cOal->OalPlaySources(aSourceIds), "Play failed on sources!",
       "LeftIndex",  SourceGet(),       "LeftValid",  SourceIsValid(),
       "RightIndex", soOther.SourceGet(),
       "RightValid", soOther.SourceIsValid());
@@ -307,7 +307,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
     ICHelperSource{ cSources, this },  // Register in Sources list
     SerialSlave{ ctParent.Serial() },  // Initialise identification number
     SourceFlags{ sfFlags },            // Set source managed flags
-    aluId(cOal->CreateSource())        // Initialise a new source from OpenAL
+    aluId(cOal->OalCreateSource())     // Initialise a new source from OpenAL
     /* -- Check for CreateSource error or initialise ----------------------- */
     { // Generate source
       ALNF("Error generating al source id!");
@@ -317,7 +317,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Source,
     // Delete the sourcess if id allocated
-    if(SourceGet()) ALL(cOal->DeleteSource(SourceGet()),
+    if(SourceGet()) ALL(cOal->OalDeleteSource(SourceGet()),
       "Source failed to delete $!", SourceGet());
   )
 };/* -- End ---------------------------------------------------------------- */
@@ -396,7 +396,7 @@ static Source *SourceGetFree()
 }
 /* == Returns if we can make a new source ================================== */
 static bool SourceCanMakeNew()
-  { return cSources->size() < cOal->GetMaxMonoSources(); }
+  { return cSources->size() < cOal->OalGetMaxMonoSources(); }
 /* == Get a source using Lua to allocate it ================================ */
 static Source *SourceGetFromLua(lua_State*const lS)
 { // Try to get a used source and if failed?
@@ -425,7 +425,7 @@ static Source *SourceGet()
 static bool SourceAlloc(const size_t stCount)
 { // Get the value we can actually use and the number of sources currently
   // allocated. Return if no new static sources are needed to be created.
-  if(stCount >= cOal->GetMaxMonoSources()) return false;
+  if(stCount >= cOal->OalGetMaxMonoSources()) return false;
   // Create new sources until we've reached the maximum and mark as usable.
   // The audio thread could already be polling these right now so all three of
   // these lines will lock access to the list.
@@ -444,7 +444,7 @@ static CVarReturn SourceSetCount(const size_t stCount)
 { // Set preallocated source count for Audio class when initialising
   cSources->stSources = stCount;
   // Accepted if we can't check it yet, denied if not, or bad value
-  return BoolToCVarReturn(cOal->IsNotInitialised() || SourceAlloc(stCount));
+  return BoolToCVarReturn(cOal->OalIsNotInitialised() || SourceAlloc(stCount));
 }
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace

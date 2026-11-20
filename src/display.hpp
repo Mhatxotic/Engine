@@ -27,7 +27,7 @@ using namespace ILuaUtil::P;           using namespace IMetadata::P;
 using namespace IMutex::P;             using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace Lib::GlFW::Types;
+using namespace IUtil::P;              using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -283,7 +283,7 @@ class Display :                        // Actual class body
   { // If window is not closable then ignore the event
     if(FlagIsClear(DF_CLOSEABLE)) return;
     // Send quit event
-    cEvtMain->RequestQuit();
+    cEvtMain->EvtMainRequestQuit();
   }
   /* -- Window iconified --------------------------------------------------- */
   void DisplayOnIconify(const EvtMainEvent &emeEvent)
@@ -375,7 +375,7 @@ class Display :                        // Actual class body
       // Capture exceptions so we can resume a suspended engine thread
       try
       { // Tell engine thread to suspend
-        cEvtMain->Add(EMC_SUSPEND, &abUnsuspend,
+        cEvtMain->EvtCoreAdd(EMC_SUSPEND, &abUnsuspend,
           static_cast<condition_variable*>(this));
         // Wait for engine thread to tell us it's suspended
         wait(ulLock, [this]{ return abUnsuspend == true; });
@@ -386,7 +386,7 @@ class Display :                        // Actual class body
         // Enumerate monitors and video modes
         DisplayEnumerateMonitorsAndVideoModes();
         // Engine thread can continue
-        cEvtMain->Unsuspend();
+        cEvtMain->EvtMainUnsuspend();
         // Log that we're processing a monitor change event
         cLog->LogDebugSafe("Display finished processing monitor event.");
       } // Exception occured?
@@ -394,7 +394,7 @@ class Display :                        // Actual class body
       { // Reset our unsuspension variable
         abUnsuspend = false;
         // Engine thread can continue
-        cEvtMain->Unsuspend();
+        cEvtMain->EvtMainUnsuspend();
         // Throw exception to LUA
         throw;
       }
@@ -423,17 +423,18 @@ class Display :                        // Actual class body
         // the whole engine with an exception.
         gfwmActive = nullptr;
         // Request soft reinitialisation of window
-        cEvtMain->RequestGLReInitWait();
+        cEvtMain->EvtMainRequestGLReInitWait();
         // Unsuspend the main thread and return
         return;
       } // Try to get monitor name and if found? Log the name.
       else cLog->LogInfoExSafe("Display disconnected monitor '$'.",
         gfwmActive->Name());
     } // Add event to refresh monitors
-    cEvtWin->AddUnblock(EWC_WIN_MONITORS);
+    cEvtWin->EvtWinAddUnblock(EWC_WIN_MONITORS);
   }
   /* -- Add event to reinit matrix ----------------------------------------- */
-  void DisplayRequestMatrixReInit() { cEvtMain->Add(EMC_VID_MATRIXREINIT); }
+  void DisplayRequestMatrixReInit()
+    { cEvtMain->EvtCoreAdd(EMC_VID_MATRIXREINIT); }
   /* -- Matrix reset requested --------------------------------------------- */
   void DisplayOnMatrixReset(const EvtMainEvent&)
   { // Force-reinitialise matrix
@@ -541,7 +542,7 @@ class Display :                        // Actual class body
 #if defined(LINUX)
     // On Wayland, quit the thread becuase going back to window mode on
     // this platform is a little wierd and can cause problems
-    if(GlFWIsWayland()) return cEvtMain->RequestQuitThread();
+    if(GlFWIsWayland()) return cEvtMain->EvtMainRequestQuitThread();
 #endif
     // Lock mutex and make other requests wait
     MutexUniqueCall([this, bState](UniqueLock &ulLock){
@@ -550,7 +551,7 @@ class Display :                        // Actual class body
       // Capture exceptions so we can resume a suspended engine thread
       try
       { // Tell engine thread to suspend
-        cEvtMain->Add(EMC_SUSPEND, &abUnsuspend,
+        cEvtMain->EvtCoreAdd(EMC_SUSPEND, &abUnsuspend,
           static_cast<condition_variable*>(this));
         // Wait for engine thread to tell us it's suspended
         wait(ulLock, [this]{ return abUnsuspend == true; });
@@ -561,7 +562,7 @@ class Display :                        // Actual class body
         // Update new fullscreen setting and reinitialise if successful
         DisplayReInitWindow(bState);
         // Engine thread can continue
-        cEvtMain->Unsuspend();
+        cEvtMain->EvtMainUnsuspend();
         // Log that we're processing a monitor change event
         cLog->LogDebugSafe("Display finished processing window reinit.");
       } // Exception occured?
@@ -569,7 +570,7 @@ class Display :                        // Actual class body
       { // Reset our unsuspension variable
         abUnsuspend = false;
         // Engine thread can continue
-        cEvtMain->Unsuspend();
+        cEvtMain->EvtMainUnsuspend();
         // Throw exception to LUA
         throw;
       }
@@ -753,29 +754,37 @@ class Display :                        // Actual class body
   const GlFWRes *DisplayGetSelectedRes() const { return gfwrActive; }
   /* -- Request from alternative thread to resize window ------------------- */
   void DisplayRequestResize(const int iW, const int iH)
-    { cEvtWin->AddUnblock(EWC_WIN_RESIZE, iW, iH); }
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_RESIZE, iW, iH); }
   /* -- Request from alternative thread to move window --------------------- */
   void DisplayRequestMove(const int iX, const int iY)
-    { cEvtWin->AddUnblock(EWC_WIN_MOVE, iX, iY); }
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_MOVE, iX, iY); }
   /* -- Request the window set a new cursor graphic ------------------------ */
   void DisplayRequestSetCursor(const GlFWCursorType gctType)
-    { cEvtWin->AddUnblock(EWC_WIN_CURSET, gctType); }
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_CURSET, gctType); }
   /* -- Request the window reset the cursor graphic ------------------------ */
-  void DisplayRequestResetCursor() { cEvtWin->AddUnblock(EWC_WIN_CURRESET); }
+  void DisplayRequestResetCursor()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_CURRESET); }
   /* -- Request from alternative thread to centre the window --------------- */
-  void DisplayRequestCentre() { cEvtWin->AddUnblock(EWC_WIN_CENTRE); }
+  void DisplayRequestCentre()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_CENTRE); }
   /* -- Request from alternative thread to reposition the window ----------- */
-  void DisplayRequestReposition() { cEvtWin->AddUnblock(EWC_WIN_RESET); }
+  void DisplayRequestReposition()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_RESET); }
   /* -- Request to minimise window ----------------------------------------- */
-  void DisplayRequestMinimise() { cEvtWin->AddUnblock(EWC_WIN_MINIMISE); }
+  void DisplayRequestMinimise()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_MINIMISE); }
   /* -- Request to maximise window ----------------------------------------- */
-  void DisplayRequestMaximise() { cEvtWin->AddUnblock(EWC_WIN_MAXIMISE); }
+  void DisplayRequestMaximise()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_MAXIMISE); }
   /* -- Request to restore window ------------------------------------------ */
-  void DisplayRequestRestore() { cEvtWin->AddUnblock(EWC_WIN_RESTORE); }
+  void DisplayRequestRestore()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_RESTORE); }
   /* -- Request to focus window -------------------------------------------- */
-  void DisplayRequestFocus() { cEvtWin->AddUnblock(EWC_WIN_FOCUS); }
+  void DisplayRequestFocus()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_FOCUS); }
   /* -- Request for window attention --------------------------------------- */
-  void DisplayRequestAttention() { cEvtWin->AddUnblock(EWC_WIN_ATTENTION); }
+  void DisplayRequestAttention()
+    { cEvtWin->EvtWinAddUnblock(EWC_WIN_ATTENTION); }
   /* -- Return current video mode refresh rate ----------------------------- */
   int DisplayGetRefreshRate() { return gfwrActive->Refresh(); }
   /* -- Get selected monitor id -------------------------------------------- */
@@ -922,7 +931,8 @@ class Display :                        // Actual class body
   }
   /* -- Update icons and refresh icon if succeeded ------------------------- */
   void DisplaySetIconFromLua(const StdStringView &ssvNames)
-    { if(DisplaySetIcon(ssvNames)) return cEvtWin->Add(EWC_WIN_SETICON); }
+    { if(DisplaySetIcon(ssvNames))
+        return cEvtWin->EvtWinAddUnblock(EWC_WIN_SETICON); }
   /* -- Get window full-screen type ---------------------------------------- */
   FSType DisplayGetFSType() const { return fsType; }
   const StdStringView &DisplayGetFSTypeString(const FSType fsT) const

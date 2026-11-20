@@ -26,8 +26,8 @@ using namespace IMutex::P;             using namespace IName::P;
 using namespace IOal::P;               using namespace ISerial::P;
 using namespace ISource::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::Ogg;
-using namespace Lib::OpenAL::Types;
+using namespace IUtil::P;              using namespace LOgg;
+using namespace LAL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -170,7 +170,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
     // Number of channels as size_t
     const size_t stChannels = static_cast<size_t>(StreamGetChannels());
     // Decode the buffer and grab the size. If nothing was decoded then reloop.
-    if(cOal->Have32FPPB())
+    if(cOal->OalHave32FPPB())
     { // Four bytes per channel (float)
       stBpc = sizeof(ALfloat);
       // Loop...
@@ -246,7 +246,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   void StreamUnloadBuffers()
   { // Unload the buffers if we have them
     if(!aluvBuffers.empty())
-      ALL(cOal->DeleteBuffers(aluvBuffers),
+      ALL(cOal->OalDeleteBuffers(aluvBuffers),
         "Stream '$' failed to delete $ buffers!",
         NameGet(), aluvBuffers.size());
   }
@@ -272,7 +272,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
       XC("Empty sources list!",
         "Name", NameGet(), "BufferCount", aluvBuffers.size());
     // Generate OpenAL buffers
-    AL(cOal->CreateBuffers(aluvBuffers),
+    AL(cOal->OalCreateBuffers(aluvBuffers),
       "Failed to generate buffers for stream!",
       "Name", NameGet(), "Count", aluvBuffers.size());
     // Generate space for queued buffers
@@ -573,8 +573,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
         "Name", NameGet(), "Channels", StreamGetChannels());
     // Compare number of channels in file to set appropriate format
     aleFormat = StreamGetChannels() == 1 ?
-      (cOal->Have32FPPB() ? AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_MONO16) :
-      (cOal->Have32FPPB() ? AL_FORMAT_STEREO_FLOAT32 : AL_FORMAT_STEREO16);
+      (cOal->OalHave32FPPB() ? AL_FORMAT_MONO_FLOAT32 : AL_FORMAT_MONO16) :
+      (cOal->OalHave32FPPB() ? AL_FORMAT_STEREO_FLOAT32 : AL_FORMAT_STEREO16);
     // Allocate the buffer with size from global setting. We can re-use the
     // 'Memory' class from the 'AsyncLoader' class.
     MemInitBlank(ctParent.stBufSize);

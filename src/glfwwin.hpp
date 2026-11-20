@@ -15,7 +15,7 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IGlFWBase::P;          using namespace IGlFWUtil::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IStdLib::P;            using namespace IString::P;
-using namespace IUtfCodepoint::P;      using namespace Lib::GlFW;
+using namespace IUtfCodepoint::P;      using namespace LGL;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -58,19 +58,19 @@ class GlFWWindow :                     // GLFW window class
     StdForEach(seq, spFiles.begin(), spFiles.end(),
       [this](const char*const cpStr){ WinGetFiles().emplace_back(cpStr); });
     // Now dispatch the event
-    cEvtMain->Add(EMC_INP_DRAGDROP);
+    cEvtMain->EvtCoreAdd(EMC_INP_DRAGDROP);
   }
   /* -- Event handler for 'glfwSetCharCallback' ---------------------------- */
   static void WinOnInputChar(GLFWwindow*const glfwWindow, unsigned uChar)
-    { cEvtMain->Add(EMC_INP_CHAR, reinterpret_cast<void*>(glfwWindow),
+    { cEvtMain->EvtCoreAdd(EMC_INP_CHAR, reinterpret_cast<void*>(glfwWindow),
         static_cast<UtfCodepoint>(uChar)); }
   /* -- Event handler for 'glfwSetCursorEnterCallback' --------------------- */
   static void WinOnMouseFocus(GLFWwindow*const glfwWindow, int iOnStage)
-    { cEvtMain->Add(EMC_INP_MOUSEFOCUS,
+    { cEvtMain->EvtCoreAdd(EMC_INP_MOUSEFOCUS,
         reinterpret_cast<void*>(glfwWindow), iOnStage); }
   /* -- Event handler for 'glfwSetCursorPosCallback' ----------------------- */
   static void WinOnMouseMove(GLFWwindow*const glfwWindow, double dX, double dY)
-    { cEvtMain->Add(EMC_INP_MOUSEMOVE,
+    { cEvtMain->EvtCoreAdd(EMC_INP_MOUSEMOVE,
         reinterpret_cast<void*>(glfwWindow), dX, dY); }
   /* -- Event handler for 'glfwSetDropCallback' ---------------------------- */
   static void WinOnDragDrop(GLFWwindow*const glfwWindow, int iCount,
@@ -88,7 +88,7 @@ class GlFWWindow :                     // GLFW window class
     const DimInt diSize{ glfwNWindow->WinGetSize() };
     const DimFloat dfScale{ glfwNWindow->WinGetScale() };
     // Dispatch event to engine thread
-    cEvtMain->Add(EMC_VID_FBREINIT, reinterpret_cast<void*>(glfwWindow),
+    cEvtMain->EvtCoreAdd(EMC_VID_FBREINIT, reinterpret_cast<void*>(glfwWindow),
       iWidth, iHeight, ciPos.CoordGetX(), ciPos.CoordGetY(),
       diSize.DimGetWidth(), diSize.DimGetHeight(), dfScale.DimGetWidth(),
       dfScale.DimGetHeight());
@@ -96,49 +96,50 @@ class GlFWWindow :                     // GLFW window class
   /* -- Event handler for 'glfwSetKeyCallback' ----------------------------- */
   static void WinOnKeyPress(GLFWwindow*const glfwWindow, int iKey,
     int iScanCode, int iAction, int iMods)
-  { cEvtMain->Add(EMC_INP_KEYPRESS,
+  { cEvtMain->EvtCoreAdd(EMC_INP_KEYPRESS,
       reinterpret_cast<void*>(glfwWindow), iKey, iScanCode, iAction, iMods); }
   /* -- Event handler for 'glfwSetMouseButtonCallback' --------------------- */
   static void WinOnMousePress(GLFWwindow*const glfwWindow, int iButton,
     int iAction, int iMods)
-  { cEvtMain->Add(EMC_INP_MOUSECLICK,
+  { cEvtMain->EvtCoreAdd(EMC_INP_MOUSECLICK,
       reinterpret_cast<void*>(glfwWindow), iButton, iAction, iMods); }
   /* -- Event handler for 'glfwSetScrollCallback' -------------------------- */
   static void WinOnMouseScroll(GLFWwindow*const glfwWindow, double dX,
     double dY)
-  { cEvtMain->Add(EMC_INP_MOUSESCROLL,
+  { cEvtMain->EvtCoreAdd(EMC_INP_MOUSESCROLL,
       reinterpret_cast<void*>(glfwWindow), dX, dY); }
   /* -- Event handler for 'glfwSetWindowCloseCallback' --------------------- */
   static void WinOnWindowClose(GLFWwindow*const glfwWindow)
   { // GLFW must be denied because we will close the window instead.
     glfwSetWindowShouldClose(glfwWindow, GL_FALSE);
     // Dispatch the event to handle this ourselve.
-    cEvtMain->Add(EMC_WIN_CLOSE, reinterpret_cast<void*>(glfwWindow));
+    cEvtMain->EvtCoreAdd(EMC_WIN_CLOSE, reinterpret_cast<void*>(glfwWindow));
   }
   /* -- Event handler for 'glfwSetWindowContentScaleCallback' -------------- */
   static void WinOnWindowScale(GLFWwindow*const glfwWindow, const float fX,
     const float fY)
-  { cEvtMain->Add(EMC_WIN_SCALE,
+  { cEvtMain->EvtCoreAdd(EMC_WIN_SCALE,
       reinterpret_cast<void*>(glfwWindow), fX, fY); }
   /* -- Event handler for 'glfwSetWindowFocusCallback' --------------------- */
   static void WinOnWindowFocus(GLFWwindow*const glfwWindow, int iFocused)
-    { cEvtMain->Add(EMC_WIN_FOCUS, reinterpret_cast<void*>(glfwWindow),
+    { cEvtMain->EvtCoreAdd(EMC_WIN_FOCUS, reinterpret_cast<void*>(glfwWindow),
         iFocused); }
   /* -- Event handler for 'glfwSetWindowIconifyCallback' ------------------- */
   static void WinOnWindowIconify(GLFWwindow*const glfwWindow, int iIconified)
-    { cEvtMain->Add(EMC_WIN_ICONIFY,
+    { cEvtMain->EvtCoreAdd(EMC_WIN_ICONIFY,
         reinterpret_cast<void*>(glfwWindow), iIconified); }
   /* -- Event handler for 'glfwSetWindowPosCallback' ----------------------- */
   static void WinOnWindowMove(GLFWwindow*const glfwWindow, int iX, int iY)
-    { cEvtMain->Add(EMC_WIN_MOVED,
+    { cEvtMain->EvtCoreAdd(EMC_WIN_MOVED,
         reinterpret_cast<void*>(glfwWindow), iX, iY); }
   /* -- Event handler for 'glfwSetWindowRefreshCallback' ------------------- */
   static void WinOnWindowRefresh(GLFWwindow*const glfwWindow)
-    { cEvtMain->Add(EMC_WIN_REFRESH, reinterpret_cast<void*>(glfwWindow)); }
+    { cEvtMain->EvtCoreAdd(EMC_WIN_REFRESH,
+        reinterpret_cast<void*>(glfwWindow)); }
   /* -- Event handler for 'glfwSetWindowSizeCallback' ---------------------- */
   static void WinOnWindowResize(GLFWwindow*const glfwWindow, int iWidth,
     int iHeight)
-  { cEvtMain->Add(EMC_WIN_RESIZED,
+  { cEvtMain->EvtCoreAdd(EMC_WIN_RESIZED,
       reinterpret_cast<void*>(glfwWindow), iWidth, iHeight); }
   /* -- Get files -------------------------------------------------- */ public:
   StrVector &WinGetFiles() { return svFiles; }

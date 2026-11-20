@@ -58,8 +58,8 @@ using namespace ISysUtil::P;           using namespace ISystem::P;
 using namespace ITexture::P;           using namespace IThread::P;
 using namespace ITime::P;              using namespace IToken::P;
 using namespace IUrl::P;               using namespace IUtil::P;
-using namespace IVideo::P;             using namespace Lib::GlFW::Types;
-using namespace Lib::OpenAL::Types;    using namespace Lib::Sqlite::Types;
+using namespace IVideo::P;             using namespace LAL::Types;
+using namespace LGL::Types;            using namespace LSql::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -165,8 +165,8 @@ class Core final :                     // Members initially private
     SocketResetCounters();
     // Clear any lingering events which is very important because events from
     // the last sandbox may contain invalidated pointers and as long as they
-    // don't reach the 'EvtMain::ManageSafe()' function we're fine.
-    EvtMain::Flush();
+    // don't reach the 'EvtMainManage()' function we're fine.
+    EvtMainFlush();
     // Reset tick count and catchup
     FrameCatchup();
     FrameResetTicks();
@@ -272,9 +272,9 @@ class Core final :                     // Members initially private
   { // Capture exceptions...
     try
     { // Clear thread exit status
-      GetEngThread().ThreadCancelExit();
+      EvtMainGetEngThread().ThreadCancelExit();
       // Compare event code. Do we need to execute scripts?
-      switch(GetExitReason())
+      switch(EvtMainGetExitReason())
       { // Do not reinitialise anything if we processed a LUA error code
         case EMC_LUA_ERROR: break;
         // Lua execution was ended (e.g. use of the 'lend' command)
@@ -284,7 +284,7 @@ class Core final :                     // Members initially private
           // Force timer delay to 1ms to prevent 100% thread use on Main*
           FrameSetDelayIfZero();
           // Exceptions from here on are recoverable
-          SetExitReason(EMC_LUA_ERROR);
+          EvtMainSetExitReason(EMC_LUA_ERROR);
           // Done
           break;
         // The graphics subsystem was reinitialised due to 'greset' command?
@@ -300,7 +300,7 @@ class Core final :                     // Members initially private
         // The thread and window was reinitialised? (e.g. vreset command)
         case EMC_QUIT_THREAD:
           // Exceptions from here on are recoverable
-          SetExitReason(EMC_LUA_ERROR);
+          EvtMainSetExitReason(EMC_LUA_ERROR);
           // Done
           break;
         // Lua executing was reinitialised?
@@ -320,7 +320,7 @@ class Core final :                     // Members initially private
           // exceptions or C (LUA) exceptions occur, the underlying scope knows
           // to handle the error and try to recover. The actual loops will set
           // this to something different when they cleanly exit their loops.
-          SetExitReason(EMC_LUA_ERROR);
+          EvtMainSetExitReason(EMC_LUA_ERROR);
           // Execute startup script
           LuaCodeExecuteFile(lS, CVarsGetStrInternal(LUA_SCRIPT));
           // Done
@@ -332,21 +332,21 @@ class Core final :                     // Members initially private
         { // Frame limiter enabled?
           if(MetadataIsTimerMode())
           { // Loop until event manager emits break
-            while(EvtMain::HandleSafe())
+            while(EvtMainHandleSafe())
             { // Execute unthreaded tick
               CoreTickFrameLimiter();
               // Process bot console
               ConsoleFlushToLog();
             }
           } // Frame limiter disabled so loop until event manager emits break
-          else while(EvtMain::HandleSafe())
+          else while(EvtMainHandleSafe())
           { // Execute unthreaded tick
             CoreTickNoFrameLimiter();
             // Process bot console
             ConsoleFlushToLog();
           }
         } // Terminal mode only so loop until thread says we should break loop.
-        else while(EvtMain::HandleSafe())
+        else while(EvtMainHandleSafe())
         { // Calculate time elapsed in this tick
           FrameUpdateBot();
           // Execute the main tick
@@ -359,11 +359,11 @@ class Core final :                     // Members initially private
       { // Frame limiter enabled?
         if(MetadataIsTimerMode())
           // Loop until event manager says we should break
-          while(EvtMain::HandleSafe()) CoreTickFrameLimiter();
+          while(EvtMainHandleSafe()) CoreTickFrameLimiter();
           // Frame limiter disabled so loop without frame limiting
-        else while(EvtMain::HandleSafe()) CoreTickNoFrameLimiter();
+        else while(EvtMainHandleSafe()) CoreTickNoFrameLimiter();
       } // No mode set
-      else while(EvtMain::HandleSafe())
+      else while(EvtMainHandleSafe())
       { // Calculate time elapsed in this tick
         FrameUpdateBot();
         // Execute the main tick
@@ -401,9 +401,9 @@ class Core final :                     // Members initially private
   void CoreDeInitComponents() try
   { // Log reason for deinit
     cLog->LogDebugExSafe("Engine deinitialising interfaces with code $<$>.",
-      GetExitReasonStr(), GetExitReason());
+      EvtMainGetExitReasonStr(), EvtMainGetExitReason());
     // Whats the exit reason code?
-    switch(GetExitReason())
+    switch(EvtMainGetExitReason())
     { // Quitting thread?
       case EMC_QUIT_HWREINIT: [[fallthrough]];
       case EMC_QUIT_VREINIT: [[fallthrough]];
@@ -460,7 +460,7 @@ class Core final :                     // Members initially private
     // Initialise core shaders
     ShadersInit();
     // If we're initialising for the first time?
-    if(IsExitReason(EMC_NONE))
+    if(EvtMainIsExitReason(EMC_NONE))
     { // Initialise freetype, console render, audio and input classes
       FreeTypeInit();
       ConsoleInit();
@@ -483,21 +483,22 @@ class Core final :                     // Members initially private
   ThreadFlagsType CoreThreadMain(Thread&) try
   { // Log reason for init
     cLog->LogDebugExSafe("Core engine thread started (C:$;M:$<$>).",
-      GetExitReason(), MetadataGetCoreFlagsString(), MetadataGetCoreFlags());
+      EvtMainGetExitReason(), MetadataGetCoreFlagsString(),
+      MetadataGetCoreFlags());
     // Non-interactive mode?
     if(MetadataIsTextMode())
     { // Have interactive mode too? Init graphical systems
       if(MetadataIsGraphicalMode()) CoreInitGraphicalSubsystems();
       // Not interactive mode so init FT and console if not a first time init
-      else if(IsExitReason(EMC_NONE)) { FreeTypeInit(); ConsoleInit(); }
+      else if(EvtMainIsExitReason(EMC_NONE)) { FreeTypeInit(); ConsoleInit(); }
       // Not initialising for first time so load icons
       else DisplayUpdateIcons();
     } // Init interactive console?
     else if(MetadataIsGraphicalMode()) CoreInitGraphicalSubsystems();
     // With audio mode enabled? Initialise audio class.
-    if(MetadataIsAudioMode() && IsExitReason(EMC_NONE)) AudioInit();
+    if(MetadataIsAudioMode() && EvtMainIsExitReason(EMC_NONE)) AudioInit();
     // Lua loop with initialisation. Compare event code
-    SandBoxInit: switch(GetExitReason())
+    SandBoxInit: switch(EvtMainGetExitReason())
     { // Ignore LUA initialisation if we're reinitialising other components
       case EMC_QUIT_HWREINIT: [[fallthrough]];
       case EMC_QUIT_VREINIT: [[fallthrough]];
@@ -517,7 +518,7 @@ class Core final :                     // Members initially private
       // Show error in console
       ConsoleAddLine(COLOUR_LRED, eReason.what());
       // Check event code that was set?
-      switch(GetExitReason())
+      switch(EvtMainGetExitReason())
       { // Run-time error?
         case EMC_LUA_ERROR:
           // If we are not in the exit script?
@@ -567,11 +568,11 @@ class Core final :                     // Members initially private
                 throw;
             } // Should not get here
           } // We have to update the exit code manually if pending.
-          UpdateConfirmExit();
-          // Check exit code. These are originally set in EvtMain::DoHandle()
+          EvtMainUpdateConfirmExit();
+          // Check exit code. These are originally set in EvtMainDoHandle()
           // so make sure all used exit values with ConfirmExit() are checked
           // for here.
-          switch(GetExitReason())
+          switch(EvtMainGetExitReason())
           { // Lua is ending execution? (i.e. via 'lend') fall through.
             case EMC_LUA_END: [[fallthrough]];
             // Lua executing is reinitialising? (i.e. lreset).
@@ -585,7 +586,7 @@ class Core final :                     // Members initially private
             default:
               // Report unknown exit reason to log
               cLog->LogDebugExSafe("Core has unknown exit reason of $!",
-                GetExitReason());
+                EvtMainGetExitReason());
               // Fall through to EMC_QUIT_RESTART
               [[fallthrough]];
             // Quitting and restarting?
@@ -600,7 +601,7 @@ class Core final :                     // Members initially private
         default:
           // Report it
           cLog->LogWarningExSafe("Core has unknown exit reason of $!",
-            GetExitReason());
+            EvtMainGetExitReason());
           // Fall through to EMC_LUA_END
           [[fallthrough]];
         // Lua is ending execution? Shouldn't happen.
@@ -615,7 +616,7 @@ class Core final :                     // Members initially private
         case EMC_QUIT: CoreDeInitComponents(); throw;
       } // We get here to process lua event as normal.
     } // Why did LUA break out of the sandbox?
-    switch(GetExitReason())
+    switch(EvtMainGetExitReason())
     { // Execution ended? (e.g. 'lend' command was used)
       case EMC_LUA_END:
         // Add message to say the execution ended
@@ -653,7 +654,7 @@ class Core final :                     // Members initially private
   } // exception occured out of loop. Fatal so we have to quit
   catch(const StdException &eReason)
   { // We will quit since this is fatal
-    SetExitReason(EMC_QUIT);
+    EvtMainSetExitReason(EMC_QUIT);
     // Write exception to log
     cLog->LogErrorExSafe("(ENGINE THREAD FATAL EXCEPTION) $", eReason);
     // Show error
@@ -666,7 +667,7 @@ class Core final :                     // Members initially private
   /* -- Engine should continue? -------------------------------------------- */
   bool CoreShouldEngineContinue()
   { // Compare exit value
-    switch(GetExitReason())
+    switch(EvtMainGetExitReason())
     { // Engine was requested to quit or restart? NO!
       case EMC_QUIT: [[fallthrough]];
       case EMC_QUIT_RESTART: [[fallthrough]];
@@ -686,21 +687,21 @@ class Core final :                     // Members initially private
     { // Deinitialise display and thread when this scope exists
       const auto sgWDeInit{
         MakeScopeGuard([this]{
-          GetEngThread().ThreadDeInit();
+          EvtMainGetEngThread().ThreadDeInit();
           DisplayDeInit();
         }) };
       // Initialise window
       DisplayInit();
       // Setup main thread and start it
-      Restart: GetEngThread().ThreadInit(cbtMain, nullptr);
+      Restart: EvtMainGetEngThread().ThreadInit(cbtMain, nullptr);
       // Loop until window should close
       while(WinShouldNotClose())
       { // Process window event manager commands from other threads
-        EvtWin::Manage();
+        EvtWinManage();
         // Wait for more window events
         GlFWWaitEvents();
       } // Compare exit reason
-      switch(GetExitReason())
+      switch(EvtMainGetExitReason())
       { // If the window is being reinitialised due to HW change?
         case EMC_QUIT_HWREINIT:
           // Fall through to quit
@@ -708,7 +709,7 @@ class Core final :                     // Members initially private
         // The graphics subsystem was reinitialised due to 'greset' command?
         case EMC_QUIT_VREINIT:
           // Deinitialise the engine thread and wait for it to complete
-          GetEngThread().ThreadDeInit();
+          EvtMainGetEngThread().ThreadDeInit();
           // Soft reinitialise the window
           DisplayReInit();
           // Go back to the thread restart point
@@ -718,9 +719,9 @@ class Core final :                     // Members initially private
           // Write a warning because we can't run the exit request
           cLog->LogWarningSafe("Core processing abrupt window close event...");
           // Force quit reason because it wasn't set yet
-          SetExitReason(EMC_QUIT);
+          EvtMainSetExitReason(EMC_QUIT);
           // Deinitialise the engine thread and wait for it to complete
-          GetEngThread().ThreadDeInit();
+          EvtMainGetEngThread().ThreadDeInit();
           // Fall through to quit
           [[fallthrough]];
         // Anything else just deinit the window and reload it
@@ -731,7 +732,7 @@ class Core final :                     // Members initially private
     { // Send to log and show error message to user
       cLog->LogErrorExSafe("(WINDOW LOOP EXCEPTION) $", eReason);
       // Exit loop so we don't infinite loop
-      SetExitReason(EMC_QUIT);
+      EvtMainSetExitReason(EMC_QUIT);
       // Show error and try to carry on and clean everything up
       SysMsgEx("Window Loop Fatal Exception!", eReason.what(), MB_ICONSTOP);
     } // Engine should terminate from here-on
@@ -758,7 +759,7 @@ class Core final :                     // Members initially private
         XC("Text console cannot be used when logging to standard output!");
       // Deinit text mode console when leaving scope
       const auto sgTDeInit{ MakeScopeGuard([this]{
-        GetEngThread().ThreadDeInit();
+        EvtMainGetEngThread().ThreadDeInit();
         SetWindowDestroyed();
         SysConDeInit();
       }) };
@@ -782,7 +783,8 @@ class Core final :                     // Members initially private
         // thread properly. We won't actually be spawning a new thread with
         // this though, it's just used as simple exit condition flag to be
         // compatible with the GUI mode.
-        while(CoreShouldEngineContinue()) CoreThreadMain(GetEngThread());
+        while(CoreShouldEngineContinue())
+          CoreThreadMain(EvtMainGetEngThread());
       } // If system says we have to close as quickly as possible?
       if(SysConIsClosing())
       { // Quickly save cvars, database and log, this is the priority since
@@ -799,7 +801,7 @@ class Core final :                     // Members initially private
     else
     { // Deinit window when leaving scope
       const auto sgWDeInit{ MakeScopeGuard([this]{
-        GetEngThread().ThreadDeInit();
+        EvtMainGetEngThread().ThreadDeInit();
         SetWindowDestroyed();
       }) };
       // Init lightweight text mode console for monitoring.
@@ -809,7 +811,7 @@ class Core final :                     // Members initially private
       // thread properly. We won't actually be spawning a new thread with
       // this though, it's just used as simple exit condition flag to be
       // compatible with the GUI mode.
-      while(CoreShouldEngineContinue()) CoreThreadMain(GetEngThread());
+      while(CoreShouldEngineContinue()) CoreThreadMain(EvtMainGetEngThread());
       // If system says we have to close as quickly as possible?
       if(SysConIsClosing())
       { // Quickly save cvars, database and log, this is the priority since
@@ -821,7 +823,7 @@ class Core final :                     // Members initially private
         SysConCanCloseNow();
       }
     } // Compare engine exit code...
-    switch(GetExitReason())
+    switch(EvtMainGetExitReason())
     { // If we're to restart process with parameters? Set to do so
       case EMC_QUIT_RESTART:
         // Message to send

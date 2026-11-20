@@ -16,7 +16,7 @@ using namespace IGlFWCursor::P;        using namespace IGlFWWindow::P;
 using namespace IHelper::P;            using namespace ILog::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace IToken::P;             using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace Lib::GlFW;
+using namespace IUtil::P;              using namespace LGL;
 /* ------------------------------------------------------------------------- */
 using CursorStandard = StdArray<GlFWCursor, CUR_MAX>;
 /* ------------------------------------------------------------------------- */
@@ -50,24 +50,24 @@ class GlFW :                           // Root engine class
   void GlFWOnMonitorChanged(GLFWmonitor*const mAffected, const int iAction) try
   { // Send event to process monitor which has to unsuspend the engine thread
     if(iAction == GLFW_CONNECTED)
-      cEvtWin->Execute(EWC_WIN_MONITOR,
+      cEvtWin->EvtCoreExecute(EWC_WIN_MONITOR,
         GlFWGetMonitorName(mAffected), nullptr);
     // Anything but connected means the name is invalid
     else if(iAction == GLFW_DISCONNECTED)
-      cEvtWin->Execute(EWC_WIN_MONITOR,
+      cEvtWin->EvtCoreExecute(EWC_WIN_MONITOR,
         nullptr, GlFWGetMonitorUserPointer<void*>(mAffected));
     // Invalid event
     else
     { // Log invalid event and ask engine thread to quit and reinit window
       cLog->LogWarningExSafe("GlFW got invalid monitor change action of 0x$$!",
         StdIOSHex, iAction);
-      cEvtMain->RequestQuitThread();
+      cEvtMain->EvtMainRequestQuitThread();
     }
   } // Exceptions we have to handle since func could be in a thread GlFW owns.
   catch(const StdException &e)
   { // Write error and ask engine thread to quit and reinit window
     cLog->LogWarningExSafe("GlFW monitor event exception: $", e.what());
-    cEvtMain->RequestQuitThread();
+    cEvtMain->EvtMainRequestQuitThread();
   }
   /* -- Error handler prototype (full body at bottom) ---------------------- */
   static void GlFWOnHandleErrorStatic(int, const char*const);

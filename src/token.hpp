@@ -103,7 +103,7 @@ struct Token :                         // Tokeniser class
     StrVector{ StdMove(tlOther) }      // Move vector of strings over
     /* -- No code ---------------------------------------------------------- */
     {}
-};/* ----------------------------------------------------------------------- */
+};/* -- Common typedefs ---------------------------------------------------- */
 using TokenList           = Token<StdStringView, StdList<StdStringView>>;
 using TokenStrView        = Token<StdStringView>;
 using TokenStrViewConstIt = TokenStrView::const_iterator;

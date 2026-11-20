@@ -52,7 +52,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
   { // Set clipboard string to set
     strClipboard = strText;
     // Dispatch the event
-    cEvtWin->Add(EWC_CB_SETNR, this);
+    cEvtWin->EvtCoreAdd(EWC_CB_SETNR, this);
   }
   /* -- Window set clipboard request --------------------------------------- */
   static void ClipOnSetNRCb(const EvtWinEvent &eweEvent)
@@ -95,7 +95,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     // Init LUA references
     LuaEvtInitEx(lS);
     // We're ready, so dispatch to the window thread with this class
-    cEvtWin->Add(EWC_CB_SET, this);
+    cEvtWin->EvtCoreAdd(EWC_CB_SET, this);
   }
   /* -- Initialise and get string ------------------------------------------ */
   void ClipGetAsync(lua_State*const lS, const StdStringView &ssvIdent)
@@ -104,7 +104,7 @@ CTOR_MEM_BEGIN_CSLAVE(Clips, Clip, ICHelperUnsafe),
     // Init LUA references
     LuaEvtInitEx(lS);
     // We're ready, so dispatch to the window thread with this class
-    cEvtWin->Add(EWC_CB_GET, this);
+    cEvtWin->EvtCoreAdd(EWC_CB_GET, this);
   }
   /* -- Default constructor ------------------------------------------------ */
   Clip() :

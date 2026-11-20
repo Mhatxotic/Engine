@@ -146,7 +146,7 @@ class SysCon :                         // All members initially private
           case 1: iMods = 0; iKey = GLFW_KEY_HOME; break;
           // Break key pressed? Send exit signal to engine
           case 3: iKey = iMods = 0;
-                  if(bBreakEnabled) cEvtMain->RequestQuit(); break;
+                  if(bBreakEnabled) cEvtMain->EvtMainRequestQuit(); break;
           // End key pressed? (Not mapped by default)
           case 5: iMods = 0; iKey = GLFW_KEY_END; break;
           // Escape key pressed?

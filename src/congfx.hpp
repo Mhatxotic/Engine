@@ -21,7 +21,7 @@ using namespace IImageDef::P;          using namespace ILog::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace IUtfCodepoint::P;      using namespace Lib::GlFW::Types;
+using namespace IUtfCodepoint::P;      using namespace LGL::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ========================================================================= */
@@ -191,7 +191,7 @@ class ConGfx :                         // Members initially private
         // Break to pass to console class
         break;
       } // Paste text from clipboard?
-      case GLFW_KEY_V: cEvtMain->Add(EMC_INP_PASTE); break;
+      case GLFW_KEY_V: cEvtMain->EvtCoreAdd(EMC_INP_PASTE); break;
       // Nothing interesting break to pass to console class
       default: break;
     } // Normal key, which key?
