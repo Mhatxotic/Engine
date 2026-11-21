@@ -10,8 +10,8 @@
 /* ------------------------------------------------------------------------- */
 namespace Common {                     // Common namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IStd::P;               using namespace LGL::Types;
-using namespace LAL::Types;
+using namespace IStd::P;               using namespace LOgl::Types;
+using namespace LOal::Types;
 /* -- Read a LString ------------------------------------------------------- */
 struct AgLCString { size_t stB; const char *cpD;
   explicit AgLCString(lua_State*const lS, const int iArg) :

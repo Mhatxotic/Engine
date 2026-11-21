@@ -682,16 +682,13 @@ template<class ParentType>class AsyncLoader :
     AsyncStop();
   )
 };
-/* -- Detail struct collector async helper --------------------------------- */
-template<class LockType> struct CLHelperAsyncTraits
-  { using HelperType = CLHelper<LockType>; };
 /* -- Function to wait for async of all members in a collector ------------- */
 template<class LockType> class CLHelperAsync :
   /* -- Derivced classes --------------------------------------------------- */
-  public CLHelperAsyncTraits<LockType>::HelperType
+  public CLHelper<LockType>
 { /* -- Private typedefs --------------------------------------------------- */
-  using HelperType = CLHelperAsyncTraits<LockType>::HelperType;
-  using MemberType = typename LockType::MemberType;
+  using HelperType       = typename CLHelperAsync::HelperType;
+  using MemberType       = typename CLHelperAsync::MemberType;
   using LuaEvtSlaveType  = LuaEvtTypeAsync<MemberType>;
   using LuaEvtMasterType = LuaEvtMaster<MemberType, LuaEvtSlaveType>;
   /* -- Public variables ------------------------------------------- */ public:

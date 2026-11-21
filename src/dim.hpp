@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IDim {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IIntPair::P;           using namespace LGL::Types;
+using namespace IIntPair::P;           using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

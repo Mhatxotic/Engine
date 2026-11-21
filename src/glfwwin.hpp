@@ -15,7 +15,7 @@ using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IGlFWBase::P;          using namespace IGlFWUtil::P;
 using namespace ILog::P;               using namespace IStd::P;
 using namespace IStdLib::P;            using namespace IString::P;
-using namespace IUtfCodepoint::P;      using namespace LGL;
+using namespace IUtfCodepoint::P;      using namespace LOgl;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

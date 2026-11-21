@@ -15,7 +15,7 @@ using namespace ILog::P;               using namespace ILookupMap::P;
 using namespace IMemory::P;            using namespace IPcmData::P;
 using namespace IPcmDef::P;            using namespace IPcmLib::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;              using namespace LAL::Types;
+using namespace IUtil::P;              using namespace LOal::Types;
 using namespace LOgg;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace

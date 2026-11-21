@@ -11,7 +11,7 @@ namespace IGlFWUtil {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IGlFWBase::P;          using namespace ILog::P;
-using namespace ILookupMap::P;         using namespace LGL;
+using namespace ILookupMap::P;         using namespace LOgl;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

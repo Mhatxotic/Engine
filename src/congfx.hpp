@@ -21,7 +21,7 @@ using namespace IImageDef::P;          using namespace ILog::P;
 using namespace IOgl::P;               using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace IUtfCodepoint::P;      using namespace LGL::Types;
+using namespace IUtfCodepoint::P;      using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ========================================================================= */

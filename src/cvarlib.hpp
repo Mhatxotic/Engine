@@ -28,8 +28,8 @@ CVarItemStaticList{{
 // ! APP_CMDLINE
 // ? Shows the commandline sent to the application it cannot be changed at all.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_cmdline", "",
-  CBSTR(cCore->CoreParseCmdLine), CONFIDENTIAL|TSTRING|MTRIM|PCMDLINE },
+{ CFL_BASIC, "app_cmdline", "", CBSTR(cCore->CoreParseCmdLine),
+    CVarFlagsConst{ CONFIDENTIAL|TSTRING|MTRIM|PCMDLINE }},
 /* == Core cvars (don't modify order) ====================================== */
 // ! LOG_LEVEL
 // ? Specifies the logging level...
@@ -47,20 +47,20 @@ CVarItemStaticList{{
   "2",                                 // Default of WARNING for log level
 #endif                                 // Release type check
   /* ----------------------------------------------------------------------- */
-  CB(cLog->LogSetLevel, LHLevel), TUINTEGER|PANY },
+  CB(cLog->LogSetLevel, LHLevel), CVarFlagsConst{ TUINTEGER|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AST_LZMABUFFER
 // ? Specifies the decompression buffer size (in bytes) for the lzma api. The
 // ? default value is 256 kilobytes.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_lzmabuffer", "262144",
-  CB(ArchiveSetBufferSize, size_t), TUINTEGER|CPOW2|PNOUI },
+{ CFL_BASIC, "ast_lzmabuffer", "262144", CB(ArchiveSetBufferSize, size_t),
+    CVarFlagsConst{ TUINTEGER|CPOW2|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! AST_PIPEBUFFER
 // ? Specifies the size of the pipe buffer.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_pipebuffer", "4096",
-  CB(AssetSetPipeBufferSize, size_t), TUINTEGER|CPOW2|PANY },
+{ CFL_BASIC, "ast_pipebuffer", "4096", CB(AssetSetPipeBufferSize, size_t),
+    CVarFlagsConst{ TUINTEGER|CPOW2|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AST_FSOVERRIDE
 // ? Specifies the order in which to load resources. Specify '0' to only allow
@@ -68,30 +68,30 @@ CVarItemStaticList{{
 // ? then archives, '2' to load from archives first and then try the disk or
 // ? '3' to load from disk only.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_fsoverride", "2",
-  CB(AssetSetFSOverride, FSOverrideType), TUINTEGER|PNOUI },
+{ CFL_BASIC, "ast_fsoverride", "2", CB(AssetSetFSOverride, FSOverrideType),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! AST_EXEBUNDLE
 // ? A boolean to specify if the executable file should be checked for a
 // ? 7-zip archive and use that to load guest assets. This is only supported
 // ? on Windows architectures right now and ignored on others.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_exebundle", "1",
-  CB(ArchiveInitExe, bool), TBOOLEAN|PCMDLINE },
+{ CFL_BASIC, "ast_exebundle", "1", CB(ArchiveInitExe, bool),
+    CVarFlagsConst{ TBOOLEAN|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! AST_BASEDIR
 // ? Specifies the base directory of where the executable was started from. It
 // ? is only readable by the end-user and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "ast_basedir", "", CBSTR(cSystem->SysSetWorkDir),
-  CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
+    CVarFlagsConst{ CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! AST_BUNDLES
 // ? Specifies the [.ext]ension to use as 7-zip archives. These filenames will
 // ? be checked for at startup and automatically loaded by the engine.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_bundles", "." ARCHIVE_EXTENSION,
-  CBSTR(ArchiveInit), TSTRING|MTRIM|PCMDLINE },
+{ CFL_BASIC, "ast_bundles", "." ARCHIVE_EXTENSION, CBSTR(ArchiveInit),
+    CVarFlagsConst{ TSTRING|MTRIM|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! APP_ACTIVESET
 // ? Selects the active configuration set from the application manifest file
@@ -105,7 +105,8 @@ CVarItemStaticList{{
 // ? will not select any set at all regardless of manifest set value.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_activeset", "-2",
-  CB(cCVars->CVarsSetConfigActiveSet, ssize_t), TINTEGER|PCMDLINE },
+  CB(cCVars->CVarsSetConfigActiveSet, ssize_t),
+    CVarFlagsConst{ TINTEGER|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! APP_CONFIG
 // ? Loads the configuration file with the specified extension (usually 'app').
@@ -114,7 +115,8 @@ CVarItemStaticList{{
 // ? command-line.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_config", DEFAULT_CONFIGURATION,
-  CBSTR(cCVars->CVarsExecAppConfig), TSTRING|CFILENAME|MTRIM|PCMDLINE },
+  CBSTR(cCVars->CVarsExecAppConfig),
+    CVarFlagsConst{ TSTRING|CFILENAME|MTRIM|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! APP_AUTHOR
 // ? Specifies the author of the guest application. This is used for display
@@ -122,7 +124,8 @@ CVarItemStaticList{{
 // ? app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_author", "Anonymous",
-  CBSTR(cMetadata->MetadataSetAuthor), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cMetadata->MetadataSetAuthor),
+    CVarFlagsConst{ TSTRING|CNOTEMPTY|MTRIM|PAPPCFG } },
 /* ------------------------------------------------------------------------- */
 // ! APP_SHORTNAME
 // ? Specifies a short title name for the guest application. It is purely for
@@ -130,24 +133,24 @@ CVarItemStaticList{{
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_shortname", "Untitled",
-  CBSTR(cMetadata->MetadataSetShortTitle), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cMetadata->MetadataSetShortTitle),
+    CVarFlagsConst{ TSTRING|CNOTEMPTY|MTRIM|PAPPCFG } },
 /* ------------------------------------------------------------------------- */
 // ! AST_HOMEDIR
 // ? Species the users home directory where files are written to if they cannot
 // ? be written to the working directory. It is only readable by the end-user
 // ? and the host, but not the guest.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_homedir", "",
-  CBSTR(cCore->CoreSetHomeDir),
-  CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
+{ CFL_BASIC, "ast_homedir", "", CBSTR(cCore->CoreSetHomeDir),
+    CVarFlagsConst{ CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! AST_MODBUNDLE
 // ? Scans the directory pointed at 'ast_homedir' to be scanned for archives
 // ? ending in the value specified by 'ast_bundles' which can override any game
 // ? asset (except app.cfg). The default is true (yes).
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "ast_modbundle", "1",
-  CB(ArchiveInitPersist, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "ast_modbundle", "1", CB(ArchiveInitPersist, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! AST_SAFETYMODE
 // ? Specifies the default file access safety mode. Specify 0 to completely
@@ -162,7 +165,8 @@ CVarItemStaticList{{
 // ? to can be accessed.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "ast_safetymode", "2",
-  CB(cDirBase->SetDefaultSafetyMode, ValidType), TUINTEGER|PNOUI },
+  CB(cDirBase->SetDefaultSafetyMode, ValidType),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_RETRYSUSPEND
 // ? Specifies the number of milliseconds to suspend before retrying the
@@ -170,21 +174,21 @@ CVarItemStaticList{{
 // ? safety reasons. Setting to zero disables but yields the calling thread.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_retrysuspend", "1",
-  CB(SqlRetrySuspendModified, uint64_t), TUINTEGER|PNOUI },
+  CB(SqlRetrySuspendModified, uint64_t), CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_ERASEEMPTY
 // ? Specifies to automatically erase the database at exit if no cvars or
 // ? custom tables are written to it by the guest.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_eraseempty", "1",
-  CB(SqlDeleteEmptyDBModified, bool), TBOOLEAN|PNOUI },
+  CB(SqlDeleteEmptyDBModified, bool), CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_RETRYCOUNT
 // ? Specifies the number of times a Sql query can be retried before giving
 // ? up. Set to -1 for infinite. The default value is 1000.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "sql_retrycount", "1000",
-  CB(SqlRetryCountModified, unsigned), TINTEGER|PNOUI },
+  CB(SqlRetryCountModified, unsigned), CVarFlagsConst{ TINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DB
 // ? Specifies the Sql database filename to use. This filename is subject
@@ -196,55 +200,55 @@ CVarItemStaticList{{
 // ? result in the Sqlite database being stored in memory. Specifying a blank
 // ? string uses the executables filename without the extension.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_db", "",
-  CBSTR(SqlUdbFileModified), CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE },
+{ CFL_BASIC, "sql_db", "", CBSTR(SqlUdbFileModified),
+    CVarFlagsConst{ CONFIDENTIAL|TSTRING|CTRUSTEDFN|MTRIM|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_LOCKINGMODE
 // ? Performs 'pragma locking_mode' when the database is opened to this value.
 // ? If set to 'true' then locking mode is 'EXCLUSIVE', else locking mode is
 // ? 'NORMAL' when 'false' (default).
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_lockingmode", "0",
-  CB(SqlLockingModeModified, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "sql_lockingmode", "0", CB(SqlLockingModeModified, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_TEMPSTORE
 // ? Performs 'pragma temp_store' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_tempstore", "MEMORY",
-  CBSTR(SqlTempStoreModified), TSTRING|MTRIM|PNOUI },
+{ CFL_BASIC, "sql_tempstore", "MEMORY", CBSTR(SqlTempStoreModified),
+    CVarFlagsConst{ TSTRING|MTRIM|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_SYNCHRONOUS
 // ? Performs 'pragma synchronous x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_synchronous", "0",
-  CB(SqlSynchronousModified, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "sql_synchronous", "0", CB(SqlSynchronousModified, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_JOURNALMODE
 // ? Performs 'pragma journal_mode x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_journalmode", "0",
-  CB(SqlJournalModeModified, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "sql_journalmode", "0", CB(SqlJournalModeModified, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_AUTOVACUUM
 // ? Performs 'pragma auto_vacuum x' when the database is opened to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_autovacuum", "1",
-  CB(SqlAutoVacuumModified, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "sql_autovacuum", "1", CB(SqlAutoVacuumModified, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_FOREIGNKEYS
 // ? Performs 'pragma foreign_keys x' when the database is opened to this
 // ? value.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_foreignkeys", "1",
-  CB(SqlForeignKeysModified, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "sql_foreignkeys", "1", CB(SqlForeignKeysModified, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_INCVACUUM
 // ? Performs 'pragma incremental_vacuum(x)' when the database is opened and
 // ? sets 'x' to this value.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_incvacuum", "0",
-  CB(SqlIncVacuumModified, uint64_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "sql_incvacuum", "0", CB(SqlIncVacuumModified, uint64_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_DEFAULTS
 // ? Performs a reset of the database depending on the following value...
@@ -252,14 +256,14 @@ CVarItemStaticList{{
 // ? [1] DC_OVERWRITE = Overwrite engine variables with defaults.
 // ? [2] DC_REFRESH   = Completely clear SQL cvars table.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_defaults", "0",
-  CB(cCVars->CVarsSetDefaults, CVarDefaults), TUINTEGER|PCMDLINE },
+{ CFL_BASIC, "sql_defaults", "0", CB(cCVars->CVarsSetDefaults, CVarDefaults),
+    CVarFlagsConst{ TUINTEGER|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! SQL_LOADCONFIG
 // ? Actually loads cvars from the configuration database.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "sql_loadconfig", "1",
-  CB(cCVars->CVarsLoadSettings, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "sql_loadconfig", "1", CB(cCVars->CVarsLoadSettings, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! APP_CFLAGS
 // ? Specifies how the host wants to be run with the following flags...
@@ -269,38 +273,39 @@ CVarItemStaticList{{
 // ? [0x4] CFL_VIDEO = Inits an OpenGL context+window and API.
 // ? [0x8] CFL_TIMER = Limit engine framerate to cvar value 'app_tickrate'.
 { CFL_BASIC, "app_cflags", "0",
-  CB(cMetadata->MetadataSetCoreFlags, CoreFlagsType), TUINTEGER|PNOUI },
+  CB(cMetadata->MetadataSetCoreFlags, CoreFlagsType),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LOG_LINES
 // ? Specifies the maximum number of lines to keep in the backlog. The log
 // ? lines are always empty when logging to a file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "log_lines", "10000",
-  CB(cLog->LogLinesModified, size_t), TUINTEGERSAVE|PANY },
+{ CFL_BASIC, "log_lines", "10000", CB(cLog->LogLinesModified, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! LOG_APPEND
 // ? If set to 0 (default). The specified log file at 'log_file' is created or
 // ? truncated when opened else if set to 1 then the specified log file is
 // ? created or appended.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "log_append", "0",
-  CB(cLog->LogSetFileAppend, size_t), TBOOLEAN|PANY },
+{ CFL_BASIC, "log_append", "0", CB(cLog->LogSetFileAppend, size_t),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! LOG_FILE
 // ? Specifies a file to log internal engine messages to. It is used to help
 // ? debugging. Leave as blank for no log file. It can be set from command-line
 // ? parameters, the app.cfg file and the user.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "log_file", "",
-  CBSTR(cLog->LogFileModified), TSTRING|CFILENAME|MTRIM|PCMDLINE|PCONSOLE },
+{ CFL_BASIC, "log_file", "", CBSTR(cLog->LogFileModified),
+    CVarFlagsConst{ TSTRING|CFILENAME|MTRIM|PCMDLINE|PCONSOLE } },
 /* ------------------------------------------------------------------------- */
 // ! APP_LONGNAME
 // ? Specifies a long title name for the guest application. It is uses as the
 // ? window title and for display purposes only to the end-user. It can be
 // ? requested by the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_longname", "Untitled",
-  CBSTR(cMetadata->MetadataSetTitle), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
+{ CFL_BASIC, "app_longname", "Untitled", CBSTR(cMetadata->MetadataSetTitle),
+    CVarFlagsConst{ TSTRING|CNOTEMPTY|MTRIM|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! ERR_INSTANCE
 // ? Tries to activate an existing window of the same name if another instance
@@ -308,8 +313,8 @@ CVarItemStaticList{{
 // ? crash but not on Linux and MacOS. So just simply remove the app name from
 // ? /dev/shm and the engine should run again.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "err_instance", "1",
-  CB(cCore->CoreSetOneInstance, bool), TBOOLEAN|PNOUI },
+{ CFL_BASIC, "err_instance", "1", CB(cCore->CoreSetOneInstance, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* == Object cvars ========================================================= */
 // ! OBJ_ARCHIVEMAX
 // ? Specifies the maximum number of archive objects allowed to be registered
@@ -317,46 +322,47 @@ CVarItemStaticList{{
 // ? An exception is generated if more archives than this are allocated.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "obj_archivemax", "1000",
-  CB(cArchives->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+  CB(cArchives->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_ASSETMAX
 // ? Specifies the maximum number of asset objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_assetmax", "1000",
-  CB(cAssets->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_assetmax", "1000", CB(cAssets->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_ATLASMAX
 // ? Specifies the maximum number of atlas objects allowed to be registered by
 // ? the engine. An exception is generated if more objects than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_atlasmax", "1000",
-  CB(cAtlases->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_atlasmax", "1000", CB(cAtlases->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_BINMAX
 // ? Specifies the maximum number of bin objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_binmax", "1000",
-  CB(cBins->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_binmax", "1000", CB(cBins->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CLIPMAX
 // ? Specifies the maximum number of clipboard objects allowed to be registered
 // ? by the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_clipmax", "100",
-  CB(cClips->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_clipmax", "100", CB(cClips->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CMDMAX
 // ? Specifies the maximum number of Lua console commands allowed to be
 // ? registered by the engine.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_cmdmax", "1000",
-  CB(cCommands->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_cmdmax", "1000", CB(cCommands->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CVARIMAX
 // ? Specifies the maximum number of initial cvars allowed to be registered by
@@ -367,151 +373,152 @@ CVarItemStaticList{{
 // ? generated if more initial cvars than this are allocated.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "obj_cvarimax", "1000",
-  CB(cCVars->CVarsMaxICountModified, size_t), TUINTEGER|PNOUI },
+  CB(cCVars->CVarsMaxICountModified, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_CVARMAX
 // ? Specifies the maximum number of cvars allowed to be registered by the
 // ? engine. This includes the internal default cvars. An exception is
 // ? generated if more cvars than this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_cvarmax", "1000",
-  CB(cVariables->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_cvarmax", "1000", CB(cVariables->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FBOMAX
 // ? Specifies the maximum number of framebuffer objects allowed to be
 // ? registered by the engine. An exception is generated if more cvars than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "obj_fbomax", "1000",
-  CB(cFbos->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "obj_fbomax", "1000", CB(cFbos->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FILEMAX
 // ? Specifies the maximum number of file objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_filemax", "1000",
-  CB(cFiles->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_filemax", "1000", CB(cFiles->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FONTMAX
 // ? Specifies the maximum number of font objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "obj_fontmax", "1000",
-  CB(cFonts->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "obj_fontmax", "1000", CB(cFonts->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FTFMAX
 // ? Specifies the maximum number of freetype objects allowed to be registered
 // ? by the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_ftfmax", "1000",
-  CB(cFtfs->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_ftfmax", "1000", CB(cFtfs->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_FUNCMAX
 // ? Specifies the maximum number of lua referenced function objects allowed to
 // ? be registered by the engine. An exception is generated if more cvars than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_funcmax", "1000",
-  CB(cLuaFuncs->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_funcmax", "1000", CB(cLuaFuncs->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_IMGMAX
 // ? Specifies the maximum number of image objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_imgmax", "1000",
-  CB(cImages->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_imgmax", "1000", CB(cImages->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_JSONMAX
 // ? Specifies the maximum number of json objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_jsonmax", "1000",
-  CB(cJsons->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_jsonmax", "1000", CB(cJsons->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_MASKMAX
 // ? Specifies the maximum number of mask objects allowed to be registered by
 // ? the engine. An exception is generated if more cvars than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_maskmax", "1000",
-  CB(cMasks->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_maskmax", "1000", CB(cMasks->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_PCMMAX
 // ? Specifies the maximum number of pcm objects allowed to be registered by
 // ? the engine. An exception is generated if more objects than this are
 // ? allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_pcmmax", "1000",
-  CB(cPcms->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_pcmmax", "1000", CB(cPcms->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SAMPLEMAX
 // ? Specifies the maximum number of sample objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "obj_samplemax", "1000",
-  CB(cSamples->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_AUDIO, "obj_samplemax", "1000", CB(cSamples->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SHADERMAX
 // ? Specifies the maximum number of shader objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "obj_shadermax", "1000",
-  CB(cShaders->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "obj_shadermax", "1000", CB(cShaders->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SOCKETMAX
 // ? Specifies the maximum number of socket objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_socketmax", "1000",
-  CB(cSockets->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_socketmax", "1000", CB(cSockets->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SOURCEMAX
 // ? Specifies the maximum number of source objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "obj_sourcemax", "1000",
-  CB(cSources->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_AUDIO, "obj_sourcemax", "1000", CB(cSources->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SQLMAX
 // ? Specifies the maximum number of sql database objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_sqlmax", "100",
-  CB(cSqls->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_sqlmax", "100", CB(cSqls->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_SSHOTMAX
 // ? Specifies the maximum number of sshot objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "obj_sshotmax", "100",
-  CB(cSShots->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "obj_sshotmax", "100", CB(cSShots->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_STATMAX
 // ? Specifies the maximum number of stat objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_statmax", "1000",
-  CB(cStats->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_statmax", "1000", CB(cStats->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_STREAMMAX
 // ? Specifies the maximum number of stream objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "obj_streammax", "1000",
-  CB(cStreams->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_AUDIO, "obj_streammax", "1000", CB(cStreams->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_TEXTUREMAX
 // ? Specifies the maximum number of texture objects allowed to be
@@ -519,31 +526,32 @@ CVarItemStaticList{{
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "obj_texturemax", "1000",
-  CB(cTextures->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+  CB(cTextures->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_THREADMAX
 // ? Specifies the maximum number of thread objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "obj_threadmax", "1000",
-  CB(cThreads->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "obj_threadmax", "1000", CB(cThreads->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_URLMAX
 // ? Specifies the maximum number of url objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "obj_urlmax", "1000",
-  CB(cUrls->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "obj_urlmax", "1000", CB(cUrls->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! OBJ_VIDEOMAX
 // ? Specifies the maximum number of video objects allowed to be
 // ? registered by the engine. An exception is generated if more objects than
 // ? this are allocated.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "obj_videomax", "1000",
-  CB(cVideos->CollectorSetLimit, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "obj_videomax", "1000", CB(cVideos->CollectorSetLimit, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* == Base cvars =========================================================== */
 // ! APP_DESCRIPTION
 // ? Specifies a description for the guest application. It is purely for
@@ -551,7 +559,8 @@ CVarItemStaticList{{
 // ? and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_description", "Undescribed",
-  CBSTR(cMetadata->MetadataSetDescription), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
+  CBSTR(cMetadata->MetadataSetDescription),
+    CVarFlagsConst{ TSTRING|CNOTEMPTY|MTRIM|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! APP_VERSION
 // ? Specifies a version for the guest application. It is purely for display
@@ -559,15 +568,16 @@ CVarItemStaticList{{
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_version", "0.0",
-  CBSTR(cMetadata->MetadataSetVersion), TSTRING|CNOTEMPTY|MTRIM|PNOUI },
+  CBSTR(cMetadata->MetadataSetVersion),
+    CVarFlagsConst{ TSTRING|CNOTEMPTY|MTRIM|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! APP_ICON
 // ? Specifies a large icon for use with the application and window. It can be
 // ? any format that is supported with the Image.* loading functions. It can
 // ? also be changed dynamically by Lua. Keep to empty for default icon.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_icon", "",
-  CBSTR(cDisplay->DisplaySetIcon), TSTRING|MTRIM|PAPPCFG },
+{ CFL_BASIC, "app_icon", "", CBSTR(cDisplay->DisplaySetIcon),
+    CVarFlagsConst{ TSTRING|MTRIM|PAPPCFG } },
 /* ------------------------------------------------------------------------- */
 // ! APP_COPYRIGHT
 // ? Specifies any copyright information for the guest application. It is
@@ -575,7 +585,8 @@ CVarItemStaticList{{
 // ? the guest and only set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_copyright", "Public Domain",
-  CBSTR(cMetadata->MetadataSetCopyright), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cMetadata->MetadataSetCopyright),
+    CVarFlagsConst{ TSTRING|CNOTEMPTY|MTRIM|PAPPCFG } },
 /* ------------------------------------------------------------------------- */
 // ! APP_WEBSITE
 // ? Specifies a website for the guest application. It is purely for display
@@ -583,7 +594,8 @@ CVarItemStaticList{{
 // ? set in the app.cfg file.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_website", "about:blank",
-  CBSTR(cMetadata->MetadataSetWebsite), TSTRING|CNOTEMPTY|MTRIM|PAPPCFG },
+  CBSTR(cMetadata->MetadataSetWebsite),
+    CVarFlagsConst{ TSTRING|CNOTEMPTY|MTRIM|PAPPCFG } },
 /* ------------------------------------------------------------------------- */
 // ! APP_TICKRATE
 // ? Specifies the base tick rate of the guest application in nanoseconds.
@@ -591,7 +603,8 @@ CVarItemStaticList{{
 // ? changed dynamically with Lua. The default is 0.016666666 seconds (60fps).
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "app_tickrate", "16666666",
-  CB(cFrame->FrameTickRateModified, uint64_t), TUINTEGER|PNOUI },
+  CB(cFrame->FrameTickRateModified, uint64_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! APP_DELAY
 // ? Specifies an artificial delay to force for terminal mode or graphical mode
@@ -600,8 +613,8 @@ CVarItemStaticList{{
 // ? accumulator. This function greatly lowers CPU usage and performance. The
 // ? default is '0' which causes a thread yield every frame but no suspend.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_delay", "0",
-  CB(cFrame->FrameSetDelay, unsigned), TINTEGERSAVE|PANY },
+{ CFL_BASIC, "app_delay", "0", CB(cFrame->FrameSetDelay, unsigned),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! APP_TITLE
 // ? Sets a custom title for the window. This can only be changed at the
@@ -612,8 +625,8 @@ CVarItemStaticList{{
 // ? value of 'app_longname', where 'V' is the value of 'app_version' and 'T'
 // ? is the target executable architechture.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "app_title", "",
-  CBSTR(cCore->CoreTitleModified), TSTRING|MTRIM|PAPPCFG },
+{ CFL_BASIC, "app_title", "", CBSTR(cCore->CoreTitleModified),
+    CVarFlagsConst{ TSTRING|MTRIM|PAPPCFG } },
 /* == Error cvars ========================================================== */
 // ! ERR_ADMIN
 // ? Throws an error if the user is running the engine with elevated
@@ -623,8 +636,8 @@ CVarItemStaticList{{
 // ? 2 = Same as 1 but ALLOWS when OS's has admin as default (i.e. XP!).
 // ? The default value is 2.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "err_admin", "2",
-  CB(cSystem->SysCheckAdminModified, unsigned), TUINTEGER|PNOUI },
+{ CFL_BASIC, "err_admin", "2", CB(cSystem->SysCheckAdminModified, unsigned),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! ERR_CHECKSUM
 // ? Throws an error if there is an executable checksum mismatch. This only
@@ -640,7 +653,8 @@ CVarItemStaticList{{
   "0",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->SysCheckChecksumModified, bool), TBOOLEAN|PNOUI },
+  CB(cSystem->SysCheckChecksumModified, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! ERR_DEBUGGER
 // ? Throws an error if a debugger is running at start-up. The default value
@@ -654,14 +668,15 @@ CVarItemStaticList{{
   "0",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cSystem->SysCheckDebuggerDetected, bool), TBOOLEAN|PNOUI },
+  CB(cSystem->SysCheckDebuggerDetected, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINVRAM
 // ? The engine fails to run if the system does not have this amount of VRAM
 // ? available.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "err_minvram", "0",
-  CB(cOgl->OglSetMinVRAM, uint64_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "err_minvram", "0", CB(cOgl->OglSetMinVRAM, uint64_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! ERR_MINRAM
 // ? The engine fails to run if the system does not have this amount of free
@@ -670,8 +685,8 @@ CVarItemStaticList{{
 // ? speed of the clear is reported in the log then the memory is freed. The
 // ? default value is zero.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "err_minram", "0",
-  CB(cSystem->SysSetMinRAM, uint64_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "err_minram", "0", CB(cSystem->SysSetMinRAM, uint64_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* == Lua cvars ============================================================ */
 // ! LUA_CACHE
 // ? Specifies to compile any Lua code and store it in the user database for
@@ -682,14 +697,14 @@ CVarItemStaticList{{
 // ? [2] LCC_MINIMUM  = " with minimum debug information and store result.
 // ? The default value is 3 for release executable and 2 for beta executable.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_cache", "1",
-  CB(LuaCodeSetCache, LuaCache), TUINTEGER|PANY },
+{ CFL_BASIC, "lua_cache", "1", CB(LuaCodeSetCache, LuaCache),
+    CVarFlagsConst{ TUINTEGER|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_DEBUGLOCALS
 // ? Print locals when generating stack traces (default is true).
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_debuglocals", "1",
-  CB(cLua->SetDebugLocals, bool), TBOOLEAN|PANY },
+{ CFL_BASIC, "lua_debuglocals", "1", CB(cLua->SetDebugLocals, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_ERRIGNORE
 // ? When LUA_ERRMODE is set to 1, this specifies the number of LUA script
@@ -705,7 +720,7 @@ CVarItemStaticList{{
   "10",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreSetResetLimit, unsigned), TUINTEGER|PNOUI },
+  CB(cCore->CoreSetResetLimit, unsigned), CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_ERRMODE
 // ? Sets how to handle a LUA script error to one of these values...
@@ -723,7 +738,8 @@ CVarItemStaticList{{
   "2",
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason), TUINTEGER|PNOUI },
+  CB(cCore->CoreErrorBehaviourModified, CoreErrorReason),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCMAJMIN
 // ? Overrides Lua's internal LUA_GCPMAJORMINOR value. The default value is 50
@@ -732,8 +748,8 @@ CVarItemStaticList{{
 // ? minor collection remains above x% of the memory threshold set by the last
 // ? major collection, a full major cycle is triggered.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_gcpmajmin", "68",
-  CB(cLua->SetGCMajorMinor, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_gcpmajmin", "68", CB(cLua->SetGCMajorMinor, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCMINMUL
 // ? Overrides Lua's internal LUA_GCPMINORMUL value. The default value is 20
@@ -741,8 +757,8 @@ CVarItemStaticList{{
 // ? of minor collections. A minor collection triggers when memory grows by
 // ? x% beyond the memory in use after the previous major collection.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_gcpminmul", "20",
-  CB(cLua->SetGCMinorMul, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_gcpminmul", "20", CB(cLua->SetGCMinorMul, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCMINMAJ
 // ? Overrides Lua's internal LUA_GCPMINORMAJOR value. The default value is 50
@@ -750,8 +766,8 @@ CVarItemStaticList{{
 // ? collections themselves behave when done incrementally, managing the pacing
 // ? between back-to-back major collection steps.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_gcpminmaj", "50",
-  CB(cLua->SetGCMinorMajor, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_gcpminmaj", "50", CB(cLua->SetGCMinorMajor, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCMODE
 // ? Overrides Lua's internal LUA_GCGEN and LUA_GCINC values. These are flags
@@ -786,8 +802,8 @@ CVarItemStaticList{{
 // ? orthogonal and can be combined: minor generational collections can be
 // ? incremental, and major collections can be performed incrementally as well.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_gcmode", "3",
-  CB(cLua->SetGCMode, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_gcmode", "3", CB(cLua->SetGCMode, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCPAUSE
 // ? Overrides Lua's internal LUA_GCPPAUSE value with this. The default value
@@ -797,8 +813,8 @@ CVarItemStaticList{{
 // ? not wait and will immediately begin a new cycle. The default of 200 means
 // ? it waits for total memory to double before starting again.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_gcppause", "250",
-  CB(cLua->SetGCPause, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_gcppause", "250", CB(cLua->SetGCPause, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCSTEPMUL
 // ? Overrides Lua's internal LUA_GCPSTEPMUL value with this. The default value
@@ -808,8 +824,8 @@ CVarItemStaticList{{
 // ? below 100 makes the collector too slow, meaning it may never finish a full
 // ? cycle and can cause memory leaks.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_gcpstepmul", "200",
-  CB(cLua->SetGCStepMul, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_gcpstepmul", "200", CB(cLua->SetGCStepMul, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_GCSTEPSIZE
 // ? Overrides Lua's internal LUA_GCPSTEPSIZE value with this. The default
@@ -819,24 +835,24 @@ CVarItemStaticList{{
 // ? this to an intentionally large value (like 60) effectively forces the
 // ? collector into a non-incremental, "stop-the-world" routine.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_gcpstepsize", "9600",
-  CB(cLua->SetGCStepSize, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_gcpstepsize", "9600", CB(cLua->SetGCStepSize, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_LASTVER
 // ? Specifies the last known version of LUA used with the engine. If the
 // ? current LUA version is different to this then the code cache will be
 // ? completely deleted so all code is recompiled.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_lastver", "",
-  CBSTR(LuaCodeCheckVersion), TSTRINGSAVE|PCMDLINE|PUDB },
+{ CFL_BASIC, "lua_lastver", "", CBSTR(LuaCodeCheckVersion),
+    CVarFlagsConst{ TSTRINGSAVE|PCMDLINE|PUDB } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_RANDOMSEED
 // ? Specifies a fixed random seed that Lua's math.random() function should
 // ? use. Specify zero to have this value randomised at startup with entropy
 // ? from the operating system.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_randomseed", "0",
-  CB(cLua->SetSeed, lua_Integer), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_randomseed", "0", CB(cLua->SetSeed, lua_Integer),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_SCRIPT
 // ? Specifies the script to load and execute automatically at startup. It must
@@ -844,13 +860,13 @@ CVarItemStaticList{{
 // ? directory.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "lua_script", "main.lua", NoOp,
-  TSTRING|CFILENAME|CNOTEMPTY|MTRIM|PNOUI },
+    CVarFlagsConst{ TSTRING|CFILENAME|CNOTEMPTY|MTRIM|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_SIZESTACK
 // ? Makes sure theres room for this many values on the Lua stack.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_sizestack", "1000",
-  CB(cLua->SetStack, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_sizestack", "1000", CB(cLua->SetStack, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_TICKCHECK
 // ? Sets the internal Lua value of LUA_MASKCOUNT and executes a callback for
@@ -858,8 +874,8 @@ CVarItemStaticList{{
 // ? has been executing for too long. You can see the rate of the operations
 // ? by using the 'cpu' command in the engine console.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_tickcheck", "1000000",
-  CB(cLua->SetOpsInterval, int), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_tickcheck", "1000000", CB(cLua->SetOpsInterval, int),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! LUA_TICKTIMEOUT
 // ? Specifies the limit in seconds of how long a engine frame can be executed
@@ -867,8 +883,8 @@ CVarItemStaticList{{
 // ? as resulting infinite loops in Lua cannot be recovered and will require
 // ? force termination of the entire process.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "lua_ticktimeout", "1",
-  CB(cFrame->FrameSetTimeOut, unsigned), TUINTEGER|PNOUI },
+{ CFL_BASIC, "lua_ticktimeout", "1", CB(cFrame->FrameSetTimeOut, unsigned),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* == Audio cvars ========================================================== */
 // ! AUD_CHECK
 // ? Specifies an interval (in number of milliseconds) of checking for audio
@@ -877,8 +893,8 @@ CVarItemStaticList{{
 // ? device list is detected then the audio is reset automatically, as if the
 // ? 'areset' console command was used.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_check", "5000",
-  CB(cAudio->SetAudCheckRate, unsigned), TUINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_check", "5000", CB(cAudio->SetAudCheckRate, unsigned),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_DELAY
 // ? Specifies an delay (in number of milliseconds) to suspend the audio
@@ -886,29 +902,29 @@ CVarItemStaticList{{
 // ? pops. The audio thread is in charge of managing Source classes and
 // ? checking for discreprencies.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_delay", "10",
-  CB(cAudio->SetAudThreadDelay, unsigned), TUINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_delay", "10", CB(cAudio->SetAudThreadDelay, unsigned),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_FMVVOL
 // ? Specifies the volume of Video classes. 0.0 (mute) to 1.0 (maximum volume).
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_fmvvol", "1",
-  CB(VideoSetVolume, ALfloat), TUFLOATSAVE|PANY },
+{ CFL_AUDIO, "aud_fmvvol", "1", CB(VideoSetVolume, ALfloat),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_HRTF
 // ? Specifies whether to use HRTF dynamics on audio output. This could cause
 // ? strange audio stereo quality issues so it is recommended to disable.
 /* ------------------------------------------------------------------------- */
 { CFL_AUDIO, "aud_hrtf", "0", CB(cOal->OalSetHRTF, bool),
-  TUINTEGERSAVE|PANY },
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_INTERFACE
 // ? Specifies the audio device number to use. -1 makes sure to use the default
 // ? device, otherwise it is the index number of a specific audio device to
 // ? use.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_interface", "-1",
-    CB(cAudio->SetInterface, size_t), TINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_interface", "-1", CB(cAudio->SetInterface, size_t),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_NUMSOURCES
 // ? Specifies the maximum number of sources to preallocate. 0 means sources
@@ -916,23 +932,23 @@ CVarItemStaticList{{
 // ? CPU usage but increases the chances of errors if too many sources are
 // ? requested.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_numsources", "0",
-  CB(SourceSetCount, size_t), TUINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_numsources", "0", CB(SourceSetCount, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_SAMVOL
 // ? Specifies the volume of Sample classes. 0.0 (mute) to
 // ? 1.0 (maximum volume).
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_samvol", "1",
-  CB(SampleSetVolume, ALfloat), TUFLOATSAVE|PANY },
+{ CFL_AUDIO, "aud_samvol", "1", CB(SampleSetVolume, ALfloat),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_STRBUFCOUNT
 // ? Specifies the number of buffers to use for Stream classes. We need
 // ? multiple buffers to make streamed audio playback consistent. Four should
 // ? always be enough.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_strbufcount", "4",
-  CB(StreamSetBufferCount, size_t), TUINTEGERSAVE|PANY },
+{ CFL_AUDIO, "aud_strbufcount", "4", CB(StreamSetBufferCount, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_STRBUFFER
 // ? Specifies the size (in bytes) of memory to allocate for use with buffering
@@ -941,44 +957,44 @@ CVarItemStaticList{{
 // ? default is to allocate 32 kilobytes of RAM which should be enough and will
 // ? need to be raised if any distortions occur in playback.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_strbuffer", "32768",
-  CB(StreamSetBufferSize, size_t), TUINTEGERSAVE|CPOW2|PANY },
+{ CFL_AUDIO, "aud_strbuffer", "32768", CB(StreamSetBufferSize, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|CPOW2|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_STRVOL
 // ? Specifies the volume of Stream classes. 0.0 (mute) to
 // ? 1.0 (maximum volume).
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_strvol", "1",
-  CB(StreamSetVolume, ALfloat), TUFLOATSAVE|PANY },
+{ CFL_AUDIO, "aud_strvol", "1", CB(StreamSetVolume, ALfloat),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_VERSION
 // ? Makes sure the specified version matches the internal openal version and
 // ? soft initialises the library.
 /* ------------------------------------------------------------------------- */
 { CFL_AUDIO, "aud_version", "1.1", CB(cOal->OalSetVersion, double),
-  TUFLOAT|PCMDLINE },
+    CVarFlagsConst{ TUFLOAT|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! AUD_VOL
 // ? Specifies the global volume of all class types. 0.0 (mute) to
 // ? 1.0 (maximum volume). Setting a value too high may cause artifacts on
 // ? older OS audio API's.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIO, "aud_vol", "0.75",
-  CB(cAudio->AudioSetVolume, ALfloat), TUFLOATSAVE|PANY },
+{ CFL_AUDIO, "aud_vol", "0.75", CB(cAudio->AudioSetVolume, ALfloat),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* == Console cvars ======================================================== */
 // ! CON_KEYPRIMARY
 // ? The primary GLFW console key virtual key code to use to toggle console
 // ? visibility. It is set to '`' as default on a UK keyboard.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_keyprimary", "96",
-  CB(cInput->InputSetConsoleKey1, int), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "con_keyprimary", "96", CB(cInput->InputSetConsoleKey1, int),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_KEYSECONDARY
 // ? The secondary GLFW console key virtual key code to use to toggle console
 // ? visibility. It is set to '+-' as default on a US keyboard.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_keysecondary", "161",
-  CB(cInput->InputSetConsoleKey2, int), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "con_keysecondary", "161", CB(cInput->InputSetConsoleKey2, int),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_AUTOCOMPLETE
 // ? Flags that specify what to auto complete when TAB key is pressed in the
@@ -988,50 +1004,52 @@ CVarItemStaticList{{
 // ? [0x2] AC_CVARS    = Autocomplete cvar names
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "con_autocomplete", "3",
-  CB(cConsole->SetAutoComplete, AutoCompleteFlagsType), TUINTEGERSAVE|PANY },
+  CB(cConsole->SetAutoComplete, AutoCompleteFlagsType),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_AUTOSCROLL
 // ? A boolean that specifies whether to autoscroll the console to the last
 // ? newly printed message.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "con_autoscroll", "1",
-  CB(cConsole->SetAutoScroll, bool), TBOOLEANSAVE|PANY },
+{ CFL_BASIC, "con_autoscroll", "1", CB(cConsole->SetAutoScroll, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_AUTOCOPYCVAR
 // ? A boolean that specifies whether to automatically copy the variable
 // ? name and value when a cvar name is typed in the console.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "con_autocopycvar", "1",
-  CB(cConsole->SetAutoCopyCVar, bool), TBOOLEANSAVE|PANY },
+{ CFL_BASIC, "con_autocopycvar", "1", CB(cConsole->SetAutoCopyCVar, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_HEIGHT
 // ? Specifies the height of the console in OpenGL mode. 1 means the console
 // ? is covering the whole screen, and 0 means the console is not showing.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_height", "0.5",
-  CB(cConGfx->ConGfxSetHeight, GLfloat), TUFLOATSAVE|PANY },
+{ CFL_VIDEO, "con_height", "0.5", CB(cConGfx->ConGfxSetHeight, GLfloat),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_BLOUTPUT
 // ? Specifies the maximum number of lines to keep in the console. Excess
 // ? messages are discarded automatically to not fill up memory.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "con_bloutput", "10000",
-  CB(cConsole->SetConsoleOutputLines, size_t), TUINTEGERSAVE|PANY },
+  CB(cConsole->SetConsoleOutputLines, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_BLINPUT
 // ? Number of lines to store in the input backlog. A successful command input
 // ? automatically adds the last command typed into this list.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "con_blinput", "1000",
-  CB(cConsole->SetConsoleInputLines, size_t), TUINTEGERSAVE|PANY },
+{ CFL_BASIC, "con_blinput", "1000", CB(cConsole->SetConsoleInputLines, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_DISABLED
 // ? Specifies wether the console is permanantly disabled or not. It ignores
 // ? the CON_GCWTERM setting as well. This does not disable the NCurses mode
 // ? terminal which cannot be disabled.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_disabled", "0",
-  CB(cConGfx->ConGfxCantDisableModified, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "con_disabled", "0", CB(cConGfx->ConGfxCantDisableModified, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_CVSHOWFLAGS
 // ? Flags specifying how to show CVar values in the console to protect
@@ -1041,7 +1059,8 @@ CVarItemStaticList{{
 // ? [0x2] SF_PROTECTED    = Show cvars marked as protected.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "con_cvshowflags", "0",
-  CB(cCVars->CVarsSetDisplayFlags, CVarShowFlagsType), TUINTEGER|PANY },
+  CB(cCVars->CVarsSetDisplayFlags, CVarShowFlagsType),
+    CVarFlagsConst{ TUINTEGER|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_BGCOLOUR
 // ? Specifies the background colour of the console texture in the syntax of
@@ -1049,27 +1068,29 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_bgcolour", "2130706432",
   CB(cConGfx->ConGfxTextBackgroundColourModified, uint32_t),
-  TUINTEGERSAVE|PANY },
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_BGTEXTURE
 // ? The texture file to load that will be used as the background for the
 // ? console.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_bgtexture", "", NoOp, TSTRING|CFILENAME|PNOUI },
+{ CFL_VIDEO, "con_bgtexture", "", NoOp,
+    CVarFlagsConst{ TSTRING|CFILENAME|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_ENABLEBREAK
 // ? Enables or disables CONTROL+C and CONTROL+BREAK interrupt handler. When
 // ? set to zero, the keys are ignored. When one, the keys perform a clean
 // ? shutdown. Note that this does not affect the SIGINT signal.
 /* ------------------------------------------------------------------------- */
-{ CFL_TEXT, "con_enablebreak", "0",
-  CB(cSystem->SysConSetBreak, bool), TBOOLEANSAVE|PANY },
+{ CFL_TEXT, "con_enablebreak", "0", CB(cSystem->SysConSetBreak, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONT
 // ? Specifies the filename of the FreeType compatible font to load as the
 // ? console font file.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_font", "console.ttf", NoOp, TSTRING|CFILENAME|PNOUI },
+{ CFL_VIDEO, "con_font", "console.ttf", NoOp,
+    CVarFlagsConst{ TSTRING|CFILENAME|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTFLAGS
 // ? Specifies manipulation of the loaded font. See the 'Char.Flags' for
@@ -1077,7 +1098,7 @@ CVarItemStaticList{{
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontflags", "0",
   CB(cConGfx->ConGfxFontFlagsModified, ImageFlagsType),
-  TUINTEGER|PANY },
+    CVarFlagsConst{ TUINTEGER|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTCOLOUR
 // ? Specifies the default colour of the console text. See the Console.Colours
@@ -1085,54 +1106,60 @@ CVarItemStaticList{{
 // ? to keep compatibility with the system text console.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontcolour", "15",
-  CB(cConsole->TextForegroundColourModified, unsigned), TUINTEGERSAVE|PANY },
+  CB(cConsole->TextForegroundColourModified, unsigned),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTHEIGHT
 // ? Specifies the height of the loaded console FreeType font.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontheight", "20",
-  CB(cConGfx->ConGfxTextHeightModified, GLfloat), TUINTEGER|PNOUI },
+  CB(cConGfx->ConGfxTextHeightModified, GLfloat),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTPADDING
 // ? Specifies any extra padding to add to each FreeType font glyph to prevent
 // ? pixels from other glyphs spilling into the render due to filtering.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontpadding", "0", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "con_fontpadding", "0", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTPCMIN
 // ? Specifies the minimum character code to start precaching from
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontpcmin", "32", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "con_fontpcmin", "32", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTPCMAX
 // ? Specifies the maximum character code to end precaching at
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fontpcmax", "256", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "con_fontpcmax", "256", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTSCALE
 // ? Specifies the scale adjust of the font. A value not equal to one will
 // ? cause interpolation to occur so filtering is advised.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontscale", "1",
-  CB(cConGfx->ConGfxTextScaleModified, GLfloat), TUFLOATSAVE|PANY },
+  CB(cConGfx->ConGfxTextScaleModified, GLfloat),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTSPACING
 // ? Specifies the amount of padding to add after each cahracter rendered.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontspacing", "0",
-  CB(cConGfx->ConGfxTextLetterSpacingModified, GLfloat), TFLOAT|PNOUI },
+  CB(cConGfx->ConGfxTextLetterSpacingModified, GLfloat),
+    CVarFlagsConst{ TFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTLSPACING
 // ? Specifies the amount of padding to add below each line of text rendered.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontlspacing", "0",
-  CB(cConGfx->ConGfxTextLineSpacingModified, GLfloat), TFLOAT|PNOUI },
+  CB(cConGfx->ConGfxTextLineSpacingModified, GLfloat),
+    CVarFlagsConst{ TFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTWIDTH
 // ? Specifies the width of the loaded console FreeType font.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "con_fontwidth", "20",
-  CB(cConGfx->ConGfxTextWidthModified, GLfloat), TUINTEGER|PNOUI },
+  CB(cConGfx->ConGfxTextWidthModified, GLfloat),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_FONTTEXSIZE
 // ? Specifies the initial size of the texture canvas in pixels. Do not set
@@ -1140,7 +1167,7 @@ CVarItemStaticList{{
 // ? this value. An exception is thrown if not. Zero means start with enough
 // ? size for one character.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "con_fonttexsize", "0", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "con_fonttexsize", "0", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_GCWTERM
 // ? Enable to allow the graphical console to show when 'app_cflags' is set to
@@ -1149,7 +1176,7 @@ CVarItemStaticList{{
 // ? your application and work with sensitive information in which you'll want
 // ? to keep this disabled to prevent potential leaking of private information
 // ? on-screen. It can only be set in the application manifest file.
-{ CFL_TEXT, "con_gcwterm", "0", NoOp, TUINTEGER|PNOUI },
+{ CFL_TEXT, "con_gcwterm", "0", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_INPREFRESH
 // ? Specifies the time interval in microseconds between input polls. Only
@@ -1163,45 +1190,46 @@ CVarItemStaticList{{
 #else
   "1000",                              // 1.00ms (0.0001 sec)
 #endif
-  CB(cConsole->InputRefreshModified, unsigned), TUINTEGERSAVE|PANY },
+  CB(cConsole->InputRefreshModified, unsigned),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_INPUTMAX
 // ? Specifies the maximum number of characters that are allowed to be typed
 // ? into the console input buffer.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "con_inputmax", "1024",
-  CB(cConsole->SetMaxInputChars, size_t), TUINTEGERSAVE|PANY },
+{ CFL_BASIC, "con_inputmax", "1024", CB(cConsole->SetMaxInputChars, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_OUTPUTMAX
 // ? Specifies the maximum number of characters that are allowed on each
 // ? console output line. It is needed to limit stalling the engine and GPU
 // ? with very long lines.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "con_outputmax", "4096",
-  CB(cConsole->SetMaxOutputChars, size_t), TUINTEGERSAVE|PANY },
+{ CFL_BASIC, "con_outputmax", "4096", CB(cConsole->SetMaxOutputChars, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_PAGELINES
 // ? The number of lines that are scrolled when pressing CONTROL and PAGEUP or
 // ? PAGEDOWN keys.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "con_pagelines", "10",
-  CB(cConsole->SetPageMoveCount, ssize_t), TUINTEGERSAVE|PANY },
+{ CFL_BASIC, "con_pagelines", "10", CB(cConsole->SetPageMoveCount, ssize_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCCOLS
 // ? In terminal mode, this is the maximum number of columns to draw. The
 // ? larger this value is, the more text that can be displayed at once but
 // ? will increase CPU usage from the operating system.
 /* ------------------------------------------------------------------------- */
-{ CFL_TEXT, "con_tmccols", "80",
-  CB(cSystem->ColsModified, unsigned), TUINTEGERSAVE|PANY },
+{ CFL_TEXT, "con_tmccols", "80", CB(cSystem->ColsModified, unsigned),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCROWS
 // ? In terminal mode, this is the maximum number of rows to draw. The larger
 // ? this value is, the more text that can be displayed at once but will
 // ? increase CPU usage from the operating system.
 /* ------------------------------------------------------------------------- */
-{ CFL_TEXT, "con_tmcrows", "32",
-  CB(cSystem->RowsModified, unsigned), TUINTEGERSAVE|PANY },
+{ CFL_TEXT, "con_tmcrows", "32", CB(cSystem->RowsModified, unsigned),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCREFRESH
 // ? The interval in milliseconds where the status bar and title bar are
@@ -1210,43 +1238,44 @@ CVarItemStaticList{{
 // ? is being typed.
 /* ------------------------------------------------------------------------- */
 { CFL_TEXT, "con_tmcrefresh", "1000",
-  CB(cConsole->OutputRefreshModified, unsigned), TUINTEGERSAVE|PANY },
+  CB(cConsole->OutputRefreshModified, unsigned),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCNOCLOSE
 // ? Disables the X button and close in the application context menu. This does
 // ? not prevent CONTROL+C/BREAK keys. This only applies to the Windows
 // ? operating system console only and a nullop on any other system!
 /* ------------------------------------------------------------------------- */
-{ CFL_TEXT, "con_tmcnoclose", "1", NoOp, TBOOLEAN|PNOUI },
+{ CFL_TEXT, "con_tmcnoclose", "1", NoOp, CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! CON_TMCTFORMAT
 // ? The format of the time in the titlebar (see strftime() for details).
 /* ------------------------------------------------------------------------- */
-{ CFL_TEXT, "con_tmctformat", "%y-%m-%d %T",
-  CBSTR(cConsole->SetTimeFormat), TSTRINGSAVE|MTRIM|CNOTEMPTY|PANY },
+{ CFL_TEXT, "con_tmctformat", "%y-%m-%d %T", CBSTR(cConsole->SetTimeFormat),
+    CVarFlagsConst{ TSTRINGSAVE|MTRIM|CNOTEMPTY|PANY } },
 /* == Fmv cvars ============================================================ */
 // ! FMV_ABUFFER
 // ? The size of the audio buffer in seconds. Changing this value only takes
 // ? effect the next time a 'Video' object is constructed.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIOVIDEO, "fmv_abuffer", "0.25",
-  CB(VideoSetAudioBufferSize, double), TUFLOATSAVE|CPOW2|PANY },
+{ CFL_AUDIOVIDEO, "fmv_abuffer", "0.25", CB(VideoSetAudioBufferSize, double),
+    CVarFlagsConst{ TUFLOATSAVE|CPOW2|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! FMV_IOBUFFER
 // ? For each 'Video' class, this amount of memory is allocated as buffering
 // ? from disk. Changing this value only takes effect the next time a 'Video'
 // ? object is constructed.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIOVIDEO, "fmv_iobuffer", "65536",
-  CB(VideoSetIOBufferSize, size_t), TUINTEGERSAVE|CPOW2|PANY },
+{ CFL_AUDIOVIDEO, "fmv_iobuffer", "65536", CB(VideoSetIOBufferSize, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|CPOW2|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! FMV_MAXDRIFT
 // ? The amount of time allowed to drift between audio and video before we
 // ? start speeding up or slowing down audio. Changing this value only takes
 // ? effect the next time a 'Video' object is constructed.
 /* ------------------------------------------------------------------------- */
-{ CFL_AUDIOVIDEO, "fmv_maxdrift", "0.25",
-  CB(VideoSetMaximumDrift, double), TUFLOATSAVE|PANY },
+{ CFL_AUDIOVIDEO, "fmv_maxdrift", "0.25", CB(VideoSetMaximumDrift, double),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* == Input cvars ========================================================== */
 // ! INP_CLAMPMOUSE
 // ? When enabled (default) the mouse cursor is clamped to the window edge.
@@ -1256,99 +1285,101 @@ CVarItemStaticList{{
 // ? where the cursor is allowed to leave the window. Recommended to enable
 // ? 'inp_fsignore' too to disable the input when mouse leaves the window.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_clampmouse", "1",
-  CB(cInput->InputSetClampMouse, bool), TBOOLEANSAVE|PANY },
+{ CFL_VIDEO, "inp_clampmouse", "1", CB(cInput->InputSetClampMouse, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! INP_JOYDEFFDZ
 // ? Specifies the gamepad forward deadzone.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_joydeffdz", "0.25",
-  CB(cInput->JoySetDefaultJoyFwdDZ, float), TUFLOATSAVE|PANY },
+{ CFL_VIDEO, "inp_joydeffdz", "0.25", CB(cInput->JoySetDefaultJoyFwdDZ, float),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! INP_JOYDEFRDZ
 // ? Specifies the gamepad reverse deadzone.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_joydefrdz", "0.25",
-  CB(cInput->JoySetDefaultJoyRevDZ, float), TUFLOATSAVE|PANY },
+{ CFL_VIDEO, "inp_joydefrdz", "0.25", CB(cInput->JoySetDefaultJoyRevDZ, float),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! INP_FSTOGGLER
 // ? Enables or disables the ALT+ENTER or OPTION+ENTER combinations to switch
 // ? between full-screen or windowed mode (Uses value from 'vid_fs').
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_fstoggler", "1",
-  CB(cInput->InputSetFSTogglerEnabled, bool), TBOOLEANSAVE|PANY },
+{ CFL_VIDEO, "inp_fstoggler", "1", CB(cInput->InputSetFSTogglerEnabled, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! INP_LOCKKEYMODS
 // ? Enables or disables the placing CAPS/NUM/SCROLL LOCK status in the key
 // ? events.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_lockkeymods", "1",
-  CB(cInput->InputSetLockKeyModEnabled, bool), TBOOLEAN|PANY },
+  CB(cInput->InputSetLockKeyModEnabled, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! INP_RAWMOUSE
 // ? Enables raw mouse input if available.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_rawmouse", "1",
-  CB(cInput->InputSetRawMouseEnabled, bool), TBOOLEANSAVE|PANY },
+{ CFL_VIDEO, "inp_rawmouse", "1", CB(cInput->InputSetRawMouseEnabled, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! INP_STICKYKEY
 // ? Enables sticky key presses.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "inp_stickykey", "1",
-  CB(cInput->InputSetStickyKeyEnabled, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "inp_stickykey", "1", CB(cInput->InputSetStickyKeyEnabled, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! INP_STICKYMOUSE
 // ? Enables sticky mouse buttons.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "inp_stickymouse", "1",
-  CB(cInput->InputSetStickyMouseEnabled, bool), TBOOLEAN|PANY },
+  CB(cInput->InputSetStickyMouseEnabled, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* == Network cvars ======================================================== */
 // ! NET_CBPFLAG1
 // ? Specifies the certificate error ignore flags.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_cbpflag1", "0",
-  CB(cSockets->CertsSetBypassFlags1, uint64_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "net_cbpflag1", "0", CB(cSockets->CertsSetBypassFlags1, uint64_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_CBPFLAG2
 // ? Specifies the extended certificate error ignore flags.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_cbpflag2", "0",
-  CB(cSockets->CertsSetBypassFlags2, uint64_t), TUINTEGER|PNOUI },
+{ CFL_BASIC, "net_cbpflag2", "0", CB(cSockets->CertsSetBypassFlags2, uint64_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_BUFFER
 // ? Specifies the amount of memory in bytes to reserve for each recv() or
 // ? send() call. Default is 64k.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_buffer", "65536",
-  CB(SocketSetBufferSize, size_t), TUINTEGER|CPOW2|PNOUI },
+{ CFL_BASIC, "net_buffer", "65536", CB(SocketSetBufferSize, size_t),
+    CVarFlagsConst{ TUINTEGER|CPOW2|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_RTIMEOUT
 // ? Specifies a socket recv() command timeout in seconds.
 // ? Default is 2 minutes.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_rtimeout", "120",
-  CB(SocketSetRXTimeout, double), TUFLOAT|PNOUI },
+{ CFL_BASIC, "net_rtimeout", "120", CB(SocketSetRXTimeout, double),
+    CVarFlagsConst{ TUFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_STIMEOUT
 // ? Specifies a socket send() command timeout in seconds.
 // ? Default is 30 seconds.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_stimeout", "30",
-  CB(SocketSetTXTimeout, double), TUFLOAT|PNOUI },
+{ CFL_BASIC, "net_stimeout", "30", CB(SocketSetTXTimeout, double),
+    CVarFlagsConst{ TUFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_CIPHERTLSv1
 // ? Specifies the default settings for TLSv1.x connections. The default is
 // ? use only maximum strength ciphers.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "net_ciphertlsv1", "HIGH:!DSS:!aNULL@STRENGTH",
-  CBSTR(SocketSetCipher12), MTRIM|TSTRING|PNOUI },
+  CBSTR(SocketSetCipher12), CVarFlagsConst{ MTRIM|TSTRING|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_CIPHERTLSv13
 // ? Specifies the default settings for TLSv3 connections. The default is empty
 // ? which lets OpenSSL decide.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_ciphertlsv13", "",
-  CBSTR(SocketSetCipher13), MTRIM|TSTRING|PNOUI },
+{ CFL_BASIC, "net_ciphertlsv13", "", CBSTR(SocketSetCipher13),
+    CVarFlagsConst{ MTRIM|TSTRING|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_CASTORE
 // ? Specifies the relative directory to the client certificate store. These
@@ -1356,14 +1387,14 @@ CVarItemStaticList{{
 // ? connection. These certificates are loaded and checked at startup and
 // ? a log warning message is generated if the certificate is not usable.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_castore", "",
-  CBSTR(cSockets->CertsFileModified), TSTRING|CFILENAME|MTRIM|PNOUI },
+{ CFL_BASIC, "net_castore", "", CBSTR(cSockets->CertsFileModified),
+    CVarFlagsConst{ TSTRING|CFILENAME|MTRIM|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! NET_OCSP
 // ? Informs OpenSSL to verify server certificates via OCSP.
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_ocsp", "1",
-  CB(SocketOCSPModified, int), TUINTEGER|PANY },
+{ CFL_BASIC, "net_ocsp", "1", CB(SocketOCSPModified, int),
+    CVarFlagsConst{ TUINTEGER|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! NET_USERAGENT
 // ? When using the built-in simple HTTP client, this string is sent as the
@@ -1371,16 +1402,16 @@ CVarItemStaticList{{
 // ? to "Mozilla/5.0 (<EngineName>; <EngineBits>-bit; v<EngineVersion>)
 // ? <AppName>/<AppVersion>".
 /* ------------------------------------------------------------------------- */
-{ CFL_BASIC, "net_useragent", "",
-  CBSTR(SocketAgentModified), TSTRING|MTRIM|PANY },
+{ CFL_BASIC, "net_useragent", "", CBSTR(SocketAgentModified),
+    CVarFlagsConst{ TSTRING|MTRIM|PANY } },
 /* == Video cvars ========================================================== */
 // ! VID_API
 // ? Specifies the API to use. This is only used for troubleshooting purposes
 // ? only and serves no other purpose. Select 0 (default) for GLFW_OPENGL_API,
 // ? 1 for GLFW_OPENGL_ES_API or 2 for GLFW_NO_API.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_api", "0",
-  CB(cDisplay->DisplayApiChanged, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "vid_api", "0", CB(cDisplay->DisplayApiChanged, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBALPHA
 // ? Override alpha component bit-depth. Default is -1 for GLFW_DONT_CARE.
@@ -1395,7 +1426,8 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetAlphaBitDepth, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetAlphaBitDepth, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBBLUE
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1411,7 +1443,8 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetBlueBitDepth, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetBlueBitDepth, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBGREEN
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1427,7 +1460,8 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetGreenBitDepth, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetGreenBitDepth, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FBRED
 // ? Override red component bit-depth. Default is -1 for GLFW_DONT_CARE or 10
@@ -1443,56 +1477,59 @@ CVarItemStaticList{{
   "-1",                                // Win32/Wayland doesn't need
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplaySetRedBitDepth, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplaySetRedBitDepth, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_CTXMAJOR
 // ? Specifies the major context version to use. This is only used for
 // ? troubleshooting purposes only and serves no other purpose. The default is
 // ? 3 with a core profile.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_ctxmajor", "3",
-  CB(cDisplay->DisplayCtxMajorChanged, int), TINTEGER|PNOUI },
+{ CFL_VIDEO, "vid_ctxmajor", "3", CB(cDisplay->DisplayCtxMajorChanged, int),
+    CVarFlagsConst{ TINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_CTXMINOR
 // ? Specifies the minor context version to use. This is only used for
 // ? troubleshooting purposes only and serves no other purpose. The default is
 // ? 2 with a core profile.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_ctxminor", "2",
-  CB(cDisplay->DisplayCtxMinorChanged, int), TINTEGER|PNOUI },
+{ CFL_VIDEO, "vid_ctxminor", "2", CB(cDisplay->DisplayCtxMinorChanged, int),
+    CVarFlagsConst{ TINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_CLEAR
 // ? Specifies to clear the main frame buffer every frame.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_clear", "1",
-  CB(cFboCore->FboCoreSetBackBufferClear, bool), TBOOLEAN|PNOUI },
+{ CFL_VIDEO, "vid_clear", "1", CB(cFboCore->FboCoreSetBackBufferClear, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_CLEARCOLOUR
 // ? Specifies the 32-bit integer (0xAARRGGBB) as the default clear value.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_clearcolour", "0",
-  CB(cFboCore->FboCoreSetBackBufferClearColour, unsigned), TUINTEGER|PNOUI },
+  CB(cFboCore->FboCoreSetBackBufferClearColour, unsigned),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_DBLBUFF
 // ? Specifies to use double-buffering. This is only used for troubleshooting
 // ? purposes only and serves no other purpose. The default is 1 for yes.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_dblbuff", "1",
-  CB(cDisplay->DisplayDoubleBufferChanged, bool), TBOOLEAN|PNOUI },
+  CB(cDisplay->DisplayDoubleBufferChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_DEBUG
 // ? Sets 'GLFW_OPENGL_DEBUG_CONTEXT'. Default is 0 (disabled).
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_debug", "0",
-  CB(cDisplay->DisplaySetGLDebugMode, bool), TBOOLEANSAVE|PANY },
+{ CFL_VIDEO, "vid_debug", "0", CB(cDisplay->DisplaySetGLDebugMode, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FS
 // ? Specifies what full-screen type to use. Specify 0 to keep the engine in
 // ? a normal window, 1 for exclusive full-screen mode (specified by
 // ? 'vid_fsmode') or 2 for borderless full-screen mode.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_fs", "0",
-  CB(cDisplay->DisplayFullScreenStateChanged, bool), TBOOLEANSAVE|PANY },
+{ CFL_VIDEO, "vid_fs", "0", CB(cDisplay->DisplayFullScreenStateChanged, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FSAA
 // ? Enables full-scene anti-aliasing. Only needed to smooth the edges of
@@ -1500,16 +1537,16 @@ CVarItemStaticList{{
 // ? 0, 90, 180 or 270 degrees. This cvar has been semi-disabled as instability
 // ? occurs with any setting other than the default on a Mac.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_fsaa", "-1",
-  CB(cDisplay->DisplayFsaaChanged, int), TINTEGER|CPOW2|PCMDLINE },
+{ CFL_VIDEO, "vid_fsaa", "-1", CB(cDisplay->DisplayFsaaChanged, int),
+    CVarFlagsConst{ TINTEGER|CPOW2|PCMDLINE } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FORWARD
 // ? Specifies to use a forward compatible context. This is only used for
 // ? troubleshooting purposes only and serves no other purpose. The default is
 // ? 1 for yes.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_forward", "1",
-  CB(cDisplay->DisplayForwardChanged, bool), TBOOLEAN|PNOUI },
+{ CFL_VIDEO, "vid_forward", "1", CB(cDisplay->DisplayForwardChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_FSMODE
 // ? Specifies which full-screen mode to use. You can check the log or use
@@ -1526,14 +1563,15 @@ CVarItemStaticList{{
   "-2",                                // Force borderless full-screen
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplayFullScreenModeChanged, int), TINTEGERSAVE|PANY },
+  CB(cDisplay->DisplayFullScreenModeChanged, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_GAMMA
 // ? Overrides the gamma level. The default is 1 which is to keep the desktop
 // ? gamma level.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_gamma", "1",
-  CB(cDisplay->DisplayGammaChanged, GLfloat), TUFLOATSAVE|PANY },
+{ CFL_VIDEO, "vid_gamma", "1", CB(cDisplay->DisplayGammaChanged, GLfloat),
+    CVarFlagsConst{ TUFLOATSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_GASWITCH
 // ? Set to 0 (default) to disable MacOS graphics switching, or 1 to allow
@@ -1547,28 +1585,29 @@ CVarItemStaticList{{
     "0",                               // No support for graphics switching
 #endif
   /* ----------------------------------------------------------------------- */
-  CB(cDisplay->DisplayGraphicsSwitchingChanged, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplayGraphicsSwitchingChanged, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_HIDPI
 // ? Enables or disables HiDPI support. Set to '0' to disable HiDPI, '1' to
 // ? (default) to enable it. The cvar only applies to MacOS and can only
 // ? be set via command-line or the application manifest.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_hidpi", "1",
-  CB(cDisplay->DisplayHiDPIChanged, bool), TBOOLEAN|PNOUI },
+{ CFL_VIDEO, "vid_hidpi", "1", CB(cDisplay->DisplayHiDPIChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_MONITOR
 // ? Specifies the monitor id to use. Use the 'mlist' console command to see
 // ? possible values or just use -1 to let the operating system decide.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_monitor", "-1",
-  CB(cDisplay->DisplayMonitorChanged, int), TINTEGERSAVE|PANY },
+{ CFL_VIDEO, "vid_monitor", "-1", CB(cDisplay->DisplayMonitorChanged, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_NOERRORS
 // ? Sets GLFW_CONTEXT_NO_ERROR. Default is 0 (disabled).
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_noerrors", "0",
-  CB(cDisplay->DisplaySetNoErrorsMode, bool), TBOOLEANSAVE|PANY },
+{ CFL_VIDEO, "vid_noerrors", "0", CB(cDisplay->DisplaySetNoErrorsMode, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORASPMAX
 // ? Specifies the maximum aspect ratio allowed in the main frame buffer. For
@@ -1576,7 +1615,8 @@ CVarItemStaticList{{
 // ? 'vid_simplematrix' cvar is set to 0.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_oraspmax", "1.777778",
-  CB(cFboCore->FboCoreSetMaxAspect, GLfloat), TUFLOAT|PNOUI },
+  CB(cFboCore->FboCoreSetMaxAspect, GLfloat),
+    CVarFlagsConst{ TUFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORASPMIN
 // ? Specifies the minmum aspect ratio allowed in the main frame buffer. For
@@ -1584,19 +1624,22 @@ CVarItemStaticList{{
 // ? 'vid_simplematrix' cvar is set to 0.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_oraspmin", "1.25",
-  CB(cFboCore->FboCoreSetMinAspect, GLfloat), TUFLOAT|PNOUI },
+  CB(cFboCore->FboCoreSetMinAspect, GLfloat),
+    CVarFlagsConst{ TUFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORHEIGHT
 // ? Specifies the height of the main frame buffer.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_orheight", "480",
-  CB(cDisplay->DisplaySetMatrixHeight, GLfloat), TUFLOAT|PNOUI },
+  CB(cDisplay->DisplaySetMatrixHeight, GLfloat),
+    CVarFlagsConst{ TUFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_ORWIDTH
 // ? Specifies the width of the main frame buffer.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_orwidth", "640",
-  CB(cDisplay->DisplaySetMatrixWidth, GLfloat), TUFLOAT|PNOUI },
+  CB(cDisplay->DisplaySetMatrixWidth, GLfloat),
+    CVarFlagsConst{ TUFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_PROFILE
 // ? Specifies the type of profile to create the context for. This is only used
@@ -1604,32 +1647,32 @@ CVarItemStaticList{{
 // ? (default) for GLFW_OPENGL_CORE_PROFILE, 1 for GLFW_OPENGL_COMPAT_PROFILE
 // ? or 2 for GLFW_OPENGL_ANY_PROFILE.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_profile", "0",
-  CB(cDisplay->DisplayProfileChanged, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "vid_profile", "0", CB(cDisplay->DisplayProfileChanged, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_QCOMPRESS
 // ? Specifies texture compression quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_qcompress", "3",
-  CB(cOgl->OglSetQCompressHint, size_t), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "vid_qcompress", "3", CB(cOgl->OglSetQCompressHint, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_QLINE
 // ? Specifies line quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_qline", "0",
-  CB(cOgl->OglSetQLineHint, size_t), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "vid_qline", "0", CB(cOgl->OglSetQLineHint, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_QPOLYGON
 // ? Specifies polygon quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_qpolygon", "0",
-  CB(cOgl->OglSetQPolygonHint, size_t), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "vid_qpolygon", "0", CB(cOgl->OglSetQPolygonHint, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_QSHADER
 // ? Specifies shader quality. Default is maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_qshader", "3",
-  CB(cOgl->OglSetQShaderHint, size_t), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "vid_qshader", "3", CB(cOgl->OglSetQShaderHint, size_t),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_RCMDS
 // ? Pre-allocates space for the specified number of OpenGL command structures.
@@ -1638,23 +1681,24 @@ CVarItemStaticList{{
 // ? the application manifest.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_rcmds", "1000",
-  CB(cFboCore->FboCoreSetCommandReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
+  CB(cFboCore->FboCoreSetCommandReserve, size_t),
+    CVarFlagsConst{ TINTEGER|CUNSIGNED|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_RDFBO
 // ? Pre-allocates the specified number of frame buffer names to reserve in the
 // ? pending frame buffer names deletion list. Only the app author needs to be
 // ? concerned with this value and can only be set in the application manifest.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_rdfbo", "10",
-  CB(cOgl->OglSetFboDListReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
+{ CFL_VIDEO, "vid_rdfbo", "10", CB(cOgl->OglSetFboDListReserve, size_t),
+    CVarFlagsConst{ TINTEGER|CUNSIGNED|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_RDTEX
 // ? Pre-allocates the specified number of texture names to reserve in the
 // ? pending texture names deletion list. Only the app author needs to be
 // ? concerned with this value and can only be set in the application manifest.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_rdtex", "10",
-  CB(cOgl->OglSetTexDListReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
+{ CFL_VIDEO, "vid_rdtex", "10", CB(cOgl->OglSetTexDListReserve, size_t),
+    CVarFlagsConst{ TINTEGER|CUNSIGNED|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_RELEASE
 // ? Specifies the context release behaviour. This is only used
@@ -1662,8 +1706,8 @@ CVarItemStaticList{{
 // ? (default) for GLFW_ANY_RELEASE_BEHAVIOR, 1 for GLFW_RELEASE_BEHAVIOR_FLUSH
 // ? or 2 for GLFW_RELEASE_BEHAVIOR_NONE.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_release", "2",
-  CB(cDisplay->DisplayReleaseChanged, size_t), TUINTEGER|PNOUI },
+{ CFL_VIDEO, "vid_release", "2", CB(cDisplay->DisplayReleaseChanged, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_RFBO
 // ? Pre-allocates space for the specified number of frame buffer names. By
@@ -1672,8 +1716,8 @@ CVarItemStaticList{{
 // ? low and many frame buffers are used. Only the app author needs to be
 // ? concerned with this value and can only be set in the application manifest.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_rfbo", "2",
-  CB(FboSetOrderReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
+{ CFL_VIDEO, "vid_rfbo", "2", CB(FboSetOrderReserve, size_t),
+    CVarFlagsConst{ TINTEGER|CUNSIGNED|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_RFLOATS
 // ? Pre-allocates buffer space for the specified number of GLfloats. There
@@ -1682,7 +1726,8 @@ CVarItemStaticList{{
 // ? the application manifest.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_rfloats", "10000",
-  CB(cFboCore->FboCoreSetFloatReserve, size_t), TINTEGER|CUNSIGNED|PNOUI },
+  CB(cFboCore->FboCoreSetFloatReserve, size_t),
+    CVarFlagsConst{ TINTEGER|CUNSIGNED|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_ROBUSTNESS
 // ? Specifies the robustness strategy of the context. This is only used
@@ -1691,7 +1736,8 @@ CVarItemStaticList{{
 // ? GLFW_LOSE_CONTEXT_ON_RESET or 2 for GLFW_NO_ROBUSTNESS.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_robustness", "2",
-  CB(cDisplay->DisplayRobustnessChanged, size_t), TUINTEGER|PNOUI },
+  CB(cDisplay->DisplayRobustnessChanged, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_SIMPLEMATRIX
 // ? Set to 0 to not maintain frame buffer aspect ratio, or 1 to allow the
@@ -1699,7 +1745,8 @@ CVarItemStaticList{{
 // ? 'vid_oraspmin' and 'vid_oraspmax).
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_simplematrix", "0",
-  CB(cFboCore->FboCoreSetSimpleMatrix, bool), TBOOLEAN|PNOUI },
+  CB(cFboCore->FboCoreSetSimpleMatrix, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_SRGB
 // ? This specifies whether the framebuffer should be sRGB capable. Possible
@@ -1707,21 +1754,22 @@ CVarItemStaticList{{
 // ? to the configuration database.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_srgb", "0",
-  CB(cDisplay->DisplaySRGBColourSpaceChanged, bool), TBOOLEANSAVE|PANY },
+  CB(cDisplay->DisplaySRGBColourSpaceChanged, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_SSTYPE
 // ? Specifies the screenshot type, see the command output of 'imgfmts' to see
 // ? the image types supported and the id's for them. Only entries marked with
 // ? the 'S' (saveable) token can be used.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_sstype", "0",
-  CB(SShotsSetType, ImageFormat), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "vid_sstype", "0", CB(SShotsSetType, ImageFormat),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_STEREO
 // ? Enables 3D glasses support.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_stereo", "0" ,
-  CB(cDisplay->DisplaySetStereoMode, bool), TBOOLEANSAVE|PANY },
+{ CFL_VIDEO, "vid_stereo", "0" , CB(cDisplay->DisplaySetStereoMode, bool),
+    CVarFlagsConst{ TBOOLEANSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_SUBPIXROUND
 // ? Specifies the type of sub-pixel rounding function on the main frame-buffer
@@ -1730,14 +1778,16 @@ CVarItemStaticList{{
 // ? 4 to use the roundEven() function.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_subpixround", "0",
-  CB(cShaderCore->SetSPRoundingMethod, size_t), TUINTEGER|PNOUI },
+  CB(cShaderCore->SetSPRoundingMethod, size_t),
+    CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! VID_TEXFILTER
 // ? Sets the texture filter id and equates to the values of the 'Fbo.Filters'
 // ? table.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "vid_texfilter", "3",
-  CB(cFboCore->FboCoreSetFilter, OglFilterEnum), TUINTEGERSAVE|PANY },
+  CB(cFboCore->FboCoreSetFilter, OglFilterEnum),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! VID_VSYNC
 // ? Enables vertical synchronisation which helps smooth the frame rate. Set to
@@ -1746,54 +1796,55 @@ CVarItemStaticList{{
 // ? refresh rate. You can also use -1 to use adaptive sync, and 2 to half the
 // ? refresh rate if you like.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "vid_vsync", "1",
-  CB(cOgl->OglSetVSyncMode, int), TINTEGERSAVE|PANY },
+{ CFL_VIDEO, "vid_vsync", "1", CB(cOgl->OglSetVSyncMode, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_ALPHA
 // ? Specifies that the window has alpha which is needed for transparent
 // ? windows. Default is 0 for no.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_alpha", "0",
-  CB(cDisplay->DisplaySetWindowTransparency, bool), TBOOLEAN|PNOUI },
+  CB(cDisplay->DisplaySetWindowTransparency, bool),
+    CVarFlagsConst{ TBOOLEAN|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_ASPECT
 // ? Force the window to have an aspect ratio. Specify as a floating point
 // ? number. i.e. 16.9 for 16:9 or 4.3 for 4:3, etc. or 0 for numeric and/or
 // ? denominator for freedom for the end user to resize at will.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_aspect", "0", NoOp, TUFLOAT|PNOUI },
+{ CFL_VIDEO, "win_aspect", "0", NoOp, CVarFlagsConst{ TUFLOAT|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_BORDER
 // ? Specifies if the window should have a titlebar and a border.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_border", "1",
-  CB(cDisplay->DisplayBorderChanged, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "win_border", "1", CB(cDisplay->DisplayBorderChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_CLOSEABLE
 // ? Specifies if the window is closable by the user.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_closeable", "1",
-  CB(cDisplay->DisplayCloseableChanged, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "win_closeable", "1", CB(cDisplay->DisplayCloseableChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_FLOATING
 // ? Specifies to lock the visibility of the window, otherwise known as 'always
 // ? on top' or 'Topmost'.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_floating", "0",
-  CB(cDisplay->DisplayFloatingChanged, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "win_floating", "0", CB(cDisplay->DisplayFloatingChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_FOCUSED
 // ? Specifies to automatically focus the window on creation.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_focused", "1",
-  CB(cDisplay->DisplayAutoFocusChanged, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "win_focused", "1", CB(cDisplay->DisplayAutoFocusChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHT
 // ? Sets the initial height of the window. This value is saved to the
 // ? persistence database when changed.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_height", "0",
-  CB(cDisplay->DisplayHeightChanged, int), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "win_height", "0", CB(cDisplay->DisplayHeightChanged, int),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHTMAX
 // ? Sets the maximum height of the window. This is only changable at the
@@ -1801,57 +1852,58 @@ CVarItemStaticList{{
 // ? The upper value is clamped by the GPU's maximum texture size which is
 // ? normally 16384 on all modern GPU's. Specify 0 to use the GPU maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_heightmax", "0", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "win_heightmax", "0", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_HEIGHTMIN
 // ? Sets the minimum height of the window. This is only changable at the
 // ? application configuration file and is not saved to persistence database.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_heightmin", "0", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "win_heightmin", "0", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_MAXIMISED
 // ? Specify 1 to have the window automatically maximised on creation or 0
 // ? to not. The default value is 0.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_maximised", "0",
-  CB(cDisplay->DisplaySetMaximisedMode, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "win_maximised", "0", CB(cDisplay->DisplaySetMaximisedMode, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_MINIMISEAUTO
 // ? Specify 1 to have the window automatically minimise when it is not active
 // ? or 0 to not. The default value is 1.
 /* ------------------------------------------------------------------------- */
 { CFL_VIDEO, "win_minimiseauto", "1",
-  CB(cDisplay->DisplayAutoIconifyChanged, bool), TBOOLEAN|PANY },
+  CB(cDisplay->DisplayAutoIconifyChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_POSX
 // ? Specify the default X position of the window. -2 means the centre of the
 // ? screen and -1 means the default position. Any other value is the actual
 // ? physical position on the screen. The default value is -2.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_posx", "-2",
-  CB(cDisplay->DisplaySetXPosition, int), TINTEGERSAVE|PANY },
+{ CFL_VIDEO, "win_posx", "-2", CB(cDisplay->DisplaySetXPosition, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_POSY
 // ? Specify the default Y position of the window. -2 means the centre of the
 // ? screen and -1 means the default position. Any other value is the actual
 // ? physical position on the screen. The default value is -2.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_posy", "-2",
-  CB(cDisplay->DisplaySetYPosition, int), TINTEGERSAVE|PANY },
+{ CFL_VIDEO, "win_posy", "-2", CB(cDisplay->DisplaySetYPosition, int),
+    CVarFlagsConst{ TINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_SIZABLE
 // ? Specify 1 if the window is allowed to be resized or 0 if not. The default
 // ? value is 1.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_sizable", "1",
-  CB(cDisplay->DisplaySizableChanged, bool), TBOOLEAN|PANY },
+{ CFL_VIDEO, "win_sizable", "1", CB(cDisplay->DisplaySizableChanged, bool),
+    CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTH
 // ? Sets the initial width of the window. This value is saved to the
 // ? persistence database when changed.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_width", "0",
-  CB(cDisplay->DisplayWidthChanged, int), TUINTEGERSAVE|PANY },
+{ CFL_VIDEO, "win_width", "0", CB(cDisplay->DisplayWidthChanged, int),
+    CVarFlagsConst{ TUINTEGERSAVE|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTHMAX
 // ? Sets the maximum width of the window. This is only changable at the
@@ -1859,25 +1911,25 @@ CVarItemStaticList{{
 // ? The upper value is clamped by the GPU's maximum texture size which is
 // ? normally 16384 on all modern GPU's. Specify 0 to use the GPU maximum.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_widthmax", "0", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "win_widthmax", "0", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* ------------------------------------------------------------------------- */
 // ! WIN_WIDTHMIN
 // ? Sets the minimum width of the window. This is only changable at the
 // ? application configuration file and is not saved to persistence database.
 /* ------------------------------------------------------------------------- */
-{ CFL_VIDEO, "win_widthmin", "0", NoOp, TUINTEGER|PNOUI },
+{ CFL_VIDEO, "win_widthmin", "0", NoOp, CVarFlagsConst{ TUINTEGER|PNOUI } },
 /* == Logging cvars ======================================================== */
 // ! LOG_CREDITS
 // ? Specifies to include credits in the log at startup.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "log_credits", "0",
-  CB(cCredits->CreditDumpList, bool), TBOOLEAN|PANY },
+  CB(cCredits->CreditDumpList, bool), CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! LOG_DYLIBS
 // ? Specifies to include shared libraries in the log at startup.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "log_dylibs", "0",
-  CB(cSystem->DumpModuleList, bool), TBOOLEAN|PANY },
+  CB(cSystem->DumpModuleList, bool), CVarFlagsConst{ TBOOLEAN|PANY } },
 /* ------------------------------------------------------------------------- */
 // ! COM_FLAGS
 // ? Specifies compatibility flags. Great care is taken to make sure the engine
@@ -1890,7 +1942,8 @@ CVarItemStaticList{{
 // ? there seem to be no compatibility problems so this is a nullop for now.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "com_flags", "-1",
-  CB(cCore->CoreProcessCompatibilityFlags, uint64_t), TINTEGER|PANY },
+  CB(cCore->CoreProcessCompatibilityFlags, uint64_t),
+    CVarFlagsConst{ TINTEGER|PANY } },
 /* -- Undefines ------------------------------------------------------------ */
 #undef CBSTR                           // Done with string function callback
 #undef CB                              // Done with int function callback

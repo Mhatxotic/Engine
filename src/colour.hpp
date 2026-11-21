@@ -11,7 +11,7 @@
 namespace IColour {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IStd::P;               using namespace IUtil::P;
-using namespace LGL::Types;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 using Components = StdArray<GLfloat, 4>; // Array of RGBA floats
 /* ------------------------------------------------------------------------- */

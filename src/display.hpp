@@ -27,7 +27,7 @@ using namespace ILuaUtil::P;           using namespace IMetadata::P;
 using namespace IMutex::P;             using namespace IStd::P;
 using namespace IString::P;            using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace LGL::Types;
+using namespace IUtil::P;              using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -894,8 +894,8 @@ class Display :                        // Actual class body
           DirVerifyFileNameIsValid(ssvName);
           // GLFW only accepts reversed 32BPP images in RGB order so we need to
           // force that by the image loader class too.
-          const Image &imC = ivIcons.emplace_back(
-            Image{ StdString{ ssvName }, IL_REVERSE|IL_TORGB|IL_TO32BPP });
+          const Image &imC = ivIcons.emplace_back(Image{ StdString{ ssvName },
+            ImageFlagsConst{ IL_REVERSE|IL_TORGB|IL_TO32BPP }});
           // Add to the available images we loaded
           const ImageSlot &imsD = imC.GetSlots().front();
           gfwivIcons.push_back({ imsD.DimGetWidth<int>(),

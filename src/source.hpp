@@ -18,7 +18,7 @@ using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace ILuaUtil::P;           using namespace IName::P;
 using namespace IOal::P;               using namespace ISerial::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LAL::Types;
+using namespace IUtil::P;              using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

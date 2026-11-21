@@ -12,7 +12,7 @@ using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IFboCmd::P;            using namespace ILog::P;
 using namespace IOgl::P;               using namespace IShader::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
-using namespace IString::P;            using namespace LGL::Types;
+using namespace IString::P;            using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Shader core class ==================================================== */

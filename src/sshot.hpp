@@ -19,7 +19,7 @@ using namespace IMemory::P;            using namespace IMetadata::P;
 using namespace IName::P;              using namespace IOgl::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IThread::P;            using namespace LGL::Types;
+using namespace IThread::P;            using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Begin collector class ------------------------------------------------ */

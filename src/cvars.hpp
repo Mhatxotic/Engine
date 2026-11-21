@@ -242,12 +242,13 @@ struct CVars :                         // Start of vars class
   { // Calculate set permission based on source
     auto SourceToPermission = [](const CVarFlagsConst cvfcS)->CVarFlagsConst
     { // Convert the S* flag to a P* flag and return it (order is important)
-      return cvfcS.FlagIsClear(SANY)   ? PANY     :
-           ((cvfcS.FlagIsSet(SCMDLINE) ? PCMDLINE : NONE) |
-            (cvfcS.FlagIsSet(SAPPCFG)  ? PAPPCFG  : NONE) |
-            (cvfcS.FlagIsSet(SUDB)     ? PUDB     : NONE) |
-            (cvfcS.FlagIsSet(SCONSOLE) ? PCONSOLE : NONE) |
-            (cvfcS.FlagIsSet(SLUA)     ? PLUA     : NONE));
+      return CVarFlagsConst{
+        cvfcS.FlagIsClear(SANY)   ? PANY     :
+        ((cvfcS.FlagIsSet(SCMDLINE) ? PCMDLINE : NONE) |
+         (cvfcS.FlagIsSet(SAPPCFG)  ? PAPPCFG  : NONE) |
+         (cvfcS.FlagIsSet(SUDB)     ? PUDB     : NONE) |
+         (cvfcS.FlagIsSet(SCONSOLE) ? PCONSOLE : NONE) |
+         (cvfcS.FlagIsSet(SLUA)     ? PLUA     : NONE)) };
     }; // Find initial cvar in initial pending list and if not found?
     const CVarMapIt cvmiPendIt{ cvmPending.find(ssvVar) };
     if(cvmiPendIt == cvmPending.cend())
@@ -265,7 +266,7 @@ struct CVars :                         // Start of vars class
           // Permission required to set the value
           SourceToPermission(cvfcFlags),
           // Merge throw on error and new cvar flag to supplied flags
-          cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR, strCBError);
+          CVarFlagsConst{cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR}, strCBError);
       } // Exception occured?
       catch(const StdException &)
       { // Unregister the variable that was created to not cause problems when
@@ -300,7 +301,7 @@ struct CVars :                         // Start of vars class
         // Permission required to set the value
         SourceToPermission(cviRef),
         // Merge throw on error and new cvar flag to supplied flags
-        cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR,
+        CVarFlagsConst{ cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR },
         // Error call back destination string
         strCBError);
       // Return iterator
@@ -313,7 +314,8 @@ struct CVars :                         // Start of vars class
     const StdStringView &ssvVal, const CVarFlagsConst cvfcFlags,
     const CVarConditionFlagsConst cvcfcFlags)
   { // Try to set the variable and grab the result
-    switch(CVarsSet(ssvVar, ssvVal, cvfcFlags, cvcfcFlags|CCF_IGNOREIFMISSING))
+    switch(CVarsSet(ssvVar, ssvVal, cvfcFlags,
+      CVarFlagsConst{ cvcfcFlags|CCF_IGNOREIFMISSING }))
     { // Not found? We need to add it to a standby list
       case CVS_NOTFOUND: break;
       // No error or not changed? return success!
@@ -563,8 +565,9 @@ struct CVars :                         // Start of vars class
         if(srmciFlagsIt == srmRef.cend()) return;
         const SqlData &sdFlagsRef = srmciFlagsIt->second;
         if(sdFlagsRef.iType != SQLITE_INTEGER) return;
-        const SqlCVarDataFlagsConst
-          scfFlags{ sdFlagsRef.MemReadInt<sqlite_int64>() };
+        const SqlCVarDataFlagsConst scfFlags{
+          static_cast<SqlCVarDataFlagsType>(
+            sdFlagsRef.MemReadInt<sqlite_int64>()) };
         // Get value and goto next record if not found, else set the value
         const SqlRecordsMapConstIt
           srmciValueIt{ srmRef.find(cSqls->strCVValueColumn) };
@@ -582,7 +585,7 @@ struct CVars :                         // Start of vars class
           } // Store value directly with synchronisation
           maMutex.MutexCall([this, &strVar, &sdValueRef, &astLoaded](){
             if(CVarsSetVarOrInitial(strVar, sdValueRef.MemToStringSafe(),
-              PUDB|SUDB, CCF_NOTDECRYPTED))
+              CVarFlagsConst{ PUDB|SUDB }, CCF_NOTDECRYPTED))
                 ++astLoaded;
           }); // Go to next item
           return;
@@ -607,8 +610,8 @@ struct CVars :                         // Start of vars class
         // is not easy to change a sql database manually if we change the
         // rules on a cvar.
         maMutex.MutexCall([this, &strVar, &strNewValue, &astLoaded](){
-          if(CVarsSetVarOrInitial(strVar, strNewValue, PUDB|SUDB,
-               CCF_DECRYPTED))
+          if(CVarsSetVarOrInitial(strVar, strNewValue,
+               CVarFlagsConst{ PUDB|SUDB }, CCF_DECRYPTED))
             ++astLoaded;
         });
       });

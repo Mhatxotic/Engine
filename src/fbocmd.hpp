@@ -10,7 +10,7 @@
 /* ------------------------------------------------------------------------- */
 namespace IFboCmd {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace LGL::Types;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Defines -------------------------------------------------------------- */

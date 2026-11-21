@@ -137,7 +137,7 @@ CTOR_MEM_BEGIN_CSLAVE(Variables, Variable, ICHelperUnsafe)
         cCVars->CVarsGetVarListEnd())
     }); // Register the variable and set the iterator to the new cvar.
     Pair().second = cCVars->CVarsRegister(ssvName, ssvDefault,
-      LuaCallbackStatic, cvfcFlags|SLUA|PANY);
+      LuaCallbackStatic, CVarFlagsConst{ cvfcFlags|SLUA|PANY });
     // Register the object in collector
     CollectorRegister();
   }

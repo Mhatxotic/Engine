@@ -13,7 +13,7 @@ using namespace ICommon::P;            using namespace IDim::P;
 using namespace IDimCoord::P;          using namespace IError::P;
 using namespace IGlFWBase::P;          using namespace ILog::P;
 using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;              using namespace LGL;
+using namespace IUtil::P;              using namespace LOgl;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

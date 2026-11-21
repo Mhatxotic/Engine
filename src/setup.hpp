@@ -437,7 +437,7 @@ namespace E                            // Store libs in engine namespace
   { /* ------------------------------------------------------------------- */
 #include <zlib/zlib.h>                 // Main header
   } /* ------------------------------------------------------------------- */
-  namespace LGL                        // GLFW API functions
+  namespace LOgl                       // GLFW API functions
   { /* ------------------------------------------------------------------- */
 #define GLFW_INCLUDE_GLCOREARB         // Include arbitrary OpenGL API
 #include <glfw/glfw3.h>                // Main header
@@ -445,17 +445,17 @@ namespace E                            // Store libs in engine namespace
     /* ------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ----------------------------------------------------------------- */
-      using LGL::GLFWimage;            // GLFW specific image type
-      using LGL::GLFWmonitor;          // GLFW specific monitor type
-      using LGL::GLFWwindow;           // GLFW specific window type
-      using LGL::GLchar;               // GL specific char type
-      using LGL::GLenum;               // GL specific enum type
-      using LGL::GLfloat;              // GL specific float type
-      using LGL::GLint;                // GL specific int type
-      using LGL::GLsizei;              // GL specific sizei type
-      using LGL::GLubyte;              // GL specific unsigned char type
-      using LGL::GLuint;               // GL specific unsigned type
-      using LGL::GLvoid;               // GL specific void type
+      using LOgl::GLFWimage;           // GLFW specific image type
+      using LOgl::GLFWmonitor;         // GLFW specific monitor type
+      using LOgl::GLFWwindow;          // GLFW specific window type
+      using LOgl::GLchar;              // GL specific char type
+      using LOgl::GLenum;              // GL specific enum type
+      using LOgl::GLfloat;             // GL specific float type
+      using LOgl::GLint;               // GL specific int type
+      using LOgl::GLsizei;             // GL specific sizei type
+      using LOgl::GLubyte;             // GL specific unsigned char type
+      using LOgl::GLuint;              // GL specific unsigned type
+      using LOgl::GLvoid;              // GL specific void type
     } /* ------------------------------------------------------------------- */
 #if defined(MACOS)                     // MacOS defined?
     /* --------------------------------------------------------------------- */
@@ -505,7 +505,7 @@ namespace E                            // Store libs in engine namespace
 # pragma warning(pop)                  // Restore original warning settings
 #endif                                 // MSVC_VANILLA
   } /* --------------------------------------------------------------------- */
-  namespace LAL                        // OpenAL API functions
+  namespace LOal                       // OpenAL API functions
   { /* --------------------------------------------------------------------- */
 #define AL_ALEXT_PROTOTYPES            // So can get alcResetDevice
 #include <al/alext.h>                  // Main header
@@ -513,19 +513,19 @@ namespace E                            // Store libs in engine namespace
     /* --------------------------------------------------------------------- */
     namespace Types                    // Common types
     { /* ------------------------------------------------------------------- */
-      using LAL::ALCEVENTPROCTYPESOFT; // AL specific system event callback
-      using LAL::ALCchar;              // AL specific context char type
-      using LAL::ALCdevice;            // AL specific device context
-      using LAL::ALCenum;              // AL specific context enum type
-      using LAL::ALCsizei;             // AL specific context sizei type
-      using LAL::ALdouble;             // AL specific double type
-      using LAL::ALenum;               // AL specific enum type
-      using LAL::ALfloat;              // AL specific float type
-      using LAL::ALint;                // AL specific int type
-      using LAL::ALshort;              // AL specific short type
-      using LAL::ALsizei;              // AL specific sizei type
-      using LAL::ALuint;               // AL specific unsigned type
-      using LAL::ALvoid;               // AL specific void type
+      using LOal::ALCEVENTPROCTYPESOFT;// AL specific system event callback
+      using LOal::ALCchar;             // AL specific context char type
+      using LOal::ALCdevice;           // AL specific device context
+      using LOal::ALCenum;             // AL specific context enum type
+      using LOal::ALCsizei;            // AL specific context sizei type
+      using LOal::ALdouble;            // AL specific double type
+      using LOal::ALenum;              // AL specific enum type
+      using LOal::ALfloat;             // AL specific float type
+      using LOal::ALint;               // AL specific int type
+      using LOal::ALshort;             // AL specific short type
+      using LOal::ALsizei;             // AL specific sizei type
+      using LOal::ALuint;              // AL specific unsigned type
+      using LOal::ALvoid;              // AL specific void type
     } /* ------------------------------------------------------------------- */
   } /* -- Ogg Includes ----------------------------------------------------- */
   namespace LOgg                       // OggVorbis API functions

@@ -27,7 +27,7 @@ using namespace IOal::P;               using namespace ISerial::P;
 using namespace ISource::P;            using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace IUtil::P;              using namespace LOgg;
-using namespace LAL::Types;
+using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

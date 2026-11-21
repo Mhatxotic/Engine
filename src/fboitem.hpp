@@ -13,7 +13,7 @@
 namespace IFboItem {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IFboCmd::P;            using IUtil::P::UtilNormaliseEx;
-using namespace LGL::Types;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo item class ======================================================= */

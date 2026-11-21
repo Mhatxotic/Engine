@@ -27,8 +27,8 @@ using namespace ISource::P;            using namespace IStd::P;
 using namespace IStream::P;            using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IThread::P;
 using namespace IUtil::P;              using namespace LOgg;
-using namespace LOgg::Theora;          using namespace LAL::Types;
-using namespace LGL::Types;
+using namespace LOgg::Theora;          using namespace LOal::Types;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */

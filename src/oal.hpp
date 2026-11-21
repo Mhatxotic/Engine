@@ -20,7 +20,7 @@ using namespace IHelper::P;            using namespace ILog::P;
 using namespace ILookupMap::P;         using namespace IMemory::P;
 using namespace IStd::P;               using namespace IStdLib::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace LAL;
+using namespace IToken::P;             using namespace LOal;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */

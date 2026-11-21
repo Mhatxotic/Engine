@@ -17,7 +17,7 @@ using namespace ILuaUtil::P;           using namespace IMixer::P;
 using namespace IOal::P;               using namespace IPcmDef::P;
 using namespace IPcm::P;               using namespace IStd::P;
 using namespace ISource::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace LAL::Types;
+using namespace ISysUtil::P;           using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Sample collector and member class ------------------------------------ */

@@ -14,7 +14,7 @@ using namespace IFlags::P;             using namespace ILog::P;
 using namespace IMemory::P;            using namespace IPcmData::P;
 using namespace IPcmDef::P;            using namespace IPcmLib::P;
 using namespace IStd::P;               using namespace IUtil::P;
-using namespace LAL::Types;
+using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -20,7 +20,7 @@ using namespace ILog::P;               using namespace ILuaFunc::P;
 using namespace IStd::P;               using namespace IString::P;
 using namespace ISysUtil::P;           using namespace IUtfCodepoint::P;
 using namespace IUtfDecoder::P;        using namespace IUtil::P;
-using namespace LGL::Types;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */

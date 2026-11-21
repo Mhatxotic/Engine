@@ -58,8 +58,8 @@ using namespace ISysUtil::P;           using namespace ISystem::P;
 using namespace ITexture::P;           using namespace IThread::P;
 using namespace ITime::P;              using namespace IToken::P;
 using namespace IUrl::P;               using namespace IUtil::P;
-using namespace IVideo::P;             using namespace LAL::Types;
-using namespace LGL::Types;            using namespace LSql::Types;
+using namespace IVideo::P;             using namespace LOal::Types;
+using namespace LOgl::Types;           using namespace LSql::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -943,8 +943,8 @@ class Core final :                     // Members initially private
           // should allow any variable to be overridden from the command line.
           // Also show an error if the variable could not be set.
           if(CVarsSetVarOrInitial(tsvKeyVal.front(), tsvKeyVal.size() > 1 ?
-            tsvKeyVal.back() : cCommon->CommonBlankStr(), SCMDLINE|PCMDLINE,
-            CCF_NOTHING))
+            tsvKeyVal.back() : cCommon->CommonBlankStr(),
+            CVarFlagsConst{ SCMDLINE|PCMDLINE }, CCF_NOTHING))
           { // Append argument to accepted command line and add a space
             strV.append(strArg);
             strV.append(cCommon->CommonSpace());

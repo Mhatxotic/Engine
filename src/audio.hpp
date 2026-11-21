@@ -18,7 +18,7 @@ using namespace ISample::P;            using namespace ISource::P;
 using namespace IStd::P;               using namespace IStream::P;
 using namespace IString::P;            using namespace ISysUtil::P;
 using namespace IThread::P;            using namespace IVideo::P;
-using namespace LAL::Types;
+using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ========================================================================= */

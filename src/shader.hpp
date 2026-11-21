@@ -17,7 +17,7 @@ using namespace ILuaLib::P;            using namespace IName::P;
 using namespace IOgl::P;               using namespace ISerial::P;
 using namespace IShaderDef::P;         using namespace IStd::P;
 using namespace IString::P;            using namespace ISysUtil::P;
-using namespace LGL::Types;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Shader list class ---------------------------------------------------- */

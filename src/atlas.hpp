@@ -17,7 +17,7 @@ using namespace ILuaIdent::P;          using namespace ILuaLib::P;
 using namespace IMemory::P;            using namespace IOgl::P;
 using namespace IStd::P;               using namespace ISysUtil::P;
 using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtil::P;              using namespace LGL::Types;
+using namespace IUtil::P;              using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 using CoordsGLuint = Coords<GLuint>;   // GLuint co-ordinates
 /* ------------------------------------------------------------------------- */

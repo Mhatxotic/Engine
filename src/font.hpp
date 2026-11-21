@@ -26,7 +26,7 @@ using namespace IStd::P;               using namespace ISystem::P;
 using namespace ISysUtil::P;           using namespace ITexDef::P;
 using namespace ITexture::P;           using namespace IUtfCodepoint::P;
 using namespace IUtfDecoder::P;        using namespace IUtil::P;
-using namespace LFt;                   using namespace LGL::Types;
+using namespace LFt;                   using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */
