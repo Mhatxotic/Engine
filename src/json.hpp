@@ -13,13 +13,13 @@ namespace IJson {                      // Start of private module namespace
 using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICollector::P;         using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
-using namespace IFStream::P;           using namespace ILog::P;
-using namespace ILuaBase::P;           using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace LJson;
+using namespace IFStream::P;           using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace LJson;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Json object collector and member class =============================== */

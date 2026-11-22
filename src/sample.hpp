@@ -11,13 +11,14 @@
 namespace ISample {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace IError::P;             using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMixer::P;
-using namespace IOal::P;               using namespace IPcmDef::P;
-using namespace IPcm::P;               using namespace IStd::P;
-using namespace ISource::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace LOal::Types;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMixer::P;             using namespace IOal::P;
+using namespace IPcmDef::P;            using namespace IPcm::P;
+using namespace IStd::P;               using namespace ISource::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Sample collector and member class ------------------------------------ */

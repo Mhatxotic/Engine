@@ -73,14 +73,14 @@ template<class ParentType>class AsyncLoader :
     AR_ERROR,                          // Loading failed
     AR_UNKNOWN                         // Unknown code
   }; /* -------------------------------------------------------------------- */
-  enum ASyncCmdType                    // Loader content type
+  enum ASyncCmdType : unsigned         // Loader content type
   { /* --------------------------------------------------------------------- */
     BA_NONE,                           // No event
     BA_FILE,                           // Load from file
     BA_MEMORY,                         // Load from memory
     BA_EXECUTE                         // Execute command-line
   }; /* -------------------------------------------------------------------- */
-  enum ASyncCallback                   // Loader content type
+  enum ASyncCallback : unsigned        // Loader content type
   { /* --------------------------------------------------------------------- */
     LR_CLASS,                          // [0] Ref to the pointer to class
     LR_SUCCESS,                        // [1] Ref to the success callback

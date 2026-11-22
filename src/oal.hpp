@@ -16,11 +16,12 @@ namespace IOal {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IFlags::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace ILookupMap::P;         using namespace IMemory::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace LOal;
+using namespace IGCHelper::P;          using namespace IHelper::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
+using namespace IMemory::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace LOal;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
@@ -36,31 +37,34 @@ namespace P {                          // Start of public module namespace
 /* -- Typedefs ------------------------------------------------------------- */
 using ALUIntVector = StdVector<ALuint>; // A vector of ALuint's
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Oal,                       // OpenAL flags
+BUILD_FLAGS(unsigned, Oal,             // OpenAL flags
   /* -- OAL specific flags ------------------------------------------------- */
-  AFL_NONE                  {Flag(0)}, // No flags
-  AFL_INITDEVICE            {Flag(1)}, // Device has been initialised?
-  AFL_INITCONTEXT           {Flag(2)}, // Context has been initialised?
-  AFL_INFINITESOURCES       {Flag(3)}, // Have infinite sources?
-  AFL_CONTEXTCURRENT        {Flag(4)}, // Context has been made current?
-  AFL_INITIALISED           {Flag(5)}, // OpenAL fully initialised
-  AFL_HAVE32FPPB            {Flag(6)}, // Can play 32-bit float audio?
-  AFL_HAVEENUMEXT           {Flag(7)}, // Have ALC_ENUMERATE_ALL_EXT?
-  AFL_HAVESEPBDDC           {Flag(8)}, // Playback change def device event?
-  AFL_HAVESECADDC           {Flag(9)}, // Capture change default device event?
-  AFL_HAVESEPBDA           {Flag(10)}, // Playback add device event?
-  AFL_HAVESECADA           {Flag(11)}, // Capture add device event?
-  AFL_HAVESEPBDR           {Flag(12)}, // Playback remove device event?
-  AFL_HAVESECADR           {Flag(13)}, // Capture remove device event?
-  AFL_REINIT               {Flag(14)}, // Audio system is resetting?
-  AFL_HRTFREQ              {Flag(15)}, // HRTF is requested enabled?
-  AFL_HRTFINIT             {Flag(16)}  // HRTF init was successful?
-);/* == Oal class ========================================================== */
+  AFL_NONE               {OalFlag[0]}, // No flags
+  AFL_INITDEVICE         {OalFlag[1]}, // Device has been initialised?
+  AFL_INITCONTEXT        {OalFlag[2]}, // Context has been initialised?
+  AFL_INFINITESOURCES    {OalFlag[3]}, // Have infinite sources?
+  AFL_CONTEXTCURRENT     {OalFlag[4]}, // Context has been made current?
+  AFL_INITIALISED        {OalFlag[5]}, // OpenAL fully initialised
+  AFL_HAVE32FPPB         {OalFlag[6]}, // Can play 32-bit float audio?
+  AFL_HAVEENUMEXT        {OalFlag[7]}, // Have ALC_ENUMERATE_ALL_EXT?
+  AFL_HAVESEPBDDC        {OalFlag[8]}, // Playback change def device event?
+  AFL_HAVESECADDC        {OalFlag[9]}, // Capture change default device event?
+  AFL_HAVESEPBDA        {OalFlag[10]}, // Playback add device event?
+  AFL_HAVESECADA        {OalFlag[11]}, // Capture add device event?
+  AFL_HAVESEPBDR        {OalFlag[12]}, // Playback remove device event?
+  AFL_HAVESECADR        {OalFlag[13]}, // Capture remove device event?
+  AFL_REINIT            {OalFlag[14]}, // Audio system is resetting?
+  AFL_HRTFREQ           {OalFlag[15]}, // HRTF is requested enabled?
+  AFL_HRTFINIT          {OalFlag[16]}  // HRTF init was successful?
+);/* ----------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Oal;                             // Class prototype
 static Oal *cOal = nullptr;            // Pointer to global class
-class Oal :                            // Actual class body
+/* -- Class body ----------------------------------------------------------- */
+class Oal :                            // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private InitHelper,                  // Initialisation helper
+  GCHelper<Oal>,                       // Global pointer helper
+  InitHelper,                          // Initialisation helper
   public OalFlags                      // OpenAL flags
 { /* -- Error macros for use inside the class only ------------------------- */
 #define IAL(F,M,...)  ALEX(OalCheckALError, F, M, ## __VA_ARGS__)
@@ -793,6 +797,7 @@ class Oal :                            // Actual class body
   /* -- Constructor --------------------------------------------- */ protected:
   Oal() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cOal },           // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Send name to InitHelper
     OalFlags{ AFL_NONE },              // Flags not initialised yet
     /* -- Const members ---------------------------------------------------- */
@@ -820,8 +825,8 @@ class Oal :                            // Actual class body
     alcContext(nullptr),               // Context not initialised yet
     bHave32FPPB(false),                // 32bit float cap not initialised yet
     aleQuery(AL_NONE)                  // Query method not initialised yet
-    /* --------------------------------------------------------------------- */
-    { cOal = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor that unloads context and device ------------------------- */
   DTORHELPER(~Oal, OalDeInitNoReset())
   /* -- Update hints ----------------------------------------------- */ public:

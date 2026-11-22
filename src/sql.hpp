@@ -16,33 +16,33 @@ using namespace ICollector::P;         using namespace ICrypt::P;
 using namespace ICVarDef::P;           using namespace IDir::P;
 using namespace IDuration::P;          using namespace IError::P;
 using namespace IFlags::P;             using namespace IFrame::P;
-using namespace IInterval::P;          using namespace ILog::P;
-using namespace ILookupArray::P;       using namespace ILuaBase::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IPSplit::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace LSql;
+using namespace IGCHelper::P;          using namespace IInterval::P;
+using namespace ILog::P;               using namespace ILookupArray::P;
+using namespace ILuaBase::P;           using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IPSplit::P;            using namespace IMemory::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace LSql;
 /* -- Replacement for SQLITE_TRANSIENT which cases warnings ---------------- */
 static sqlite3_destructor_type fcbSqliteTransient =
   reinterpret_cast<sqlite3_destructor_type>(-1);
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(SqlCVarData,               // Sql cvar data types
+BUILD_FLAGS(unsigned, SqlCVarData,     // Sql cvar data types
   /* -- (Note: Don't ever change these around) ----------------------------- */
-  SD_NONE                   {Flag(0)}, // No flags for this cvar in db?
-  SD_ENCRYPTED              {Flag(1)}  // The data value was encrypted?
+  SD_NONE        {SqlCVarDataFlag[0]}, // No flags for this cvar in db?
+  SD_ENCRYPTED   {SqlCVarDataFlag[1]}  // The data value was encrypted?
 );/* ----------------------------------------------------------------------- */
-BUILD_FLAGS(Sql,                       // Sql flags classes
+BUILD_FLAGS(unsigned, Sql,             // Sql flags classes
   /* ----------------------------------------------------------------------- */
-  SF_NONE                   {Flag(0)}, // No settings?
-  SF_ISTEMPDB               {Flag(1)}, // Is temporary database?
-  SF_DELETEEMPTYDB          {Flag(2)}  // Delete empty databases?
+  SF_NONE                {SqlFlag[0]}, // No settings?
+  SF_ISTEMPDB            {SqlFlag[1]}, // Is temporary database?
+  SF_DELETEEMPTYDB       {SqlFlag[2]}  // Delete empty databases?
 );/* ----------------------------------------------------------------------- */
-enum ADResult                          // Results for CanDeleteDatabase()
+enum ADResult : unsigned               // Results for CanDeleteDatabase()
 { /* ----------------------------------------------------------------------- */
   ADR_OK_NO_TABLES,                    // [0] No tables exist (delete ok)
   ADR_OK_NO_RECORDS,                   // [1] No records exist (delete ok)
@@ -117,13 +117,13 @@ MAPPACK_BUILD(SqlRecords, const StdString, SqlData);
 using SqlResult = StdList<SqlRecordsMap>; // vector of key/raw data blocks
 using SqlIntPair = StdPair<sqlite3_int64,sqlite3_int64>; // Sqlite integer pair
 /* ------------------------------------------------------------------------- */
-enum PurgeResult                       // Result to a purge request
+enum PurgeResult : unsigned            // Result to a purge request
 { /* ----------------------------------------------------------------------- */
   PR_FAIL,                             // [0] Sql call failed with error
   PR_OK,                               // [1] Sql call succeeded with changes
   PR_OK_NC,                            // [2] Sql call succeeded but no changes
 };/* ----------------------------------------------------------------------- */
-enum CreateTableResult                 // Create table result
+enum CreateTableResult : unsigned      // Create table result
 { /* ----------------------------------------------------------------------- */
   CTR_FAIL,                            // [0] Sql create table failed
   CTR_OK,                              // [1] Sql call commited the variable
@@ -1427,8 +1427,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
     SqlFlags{ ctParent.sFlags },       // Copy global sql flags
     sqlDB(nullptr),                    // No sql database handle yet
     iError(SQLITE_OK)                  // Initialise sqlite and store error
-  /* -- No code ------------------------------------------------------------ */
-  { cSql = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor to close the database if opened ------------------------- */
   DTORHELPER(~Sql, SqlDoDeInit())
 };/* ----------------------------------------------------------------------- */

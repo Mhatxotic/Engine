@@ -12,10 +12,11 @@
 namespace ICredit {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICodec::P;             using namespace ICommon::P;
-using namespace ICVarDef::P;           using namespace IGlFW::P;
-using namespace IError::P;             using namespace ILog::P;
-using namespace IMemory::P;            using namespace IString::P;
-using namespace ISystem::P;            using namespace LOgg::Theora;
+using namespace ICVarDef::P;           using namespace IError::P;
+using namespace IGCHelper::P;          using namespace IGlFW::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace LOgg::Theora;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Credit library class ------------------------------------------------- */
@@ -77,10 +78,13 @@ enum CreditEnums : size_t              // Credit ids
 };/* ----------------------------------------------------------------------- */
 using CreditLibList        = StdArray<const CreditLib, CL_MAX>; // Library list
 using CreditLibListConstIt = CreditLibList::const_iterator;     // " Iterator
-/* ------------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Credits;                         // Class prototype
 static Credits *cCredits = nullptr;    // Pointer to global class
-class Credits                          // Members initially private
+/* -- Class body ----------------------------------------------------------- */
+class Credits :                        // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Credits>                    // Global pointer helper
 { /* -- License data ------------------------------------------------------- */
 #define BEGINLICENSE(n,s) \
   constexpr static const StdArray<const uint8_t,s> l ## n{
@@ -129,6 +133,7 @@ class Credits                          // Members initially private
   /* -- Default constructor ------------------------------------- */ protected:
   Credits() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cCredits },         // Initialise global pointer
     strTheoraVersion{ StrFormat("$.$.$", // Generate Theora version string
       theora_version_number()       & 0x00FF,
       theora_version_number() >>  8 & 0x00FF,
@@ -178,8 +183,8 @@ class Credits                          // Members initially private
       // End of credits data structure
 #undef LD                              // Done with this macro
     } }                                // End of credits list
-  /* -- Set global pointer to static class --------------------------------- */
-  { cCredits = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

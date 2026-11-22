@@ -20,29 +20,33 @@ using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace ICVars::P;             using namespace IDuration::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags::P;             using namespace IFrame::P;
-using namespace ILog::P;               using namespace ILuaBase::P;
-using namespace ILuaCode::P;           using namespace ILuaDef::P;
-using namespace ILuaFunc::P;           using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
-using namespace IMetadata::P;          using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LSql::Types;
+using namespace IGCHelper::P;          using namespace ILog::P;
+using namespace ILuaBase::P;           using namespace ILuaCode::P;
+using namespace ILuaDef::P;            using namespace ILuaFunc::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace ILuaVariable::P;       using namespace IMetadata::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace LSql::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
-BUILD_FLAGS(Lua,                       // OpenGL flags
+BUILD_FLAGS(unsigned, Lua,             // OpenGL flags
   /* ----------------------------------------------------------------------- */
-  LUF_NONE                  {Flag(0)}, // No flags?
-  LUF_EXITING               {Flag(1)}, // Lua is exiting?
-  LUF_GCGENERATIONAL        {Flag(2)}, // Generational mode enabled?
-  LUF_GCINCREMENTAL         {Flag(3)}  // Incremental mode enabled?
+  LUF_NONE               {LuaFlag[0]}, // No flags?
+  LUF_EXITING            {LuaFlag[1]}, // Lua is exiting?
+  LUF_GCGENERATIONAL     {LuaFlag[2]}, // Generational mode enabled?
+  LUF_GCINCREMENTAL      {LuaFlag[3]}  // Incremental mode enabled?
 );/* ----------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Lua;                             // Class prototype
 static Lua *cLua = nullptr;            // Pointer to global class
-class Lua :                            // Actual class body
+/* -- Class body ----------------------------------------------------------- */
+class Lua :                            // Members initially private
   /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Lua>,                       // Global pointer helper
   public Chrono,                       // Runtime clock
-  private EvtMainRegAuto,              // Events list to register
+  EvtMainRegAuto,                      // Events list to register
   public LuaFlags                      // Lua flags
 { /* -- Private typedefs --------------------------------------------------- */
   using LuaPtr = StdUniquePtr<lua_State, function<decltype(lua_close)>>;
@@ -570,22 +574,21 @@ class Lua :                            // Actual class body
   /* -- Default constructor ------------------------------------- */ protected:
   Lua() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cLua },           // Initialise global pointer
     EvtMainRegAuto{ cEvtMain, {        // Regster LUA event callbacks
-      /* ------------------------------------------------------------------- */
       { EMC_LUA_ASKEXIT, bind(&Lua::LuaOnAskExit,     this, _1) },
       { EMC_LUA_PAUSE,   bind(&Lua::LuaOnPause,       this, _1) },
       { EMC_LUA_RESUME,  bind(&Lua::LuaOnResume,      this, _1) }
-      /* ------------------------------------------------------------------- */
     } },                               // End of LUA event callbacks
-    /* -- Properly initialised later --------------------------------------- */
-    iOperations(0),           iStack(0),               iGCMajorMinor(0),
-    iGCMinorMul(0),           iGCMinorMajor(0),        iGCPause(0),
-    iGCStepMul(0),            iGCStepSize(0),          liSeed(0),
-    /* -- LUA event callbacks ---------------------------------------------- */
+    iOperations(0),   iStack(0),       // Initialised by cvars
+    iGCMajorMinor(0), iGCMinorMul(0),  // Initialised by cvars
+    iGCMinorMajor(0), iGCPause(0),     // Initialised by cvars
+    iGCStepMul(0),    iGCStepSize(0),  // Initialised by cvars
+    liSeed(0),                         // Initialised by cvars
     lrMainEnd{ "OnLuaEnd" },           // Setup ending tick LUA event
     lrMainTick{ "OnLuaTick" }          // Setup main tick LUA event
-    /* -- Set global pointer to static class ------------------------------- */
-    { cLua = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Lua, LuaDeInit())
   /* -- When operations count have changed ------------------------- */ public:

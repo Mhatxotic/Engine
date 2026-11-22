@@ -347,7 +347,7 @@ class SysCon :                         // All members initially private
       [this](const unsigned uCol) { SetColourInteger(uCol, 7, 128);},
       []() { /* No push background yet */ },
       []() { /* No pop background yet */ },
-      [](const unsigned) { });
+      [](const unsigned){});
   }
   /* -- Locate a supported character while checking if word can be printed - */
   bool PrintGetWord(UtfDecoder &udStr, int iXp, const int iWi)

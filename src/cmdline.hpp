@@ -11,10 +11,10 @@
 namespace ICmdLine {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IDir::P;
-using namespace IError::P;             using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -26,10 +26,13 @@ enum ExitOperation : unsigned          // Things to do at exit
   EO_TERM_REBOOT,                      // Restart with parameters
   EO_UI_REBOOT,                        // Same as above but in UI mode
 };/* ----------------------------------------------------------------------- */
-/* -- Command line helper class (should be the first global to inti) ------- */
+/* -- Class prototype and global ------------------------------------------- */
 class CmdLine;                         // Class prototype
 static CmdLine *cCmdLine = nullptr;    // Address of global class
-class CmdLine                          // Members initially public
+/* -- Class body ----------------------------------------------------------- */
+class CmdLine :                        // Members initially public
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<CmdLine>                    // Global pointer helper
 { /* -- Private typedefs --------------------------------------------------- */
   using ArgList = StdSpan<ArgType*>;   // So we have the correct sizes
   /* -- Command-line and environment variables ----------------------------- */
@@ -169,6 +172,7 @@ class CmdLine                          // Members initially public
   /* -- Assign arguments ---------------------------------------- */ protected:
   CmdLine(const int iArgs, ArgType**const atNArgs, ArgType**const atNEnv) :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cCmdLine },       // Initialise global pointer
     eoExit(EO_QUIT),                   // Initialise exit code
     alArgs{ CmdLineCheckArgs(atNArgs), // Initialise cmdline args ptr
       static_cast<size_t>(iArgs) },    // ...checking that it's valid first
@@ -179,13 +183,11 @@ class CmdLine                          // Members initially public
     ssmEnv{ StdMove(                   // Initialise environment variables
       CmdLineParseEnvArray()) },       // ...so we can keep them const
     strCWD{ StdMove(DirGetCWD()) }     // Initialise current working directory
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCmdLine = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   ~CmdLine() noexcept(false) try
-  { // Clear global class
-    cCmdLine = nullptr;
-    // Done if arguments were never initialised
+  { // Done if arguments were never initialised
     if(!CmdLineGetTotalCArgs()) return;
     // Restore startup working directory
     CmdLineSetStartupCWD();

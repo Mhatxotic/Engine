@@ -21,14 +21,12 @@ namespace P {                          // Start of public module namespace
 ** ######################################################################### **
 ** ## Windows WAVE format                                             WAV ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
-class CodecWAV;                        // Class prototype
-static CodecWAV *cCodecWAV = nullptr;  // Pointer to global class
-class CodecWAV :                       // WAV codec object
+** -- Class body ----------------------------------------------------------- */
+class CodecWAV :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   protected PcmLib                     // Pcm format helper class
 { /* -- WAV header layout -------------------------------------------------- */
-  enum HeaderLayout
+  enum HeaderLayout : unsigned
   { // *** WAV FILE LIMITS ***
     HL_MINIMUM         =           20, // Minimum header size
     HL_U32LE_MINRATE   =            1, // Minimum sample rate allowed
@@ -76,7 +74,11 @@ class CodecWAV :                       // WAV codec object
       XC("RIFF must have WAV formatted data!",
         "Expected", uExpectedMagic, "Actual", uActualMagic);
     // Flag for if we got the data chunks we need
-    BUILD_FLAGS(WaveLoad, WL_NONE{1}, WL_GOTFORMAT{2}, WL_GOTDATA{4});
+    BUILD_FLAGS(unsigned, WaveLoad,
+      WL_NONE      {WaveLoadFlag[1]},
+      WL_GOTFORMAT {WaveLoadFlag[2]},
+      WL_GOTDATA   {WaveLoadFlag[3]}
+    );
     WaveLoadFlags chunkFlags{ WL_NONE };
     // The RIFF file contains dynamic 'chunks' of data. We need to iterate
     // through each one until we can no longer read any more chunks. We need
@@ -174,8 +176,8 @@ class CodecWAV :                       // WAV codec object
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_WAV, "Windows Wave Audio", "WAV",
       bind(&CodecWAV::Decode, this, _1, _2), }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecWAV = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

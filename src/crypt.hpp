@@ -11,14 +11,14 @@
 namespace ICrypt {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICommon::P;
-using namespace IError::P;             using namespace IHelper::P;
-using namespace ILog::P;               using namespace IMemory::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IToken::P;             using namespace IUtfCodepoint::P;
-using namespace IUtfDecoder::P;        using namespace IUtfEncoder::P;
-using namespace IUtil::P;              using namespace LSsl;
-using namespace L7z;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace IMemory::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
+using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
+using namespace IUtfEncoder::P;        using namespace IUtil::P;
+using namespace LSsl;                  using namespace L7z;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Convert the specified character to hexadecimal ----------------------- */
@@ -639,12 +639,14 @@ static Memory CryptRandomBlock(const size_t stSize)
   CryptRandomPtr(mData.MemPtr(), mData.MemSize());
   return mData;
 }
-/* -- Crypt manager class -------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Crypt;                           // Class prototype
 static Crypt *cCrypt = nullptr;        // Address of global class
+/* -- Class body ----------------------------------------------------------- */
 class Crypt :                          // Actual class body
   /* -- Base classes ------------------------------------------------------- */
-  public InitHelper                    // The crypto manager class
+  GCHelper<Crypt>,                     // Global pointer helper
+  public InitHelper                    // Initialisation helper class
 { /* -- Private typedefs --------------------------------------------------- */
   MAPPACK_BUILD(CpCp, const UtfCodepoint, const UtfCodepoint)
   /* -- private variables -------------------------------------------------- */
@@ -661,9 +663,7 @@ class Crypt :                          // Actual class body
   }
   /* -- Initialise cryptographic systems ----------------------------------- */
   void CryptInit()
-  { // Set address of global class
-    cCrypt = this;
-    // Use sql to allocate memory?
+  { // Use sql to allocate memory?
     if(!CRYPTO_set_mem_functions(CryptAlloc, CryptReAlloc, CryptFree))
       XC("Failed to setup allocator for crypto interface!");
     // Generate CRC table (for lzma lib)
@@ -812,6 +812,7 @@ class Crypt :                          // Actual class body
   /* -- Default constructor ------------------------------------- */ protected:
   Crypt() :                            // No arguments
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cCrypt },         // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Initialise init helper
 #include "cryptent.hpp"                // HTML entities codex
 #include "cryptlac.hpp"                // UTF8 homoglyphs codex

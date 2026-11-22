@@ -18,16 +18,16 @@ using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICodecOGG::P;          using namespace ICollector::P;
 using namespace ICVarDef::P;           using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
-using namespace ILog::P;               using namespace ILookupArray::P;
-using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IMixer::P;
-using namespace IMutex::P;             using namespace IName::P;
-using namespace IOal::P;               using namespace ISerial::P;
-using namespace ISource::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LOgg;
-using namespace LOal::Types;
+using namespace IGCHelper::P;          using namespace ILog::P;
+using namespace ILookupArray::P;       using namespace ILuaEvt::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IMixer::P;             using namespace IMutex::P;
+using namespace IName::P;              using namespace IOal::P;
+using namespace ISerial::P;            using namespace ISource::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace LOgg;                  using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */

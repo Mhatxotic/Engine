@@ -11,26 +11,29 @@ namespace IGlFW {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IEvtMain::P;
-using namespace IGlFWBase::P;          using namespace IGlFWUtil::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWWindow::P;
-using namespace IHelper::P;            using namespace ILog::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IToken::P;             using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LOgl;
+using namespace IGCHelper::P;          using namespace IGlFWBase::P;
+using namespace IGlFWUtil::P;          using namespace IGlFWCursor::P;
+using namespace IGlFWWindow::P;        using namespace IHelper::P;
+using namespace ILog::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace IToken::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace LOgl;
 /* ------------------------------------------------------------------------- */
 using CursorStandard = StdArray<GlFWCursor, CUR_MAX>;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
 using GlFWIconVector = StdVector<GLFWimage>; // Vector of GLFW image handles
-/* ========================================================================= */
+/* -- Class prototype and global ------------------------------------------- */
 class GlFW;                            // Class prototype
 static GlFW *cGlFW = nullptr;          // Pointer to global class
-class GlFW :                           // Root engine class
+/* -- Class body ----------------------------------------------------------- */
+class GlFW :                           // Members initially private
   /* -- Base classes ------------------------------------------------------- */
+  GCHelper<GlFW>,                      // Global pointer helper
   public InitHelper,                   // Initialisation helper
   public GlFWWindow,                   // GLFW window class
-  private CursorStandard               // Standard cursors list
+  CursorStandard                       // Standard cursors list
 { /* -- Private variables and functions ------------------------------------ */
   unsigned         uErrorLevel;        // Ignore further glfw errors
   const StdStringView ssvIntVersion;   // Internal (headers) version number
@@ -194,8 +197,8 @@ class GlFW :                           // Root engine class
   /* -- Constructor -------------------------------------------------------- */
   GlFW() :                             // Default constructor (No arguments)
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cGlFW },          // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Set class function name
-    /* --------------------------------------------------------------------- */
 #define CURSOR(x) GlFWCursor{ GLFW_ ## x ## _CURSOR }
     CursorStandard{{                   // Define standard cursors
       CURSOR(ARROW),                   // [00] GLFW_ARROW_CURSOR
@@ -212,17 +215,15 @@ class GlFW :                           // Root engine class
       CURSOR(VRESIZE)                  // [11] GLFW_VRESIZE_CURSOR
     }},                                // Should have specified CUR_MAX cursors
 #undef CURSOR                          // Done with this macro
-    /* --------------------------------------------------------------------- */
     uErrorLevel(0),                    // No errors occured
     ssvIntVersion{                     // Init internal version number
       STR(GLFW_VERSION_MAJOR) "."      // (?.x.x) Major
       STR(GLFW_VERSION_MINOR) "."      // (x.?.x) Minor
       STR(GLFW_VERSION_REVISION)       // (x.x.?) Revision
     },
-    /* --------------------------------------------------------------------- */
     bRawMouseSupported(false)          // Raw mouse support is detected soon
-    /* -- Set global pointer to static class ------------------------------- */
-    { cGlFW = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 /* -- Process a glfw error ------------------------------------------------- */
 void GlFW::GlFWOnHandleErrorStatic(int iCode, const char*const cpDesc)

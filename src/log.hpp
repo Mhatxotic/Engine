@@ -12,11 +12,11 @@ namespace ILog {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace IChrono::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
-using namespace IFStream::P;           using namespace ILookupArray::P;
-using namespace IMetadata::P;          using namespace IMutex::P;
-using namespace IName::P;              using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IToken::P;
+using namespace IFStream::P;           using namespace IGCHelper::P;
+using namespace ILookupArray::P;       using namespace IMetadata::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Log levels ----------------------------------------------------------- */
@@ -45,11 +45,13 @@ struct LogLine                         // Log line structure
 };/* ----------------------------------------------------------------------- */
 using LogLines        = StdList<LogLine>;         // List of log lines
 using LogLinesConstIt = LogLines::const_iterator; // Log lines iterator
-/* == Log class ============================================================ */
+/* -- Class prototype and global ------------------------------------------- */
 class Log;                             // Class prototype
 static Log *cLog = nullptr;            // Address of global log class
-class Log :                            // The actual class body
+/* -- Class body ----------------------------------------------------------- */
+class Log :                            // Members initially private
   /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Log>,                       // Global pointer helper
   public LogLines,                     // Holds info about every log line
   public FStream,                      // Output log file if needed
   public Chrono,                       // Holds the current log time
@@ -306,6 +308,7 @@ class Log :                            // The actual class body
   /* -- Constructor --------------------------------------------- */ protected:
   Log() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cLog },           // Initialise global pointer
     llLevels{{                         // Initialise log level strings
       "Critical",                      // Log line is critical
       "Error",                         // Log line is an error
@@ -319,8 +322,8 @@ class Log :                            // The actual class body
     stMaximum(1000),                   // Initialise maximum output lines
     fsmMode(FM_MAX),                   // File mode initialised by cvar
     ssvLogExt{ "." LOG_EXTENSION }     // Log extension
-    /* -- Set global pointer to static class ------------------------------- */
-    { cLog = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Log, LogDeInitSafe())
   /* -- Set file mode ---------------------------------------------- */ public:

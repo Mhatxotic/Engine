@@ -9,13 +9,16 @@
 /* ------------------------------------------------------------------------- */
 namespace IMixer {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace LOal;
+using namespace IGCHelper::P;          using namespace LOal;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Mixer;                           // Class prototype
 static Mixer *cMixer = nullptr;        // Pointer to global class
-class Mixer                            // The class
+/* -- Class body ----------------------------------------------------------- */
+class Mixer :                          // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Mixer>                      // Global pointer helper
 { /* ----------------------------------------------------------------------- */
   using AtomicALFloat = StdAtomic<ALfloat>;
   /* ----------------------------------------------------------------------- */
@@ -58,6 +61,7 @@ class Mixer                            // The class
   /* ----------------------------------------------------------------------- */
   Mixer() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cMixer },         // Initialise global pointer
     aalfAdjSample(0.0f),               // Set by 'MixerSetSampleVolume' func
     aalfAdjStream(0.0f),               // Set by 'MixerSetStreamVolume' func
     aalfAdjVideo(0.0f),                // Set by 'MixerSetVideoVolume' func
@@ -65,8 +69,8 @@ class Mixer                            // The class
     aalfSample(0.0f),                  // Set by 'Sample' class
     aalfStream(0.0f),                  // Set by 'Stream' class
     aalfVideo(0.0f)                    // Set by 'Video' class
-    /* --------------------------------------------------------------------- */
-    { cMixer = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

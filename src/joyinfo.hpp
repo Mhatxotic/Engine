@@ -16,11 +16,11 @@ using namespace IName::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Joy,                       // Joystick state flags
+BUILD_FLAGS(unsigned, Joy,             // Joystick state flags
   /* ----------------------------------------------------------------------- */
-  JF_NONE                   {Flag(0)}, // No flags?
-  JF_CONNECTED              {Flag(1)}, // Joystick is connnected?
-  JF_GAMEPAD                {Flag(2)}  // Joystick is actually a gamepad?
+  JF_NONE                {JoyFlag[0]}, // No flags?
+  JF_CONNECTED           {JoyFlag[1]}, // Joystick is connnected?
+  JF_GAMEPAD             {JoyFlag[2]}  // Joystick is actually a gamepad?
 );/* ----------------------------------------------------------------------- */
 /* ------------------------------------------------------------------------- */
 class JoyInfo :                        // Joystick class

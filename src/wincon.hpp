@@ -372,7 +372,7 @@ class SysCon :                         // Members initially private
       [this](const unsigned uCol) { SetBackgroundInteger(uCol); },
       []() { /* No push background yet */ },
       []() { /* No pop background yet */ },
-      [](const unsigned) { });
+      [](const unsigned){});
   }
   /* -- Locate a supported character while checking if word can be printed - */
   bool PrintGetWord(UtfDecoder &udStr, size_t stXp, const size_t stWi)

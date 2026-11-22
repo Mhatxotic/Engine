@@ -15,21 +15,24 @@ using namespace ICVarLib::P;           using namespace ICVars::P;
 using namespace IConDef::P;            using namespace IConsole::P;
 using namespace IEvtMain::P;           using namespace IFbo::P;
 using namespace IFboCore::P;           using namespace IFont::P;
-using namespace IFtf::P;               using namespace IGlFW::P;
-using namespace IHelper::P;            using namespace IImage::P;
-using namespace IImageDef::P;          using namespace ILog::P;
-using namespace IOgl::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITexture::P;
-using namespace IUtfCodepoint::P;      using namespace LOgl::Types;
+using namespace IFtf::P;               using namespace IGCHelper::P;
+using namespace IGlFW::P;              using namespace IHelper::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace ILog::P;               using namespace IOgl::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITexture::P;           using namespace IUtfCodepoint::P;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
-/* ========================================================================= */
+/* -- Class prototype and global ------------------------------------------- */
 class ConGfx;                          // Class prototype
 static ConGfx *cConGfx = nullptr;      // Pointer to global class
+/* -- Class body ----------------------------------------------------------- */
 class ConGfx :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private InitHelper                   // Initialisation helper
+  GCHelper<ConGfx>,                    // Global pointer helper
+  InitHelper                           // Initialisation helper
 { /* -- Private variables -------------------------------------------------- */
   const uint32_t   ulFontColour;       // Console input text colour
   uint32_t         ulTexColour;        // Console background texture colour
@@ -346,6 +349,7 @@ class ConGfx :                         // Members initially private
   /* -- Constructor --------------------------------------------- */ protected:
   explicit ConGfx() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cConGfx },        // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Init helper function name
     ulFontColour(                      // Set input text colour
       ConColourToRGB(COLOUR_YELLOW) |  // - Lookup RGB value for yellow
@@ -360,8 +364,8 @@ class ConGfx :                         // Members initially private
     texConsole{ IP_TEXTURE, true },    // Console texture on stand-by
     fonConsole{ IP_FONT, true },       // Console font on stand-by
     cCursor('|')                       // Cursor shape
-    /* -- Set global pointer to static class ------------------------------- */
-    { cConGfx = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Set console background colour ------------------------------ */ public:
   CVarReturn ConGfxTextBackgroundColourModified(const uint32_t ulNewColour)
     { return CVarSimpleSetInt(ulTexColour, ulNewColour); }

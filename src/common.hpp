@@ -8,15 +8,20 @@
 #pragma once                           // Only one incursion allowed
 /* ------------------------------------------------------------------------- */
 namespace ICommon {                    // Start of private module namespace
+/* -- Dependencies --------------------------------------------------------- */
+using namespace IGCHelper::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
 static const char caBlank[] = "";      // Blank C-String on the stack
-/* -- Common class with common objects ------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Common;                          // Prototype
 static Common *cCommon = nullptr;      // Global access to class
-class Common                           // Common variables class
-{/* -- Common strings ------------------------------------------------------ */
+/* -- Class body ----------------------------------------------------------- */
+class Common :                         // Common variables class
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Common>                     // Global pointer helper
+{ /* -- Common strings ----------------------------------------------------- */
   const StdString strBlank;
   /* -- Common string views ------------------------------------------------ */
   const StdStringView ssv2Period, ssvAsterisk, ssvBlank, ssvColon, ssvCr,
@@ -146,6 +151,8 @@ class Common                           // Common variables class
   }
   /* -- Default constructor ------------------------------------- */ protected:
   Common() :
+    /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cCommon },        // Initialise global pointer
     /* -- String view initialisers ----------------------------------------- */
     ssv2Period{ ".." },                ssvAsterisk{ "*" },
     ssvBlank{ caBlank },               ssvColon{ ":" },
@@ -175,8 +182,8 @@ class Common                           // Common variables class
     lLocaleCurrent{ strBlank },        // Initialise locale
     i{ lLocaleCurrent },               // Initialise input string stream
     o{ lLocaleCurrent }                // Initialise output string stream
-    /* -- Set global pointer to static class and init imbued stream -------- */
-    { cCommon = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

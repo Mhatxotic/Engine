@@ -17,14 +17,12 @@ using namespace IStd::P;               using namespace IUtil::P;
 using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-class CodecCAF;                        // Class prototype
-static CodecCAF *cCodecCAF = nullptr;  // Pointer to global class
-class CodecCAF :                       // CAF codec object
+/* -- Class body ----------------------------------------------------------- */
+class CodecCAF :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private PcmLib                       // Pcm format helper class
+  PcmLib                               // Pcm format helper class
 { /* -- CAF header layout -------------------------------------------------- */
-  enum HeaderLayout
+  enum HeaderLayout : unsigned
   { // *** CAF FILE LIMITS ***
     HL_MINIMUM           =         44, // Minimum header size
     // *** CAF FILE HEADER (8 bytes). All values are big-endian!!! ***
@@ -51,11 +49,11 @@ class CodecCAF :                       // CAF codec object
   /* -- Loader for CAF files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
   { // CAF data endian types
-    BUILD_FLAGS(Header,
-      HF_NONE             { Flag(0) }, HF_ISFLOAT          { Flag(1) },
-      HF_ISPCMLE          { Flag(2) }, HF_SIGNEDINT        { Flag(3) },
-      HF_PACKED           { Flag(4) }, HF_HIGH             { Flag(5) },
-      HF_NONINTERLEAVE    { Flag(6) },
+    BUILD_FLAGS(unsigned, Header,
+      HF_NONE             { HeaderFlag[0] }, HF_ISFLOAT      { HeaderFlag[1] },
+      HF_ISPCMLE          { HeaderFlag[2] }, HF_SIGNEDINT    { HeaderFlag[3] },
+      HF_PACKED           { HeaderFlag[4] }, HF_HIGH         { HeaderFlag[5] },
+      HF_NONINTERLEAVE    { HeaderFlag[6] },
       HF_MASK{ HF_ISFLOAT|HF_ISPCMLE|HF_SIGNEDINT|HF_PACKED|HF_HIGH|
                HF_NONINTERLEAVE });
     // Check size at least 44 bytes for a file header, and 'desc' chunk and
@@ -194,8 +192,8 @@ class CodecCAF :                       // CAF codec object
     /* -- Initialisers ----------------------------------------------------- */
     PcmLib{ PFMT_CAF, "CoreAudio Format", "CAF",
       bind(&CodecCAF::Decode, this, _1, _2) }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecCAF = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

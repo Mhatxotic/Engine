@@ -10,10 +10,10 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtWin {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IEvtCore::P;           using namespace IGlFWBase::P;
-using namespace ILog::P;               using namespace ILookupArray::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IThread::P;
+using namespace IEvtCore::P;           using namespace IGCHelper::P;
+using namespace IGlFWBase::P;          using namespace ILog::P;
+using namespace ILookupArray::P;       using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Available engine commands -------------------------------------------- */
@@ -57,14 +57,15 @@ enum EvtWinCmd : size_t                // Render thread event commands
 #else                                  // Compiling on beta or release?
   EWC_NOLOG = EWC_WIN_CURPOSSET        // Suppress log from this event forwards
 #endif                                 // Build check
-};/* -- Remember to update the id strings at EvtWin constructor ------------ */
+};/* -- Class prototype and global ----------------------------------------- */
 class EvtWin;                          // Class prototype
 static EvtWin *cEvtWin = nullptr;      // Pointer to global class
-class EvtWin :                         // Event list for window thread
+/* -- Class body ----------------------------------------------------------- */
+class EvtWin :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private LookupArray<EWC_MAX>,        // Event strings
-  public EvtCore                       // Events common class
-   <EvtWinCmd,                         // The enum list of events supported
+  GCHelper<EvtWin>,                    // Global pointer helper
+  LookupArray<EWC_MAX>,                // Event strings
+  public EvtCore<EvtWinCmd,            // Events common class
     EWC_MAX,                           // Maximum events allowed
     EWC_NONE,                          // Event id for NONE
     EWC_NOLOG>                         // Event id for NOLOG
@@ -77,10 +78,11 @@ class EvtWin :                         // Event list for window thread
     GlFWForceEventHack();
   }
   /* -- Manage events ------------------------------------------------------ */
-  auto EvtWinManage() { return Manage(); }
+  EvtWinCmd EvtWinManage() { return Manage(); }
   /* -- Constructor --------------------------------------------- */ protected:
   EvtWin() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cEvtWin },        // Initialise global pointer
     LookupArray{{                      // Initialise event strings
 #define EWC(x) STR(EWC_ ## x)          // Helper to define event id strings
       EWC(NONE),            EWC(WIN_ATTENTION),   EWC(WIN_CENTRE),
@@ -93,10 +95,10 @@ class EvtWin :                         // Event list for window thread
       EWC(WIN_SETSTKMOUSE), EWC(WIN_TOGGLEFS),    EWC(CB_GET),
       EWC(CB_SET),          EWC(CB_SETNR),        EWC(WIN_CURPOSSET)
 #undef EWC                             // Done with this macro
-    }, "EWC_OTHER" },
+    }, "EWC_OTHER" },                  // Unknown event ID string
     EvtCore{ "EvtWin", *this }         // Construct core
-    /* -- Set global pointer to static class ------------------------------- */
-    { cEvtWin = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 using EvtWinArgs    = EvtWin::EvtArgs; // Event callback arguments
 using EvtWinEvent   = EvtWin::Event;   // Event command

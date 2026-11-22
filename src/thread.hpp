@@ -12,37 +12,37 @@ namespace IThread {                    // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICollector::P;
 using namespace IDuration::P;          using namespace IError::P;
-using namespace IFlags::P;             using namespace ILog::P;
-using namespace ILookupMap::P;         using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMutex::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace IFlags::P;             using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* -- Typedefs ------------------------------------------------------------- */
 using StdThread = ::std::thread;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
-BUILD_SECURE_FLAGS(Thread,
+BUILD_SECURE_FLAGS(unsigned, Thread,
   /* -- Current status ----------------------------------------------------- */
-  TS_STANDBY                {Flag(0)}, // [0x00] Thread is not doing anything?
-  TS_INIT                   {Flag(1)}, // [0x01] Thread starting up?
-  TS_RUNNING                {Flag(2)}, // [0x02] Thread is running still?
-  TS_ABORT                  {Flag(3)}, // [0x04] Thread should exit?
-  TS_RETRY                  {Flag(4)}, // [0x08] Thread will start again?
-  TS_FINISHED               {Flag(5)}, // [0x10] Thread waiting for join?
-  TS_EXCEPTION              {Flag(6)}, // [0x20] Thread exception occured?
+  TS_STANDBY          {ThreadFlag[0]}, // [0x00] Thread is not doing anything?
+  TS_INIT             {ThreadFlag[1]}, // [0x01] Thread starting up?
+  TS_RUNNING          {ThreadFlag[2]}, // [0x02] Thread is running still?
+  TS_ABORT            {ThreadFlag[3]}, // [0x04] Thread should exit?
+  TS_RETRY            {ThreadFlag[4]}, // [0x08] Thread will start again?
+  TS_FINISHED         {ThreadFlag[5]}, // [0x10] Thread waiting for join?
+  TS_EXCEPTION        {ThreadFlag[6]}, // [0x20] Thread exception occured?
   /* -- Thread callbacks must only return one of these --------------------- */
-  TS_ERROR                  {Flag(7)}, // [0x40] Thread terminated uncleanly?
-  TS_OK                     {Flag(8)}  // [0x80] Thread terminated cleanly?
+  TS_ERROR            {ThreadFlag[7]}, // [0x40] Thread terminated uncleanly?
+  TS_OK               {ThreadFlag[8]}  // [0x80] Thread terminated cleanly?
 );/* == Thread collector class with global thread id counter =============== */
 CTOR_BEGIN(Threads, Thread, CLHelperSafe,
   /* ----------------------------------------------------------------------- */
-  AtomicSizeT      astRunning;               // Number of threads running
-  const LookupMap<ThreadFlagsType> imCodes;  // Thread status codes
+  AtomicSizeT      astRunning;              // Number of threads running
+  const LookupMap<ThreadFlagsType> imCodes; // Thread status codes
 )/* ------------------------------------------------------------------------ */
-using CbThFuncT = ThreadFlagsType(Thread&);  // Thread callback function
-using CbThFunc = function<CbThFuncT> ;       // Wrapped inside a function class
+using CbThFuncT = ThreadFlagsType(Thread&); // Thread callback function
+using CbThFunc = function<CbThFuncT> ;      // Wrapped inside a function class
 /* ------------------------------------------------------------------------- */
 class ThreadBase :                     // Thread variables class
   /* -- Base classes ------------------------------------------------------- */

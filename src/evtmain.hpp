@@ -10,10 +10,11 @@
 /* ------------------------------------------------------------------------- */
 namespace IEvtMain {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IEvtCore::P;           using namespace IHelper::P;
-using namespace ILog::P;               using namespace ILookupArray::P;
-using namespace IMutex::P;             using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IEvtCore::P;           using namespace IGCHelper::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace ILookupArray::P;       using namespace IMutex::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IThread::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Available engine commands -------------------------------------------- */
@@ -90,19 +91,20 @@ enum EvtMainCmd : size_t               // Engine thread event commands
 #else                                  // Compiling on beta or release?
   EMC_NOLOG = EMC_INP_CHAR             // Suppress log from this event forwards
 #endif                                 // Build check
-};/* -- Remember to update the id strings at EvtMain constructor ----------- */
+};/* -- Class prototype and global ----------------------------------------- */
 class EvtMain;                         // Prototype class
 static EvtMain *cEvtMain = nullptr;    // Address of global class
-class EvtMain :                        // Event list for render thread
-  /* -- Dependencies ------------------------------------------------------- */
-  private LookupArray<EMC_MAX>,        // Event strings
-  public EvtCore                       // Events common class
-   <EvtMainCmd,                        // The enum list of events supported
+/* -- Class body ----------------------------------------------------------- */
+class EvtMain :                        // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<EvtMain>,                   // Global pointer helper
+  LookupArray<EMC_MAX>,                // Event strings
+  public EvtCore<EvtMainCmd,           // Events common class
     EMC_MAX,                           // Maximum events allowed
     EMC_NONE,                          // Event id for NONE
     EMC_NOLOG>,                        // Event id for NOLOG
-  private condition_variable           // CV for suspending the thread
-{ /* -- Private --------------------------------------------------- */ private:
+  condition_variable                   // CV for suspending the thread
+{ /* -- Private ------------------------------------------------------------ */
   Thread           tEngThread;         // Engine thread
   const RegAuto    raEvents;           // Events to register
   EvtMainCmd       emcPending,         // Event fired before exit requested
@@ -259,28 +261,28 @@ class EvtMain :                        // Event list for render thread
   /* -- Constructor --------------------------------------------- */ protected:
   EvtMain() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cEvtMain },       // Initialise global pointer
     LookupArray{{                      // Build event list
 #define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
-      EMC(NONE),             EMC(SUSPEND),        EMC(QUIT),
-      EMC(QUIT_HWREINIT),
-      EMC(QUIT_RESTART),     EMC(QUIT_RESTARTNP), EMC(QUIT_THREAD),
-      EMC(QUIT_VREINIT),     EMC(LUA_ASKEXIT),    EMC(LUA_CONFIRMEXIT),
-      EMC(LUA_END),          EMC(LUA_PAUSE),      EMC(LUA_REINIT),
-      EMC(LUA_RESUME),       EMC(WIN_CLOSE),      EMC(WIN_FOCUS),
-      EMC(WIN_ICONIFY),      EMC(WIN_MOVED),      EMC(WIN_REFRESH),
-      EMC(WIN_RESIZED),      EMC(WIN_SCALE),      EMC(VID_FBREINIT),
-      EMC(VID_MATRIXREINIT), EMC(VID_REINIT),     EMC(AUD_CDUPDATED),
-      EMC(AUD_PDUPDATED),    EMC(AUD_REINIT),     EMC(INP_DRAGDROP),
-      EMC(INP_JOYSTATE),     EMC(INP_MOUSEFOCUS), EMC(INP_PASTE),
-      EMC(CB_EVENT),         EMC(CUR_EVENT),      EMC(STR_EVENT),
-      EMC(VID_EVENT),        EMC(CON_UPDATE),     EMC(INP_CHAR),
-      EMC(INP_KEYPRESS),     EMC(INP_MOUSECLICK), EMC(INP_MOUSEMOVE),
-      EMC(INP_MOUSESCROLL),  EMC(MP_ARCHIVE),     EMC(MP_ASSET),
-      EMC(MP_FONT),          EMC(MP_IMAGE),       EMC(MP_JSON),
-      EMC(MP_PCM),           EMC(MP_PROCESS),     EMC(MP_SOCKET),
-      EMC(MP_STREAM),        EMC(MP_VIDEO)
+      EMC(NONE),             EMC(SUSPEND),          EMC(QUIT),
+      EMC(QUIT_HWREINIT),    EMC(QUIT_RESTART),     EMC(QUIT_RESTARTNP),
+      EMC(QUIT_THREAD),      EMC(QUIT_VREINIT),     EMC(LUA_ASKEXIT),
+      EMC(LUA_CONFIRMEXIT),  EMC(LUA_END),          EMC(LUA_PAUSE),
+      EMC(LUA_REINIT),       EMC(LUA_RESUME),       EMC(WIN_CLOSE),
+      EMC(WIN_FOCUS),        EMC(WIN_ICONIFY),      EMC(WIN_MOVED),
+      EMC(WIN_REFRESH),      EMC(WIN_RESIZED),      EMC(WIN_SCALE),
+      EMC(VID_FBREINIT),     EMC(VID_MATRIXREINIT), EMC(VID_REINIT),
+      EMC(AUD_CDUPDATED),    EMC(AUD_PDUPDATED),    EMC(AUD_REINIT),
+      EMC(INP_DRAGDROP),     EMC(INP_JOYSTATE),     EMC(INP_MOUSEFOCUS),
+      EMC(INP_PASTE),        EMC(CB_EVENT),         EMC(CUR_EVENT),
+      EMC(STR_EVENT),        EMC(VID_EVENT),        EMC(CON_UPDATE),
+      EMC(INP_CHAR),         EMC(INP_KEYPRESS),     EMC(INP_MOUSECLICK),
+      EMC(INP_MOUSEMOVE),    EMC(INP_MOUSESCROLL),  EMC(MP_ARCHIVE),
+      EMC(MP_ASSET),         EMC(MP_FONT),          EMC(MP_IMAGE),
+      EMC(MP_JSON),          EMC(MP_PCM),           EMC(MP_PROCESS),
+      EMC(MP_SOCKET),        EMC(MP_STREAM),        EMC(MP_VIDEO)
 #undef EMC                             // Done with this macro
-    }, "EMC_OTHER" },
+    }, "EMC_OTHER" },                  // Unknown event ID string
     EvtCore{ "EvtMain", *this },       // Construct core
     tEngThread{ "engine", STP_ENGINE },// Set up high perf engine thread
     raEvents{ this, {                  // Initialise custom handled events
@@ -295,8 +297,8 @@ class EvtMain :                        // Event list for render thread
     emcExit(EMC_NONE),                 // Not exited yet
     uConfirm(0),                       // Exit not confirmed yet
     bUnsuspend(false)                  // Not suspended yet
-    /* -- Set global pointer to static class and register events ----------- */
-    { cEvtMain = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 using EvtMainArgs    = EvtMain::EvtArgs; // Event callback arguments
 using EvtMainEvent   = EvtMain::Event;   // Event command

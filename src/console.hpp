@@ -17,60 +17,63 @@ using namespace IConLib::P;            using namespace ICVars::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFlags::P;             using namespace IFormat::P;
-using namespace IFrame::P;             using namespace IGlFW::P;
-using namespace IHelper::P;            using namespace IInterval::P;
-using namespace ILog::P;               using namespace IMetadata::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISocket::P;            using namespace ISysCon::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITime::P;              using namespace IToken::P;
-using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
-using namespace IUtfEncoder::P;        using namespace IUtil::P;
+using namespace IFrame::P;             using namespace IGCHelper::P;
+using namespace IGlFW::P;              using namespace IHelper::P;
+using namespace IInterval::P;          using namespace ILog::P;
+using namespace IMetadata::P;          using namespace IStd::P;
+using namespace IString::P;            using namespace ISocket::P;
+using namespace ISysCon::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITime::P;
+using namespace IToken::P;             using namespace IUtfCodepoint::P;
+using namespace IUtfDecoder::P;        using namespace IUtfEncoder::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Console,                   // Console flags
+BUILD_FLAGS(unsigned, Console,         // Console flags
   /* ----------------------------------------------------------------------- */
-  CF_NONE                   {Flag(0)}, // No settings?
-  CF_LOCKED                 {Flag(1)}, // Can't disable console (temporary)?
-  CF_IGNOREKEY              {Flag(2)}, // Ignore first key on show console?
-  CF_AUTOSCROLL             {Flag(3)}, // Autoscroll on message?
-  CF_AUTOCOPYCVAR           {Flag(4)}, // Automatically copy cvar on check?
-  CF_INSERT                 {Flag(5)}, // Character insert mode?
-  CF_ENABLED                {Flag(6)}, // Console displayed?
-  CF_IGNOREESC              {Flag(7)}, // Ignore escape key?
-  CF_LOCKEDGLOBAL           {Flag(8)}, // Can't disable console?
-  CF_BLOCKOUTPUTUPDATE      {Flag(9)}  // Block output position update?
+  CF_NONE            {ConsoleFlag[0]}, // No settings?
+  CF_LOCKED          {ConsoleFlag[1]}, // Can't disable console (temporary)?
+  CF_IGNOREKEY       {ConsoleFlag[2]}, // Ignore first key on show console?
+  CF_AUTOSCROLL      {ConsoleFlag[3]}, // Autoscroll on message?
+  CF_AUTOCOPYCVAR    {ConsoleFlag[4]}, // Automatically copy cvar on check?
+  CF_INSERT          {ConsoleFlag[5]}, // Character insert mode?
+  CF_ENABLED         {ConsoleFlag[6]}, // Console displayed?
+  CF_IGNOREESC       {ConsoleFlag[7]}, // Ignore escape key?
+  CF_LOCKEDGLOBAL    {ConsoleFlag[8]}, // Can't disable console?
+  CF_BLOCKOUTPUPDATE {ConsoleFlag[9]}  // Block output position update?
 );/* ----------------------------------------------------------------------- */
-BUILD_FLAGS(AutoComplete,              // Autocomplete flags classes
+BUILD_FLAGS(unsigned, AutoComplete,    // Autocomplete flags classes
   /* ----------------------------------------------------------------------- */
-  AC_NONE                   {Flag(0)}, // No autocompletion?
-  AC_COMMANDS               {Flag(1)}, // Autocomplete command names?
-  AC_CVARS                  {Flag(2)}, // Autocomplete cvar names?
+  AC_NONE       {AutoCompleteFlag[0]}, // No autocompletion?
+  AC_COMMANDS   {AutoCompleteFlag[1]}, // Autocomplete command names?
+  AC_CVARS      {AutoCompleteFlag[2]}, // Autocomplete cvar names?
   /* ----------------------------------------------------------------------- */
   AC_MASK{ AC_COMMANDS|AC_CVARS }      // All flags
 );/* ----------------------------------------------------------------------- */
-BUILD_FLAGS(Redraw,                    // Redraw terminal or graphical console
+BUILD_FLAGS(unsigned, Redraw,          // Redraw terminal or graphical console
   /* ----------------------------------------------------------------------- */
-  RD_NONE                   {Flag(0)}, // Redraw nothing?
-  RD_TEXT                   {Flag(1)}, // Redraw text console?
-  RD_GRAPHICS               {Flag(2)}, // Redraw graphical console?
+  RD_NONE             {RedrawFlag[0]}, // Redraw nothing?
+  RD_TEXT             {RedrawFlag[1]}, // Redraw text console?
+  RD_GRAPHICS         {RedrawFlag[2]}, // Redraw graphical console?
   /* ----------------------------------------------------------------------- */
   RD_BOTH{ RD_TEXT|RD_GRAPHICS }       // All flags
 );/* ----------------------------------------------------------------------- */
 MAPPACK_BUILD(Cmd, const StdString, const ConLib) // Map of commands type
-/* ========================================================================= */
-struct Console;                        // Class prototype
+/* -- Class prototype and global ------------------------------------------- */
+class Console;                         // Class prototype
 static Console *cConsole = nullptr;    // Pointer to global class
-struct Console :                       // Members initially private
+/* -- Class body ----------------------------------------------------------- */
+class Console :                        // Members initially private
   /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Console>,                   // Global pointer helper
   public ConLines,                     // Console text lines list
-  private ConLinesConstIt,             // Text lines forward iterator
-  private ConLinesConstRevIt,          // Text lines reverse iterator
-  private InitHelper,                  // Initialisation helper
+  ConLinesConstIt,                     // Text lines forward iterator
+  ConLinesConstRevIt,                  // Text lines reverse iterator
+  InitHelper,                          // Initialisation helper
   public ConsoleFlags,                 // Console flags
-  private EvtMainRegAuto               // Events list to register
-{ /* -- Settings ----------------------------------------------------------- */
+  EvtMainRegAuto                       // Events list to register
+{ /* -- Settings --------------------------------------------------- */ public:
   constexpr static const size_t
     stConCmdMinLength = 1,             // Minimum length of a console command
     stConCmdMaxLength = 255;           // Maximum length of a console command
@@ -354,7 +357,7 @@ struct Console :                       // Members initially private
     // Redraw the console
     SetRedraw();
     // Block the execute function from updating the output position
-    FlagSet(CF_BLOCKOUTPUTUPDATE);
+    FlagSet(CF_BLOCKOUTPUPDATE);
     // We're done
     return true;
   }
@@ -656,7 +659,7 @@ struct Console :                       // Members initially private
         clriPosition = rbegin();
       } // Carry on executing as normal
     } // Remove update block flag if set
-    if(FlagIsSet(CF_BLOCKOUTPUTUPDATE)) FlagClear(CF_BLOCKOUTPUTUPDATE);
+    if(FlagIsSet(CF_BLOCKOUTPUPDATE)) FlagClear(CF_BLOCKOUTPUPDATE);
     // Were we already at the bottom or should we auto-scroll?
     else if(bAtBottom || FlagIsSet(CF_AUTOSCROLL))
     { // Autoscroll to bottom enabled? Scroll to bottom
@@ -1052,6 +1055,7 @@ struct Console :                       // Members initially private
   /* -- Constructor --------------------------------------------- */ protected:
   explicit Console(const ConCmdStaticList &ccslDef) :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cConsole },       // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Init helper function name
     Flags{ CF_NONE },                  // No initial flags
     EvtMainRegAuto{ cEvtMain, {        // Default events
@@ -1073,8 +1077,8 @@ struct Console :                       // Members initially private
     acFlags{ AC_NONE },                // No autocomplete flags
     acisciCurrent{ acisList.cend() },  // Autocomplete not initialised
     ccslInt{ ccslDef }                 // Set default commands list
-    /* -- Set global pointer to static class ------------------------------- */
-    { cConsole = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Set page move count ---------------------------------------- */ public:
   CVarReturn SetPageMoveCount(const ssize_t sstAmount)
   { // Deny if invalid value

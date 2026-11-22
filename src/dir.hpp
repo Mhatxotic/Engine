@@ -10,10 +10,11 @@
 namespace IDir {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICVarDef::P;
-using namespace IError::P;             using namespace ILookupArray::P;
-using namespace IPSplit::P;            using namespace ISerial::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace IToken::P;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace ILookupArray::P;       using namespace IPSplit::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace IToken::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -44,9 +45,13 @@ enum ValidType : unsigned              // Types for ValidName()
   /* ----------------------------------------------------------------------- */
   VT_MAX                               // [3] Maximum trust modes
 };/* ----------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class DirBase;                         // Prototype to class
 static DirBase *cDirBase = nullptr;    // Pointer to global class
-class DirBase                          // Members initially private
+/* -- Class body ----------------------------------------------------------- */
+class DirBase :                        // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<DirBase>                    // Global pointer helper
 { /* -- Private typedefs --------------------------------------------------- */
   using VRList = LookupArray<VR_MAX>;  // List of ValidName strings typedef
   /* -- Private variables -------------------------------------------------- */
@@ -64,6 +69,7 @@ class DirBase                          // Members initially private
   /* -- Default constructor ------------------------------------- */ protected:
   DirBase() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cDirBase },       // Initialise global pointer
     vrlStrings{{                       // Init ValidNameResult strings
       "Pathname is valid",         /*0001*/ "Empty pathname denied",
       "Pathname too long",         /*0203*/ "Root directory denied",
@@ -99,8 +105,8 @@ class DirBase                          // Members initially private
       cCommon->CommonTwoPeriod()
     }},
     vtMode(VT_UNTRUSTED)               // Default mode is 'untrusted' access
-    /* -- Set pointer to global class -------------------------------------- */
-    { cDirBase = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Default safety mode ---------------------------------------- */ public:
   CVarReturn SetDefaultSafetyMode(const ValidType vtNMode)
   { // Deny if invalid mode

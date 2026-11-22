@@ -11,13 +11,14 @@ namespace IAtlas {                     // Start of private namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBin::P;               using namespace ICollector::P;
 using namespace ICoords::P;            using namespace IError::P;
-using namespace IFboCmd::P;            using namespace IImageDef::P;
-using namespace ILog::P;               using namespace IImageSlot::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace ITexture::P;
-using namespace IUtil::P;              using namespace LOgl::Types;
+using namespace IFboCmd::P;            using namespace IGCHelper::P;
+using namespace IImageDef::P;          using namespace ILog::P;
+using namespace IImageSlot::P;         using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace ITexture::P;           using namespace IUtil::P;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 using CoordsGLuint = Coords<GLuint>;   // GLuint co-ordinates
 /* ------------------------------------------------------------------------- */

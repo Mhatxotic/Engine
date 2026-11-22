@@ -12,14 +12,15 @@ namespace ISShot {                     // Start of private module namespace
 using namespace IClock::P;             using namespace ICommon::P;
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IFbo::P;               using namespace IFboCore::P;
-using namespace IImage::P;             using namespace IImageDef::P;
-using namespace IImageLib::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IMetadata::P;
-using namespace IName::P;              using namespace IOgl::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace IThread::P;            using namespace LOgl::Types;
+using namespace IGCHelper::P;          using namespace IImage::P;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IMetadata::P;          using namespace IName::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace IThread::P;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Begin collector class ------------------------------------------------ */

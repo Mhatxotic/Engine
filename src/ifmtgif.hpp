@@ -16,12 +16,10 @@ using namespace IStd::P;               using namespace ITexDef::P;
 using namespace LGif;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-class CodecGIF;                        // Class prototype
-static CodecGIF *cCodecGIF = nullptr;  // Pointer to global class
-class CodecGIF :                       // GIF codec object
+/* -- Class body ----------------------------------------------------------- */
+class CodecGIF :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private ImageLib                     // Image format helper class
+  ImageLib                             // Image format helper class
 { /* -- Allocate memory ---------------------------------------------------- */
   static void *GIFCreate(int iW, int iH)
     { return StdAlloc<void>(static_cast<unsigned>(iW * iH) * BY_RGBA); }
@@ -128,8 +126,8 @@ class CodecGIF :                       // GIF codec object
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_GIF, "Graphics Interchange Format", "GIF",
       bind(&CodecGIF::Decode, this, _1, _2) }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecGIF = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

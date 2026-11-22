@@ -33,6 +33,7 @@ namespace E {                          // Put everything in engine namespace
 /* ------------------------------------------------------------------------- */
 #include "engine.hpp"                  // Engine version information header
 #include "stddef.hpp"                  // Engine STL type aliases header
+#include "gchelper.hpp"                // Global class pointer header
 #include "common.hpp"                  // Common constant variables header
 #include "endian.hpp"                  // Endian functions utility header
 #include "std.hpp"                     // Pre UTF standard functions
@@ -4597,12 +4598,10 @@ static int Build(const int iArgC, ArgType**const saArgV,
   using namespace IFile::P;            using namespace ILuaFunc::P;
   using namespace IStat::P;            using namespace IThread::P;
   // Initialise required subsystems
-  const struct Engine : private Common, private DirBase, private CmdLine,
-    private Log, private Stats, private Threads, private EvtMain,
-    private System, private LuaFuncs, private Archives, private Assets,
-    private Crypt, private Jsons
-  { Engine(const int iArgC, ArgType**const saArgV, ArgType**const saEnv) :
-      CmdLine{ iArgC, saArgV, saEnv } {}
+  const class Engine : Common, DirBase, CmdLine, Log, Stats, Threads,
+    EvtMain, System, LuaFuncs, Archives, Assets, Crypt, Jsons
+  { public : Engine(const int iArgC, ArgType**const saArgV,
+      ArgType**const saEnv) : CmdLine{ iArgC, saArgV, saEnv } {}
   } engEngine{ iArgC, saArgV, saEnv };
   // Set base directory
 #if defined(WINDOWS) // Exe dir will be where link is

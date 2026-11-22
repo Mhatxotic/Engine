@@ -17,59 +17,63 @@ using namespace ICVars::P;             using namespace IDim::P;
 using namespace IDimCoord::P;          using namespace IDir::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFboCore::P;           using namespace IFlags::P;
-using namespace IGlFW::P;              using namespace IGlFWBase::P;
-using namespace IGlFWCursor::P;        using namespace IGlFWMonitor::P;
-using namespace IHelper::P;            using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IImageSlot::P;
-using namespace IInput::P;             using namespace ILog::P;
-using namespace ILookupArray::P;       using namespace ILuaFunc::P;
-using namespace ILuaUtil::P;           using namespace IMetadata::P;
-using namespace IMutex::P;             using namespace IStd::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IToken::P;
-using namespace IUtil::P;              using namespace LOgl::Types;
+using namespace IGCHelper::P;          using namespace IGlFW::P;
+using namespace IGlFWBase::P;          using namespace IGlFWCursor::P;
+using namespace IGlFWMonitor::P;       using namespace IHelper::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IImageSlot::P;         using namespace IInput::P;
+using namespace ILog::P;               using namespace ILookupArray::P;
+using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
+using namespace IMetadata::P;          using namespace IMutex::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IToken::P;             using namespace IUtil::P;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Display,                   // Display flags
+BUILD_FLAGS(unsigned, Display,         // Display flags
   /* -- Active flags ------------------------------------------------------- */
-  DF_NONE                   {Flag(0)}, // No display flags
-  DF_FOCUSED                {Flag(1)}, // Window is focused?
-  DF_EXCLUSIVE              {Flag(2)}, // Exclusive mode full-screen?
-  DF_NATIVEFS               {Flag(3)}, // Full-screen locked?
-  DF_INFULLSCREEN           {Flag(4)}, // Window is actually in fullscreen?
+  DF_NONE            {DisplayFlag[0]}, // No display flags
+  DF_FOCUSED         {DisplayFlag[1]}, // Window is focused?
+  DF_EXCLUSIVE       {DisplayFlag[2]}, // Exclusive mode full-screen?
+  DF_NATIVEFS        {DisplayFlag[3]}, // Full-screen locked?
+  DF_INFULLSCREEN    {DisplayFlag[4]}, // Window is actually in fullscreen?
   /* -- End-user configuration flags --------------------------------------- */
-  DF_HIDPI                 {Flag(46)}, // Use HIDPI mode on MacOS
-  DF_FORWARD               {Flag(47)}, // Use forward compatible context?
-  DF_DOUBLEBUFFER          {Flag(48)}, // Use double-buffering?
-  DF_AUTOICONIFY           {Flag(49)}, // Automatic minimise?
-  DF_AUTOFOCUS             {Flag(50)}, // Focus on show?
-  DF_SIZABLE               {Flag(51)}, // Window is resizable?
-  DF_FLOATING              {Flag(52)}, // Always on top?
-  DF_BORDER                {Flag(53)}, // Window has a border?
-  DF_MINFOCUS              {Flag(54)}, // Minimize on lose focus?
-  DF_SRGB                  {Flag(56)}, // SRGB namespace is enabled?
-  DF_GASWITCH              {Flag(57)}, // Graphics switching enabled?
-  DF_FULLSCREEN            {Flag(58)}, // Full-screen mode set?
-  DF_CLOSEABLE             {Flag(59)}, // Window is closable?
-  DF_STEREO                {Flag(60)}, // Stereo mode enabled?
-  DF_DEBUG                 {Flag(61)}, // OpenGL debug context?
-  DF_TRANSPARENT           {Flag(62)}, // Window transparency enabled?
-  DF_NOERRORS              {Flag(63)}, // No opengl errors?
-  DF_MAXIMISED             {Flag(64)}  // Window maximised at start?
-);/* -- Display class ------------------------------------------------------ */
+  DF_HIDPI          {DisplayFlag[15]}, // Use HIDPI mode on MacOS
+  DF_FORWARD        {DisplayFlag[16]}, // Use forward compatible context?
+  DF_DOUBLEBUFFER   {DisplayFlag[17]}, // Use double-buffering?
+  DF_AUTOICONIFY    {DisplayFlag[18]}, // Automatic minimise?
+  DF_AUTOFOCUS      {DisplayFlag[19]}, // Focus on show?
+  DF_SIZABLE        {DisplayFlag[20]}, // Window is resizable?
+  DF_FLOATING       {DisplayFlag[21]}, // Always on top?
+  DF_BORDER         {DisplayFlag[22]}, // Window has a border?
+  DF_MINFOCUS       {DisplayFlag[23]}, // Minimize on lose focus?
+  DF_SRGB           {DisplayFlag[24]}, // SRGB namespace is enabled?
+  DF_GASWITCH       {DisplayFlag[25]}, // Graphics switching enabled?
+  DF_FULLSCREEN     {DisplayFlag[26]}, // Full-screen mode set?
+  DF_CLOSEABLE      {DisplayFlag[27]}, // Window is closable?
+  DF_STEREO         {DisplayFlag[28]}, // Stereo mode enabled?
+  DF_DEBUG          {DisplayFlag[29]}, // OpenGL debug context?
+  DF_TRANSPARENT    {DisplayFlag[30]}, // Window transparency enabled?
+  DF_NOERRORS       {DisplayFlag[31]}, // No opengl errors?
+  DF_MAXIMISED      {DisplayFlag[32]}  // Window maximised at start?
+);/* ----------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Display;                         // Class prototype
 static Display *cDisplay = nullptr;    // Pointer to global class
-class Display :                        // Actual class body
+/* -- Class body ----------------------------------------------------------- */
+class Display :                        // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private InitHelper,                  // Initialisation helper
-  public  DisplayFlags,                // Display settings
-  private DimCoInt,                    // Requested window position and size
-  public  GlFWMonitors,                // Monitor list data
-  private MutexLock,                   // Mutex for sychronising engine thread
-  private condition_variable,          // CV for sychronising engine thread
-  private EvtMainRegAuto,              // Main events list to register
-  private EvtWinRegAuto                // Window events list to register
+  GCHelper<Display>,                   // Global pointer helper
+  InitHelper,                          // Initialisation helper
+  public DisplayFlags,                 // Display settings
+  DimCoInt,                            // Requested window position and size
+  public GlFWMonitors,                 // Monitor list data
+  MutexLock,                           // Mutex for sychronising engine thread
+  condition_variable,                  // CV for sychronising engine thread
+  EvtMainRegAuto,                      // Main events list to register
+  EvtWinRegAuto                        // Window events list to register
 { /* -- Monitors and resolutions ------------------------------------------- */
   const GlFWMonitor *gfwmActive;       // Monitor selected
   const GlFWRes   *gfwrActive;         // Monitor resolution selected
@@ -909,12 +913,13 @@ class Display :                        // Actual class body
         if(tsvIcons.size() >= 2)
         { // Get string and set small icon from the last icon specified
           const Image imC{ StdString{ tsvIcons.back() },
-            IL_REVERSE|IL_TOBGR };
+            ImageFlagsConst{ IL_REVERSE|IL_TOBGR } };
           const ImageSlot &imsD = imC.GetSlots().front();
           cSystem->SetSmallIcon(imC.NameGet(), imsD.DimGetWidth(),
             imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
         } // Set large icon from the first icon specified
-        const Image imC{ StdString{ tsvIcons.front() }, IL_REVERSE|IL_TOBGR };
+        const Image imC{ StdString{ tsvIcons.front() },
+          ImageFlagsConst{ IL_REVERSE|IL_TOBGR } };
         const ImageSlot &imsD = imC.GetSlots().front();
         cSystem->SetLargeIcon(imC.NameGet(), imsD.DimGetWidth(),
           imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
@@ -1055,6 +1060,7 @@ class Display :                        // Actual class body
   /* -- Default constructor ------------------------------------- */ protected:
   Display() :
     /* --------------------------------------------------------------------- */
+    GCHelper{ this, &cDisplay },       // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Send name to init helper
     DisplayFlags{ DF_NONE },           // No display flags set
     DimCoInt{ -1, -1, 0, 0 },          // Requested position and size
@@ -1122,8 +1128,8 @@ class Display :                        // Actual class body
       STR(FST_STANDBY),    STR(FST_WINDOW), STR(FST_EXCLUSIVE),
       STR(FST_BORDERLESS), STR(FST_NATIVE)
     }, "FST_UNKNOWN"}                  // End of full-screen type strings list
-    /* -- Set global pointer to static class ------------------------------- */
-    { cDisplay = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Display, DisplayDeInit())
   /* -- Helper macro for boolean based CVars based on OS ----------- */ public:

@@ -15,12 +15,10 @@ using namespace IImageLib::P;          using namespace IMemory::P;
 using namespace ITexDef::P;            using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-class CodecDDS;                        // Class prototype
-static CodecDDS *cCodecDDS = nullptr;  // Pointer to global class
-class CodecDDS :                       // GIF codec object
+/* -- Class body ----------------------------------------------------------- */
+class CodecDDS :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private ImageLib                     // Image format helper class
+  ImageLib                             // Image format helper class
 { /* ----------------------------------------------------------------------- */
   // *** DDS_FILEHEADER (128 bytes) ***
   // 000:         uint32_t    ulMagic; // (= 0x20534444)
@@ -333,8 +331,8 @@ class CodecDDS :                       // GIF codec object
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_DDS, "DirectDraw Surface", "DDS",
       bind(&CodecDDS::Decode, this, _1, _2) }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecDDS = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

@@ -11,13 +11,14 @@ namespace IMask {                      // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IBit::P;               using namespace ICollector::P;
 using namespace IDim::P;               using namespace IDir::P;
-using namespace IError::P;             using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IImageSlot::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IImageSlot::P;         using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Mask collector and member class ====================================== */

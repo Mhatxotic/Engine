@@ -39,12 +39,12 @@ namespace ISystem {                    // Start of private module namespace
 using namespace IClock::P;             using namespace ICmdLine::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace IDir::P;               using namespace IDuration::P;
-using namespace IError::P;             using namespace IInterval::P;
-using namespace ILog::P;               using namespace IMemory::P;
-using namespace IPSplit::P;            using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ISysCore::P;           using namespace ISysUtil::P;
-using namespace IUtil::P;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace IInterval::P;          using namespace ILog::P;
+using namespace IMemory::P;            using namespace IPSplit::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISysCore::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 using ::std::terminate_handler;        using ::std::set_terminate;
 /* ------------------------------------------------------------------------- */
@@ -54,11 +54,13 @@ namespace P {                          // Start of public module namespace
 ** ## The actual system class which we build using all the other classes  ## **
 ** ## we already defined above.                                           ## **
 ** ######################################################################### **
-** ------------------------------------------------------------------------- */
+** -- Class prototype and global ------------------------------------------- */
 class System;                          // Class prototype
 static System *cSystem = nullptr;      // Address of global class
-class System :                         // The main system class
+/* -- Class body ----------------------------------------------------------- */
+class System :                         // Members initially private
   /* -- Base classes ------------------------------------------------------- */
+  GCHelper<System>,                    // Global pointer helper
   public SysCore                       // Defined in 'sys*.hpp' headers
 { /* -- Private typedefs --------------------------------------------------- */
   Interval         ivCpu;              // For getting cpu usage
@@ -98,6 +100,7 @@ class System :                         // The main system class
   /* -- Default constructor ------------------------------------------------ */
   System() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cSystem },        // Initialise global pointer
     ivCpu{ cd1S },                     // Cpu refresh time is one seconds
     stProcessId(GetPid<size_t>()),     // Init readable proceess id
     stThreadId(GetTid<size_t>()),      // Init readable thread id
@@ -107,9 +110,7 @@ class System :                         // The main system class
       PSplitBackToForwardSlashes(      // Convert backward slashes to forward
         BuildRoamingDir()) }           // Get roaming directory from system
   /* -- Code --------------------------------------------------------------- */
-  { // Set address of global class
-    cSystem = this;
-    // Update cpu and memory usage data
+  { // Update cpu and memory usage data
     SysUpdateCPUUsage();
     UpdateMemoryUsageData();
     // Log information about the environment
@@ -241,9 +242,11 @@ class System :                         // The main system class
   /* -- Set throw error on elevated priviliedges --------------------------- */
   CVarReturn SysCheckAdminModified(const unsigned uMode)
   { // Valid modes allowed
-    enum Mode { AM_OK,                 // [0] Running as admin is okay?
-                AM_NOTOK,              // [1] Running as admin is not okay?
-                AM_NOTOKIFMODERNOS };  // [2] As above but not if OS is modern?
+    enum Mode : unsigned {
+      AM_OK,                           // [0] Running as admin is okay?
+      AM_NOTOK,                        // [1] Running as admin is not okay?
+      AM_NOTOKIFMODERNOS               // [2] As above but not if OS is modern?
+    };
     // Check mode
     switch(static_cast<Mode>(uMode))
     { // Return if OS uses admin as default for accounts else fall through

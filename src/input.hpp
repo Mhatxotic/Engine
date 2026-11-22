@@ -14,34 +14,37 @@ using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace ICVars::P;             using namespace IDim::P;
 using namespace IEvtMain::P;           using namespace IEvtWin::P;
 using namespace IFboCore::P;           using namespace IFlags::P;
-using namespace IGlFW::P;              using namespace IGlFWUtil::P;
-using namespace IHelper::P;            using namespace IJoystick::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtfCodepoint::P;
-using namespace IUtfDecoder::P;        using namespace IUtil::P;
-using namespace LOgl::Types;
+using namespace IGCHelper::P;          using namespace IGlFW::P;
+using namespace IGlFWUtil::P;          using namespace IHelper::P;
+using namespace IJoystick::P;          using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
+using namespace IUtil::P;              using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Input,                     // Input flags
+BUILD_FLAGS(unsigned, Input,           // Input flags
   /* ----------------------------------------------------------------------- */
-  IF_NONE                   {Flag(0)}, // No flags?
-  IF_CURSOR                 {Flag(1)}, // Mouse cursor is enabled?
-  IF_FSTOGGLER              {Flag(2)}, // Full-screen toggler enabled?
-  IF_MOUSEFOCUS             {Flag(3)}, // Mouse cursor has focus?
-  IF_INITEVENTS             {Flag(4)}, // Send events at startup?
-  IF_POLLJOYSTICKS          {Flag(5)}, // Do joystick polling?
-  IF_RESTORE                {Flag(6)}, // Ignore input on focus loss?
-  IF_CLAMPMOUSE             {Flag(7)}  // Clamp mouse cursor? (MacOS only)
+  IF_NONE              {InputFlag[0]}, // No flags?
+  IF_CURSOR            {InputFlag[1]}, // Mouse cursor is enabled?
+  IF_FSTOGGLER         {InputFlag[2]}, // Full-screen toggler enabled?
+  IF_MOUSEFOCUS        {InputFlag[3]}, // Mouse cursor has focus?
+  IF_INITEVENTS        {InputFlag[4]}, // Send events at startup?
+  IF_POLLJOYSTICKS     {InputFlag[5]}, // Do joystick polling?
+  IF_RESTORE           {InputFlag[6]}, // Ignore input on focus loss?
+  IF_CLAMPMOUSE        {InputFlag[7]}  // Clamp mouse cursor? (MacOS only)
 );/* ----------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Input;                           // Class prototype
 static Input *cInput = nullptr;        // Pointer to global class
-class Input :                          // Handles keyboard, mouse & controllers
+/* -- Class body ----------------------------------------------------------- */
+class Input :                          // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private InitHelper,                  // Initialsation helper
+  GCHelper<Input>,                     // Global pointer helper
+  InitHelper,                          // Initialsation helper
   public InputFlags,                   // Input configuration settings
-  private EvtMainRegAuto,              // Events list to register
+  EvtMainRegAuto,                      // Events list to register
   public DimInt,                       // Window dimensions
   public Joystick                      // Joystick class
 { /* -- Console ------------------------------------------------------------ */
@@ -313,6 +316,7 @@ class Input :                          // Handles keyboard, mouse & controllers
   /* -- Constructor --------------------------------------------- */ protected:
   Input() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cInput },         // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Init initialisation helper class
     InputFlags{ IF_NONE },             // No flags set initially
     /* -- Init events for event manager ------------------------------------ */
@@ -337,8 +341,8 @@ class Input :                          // Handles keyboard, mouse & controllers
     lfOnKey{ "OnInpUnfilteredKey" },   // Init unfiltered keypress lua event
     lfOnChar{ "OnInpFilteredKey" },    // Init filtered keypress lua event
     lfOnDragDrop{ "OnInpDragDrop" }    // Init drag & drop lua event
-    /* -- Set global pointer to static class ------------------------------- */
-    { cInput = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Input, InputDeInit())
   /* -- CVar callback to toggle raw mouse -------------------------- */ public:

@@ -33,61 +33,50 @@ using namespace IEvtWin::P;            using namespace IFbo::P;
 using namespace IFboCore::P;           using namespace IFile::P;
 using namespace IFont::P;              using namespace IFrame::P;
 using namespace IFreeType::P;          using namespace IFtf::P;
-using namespace IGlFW::P;              using namespace IGlFWBase::P;
-using namespace IGlFWMonitor::P;       using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IImageLib::P;
-using namespace IImageSlot::P;         using namespace IInput::P;
-using namespace IInterval::P;          using namespace IJson::P;
-using namespace ILog::P;               using namespace ILua::P;
-using namespace ILuaBase::P;           using namespace ILuaCode::P;
-using namespace ILuaCommand::P;        using namespace ILuaFunc::P;
-using namespace ILuaUtil::P;           using namespace ILuaVariable::P;
-using namespace IMask::P;              using namespace IMemory::P;
-using namespace IMetadata::P;          using namespace IMixer::P;
-using namespace IMutex::P;             using namespace IOal::P;
-using namespace IOgl::P;               using namespace IPSplit::P;
-using namespace IPalette::P;           using namespace IPcm::P;
-using namespace IPcmLib::P;            using namespace ISShot::P;
-using namespace ISample::P;            using namespace IShader::P;
-using namespace IShaders::P;           using namespace ISocket::P;
-using namespace ISource::P;            using namespace ISql::P;
-using namespace IStat::P;              using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IStream::P;
-using namespace IString::P;            using namespace ISysMod::P;
-using namespace ISysUtil::P;           using namespace ISystem::P;
-using namespace ITexture::P;           using namespace IThread::P;
-using namespace ITime::P;              using namespace IToken::P;
-using namespace IUrl::P;               using namespace IUtil::P;
-using namespace IVideo::P;             using namespace LOal::Types;
-using namespace LOgl::Types;           using namespace LSql::Types;
+using namespace IGCHelper::P;          using namespace IGlFW::P;
+using namespace IGlFWBase::P;          using namespace IGlFWMonitor::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IImageLib::P;          using namespace IImageSlot::P;
+using namespace IInput::P;             using namespace IInterval::P;
+using namespace IJson::P;              using namespace ILog::P;
+using namespace ILua::P;               using namespace ILuaBase::P;
+using namespace ILuaCode::P;           using namespace ILuaCommand::P;
+using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
+using namespace ILuaVariable::P;       using namespace IMask::P;
+using namespace IMemory::P;            using namespace IMetadata::P;
+using namespace IMixer::P;             using namespace IMutex::P;
+using namespace IOal::P;               using namespace IOgl::P;
+using namespace IPSplit::P;            using namespace IPalette::P;
+using namespace IPcm::P;               using namespace IPcmLib::P;
+using namespace ISShot::P;             using namespace ISample::P;
+using namespace IShader::P;            using namespace IShaders::P;
+using namespace ISocket::P;            using namespace ISource::P;
+using namespace ISql::P;               using namespace IStat::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISysMod::P;            using namespace ISysUtil::P;
+using namespace ISystem::P;            using namespace ITexture::P;
+using namespace IThread::P;            using namespace ITime::P;
+using namespace IToken::P;             using namespace IUrl::P;
+using namespace IUtil::P;              using namespace IVideo::P;
+using namespace LOal::Types;           using namespace LOgl::Types;
+using namespace LSql::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Core;                            // Core class prototype
 static Core *cCore = nullptr;          // Pointer to static class
+/* -- Class body ----------------------------------------------------------- */
 class Core final :                     // Members initially private
   /* -- Base classes (order is critical!) ---------------------------------- */
-  private Stats,     private Threads,  private EvtMain,
-  private System,    private LuaFuncs, private Archives,
-  private Assets,    private Crypt,    private Urls,
-  private Frame,     private Sqls,     private Sql,
-  private Jsons,     private Metadata, private CVarItemStaticList,
-  private CVars,     private Sockets,  private ConCmdStaticList,
-  private Console,   private GlFW,     private Credits,
-  private FreeType,  private Ftfs,     private Files,
-  private Masks,     private Bins,     private Oal,
-  private PcmLibs,   private CodecWAV, private CodecCAF,
-  private CodecOGG,  private Pcms,     private Mixer,
-  private Audio,     private Sources,  private Samples,
-  private Streams,   private EvtWin,   private Ogl,
-  private ImageLibs, private CodecPNG, private CodecJPG,
-  private CodecGIF,  private CodecDDS, private CodecWEBP,
-  private Images,    private Shaders,  private Clips,
-  private Display,   private Input,    private ShaderCore,
-  private Fbos,      private FboCore,  private SShots,
-  private Textures,  private Palettes, private Atlases,
-  private Fonts,     private Videos,   private ConGfx,
-  private Variables, private Commands, private Lua
+  GCHelper<Core>, Stats, Threads, EvtMain, System, LuaFuncs, Archives, Assets,
+  Crypt, Urls, Frame, Sqls, Sql, Jsons, Metadata, CVarItemStaticList, CVars,
+  Sockets, ConCmdStaticList, Console, GlFW, Credits, FreeType, Ftfs, Files,
+  Masks, Bins, Oal, PcmLibs, CodecWAV, CodecCAF, CodecOGG, Pcms, Mixer, Audio,
+  Sources, Samples, Streams, EvtWin, Ogl, ImageLibs, CodecPNG, CodecJPG,
+  CodecGIF, CodecDDS, CodecWEBP, Images, Shaders, Clips, Display, Input,
+  ShaderCore, Fbos, FboCore, SShots, Textures, Palettes, Atlases, Fonts,
+  Videos, ConGfx, Variables, Commands, Lua
 { /* -- Private typedefs to run a function when scope exits ---------------- */
   template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
     explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}
@@ -858,6 +847,7 @@ class Core final :                     // Members initially private
   Core() :
     /* -- Initialisers ----------------------------------------------------- */
     Lockable{ true },                  // Static virtual objects can't be GC'd
+    GCHelper<Core>{ this, &cCore },    // Initialise global pointer
 #include "cvarlib.hpp"                 // Defines cvar list
     CVars{ static_cast<CVarItemStaticList&>(*this) },
 #include "conlib.hpp"                  // Defines console command list
@@ -867,8 +857,8 @@ class Core final :                     // Members initially private
     uErrorCount(0),                    // Init number of errors occured
     uErrorLimit(0),                    // Init number of errors allowed
     ivForceFrame{ cd1S }               // Force render frame after 1 second
-    /* -- Set global pointer to static classes ----------------------------- */
-    { cCore = this; }
+    /* -- Set main SQL class global pointer to this ------------------------ */
+    { cSql = this; }
   /* -- Process compatibility flags ---------------------------------------- */
   static CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
   { // Nothing yet

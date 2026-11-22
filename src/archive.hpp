@@ -15,14 +15,15 @@ using namespace ICommon::P;            using namespace ICollector::P;
 using namespace ICrypt::P;             using namespace ICVarDef::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFileMap::P;
-using namespace IFlags::P;             using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IPSplit::P;            using namespace IMemory::P;
-using namespace IMutex::P;             using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace IUtfDecoder::P;        using namespace L7z;
+using namespace IFlags::P;             using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IPSplit::P;
+using namespace IMemory::P;            using namespace IMutex::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace IUtfDecoder::P;
+using namespace L7z;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
@@ -38,12 +39,12 @@ CTOR_BEGIN_ASYNC(Archives, Archive, CLHelperSafe,
   static void Free(ISzAllocPtr, void*const vpAddress)
     { StdFree(vpAddress); }
 );/* ----------------------------------------------------------------------- */
-BUILD_FLAGS(Archive,                   // Archive flags
+BUILD_FLAGS(unsigned, Archive,         // Archive flags
   /* ----------------------------------------------------------------------- */
-  AE_STANDBY                {Flag(0)}, // Archive on standby?
-  AE_FILEOPENED             {Flag(1)}, // Archive file handle opened?
-  AE_SETUPL2R               {Flag(2)}, // Allocated look2read structs?
-  AE_ARCHIVEINIT            {Flag(3)}  // Allocated archive structs?
+  AE_STANDBY         {ArchiveFlag[0]}, // Archive on standby?
+  AE_FILEOPENED      {ArchiveFlag[1]}, // Archive file handle opened?
+  AE_SETUPL2R        {ArchiveFlag[2]}, // Allocated look2read structs?
+  AE_ARCHIVEINIT     {ArchiveFlag[3]}  // Allocated archive structs?
 );/* ----------------------------------------------------------------------- */
 CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */

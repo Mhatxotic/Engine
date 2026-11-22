@@ -17,11 +17,11 @@ using namespace IStd::P;               using namespace IString::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(CVarShow,                  // CVar show flags
+BUILD_FLAGS(unsigned, CVarShow,        // CVar show flags
   /* ----------------------------------------------------------------------- */
-  CSF_NONE                  {Flag(0)}, // Show no confidential cvars
-  CSF_CONFIDENTIAL          {Flag(1)}, // Show private cvars
-  CSF_PROTECTED             {Flag(2)}, // Show protected cvars
+  CSF_NONE          {CVarShowFlag[0]}, // Show no confidential cvars
+  CSF_CONFIDENTIAL  {CVarShowFlag[1]}, // Show private cvars
+  CSF_PROTECTED     {CVarShowFlag[2]}, // Show protected cvars
   /* ----------------------------------------------------------------------- */
   CSF_MASK { CSF_CONFIDENTIAL|CSF_PROTECTED }
 );/* ----------------------------------------------------------------------- */
@@ -57,15 +57,15 @@ enum CVarSetEnums : unsigned           // Cvar set return codes
   CVS_ZERO,                            // [16] Value not allowed to be zero
   CVS_NOTYPESET,                       // [17] No type is set
 };/* ----------------------------------------------------------------------- */
-BUILD_FLAGS(CVarCondition,             // For Set() functions
+BUILD_FLAGS(unsigned, CVarCond,        // Set condition flags For Set() func
   /* ----------------------------------------------------------------------- */
-  CCF_NOTHING               {Flag(0)}, // No flags specified?
-  CCF_NOMARKCOMMIT          {Flag(1)}, // Do not mark as commit?
-  CCF_IGNOREIFMISSING       {Flag(2)}, // Don't throw if var missing?
-  CCF_THROWONERROR          {Flag(3)}, // Throw if there is an error?
-  CCF_NEWCVAR               {Flag(4)}, // Variable was just registered?
-  CCF_DECRYPTED             {Flag(5)}, // The variable was decrypted?
-  CCF_NOTDECRYPTED          {Flag(6)}  // The variable was not encrypted?
+  CCF_NOTHING       {CVarCondFlag[0]}, // No flags specified?
+  CCF_NOMARKCOMMIT  {CVarCondFlag[1]}, // Do not mark as commit?
+  CCF_IGNOREMISSING {CVarCondFlag[2]}, // Don't throw if var missing?
+  CCF_THROWONERROR  {CVarCondFlag[3]}, // Throw if there is an error?
+  CCF_NEWCVAR       {CVarCondFlag[4]}, // Variable was just registered?
+  CCF_DECRYPTED     {CVarCondFlag[5]}, // The variable was decrypted?
+  CCF_NOTDECRYPTED  {CVarCondFlag[6]}  // The var was not encrypted?
 );/* -- Cvar item class ---------------------------------------------------- */
 class CVarItem :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
@@ -152,7 +152,7 @@ class CVarItem :                       // Members initially private
   }
   /* -- Fired on exception when calling custom callback -------------------- */
   CVarSetEnums HandleCallbackException(const StdException &eReason,
-    const CVarConditionFlagsConst ccfcFlags, const StdString &strNValue,
+    const CVarCondFlagsConst ccfcFlags, const StdString &strNValue,
     StdString &strCBError)
   { // Throw exception if requested
     if(ccfcFlags.FlagIsSet(CCF_THROWONERROR))
@@ -164,7 +164,7 @@ class CVarItem :                       // Members initially private
   }
   /* -- Set value post checking -------------------------------------------- */
   CVarSetEnums CVarPostSetValue(const StdString &strNValue,
-    const CVarFlagsConst cvfcFlags, const CVarConditionFlagsConst ccfcFlags,
+    const CVarFlagsConst cvfcFlags, const CVarCondFlagsConst ccfcFlags,
     StdString &strCBError)
   { // If value is equal as current value then ignore it. We'll allow the
     // change when setting new vars because the triggers should trigger
@@ -251,7 +251,7 @@ class CVarItem :                       // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums CheckAndSetString(const StdString &strNValue,
-    const CVarFlagsConst cvfcFlags, const CVarConditionFlagsConst ccfcFlags,
+    const CVarFlagsConst cvfcFlags, const CVarCondFlagsConst ccfcFlags,
     StdString &strCBError)
   { // String cannot be empty and string is empty?
     if(FlagIsSet(CNOTEMPTY) && strNValue.empty())
@@ -319,7 +319,8 @@ class CVarItem :                       // Members initially private
   /* -- Sets a new custom trigger callback --------------------------------- */
   void CVarSetTrigger(const CbFunc &cfCb) { cfTrigger = cfCb; }
   /* -- Returns if a custom trigger callback is set ------------------------ */
-  bool CVarIsTriggerSet() const { return CVarGetTrigger() != NoOp; }
+  bool CVarIsTriggerSet() const        // cppcheck-suppress functionStatic
+    { return CVarGetTrigger() != NoOp; }
   /* -- Get the read-only/writable version of the variable name ------------ */
   const StdString &CVarGetVar() const { return strVar; }
   StdString &CVarGetModifyableVar() { return strVar; }
@@ -399,7 +400,7 @@ class CVarItem :                       // Members initially private
   }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums CVarCheckAndSetValue(const StdString &strNValue,
-    const CVarFlagsConst &cvfcFlags, const CVarConditionFlagsConst ccfcFlags,
+    const CVarFlagsConst &cvfcFlags, const CVarCondFlagsConst ccfcFlags,
     StdString &strCBError)
   { // Failed if not writable
     if(FlagIsClear(cvfcFlags))
@@ -507,7 +508,7 @@ class CVarItem :                       // Members initially private
   }
   /* -- Set the value to default with checking ----------------------------- */
   CVarSetEnums CvarCheckAndResetValue(const CVarFlagsConst &cvfcFlags,
-    const CVarConditionFlagsConst ccfcFlags, StdString &strCBError)
+    const CVarCondFlagsConst ccfcFlags, StdString &strCBError)
   { return CVarCheckAndSetValue(strDefValue,
       cvfcFlags, ccfcFlags, strCBError); }
   /* -- Move constructor --------------------------------------------------- */

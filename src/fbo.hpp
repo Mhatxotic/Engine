@@ -14,13 +14,14 @@ using namespace ICVarDef::P;           using namespace IError::P;
 using namespace IFboBlend::P;          using namespace IColour::P;
 using namespace IFboCmd::P;            using namespace ICoords::P;
 using namespace IFboItem::P;           using namespace IFrame::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IName::P;
-using namespace IOgl::P;               using namespace ISerial::P;
-using namespace IShader::P;            using namespace IShaderDef::P;
-using namespace IShaders::P;           using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LOgl::Types;
+using namespace IGCHelper::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IName::P;              using namespace IOgl::P;
+using namespace ISerial::P;            using namespace IShader::P;
+using namespace IShaderDef::P;         using namespace IShaders::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Fbo collector class for collector data and custom variables ========== */

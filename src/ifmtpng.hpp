@@ -21,10 +21,8 @@ using namespace ITexDef::P;            using namespace ITime::P;
 using namespace IUtil::P;              using namespace LPng;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-class CodecPNG;                        // Class prototype
-static CodecPNG *cCodecPNG = nullptr;  // Pointer to global class
-class CodecPNG :                       // PNG codec object
+/* -- Class body ----------------------------------------------------------- */
+class CodecPNG :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
   protected ImageLib                   // Image format helper class
 { /* -- Private typedefs --------------------------------------------------- */
@@ -406,8 +404,8 @@ class CodecPNG :                       // PNG codec object
     ImageLib{ IFMT_PNG, "Portable Network Graphics", "PNG",
       bind(&CodecPNG::Decode, this, _1, _2),
       bind(&CodecPNG::Encode, this, _1, _2, _3) }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecPNG = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

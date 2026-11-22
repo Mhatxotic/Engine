@@ -11,10 +11,11 @@
 namespace IBin {                       // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IDim::P;
-using namespace IDimCoord::P;          using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace IUtil::P;
+using namespace IDimCoord::P;          using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* ------------------------------------------------------------------------- */
@@ -156,13 +157,13 @@ class Pack :
     }
   }
   /* -- Swap --------------------------------------------------------------- */
-  void BinSwap(Pack &pOther)
+  /* void BinSwap(Pack &pOther)
   { // Swap dimensions
     DimSwap(pOther);
     // Swap used and free lists
     rlUsed.swap(pOther.rlUsed);
     rlFree.swap(pOther.rlFree);
-  }
+  } */
   /* -- (Re)initialise bin to empty state -------------------------- */ public:
   void Init(const UIntType uitNWidth, const UIntType uitNHeight)
   { // Init itW and itH

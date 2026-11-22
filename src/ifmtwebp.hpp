@@ -16,12 +16,10 @@ using namespace IMemory::P;            using namespace IStd::P;
 using namespace ITexDef::P;            using namespace LWebP;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-class CodecWEBP;                       // Class prototype
-static CodecWEBP *cCodecWEBP = nullptr; // Pointer to global class
-class CodecWEBP :                      // WEBP codec object
+/* -- Class body ----------------------------------------------------------- */
+class CodecWEBP :                      // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  protected ImageLib                   // Image format helper class
+  ImageLib                             // Image format helper class
 { /* ----------------------------------------------------------------------- */
   static void *WebPAlloc(void*const, size_t stSize)
     { return StdAlloc<void>(stSize); }
@@ -70,8 +68,8 @@ class CodecWEBP :                      // WEBP codec object
     /* -- Initialisers ----------------------------------------------------- */
     ImageLib{ IFMT_WEBP, "Web Picture", "WEBP",
       bind(&CodecWEBP::Decode, this, _1, _2) }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecWEBP = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

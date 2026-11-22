@@ -9,18 +9,21 @@
 /* ------------------------------------------------------------------------- */
 namespace IFreeType {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace IError::P;             using namespace ILog::P;
-using namespace IMemory::P;            using namespace IMutex::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LFt;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace IMemory::P;
+using namespace IMutex::P;             using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace LFt;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Freetype core class -------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class FreeType;                        // Class prototype
 static FreeType *cFreeType = nullptr;  // Pointer to global class
+/* -- Class body ----------------------------------------------------------- */
 class FreeType :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private MutexLock                    // Instance protection
+  GCHelper<FreeType>,                  // Global pointer helper
+  MutexLock                            // Instance protection
 { /* -- Private variables -------------------------------------------------- */
   FT_Library    ftlContext;            // Freetype context
   FT_MemoryRec_ ftmrAlloc;             // Freetype custom allocator
@@ -102,16 +105,20 @@ class FreeType :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   void FreeTypeDeInit() { if(FreeTypeDoDeInit()) ftlContext = nullptr; }
   /* -- Default constructor ------------------------------------- */ protected:
-  FreeType() : ftlContext(nullptr), ftmrAlloc{ this,
-    [](FT_Memory, long lBytes)->void*
-      { return StdAlloc<void>(lBytes); },
-    [](FT_Memory, void*const vpAddress)
-      { StdFree(vpAddress); },
-    [](FT_Memory, long, long lBytes, void*const vpAddress)->void*
-      { return StdReAlloc(vpAddress, lBytes); }
-  }
-  /* -- Set global pointer to static class --------------------------------- */
-  { cFreeType = this; }
+  FreeType() :
+    /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cFreeType },        // Initialise global pointer
+    ftlContext(nullptr),                 // Initialised later
+    ftmrAlloc{ this,                     // Set memory allocation functions
+      [](FT_Memory, long lBytes)->void*
+        { return StdAlloc<void>(lBytes); },
+      [](FT_Memory, void*const vpAddress)
+        { StdFree(vpAddress); },
+      [](FT_Memory, long, long lBytes, void*const vpAddress)->void*
+        { return StdReAlloc(vpAddress, lBytes); }
+    }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~FreeType, FreeTypeDoDeInit())
 };/* ----------------------------------------------------------------------- */

@@ -10,13 +10,14 @@
 namespace IPalette {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace IColour::P;
-using namespace IError::P;             using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IImageSlot::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IShaders::P;
-using namespace IStd::P;               using namespace ITexDef::P;
-using namespace IUtil::P;              using namespace LOgl::Types;
+using namespace IError::P;             using namespace IGCHelper::P;
+using namespace IImage::P;             using namespace IImageDef::P;
+using namespace IImageSlot::P;         using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IShaders::P;           using namespace IStd::P;
+using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 using PalData = StdArray<Colour, 256>; // Palette data
 /* ------------------------------------------------------------------------- */

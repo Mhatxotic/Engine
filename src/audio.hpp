@@ -11,23 +11,25 @@ namespace IAudio {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICVarDef::P;
 using namespace IDuration::P;          using namespace IError::P;
-using namespace IEvtMain::P;           using namespace IHelper::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace IMixer::P;             using namespace IOal::P;
-using namespace ISample::P;            using namespace ISource::P;
-using namespace IStd::P;               using namespace IStream::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IThread::P;            using namespace IVideo::P;
-using namespace LOal::Types;
+using namespace IEvtMain::P;           using namespace IGCHelper::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace IMixer::P;
+using namespace IOal::P;               using namespace ISample::P;
+using namespace ISource::P;            using namespace IStd::P;
+using namespace IStream::P;            using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IThread::P;
+using namespace IVideo::P;             using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ========================================================================= */
+/* -- Class prototype and global pointer ----------------------------------- */
 class Audio;                           // Class prototype
 static Audio *cAudio = nullptr;        // Pointer to global class
-class Audio :                          // Audio manager class
+/* -- Class body ----------------------------------------------------------- */
+class Audio :                          // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private InitHelper,                  // Initialisation helper class
-  private EvtMainRegAuto               // Frequently used events
+  GCHelper<Audio>,                     // Global pointer helper
+  InitHelper,                          // Initialisation helper class
+  EvtMainRegAuto                       // Frequently used events
 { /* -- Monitoring thread timers ------------------------------------------- */
   Thread           tThread;            // Audio thread class
   ClkTimePoint     ctpNextCheck;       // Next check for hardware changes
@@ -441,6 +443,7 @@ class Audio :                          // Audio manager class
   /* -- Default constructor ------------------------------------- */ protected:
   Audio() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cAudio },         // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Initialise class name
     EvtMainRegAuto{ cEvtMain, {        // Initialise audio events
       { EMC_AUD_REINIT,    bind(&Audio::AudioOnReInit,           this, _1) },
@@ -455,8 +458,8 @@ class Audio :                          // Audio manager class
     svPBDevices{ 10 },                 // Reserve 10 playback devices
     svCTDevices{ 10 },                 // Reserve 10 capture devices
     lfOnUpdate{ "OnAudUpdate" }        // On update event
-    /* -- Set global pointer to static class ------------------------------- */
-    { cAudio = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Audio, AudioDeInit())
   /* --------------------------------------------------------------- */ public:

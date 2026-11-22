@@ -16,10 +16,10 @@ using namespace IFlags::P;             using namespace IFStream::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(DataFormat,                // Filter properties
+BUILD_FLAGS(unsigned, DataFormat,      // Filter properties
 /* ------------------------------------------------------------------------- */
-  DF_DECODE                 {Flag(1)}, // Filter has a decoder?
-  DF_ENCODE                 {Flag(2)}  // Filter has an encoder?
+  DF_DECODE       {DataFormatFlag[1]}, // Filter has a decoder?
+  DF_ENCODE       {DataFormatFlag[2]}  // Filter has an encoder?
 );/* ----------------------------------------------------------------------- */
 template<class DataType,               // Data storage type
          typename FormatType,          // Data type id

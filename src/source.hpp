@@ -13,20 +13,21 @@
 namespace ISource {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICollector::P;         using namespace ICVarDef::P;
-using namespace IFlags::P;             using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IName::P;
-using namespace IOal::P;               using namespace ISerial::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LOal::Types;
+using namespace IFlags::P;             using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IName::P;              using namespace IOal::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Source,                    // Source flags
+BUILD_FLAGS(unsigned, Source,          // Source flags
   /* ----------------------------------------------------------------------- */
-  SF_NONE                   {Flag(0)}, // No flags
-  SF_EXTERNAL               {Flag(1)}, // Source is managed externally
-  SF_CLASS                  {Flag(2)}  // Source is managed by LUA
+  SF_NONE             {SourceFlag[0]}, // No flags
+  SF_EXTERNAL         {SourceFlag[1]}, // Source is managed externally
+  SF_CLASS            {SourceFlag[2]}  // Source is managed by LUA
 );/* -- Source collector class for collector data and custom variables ----- */
 CTOR_BEGIN(Sources, Source, CLHelperSafe, size_t stSources;);
 /* ------------------------------------------------------------------------- */

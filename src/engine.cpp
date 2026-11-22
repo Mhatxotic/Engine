@@ -20,6 +20,7 @@ namespace E {                          // Start of engine namespace
 /* ------------------------------------------------------------------------- */
 #include "engine.hpp"                  // Engine version information header
 #include "stddef.hpp"                  // Engine STL type aliases header
+#include "gchelper.hpp"                // Global class pointer helper header
 #include "common.hpp"                  // Common constant variables header
 #include "endian.hpp"                  // Endian functions header
 #include "std.hpp"                     // Standard utility functions header
@@ -186,12 +187,10 @@ ENTRYFUNC                              // Macro defined in 'setup.hpp'
     using namespace ICmdLine::P;       using namespace ICommon::P;
     using namespace ICore::P;          using namespace IDir::P;
     using namespace ILog::P;
-    // Create engine class
-    struct Engine final :
-      // Base classes required to run the main part of the engine
-      private Common, private DirBase, private CmdLine, private Log
+    // Create engine class with base critical classes needed for startup
+    class Engine final : Common, DirBase, CmdLine, Log
     { // Main procedure into creating and running the engine in 'core.cpp'
-      int EngineMain() const try { return Core{}.CoreMain(); }
+      public: int EngineMain() const try { return Core{}.CoreMain(); }
       // Safe loggable exception occured?
       catch(const StdException &eReason)
       { // Send to log and show error message to user. Show message box and

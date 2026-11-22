@@ -98,15 +98,15 @@ class EvtArgVar                        // Multi-type helps access event data
     t(EAVT_PTR), vp(const_cast<void*>(vpP)) {}
 };/* ----------------------------------------------------------------------- */
 /* -- Common events system (since we need to use this twice) --------------- */
-template<typename Cmd,                 // Variable type of command to use
-         size_t   EvtMaxEvents,        // Maximum number of events
-         Cmd      EvtNone,             // Id of 'none' event
-         Cmd      EvtNoLog>            // Id of succeeding ids to not log for
-class EvtCore :                        // Start of common event system class
+template<typename Cmd,                   // Variable type of command to use
+         size_t   EvtMaxEvents,          // Maximum number of events
+         Cmd      EvtNone,               // Id of 'none' event
+         Cmd      EvtNoLog>              // Id of succeeding ids to not log for
+struct EvtCore :                         // Start of common event system class
   /* -- Base classes ------------------------------------------------------- */
-  public NameStr,                      // Identifier of event list
-  public MutexLock                     // Primary events list mutex
-{ /* -- Typedefs --------------------------------------------------- */ public:
+  NameStr,                               // Identifier of event list
+  MutexLock                              // Primary events list mutex
+{ /* -- Typedefs ----------------------------------------------------------- */
   struct Event;                          // (Prototype) Event packet info
   using CbEcFuncT = void(const Event&);  // Event callback type
   using CbEcFunc  = function<CbEcFuncT>; // Actual event callback

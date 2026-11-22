@@ -20,12 +20,10 @@ using namespace ITime::P;              using namespace IUtil::P;
 using namespace LJpg;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
-class CodecJPG;                        // Class prototype
-static CodecJPG *cCodecJPG = nullptr;  // Pointer to global class
-class CodecJPG :                       // JPEG codec object
+/* -- Class body ----------------------------------------------------------- */
+class CodecJPG :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private ImageLib                     // Image format helper class
+  ImageLib                             // Image format helper class
 { /* -- JPEG callbacks ----------------------------------------------------- */
   static void JPegInitSource(j_decompress_ptr) {}
   static void JPegTermSource(j_decompress_ptr) {}
@@ -284,8 +282,8 @@ class CodecJPG :                       // JPEG codec object
     ImageLib{ IFMT_JPEG, "Joint Photographic Experts Group", "JPG",
       bind(&CodecJPG::Decode, this, _1, _2),
       bind(&CodecJPG::Encode, this, _1, _2, _3) }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecJPG = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

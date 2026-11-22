@@ -11,13 +11,13 @@
 namespace IShader {                    // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICollector::P;
-using namespace IError::P;             using namespace ICoords::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IName::P;
-using namespace IOgl::P;               using namespace ISerial::P;
-using namespace IShaderDef::P;         using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace LOgl::Types;
+using namespace ICoords::P;            using namespace IError::P;
+using namespace IGCHelper::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IName::P;              using namespace IOgl::P;
+using namespace ISerial::P;            using namespace IShaderDef::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Shader list class ---------------------------------------------------- */

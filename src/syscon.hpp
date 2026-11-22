@@ -19,18 +19,19 @@ namespace P {                          // Start of public module namespace
 ** ## Base class for SysCon                                               ## **
 ** ######################################################################### **
 ** -- Typedefs ------------------------------------------------------------- */
-BUILD_FLAGS(SysCon,                    // Console flags classes
+BUILD_FLAGS(unsigned, SysCon,          // Console flags classes
   /* ----------------------------------------------------------------------- */
-  SCO_NONE                  {Flag(0)}, // No settings?
-  SCO_CURVISIBLE            {Flag(1)}, // Cursor is visible?
-  SCO_CURINSERT             {Flag(2)}, // Cursor is in insert mode?
-  SCO_EXIT                  {Flag(3)}  // Exit requested?
+  SCO_NONE            {SysConFlag[0]}, // No settings?
+  SCO_CURVISIBLE      {SysConFlag[1]}, // Cursor is visible?
+  SCO_CURINSERT       {SysConFlag[2]}, // Cursor is in insert mode?
+  SCO_EXIT            {SysConFlag[3]}  // Exit requested?
 );/* ----------------------------------------------------------------------- */
 struct SysConBase :
   /* -- Base classes ------------------------------------------------------- */
   protected SysConFlags                // Flags settings
 { /* -- Typedefs ----------------------------------------------------------- */
-  enum KeyType { KT_NONE, KT_KEY, KT_CHAR, KT_RESET }; // GetKey return types
+  enum KeyType : unsigned              // GetKey return types
+    { KT_NONE, KT_KEY, KT_CHAR, KT_RESET };
   /* -- Handle CTRL_CLOSE_EVENT -------------------------------------------- */
   bool SysConIsClosing() const { return FlagIsSet(SCO_EXIT); }
   bool SysConIsNotClosing() const { return !SysConIsClosing(); }

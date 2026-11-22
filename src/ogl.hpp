@@ -14,14 +14,14 @@ using namespace ICVars::P;             using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IError::P;
 using namespace IEvtWin::P;            using namespace IFboBlend::P;
 using namespace IFboCmd::P;            using namespace IColour::P;
-using namespace IFlags::P;             using namespace IGlFW::P;
-using namespace IGlFWBase::P;          using namespace IHelper::P;
-using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace IShaderDef::P;         using namespace IStd::P;
-using namespace IStdLib::P;            using namespace IString::P;
-using namespace ISystem::P;            using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace LOgl;
+using namespace IFlags::P;             using namespace IGCHelper::P;
+using namespace IGlFW::P;              using namespace IGlFWBase::P;
+using namespace IHelper::P;            using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace IShaderDef::P;
+using namespace IStd::P;               using namespace IStdLib::P;
+using namespace IString::P;            using namespace ISystem::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;              using namespace LOgl;
 /* ------------------------------------------------------------------------- */
 constexpr static const GLuint gluMax = StdLimits<GLuint>::max();
 /* ------------------------------------------------------------------------- */
@@ -32,17 +32,17 @@ namespace P {                          // Start of public module namespace
 #define GL(F,M,...)       GLEX(cOgl->OglCheckExceptError, F, M, ## __VA_ARGS__)
 #define GLC(M,...)        GLEX(cOgl->OglCheckExceptError, , M, ## __VA_ARGS__)
 /* -- Public typedefs ------------------------------------------------------ */
-BUILD_FLAGS(Ogl,                       // OpenGL flags
+BUILD_FLAGS(unsigned, Ogl,             // OpenGL flags
   /* ----------------------------------------------------------------------- */
-  GFL_NONE                  {Flag(0)}, // No flags
-  GFL_INITIALISED           {Flag(1)}, // OpenGL context initialised?
-  GFL_HAVEMEM               {Flag(2)}, // Either of the below commands?
-  GFL_HAVENVMEM             {Flag(3)}, // Have nVidia memory information?
-  GFL_HAVEATIMEM            {Flag(4)}, // Have ATI memory avail info?
-  GFL_SHARERAM              {Flag(5)}, // Devices shares memory with system?
-  GFL_HAVEASYNC             {Flag(6)}, // Have adaptive sync? (negative vsync)
-  GFL_HAVEWASYNC            {Flag(7)}, // Have Windows adaptive sync?
-  GFL_HAVELASYNC            {Flag(8)}  // Have Linux adaptive sync?
+  GFL_NONE               {OglFlag[0]}, // No flags
+  GFL_INITIALISED        {OglFlag[1]}, // OpenGL context initialised?
+  GFL_HAVEMEM            {OglFlag[2]}, // Either of the below commands?
+  GFL_HAVENVMEM          {OglFlag[3]}, // Have nVidia memory information?
+  GFL_HAVEATIMEM         {OglFlag[4]}, // Have ATI memory avail info?
+  GFL_SHARERAM           {OglFlag[5]}, // Devices shares memory with system?
+  GFL_HAVEASYNC          {OglFlag[6]}, // Have adaptive sync? (negative vsync)
+  GFL_HAVEWASYNC         {OglFlag[7]}, // Have Windows adaptive sync?
+  GFL_HAVELASYNC         {OglFlag[8]}  // Have Linux adaptive sync?
 );/* ----------------------------------------------------------------------- */
 enum OglFilterEnum : size_t            // Available filter combinations
 { /* -- Non-mipmapped ------------------------------------------------------ */
@@ -101,12 +101,14 @@ enum VSyncMode : int {                 // VSync settings
   VSYNC_ON_HALFRATE,                   // [ 2] Verfical sync enabled (half)
   VSYNC_MAX                            // [ 3] Maximum Vertical Sync value
 };/* ----------------------------------------------------------------------- */
-/* -- OpenGL manager class ------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Ogl;                             // Class prototype
 static Ogl *cOgl = nullptr;            // Pointer to global class
-class Ogl :                            // OGL class for OpenGL use simplicity
+/* -- Class body ----------------------------------------------------------- */
+class Ogl :                            // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  private InitHelper,                  // Initialisation helper
+  GCHelper<Ogl>,                       // Global pointer helper
+  InitHelper,                          // Initialisation helper
   public Colour,                       // OGL global clear colour cache
   public FboBlend,                     // OGL global blend cache
   public OglFlags                      // OGL init flags
@@ -1371,6 +1373,7 @@ class Ogl :                            // OGL class for OpenGL use simplicity
   /* -- Constructor --------------------------------------------- */ protected:
   Ogl() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cOgl },           // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Send name to InitHelper
     OglFlags{ GFL_NONE },              // Set no flags
     /* -- Const members ---------------------------------------------------- */
@@ -1465,8 +1468,8 @@ class Ogl :                            // OGL class for OpenGL use simplicity
     ssvVendor{                         // Blank vendor
       cCommon->CommonNull() },         // Initialise with "<null>" text
     vsmSetting{ VSYNC_OFF }            // Set no VSync by default
-    /* -- Set global pointer to static class ------------------------------- */
-    { cOgl = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Ogl, OglDeInit())
   /* -- Setup VSync ------------------------------------------------ */ public:

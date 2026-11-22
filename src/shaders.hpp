@@ -9,17 +9,21 @@
 namespace IShaders {                   // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace ICVarDef::P;
-using namespace IFboCmd::P;            using namespace ILog::P;
-using namespace IOgl::P;               using namespace IShader::P;
-using namespace IShaderDef::P;         using namespace IStd::P;
-using namespace IString::P;            using namespace LOgl::Types;
+using namespace IFboCmd::P;            using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace IOgl::P;
+using namespace IShader::P;            using namespace IShaderDef::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* == Shader core class ==================================================== */
-struct ShaderCore;                     // Class prototype
+/* -- Class prototype and global ------------------------------------------- */
+class ShaderCore;                      // Class prototype
 static ShaderCore *cShaderCore = nullptr; // Pointer to global class
-struct ShaderCore                      // Actual body
-{ /* -- 3D shader references ----------------------------------------------- */
+/* -- Class body ----------------------------------------------------------- */
+class ShaderCore :                     // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<ShaderCore>                 // Global pointer helper
+{ /* -- 3D shader references --------------------------------------- */ public:
   StdArray<Shader,9> sh3DBuiltIns;     // list of built-in 3D shaders
   Shader          &sh3D,               // Basic 3D transformation shader
                   &sh3DYCbCr601FR,     // 3D YCbCr Rec.601 full-range shader
@@ -286,6 +290,7 @@ struct ShaderCore                      // Actual body
   /* -- Default constructor ------------------------------------- */ protected:
   ShaderCore() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cShaderCore },    // Initialise global pointer
     sh3D{ sh3DBuiltIns[0] },           sh3DYCbCr601FR{ sh3DBuiltIns[1] },
     sh3DYCbCr601PR{ sh3DBuiltIns[2] }, sh3DYCbCr709FR{ sh3DBuiltIns[3] },
     sh3DYCbCr709PR{ sh3DBuiltIns[4] }, sh3DYCbCrK601FR{ sh3DBuiltIns[5] },
@@ -301,8 +306,8 @@ struct ShaderCore                      // Actual body
       "round",                         // [3] Nearest whole number
       "roundEven"                      // [4] Nearest even number
     }}                                 // End of rounding strings list
-    /* -- Set global pointer to static class ------------------------------- */
-    { cShaderCore = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Set rounding method for the shader ------------------------- */ public:
   CVarReturn SetSPRoundingMethod(const size_t stMethod)
   { // Return if specified value is outrageous!

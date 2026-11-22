@@ -18,15 +18,16 @@ using namespace ICollector::P;         using namespace ICoords::P;
 using namespace IDim::P;               using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFlags::P;
 using namespace IFormat::P;            using namespace IFreeType::P;
-using namespace IFtf::P;               using namespace IImageDef::P;
-using namespace IJson::P;              using namespace ILog::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace IMemory::P;            using namespace IOgl::P;
-using namespace IStd::P;               using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace ITexDef::P;
-using namespace ITexture::P;           using namespace IUtfCodepoint::P;
-using namespace IUtfDecoder::P;        using namespace IUtil::P;
-using namespace LFt;                   using namespace LOgl::Types;
+using namespace IFtf::P;               using namespace IGCHelper::P;
+using namespace IImageDef::P;          using namespace IJson::P;
+using namespace ILog::P;               using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace IMemory::P;
+using namespace IOgl::P;               using namespace IStd::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace ITexDef::P;            using namespace ITexture::P;
+using namespace IUtfCodepoint::P;      using namespace IUtfDecoder::P;
+using namespace IUtil::P;              using namespace LFt;
+using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* == Font collector class for collector data and custom variables ========= */

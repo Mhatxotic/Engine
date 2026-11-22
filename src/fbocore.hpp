@@ -17,13 +17,13 @@ using namespace ICoords::P;            using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace ICVars::P;
 using namespace IDim::P;               using namespace IEvtMain::P;
 using namespace IFboBlend::P;          using namespace IFbo::P;
-using namespace IFrame::P;             using namespace IGlFW::P;
-using namespace ILog::P;               using namespace ILuaFunc::P;
-using namespace ILuaUtil::P;           using namespace IOgl::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace LOgl::Types;
+using namespace IFrame::P;             using namespace IGCHelper::P;
+using namespace IGlFW::P;              using namespace ILog::P;
+using namespace ILuaFunc::P;           using namespace ILuaUtil::P;
+using namespace IOgl::P;               using namespace IShader::P;
+using namespace IShaders::P;           using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 using FboDouble = StdArray<Fbo, 2>;    // Main and console Fbo typedef
 /* ------------------------------------------------------------------------- */
@@ -35,15 +35,17 @@ enum DrawState : unsigned              // Drawing states
   DS_PARTIAL,                          // [1] Draw main Fbo to back buffer only
   DS_FULL,                             // [2] Finish console/main, draw to back
 };/* ----------------------------------------------------------------------- */
-/* == Main Fbo class ======================================================= */
+/* -- Class prototype and global ------------------------------------------- */
 class FboCore;                         // Class prototype
 static FboCore *cFboCore = nullptr;    // Pointer to global class
-class FboCore :                        // The main Fbo operations manager
+/* -- Class body ----------------------------------------------------------- */
+class FboCore :                        // Members initially private
   /* -- Base classes ------------------------------------------------------- */
+  GCHelper<FboCore>,                   // Global pointer helper
   public Colour,                       // Backbuffer clear colour
   public FboBlend,                     // Default blending mode
   public DimGLSizei,                   // Main Fbo dimensions
-  private FboDouble                    // Main and console classes
+  FboDouble                            // Main and console classes
 { /* -- Private variables -------------------------------------------------- */
   GLfloat          glfAspectMin,       // Minimum orthangal matrix ratio
                    glfAspectMax;       // Maximum orthangal matrix ratio
@@ -266,6 +268,7 @@ class FboCore :                        // The main Fbo operations manager
   /* -- Initialise Fbo's using a different constructor ---------- */ protected:
   FboCore() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cFboCore },       // Initialise global pointer
     FboDouble{{{ GL_RGB8,  true },     // Initialise main Fbo (no register)
                { GL_RGBA8, true }}},   // Initialise console Fbo (no register)
     glfAspectMin(1.0f),                // Minimum aspect ratio init by CVar
@@ -278,8 +281,8 @@ class FboCore :                        // The main Fbo operations manager
     ctpStart{ cd0 },                   // Initialise FPS timepoint
     dFps{ 0.0 }, dFpsSmoothed{ 0.0 },  // Initialise calculated FPS
     lrRedraw{ "OnFboRedraw" }          // Setup graphical redraw LUA event
-    /* -- Set pointer to global class and main Fbo ------------------------- */
-    { cFboCore = this; cFbos->fboMain = &fboMain; }
+    /* -- Set pointer to main Fbo ------------------------------------------ */
+    { cFbos->fboMain = &fboMain; }
   /* -- Set main Fbo float reserve --------------------------------- */ public:
   CVarReturn FboCoreSetFloatReserve(const size_t stCount)
     { return BoolToCVarReturn(UtilReserveList(fboMain.ftvActive, stCount)); }

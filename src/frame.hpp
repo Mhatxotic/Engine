@@ -12,13 +12,17 @@
 namespace IFrame {                     // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace IClock::P;             using namespace ICVarDef::P;
-using namespace IStd::P;               using namespace IUtil::P;
+using namespace IGCHelper::P;          using namespace IStd::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Frame;                           // Class prototype
 static Frame *cFrame = nullptr;        // Address of global class
-class Frame                            // Members initially private
+/* -- Class body ----------------------------------------------------------- */
+class Frame :                          // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Frame>                      // Global pointer helper
 { /* -- Variables ---------------------------------------------------------- */
   ClkTimePoint     ctpFrame,           // Frame start time
                    ctpStart,           // Start of frame time
@@ -162,11 +166,12 @@ class Frame                            // Members initially private
   /* -- Default constructor ------------------------------------- */ protected:
   Frame() :
     /* --------------------------------------------------------------------- */
+    GCHelper{ this, &cFrame },         // Initialise global pointer
     ullTriggers(0),                    // Init number of frame timeout checks
     ullTicks(0),                       // Init no. of ticks processed this sec
     dFps(0.0), dFpsSmoothed(0.0)       // Init frames per second and smoothed
-    /* -- Set global pointer to static class ------------------------------- */
-    { cFrame = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Set time out ----------------------------------------------- */ public:
   CVarReturn FrameSetTimeOut(const unsigned uTimeOut)
     { return CVarSimpleSetIntNL(cdTimeOut, seconds{ uTimeOut }, cd1S); }

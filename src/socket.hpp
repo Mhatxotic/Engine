@@ -14,41 +14,41 @@ using namespace ICollector::P;         using namespace ICommon::P;
 using namespace ICrypt::P;             using namespace ICVars::P;
 using namespace ICVarDef::P;           using namespace ICVarLib::P;
 using namespace IError::P;             using namespace IEvtMain::P;
-using namespace IFlags::P;             using namespace ILog::P;
-using namespace ILuaBase::P;           using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IMetadata::P;          using namespace IMutex::P;
-using namespace IName::P;              using namespace IParser::P;
-using namespace IRefCtr::P;            using namespace ISerial::P;
-using namespace IStd::P;               using namespace IStdLib::P;
-using namespace IString::P;            using namespace ISystem::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IToken::P;             using namespace IUtil::P;
-using namespace LSsl;
+using namespace IFlags::P;             using namespace IGCHelper::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IMetadata::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace IParser::P;            using namespace IRefCtr::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IStdLib::P;            using namespace IString::P;
+using namespace ISystem::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace IToken::P;
+using namespace IUtil::P;              using namespace LSsl;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Connection flags ----------------------------------------------------- */
-BUILD_SECURE_FLAGS(Socket,
+BUILD_SECURE_FLAGS(unsigned, Socket,
   /* ----------------------------------------------------------------------- */
-  SS_NONE                   {Flag(0)}, // No flags?
-  SS_INITIALISING           {Flag(1)}, // Socket is initialising?
-  SS_ENCRYPTION             {Flag(2)}, // Socket is set to use encryption?
-  SS_CONNECTING             {Flag(3)}, // Socket is connecting?
-  SS_CONNECTED              {Flag(4)}, // Socket is connected?
-  SS_VHOST                  {Flag(5)}, // Socket connected with virtual host
-  SS_SENDREQUEST            {Flag(6)}, // Socket is sending request (HTTP)?
-  SS_REPLYWAIT              {Flag(7)}, // Socket waiting for reply (HTTP)?
-  SS_DOWNLOADING            {Flag(8)}, // Socket is downloading (HTTP)?
-  SS_UPGRADED               {Flag(9)}, // Socket is upgraded (WEBSOCKET)?
-  SS_CLOSEDBYSERVER        {Flag(10)}, // Socket was closed by server?
-  SS_CLOSEDBYCLIENT        {Flag(11)}, // Socket was closed by server?
-  SS_DISCONNECTING         {Flag(12)}, // Socket is disconnecting?
-  SS_STANDBY               {Flag(13)}, // Socket on standby (disconnected)?
+  SS_NONE             {SocketFlag[0]}, // No flags?
+  SS_INITIALISING     {SocketFlag[1]}, // Socket is initialising?
+  SS_ENCRYPTION       {SocketFlag[2]}, // Socket is set to use encryption?
+  SS_CONNECTING       {SocketFlag[3]}, // Socket is connecting?
+  SS_CONNECTED        {SocketFlag[4]}, // Socket is connected?
+  SS_VHOST            {SocketFlag[5]}, // Socket connected with virtual host
+  SS_SENDREQUEST      {SocketFlag[6]}, // Socket is sending request (HTTP)?
+  SS_REPLYWAIT        {SocketFlag[7]}, // Socket waiting for reply (HTTP)?
+  SS_DOWNLOADING      {SocketFlag[8]}, // Socket is downloading (HTTP)?
+  SS_UPGRADED         {SocketFlag[9]}, // Socket is upgraded (WEBSOCKET)?
+  SS_CLOSEDBYSERVER  {SocketFlag[10]}, // Socket was closed by server?
+  SS_CLOSEDBYCLIENT  {SocketFlag[11]}, // Socket was closed by server?
+  SS_DISCONNECTING   {SocketFlag[12]}, // Socket is disconnecting?
+  SS_STANDBY         {SocketFlag[13]}, // Socket on standby (disconnected)?
   /* ----------------------------------------------------------------------- */
-  SS_EVENTERROR            {Flag(13)}, // Set if error with event callback?
-  SS_READPACKET            {Flag(14)}, // Socket read a packet (not ever set)?
-  SS_PONG                  {Flag(15)}  // Pong from WebSocket?
+  SS_EVENTERROR      {SocketFlag[13]}, // Set if error with event callback?
+  SS_READPACKET      {SocketFlag[14]}, // Socket read a packet (not ever set)?
+  SS_PONG            {SocketFlag[15]}  // Pong from WebSocket?
 );/* == Socket collector class for collector data and custom variables ===== */
 CTOR_BEGIN(Sockets, Socket, CLHelperUnsafe,
 /* -- Internal registry values for http data ------------------------------- **

@@ -9,13 +9,17 @@
 /* ------------------------------------------------------------------------- */
 namespace IMetadata {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
-using namespace ICVarDef::P;           using namespace ILookupArray::P;
+using namespace ICVarDef::P;           using namespace IGCHelper::P;
+using namespace ILookupArray::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Metadata class ------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Metadata;                        // Prototype
 static Metadata *cMetadata = nullptr;  // Global access to class
-class Metadata                         // Common variables class
+/* -- Class body ----------------------------------------------------------- */
+class Metadata :                       // Members initially private
+  /* -- Base classes ------------------------------------------------------- */
+  GCHelper<Metadata>                   // Global pointer helper
 { /* -- Private variables -------------------------------------------------- */
   StdStringView    ssvTitle,           // Guest title
                    ssvShortTitle,      // Guest short title
@@ -67,6 +71,7 @@ class Metadata                         // Common variables class
   /* -- Default constructor ------------------------------------- */ protected:
   Metadata() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cMetadata },      // Initialise global pointer
     cfMode{ CFL_MASK },                // Guimode initially set by cvars
     mList{{                            // Initialise mode strings list
       "stdout",                        // [00<      0>] (nothing)
@@ -86,8 +91,8 @@ class Metadata                         // Common variables class
       "audio+video+timer",             // [14<  2|4|8>] (video+audio+timer)
       "text+audio+video+timer",        // [15<1|2|4|8>] (text+audio+video+timr)
     }}                                 // Mode strings list initialised
-  /* -- Code --------------------------------------------------------------- */
-  { cMetadata = this; }
+  /* -- No code ------------------------------------------------------------ */
+  {}
   /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
   CVarReturn MetadataSetTitle(const StdString&, const StdString &strV)
     { ssvTitle = strV; return ACCEPT; }

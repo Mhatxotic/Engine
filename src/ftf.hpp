@@ -25,12 +25,13 @@ using namespace IAsset::P;             using namespace IASync::P;
 using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFileMap::P;           using namespace IFreeType::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace ILuaUtil::P;
-using namespace IMemory::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace ISysUtil::P;           using namespace IUtil::P;
-using namespace LOgl::Types;           using namespace LFt;
+using namespace IGCHelper::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace ILuaUtil::P;           using namespace IMemory::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace ISysUtil::P;
+using namespace IUtil::P;              using namespace LOgl::Types;
+using namespace LFt;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Ftf collector class for collector data and custom variables ========== */

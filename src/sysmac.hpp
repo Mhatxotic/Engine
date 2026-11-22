@@ -679,7 +679,8 @@ class SysCore :
     return (kipInfo.kp_proc.p_flag & P_TRACED) != 0;
   }
   /* -- Get process affinity masks ----------------------------------------- */
-  static uint64_t GetAffinity(const bool) { return Flag(StdThreadMax()); }
+  static uint64_t GetAffinity(const bool)
+    { return Flag<uint64_t>()[StdThreadMax()]; }
   /* -- Return process priority -------------------------------------------- */
   int GetPriority() const
   { // Get priority value and return if succeeded

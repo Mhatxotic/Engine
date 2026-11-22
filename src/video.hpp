@@ -15,20 +15,20 @@ using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IError::P;             using namespace IEvtMain::P;
 using namespace IFbo::P;               using namespace IFileMap::P;
 using namespace IFlags::P;             using namespace IFrame::P;
-using namespace IInterval::P;          using namespace ILog::P;
-using namespace ILookupArray::P;       using namespace ILuaEvt::P;
-using namespace ILuaIdent::P;          using namespace ILuaLib::P;
-using namespace ILuaUtil::P;           using namespace IMemory::P;
-using namespace IMixer::P;             using namespace IMutex::P;
-using namespace IName::P;              using namespace IOal::P;
-using namespace IOgl::P;               using namespace IPcmLib::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace ISource::P;            using namespace IStd::P;
-using namespace IStream::P;            using namespace IString::P;
-using namespace ISysUtil::P;           using namespace IThread::P;
-using namespace IUtil::P;              using namespace LOgg;
-using namespace LOgg::Theora;          using namespace LOal::Types;
-using namespace LOgl::Types;
+using namespace IGCHelper::P;          using namespace IInterval::P;
+using namespace ILog::P;               using namespace ILookupArray::P;
+using namespace ILuaEvt::P;            using namespace ILuaIdent::P;
+using namespace ILuaLib::P;            using namespace ILuaUtil::P;
+using namespace IMemory::P;            using namespace IMixer::P;
+using namespace IMutex::P;             using namespace IName::P;
+using namespace IOal::P;               using namespace IOgl::P;
+using namespace IPcmLib::P;            using namespace IShader::P;
+using namespace IShaders::P;           using namespace ISource::P;
+using namespace IStd::P;               using namespace IStream::P;
+using namespace IString::P;            using namespace ISysUtil::P;
+using namespace IThread::P;            using namespace IUtil::P;
+using namespace LOgg;                  using namespace LOgg::Theora;
+using namespace LOal::Types;           using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Video collector class for collector data and custom variables -------- */
@@ -44,19 +44,19 @@ double             dMaxDrift;,,        // Maximum drift before drop frames
 /* -- Derived classes ------------------------------------------------------ */
 private LuaEvtMaster<Video, LuaEvtTypeParam<Video>>); // Lua event
 /* ------------------------------------------------------------------------- */
-BUILD_FLAGS(Video,                     // Video flags
+BUILD_FLAGS(unsigned, Video,           // Video flags
   /* ----------------------------------------------------------------------- */
-  FL_NONE                   {Flag(0)}, // No flags set?
-  FL_THEORA                 {Flag(1)}, // Have a theora stream?
-  FL_VORBIS                 {Flag(2)}, // Have a vorbis stream?
-  FL_GLINIT                 {Flag(3)}, // Video output initialised?
-  FL_KEYED                  {Flag(4)}, // Video is keyed?
-  FL_FDR                    {Flag(5)}, // Video is full dynamic range?
-  FL_REC709                 {Flag(6)}, // Video is Rec.709 colour space?
-  FL_FILTER                 {Flag(7)}, // Filtering is enabled?
-  FL_STOP                   {Flag(8)}, // Hard stopped?
-  FL_PLAY                   {Flag(9)}, // Video is playing?
-  FL_RESUME                {Flag(10)}, // Play after reinit?
+  FL_NONE              {VideoFlag[0]}, // No flags set?
+  FL_THEORA            {VideoFlag[1]}, // Have a theora stream?
+  FL_VORBIS            {VideoFlag[2]}, // Have a vorbis stream?
+  FL_GLINIT            {VideoFlag[3]}, // Video output initialised?
+  FL_KEYED             {VideoFlag[4]}, // Video is keyed?
+  FL_FDR               {VideoFlag[5]}, // Video is full dynamic range?
+  FL_REC709            {VideoFlag[6]}, // Video is Rec.709 colour space?
+  FL_FILTER            {VideoFlag[7]}, // Filtering is enabled?
+  FL_STOP              {VideoFlag[8]}, // Hard stopped?
+  FL_PLAY              {VideoFlag[9]}, // Video is playing?
+  FL_RESUME           {VideoFlag[10]}, // Play after reinit?
   /* -- Combined flags ----------------------------------------------------- */
   FL_THEORAVORBIS { FL_THEORA|FL_VORBIS }
 );/* ======================================================================= */
@@ -109,11 +109,12 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   /* -- Y, Cb and Cr texture ids ------------------------------------------- */
   using GLuintArray = StdArray<GLuint, 3>;
   /* -- Thread unblock reasons ------------------------------------- */ public:
-  enum Unblock { UB_STANDBY, UB_BLOCK, UB_DATA, UB_REINIT, UB_PLAY, UB_STOP,
-                 UB_PAUSE, UB_FINISH };
+  enum Unblock : unsigned
+    { UB_STANDBY, UB_BLOCK, UB_DATA,  UB_REINIT,
+      UB_PLAY,    UB_STOP,  UB_PAUSE, UB_FINISH };
   using AtomicUnblock = StdAtomic<Unblock>;
   /* -- Lua callback event ids --------------------------------------------- */
-  enum Event { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
+  enum Event : unsigned { VE_PLAY, VE_LOOP, VE_STOP, VE_PAUSE, VE_FINISH };
   /* -- Concurrency -------------------------------------------------------- */
   AtomicUnblock    auReason;           // Unlock condition variable
   AtomicSizeT      astLoop;            // Loops count

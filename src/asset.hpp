@@ -15,37 +15,37 @@ using namespace ICodec::P;             using namespace ICommon::P;
 using namespace ICollector::P;         using namespace ICVarDef::P;
 using namespace IDir::P;               using namespace IError::P;
 using namespace IEvtMain::P;           using namespace IFlags::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IName::P;              using namespace ISerial::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace ISysUtil::P;
+using namespace IGCHelper::P;          using namespace ILog::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace ISerial::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace ISysUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Public typedefs ------------------------------------------------------ */
-enum FSOverrideType                    // File system override flags
+enum FSOverrideType : unsigned         // File system override flags
 { /* ----------------------------------------------------------------------- */
    FO_INTONLY,                         // [0] Internal archives only
    FO_EXTINT,                          // [1] External and then internal
    FO_INTEXT,                          // [2] Internal and then external
    FO_EXTONLY                          // [3] External files only
 }; /* ---------------------------------------------------------------------- */
-BUILD_FLAGS(Asset,                     // Asset loading flags
+BUILD_FLAGS(unsigned, Asset,           // Asset loading flags
   /* -- Commands ----------------------------------------------------------- */
-  CD_NONE                   {Flag(0)}, // Leave the file loaded as is?
-  CD_DECODE                 {Flag(1)}, // Decode the specified block?
-  CD_ENCODE_RAW             {Flag(2)}, // Copy the specified block?
-  CD_ENCODE_AES             {Flag(3)}, // Encrypt the specified block?
-  CD_ENCODE_ZLIB            {Flag(4)}, // Deflate the specified block?
-  CD_ENCODE_LZMA            {Flag(5)}, // Compress the specified block?
-  CD_ENCODE_ZLIBAES         {Flag(6)}, // Deflate+encrypt specified block?
-  CD_ENCODE_LZMAAES         {Flag(7)}, // Compress+encrypt specified block?
+  CD_NONE              {AssetFlag[0]}, // Leave the file loaded as is?
+  CD_DECODE            {AssetFlag[1]}, // Decode the specified block?
+  CD_ENCODE_RAW        {AssetFlag[2]}, // Copy the specified block?
+  CD_ENCODE_AES        {AssetFlag[3]}, // Encrypt the specified block?
+  CD_ENCODE_ZLIB       {AssetFlag[4]}, // Deflate the specified block?
+  CD_ENCODE_LZMA       {AssetFlag[5]}, // Compress the specified block?
+  CD_ENCODE_ZLIBAES    {AssetFlag[6]}, // Deflate+encrypt specified block?
+  CD_ENCODE_LZMAAES    {AssetFlag[7]}, // Compress+encrypt specified block?
   /* -- Options ------------------------------------------------------------ */
-  CD_LEVEL_FASTEST         {Flag(60)}, // Fastest compression (less mem)?
-  CD_LEVEL_FAST            {Flag(61)}, // Fast compression?
-  CD_LEVEL_MODERATE        {Flag(62)}, // Medium compression?
-  CD_LEVEL_SLOW            {Flag(63)}, // Good compression?
-  CD_LEVEL_SLOWEST         {Flag(64)}, // Maximum compression (more mem)?
+  CD_LEVEL_FASTEST    {AssetFlag[28]}, // Fastest compression (less mem)?
+  CD_LEVEL_FAST       {AssetFlag[29]}, // Fast compression?
+  CD_LEVEL_MODERATE   {AssetFlag[30]}, // Medium compression?
+  CD_LEVEL_SLOW       {AssetFlag[31]}, // Good compression?
+  CD_LEVEL_SLOWEST    {AssetFlag[32]}, // Maximum compression (more mem)?
   /* -- All options -------------------------------------------------------- */
   CD_MASK{ CD_DECODE|CD_ENCODE_RAW|CD_ENCODE_AES|CD_ENCODE_ZLIB|CD_ENCODE_LZMA|
            CD_ENCODE_ZLIBAES|CD_ENCODE_LZMAAES|CD_LEVEL_FASTEST|CD_LEVEL_FAST|

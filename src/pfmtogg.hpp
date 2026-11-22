@@ -11,21 +11,23 @@ namespace ICodecOGG {                  // Start of private module namespace
 /* -- Dependencies --------------------------------------------------------- */
 using namespace ICommon::P;            using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFlags::P;
-using namespace ILog::P;               using namespace ILookupMap::P;
-using namespace IMemory::P;            using namespace IPcmData::P;
-using namespace IPcmDef::P;            using namespace IPcmLib::P;
-using namespace IStd::P;               using namespace IString::P;
-using namespace IUtil::P;              using namespace LOal::Types;
-using namespace LOgg;
+using namespace IGCHelper::P;          using namespace ILog::P;
+using namespace ILookupMap::P;         using namespace IMemory::P;
+using namespace IPcmData::P;           using namespace IPcmDef::P;
+using namespace IPcmLib::P;            using namespace IStd::P;
+using namespace IString::P;            using namespace IUtil::P;
+using namespace LOal::Types;           using namespace LOgg;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* ------------------------------------------------------------------------- */
+/* -- Class body ----------------------------------------------------------- */
 class CodecOGG;                        // Class prototype
 static CodecOGG *cCodecOGG = nullptr;  // Pointer to global class
+/* -- Base classes --------------------------------------------------------- */
 class CodecOGG :                       // OGG codec object
   /* -- Base classes ------------------------------------------------------- */
-  private PcmLib,                      // Pcm format helper class
-  private LookupMap<>                  // Ogg error codes
+  GCHelper<CodecOGG>,                  // Global pointer helper
+  PcmLib,                              // Pcm format helper class
+  LookupMap<>                          // Ogg error codes
 { /* -- Private variables -------------------------------------------------- */
   const ov_callbacks ovcCallbacks;     // Vorbis callbacks
   /* -- Vorbis read callback --------------------------------------- */ public:
@@ -140,6 +142,7 @@ class CodecOGG :                       // OGG codec object
   /* -- Constructor --------------------------------------------- */ protected:
   CodecOGG() :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cCodecOGG },      // Initialise global pointer
     PcmLib{ PFMT_OGG, "Xiph.Org OGG Audio", "OGG",
       bind(&CodecOGG::Decode, this, _1, _2) },
     LookupMap{{                        // Ogg error codes
@@ -152,8 +155,8 @@ class CodecOGG :                       // OGG codec object
       IDMAPSTR(OV_EBADLINK),           IDMAPSTR(OV_ENOSEEK)
     }, "OV_UNKNOWN" },
     ovcCallbacks{ VorbisRead, VorbisSeek, VorbisClose, VorbisTell }
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCodecOGG = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
 };/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

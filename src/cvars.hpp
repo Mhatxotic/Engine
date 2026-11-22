@@ -15,13 +15,13 @@ using namespace IAsset::P;             using namespace ICodec::P;
 using namespace ICommon::P;            using namespace ICVarDef::P;
 using namespace ICVarLib::P;           using namespace IDir::P;
 using namespace IError::P;             using namespace IFillCon::P;
-using namespace IHelper::P;            using namespace IJson::P;
-using namespace ILog::P;               using namespace IMetadata::P;
-using namespace IMutex::P;             using namespace IPSplit::P;
-using namespace ISql::P;               using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace IUtil::P;              using namespace LJson;
-using namespace LSql;
+using namespace IGCHelper::P;          using namespace IHelper::P;
+using namespace IJson::P;              using namespace ILog::P;
+using namespace IMetadata::P;          using namespace IMutex::P;
+using namespace IPSplit::P;            using namespace ISql::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace IUtil::P;
+using namespace LJson;                 using namespace LSql;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public namespace
 /* ------------------------------------------------------------------------- */
@@ -33,10 +33,13 @@ enum CVarDefaults : unsigned           // Flags when loaded from DB
   DC_OVERWRITE,                        // Overwrite core variables only
   DC_REFRESH                           // Wipe database completely
 }; /* ---------------------------------------------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 struct CVars;                          // Class prototype
 static CVars *cCVars = nullptr;        // Pointer to global class
-struct CVars :                         // Start of vars class
+/* -- Class body ----------------------------------------------------------- */
+struct CVars :                         // Members initially public
   /* -- Base classes ------------------------------------------------------- */
+  GCHelper<CVars>,                     // Global pointer helper
   private InitHelper                   // Initialisation helper
 { /* -- Settings ----------------------------------------------------------- */
   constexpr static const size_t        // Some internal settings
@@ -124,7 +127,7 @@ struct CVars :                         // Start of vars class
     requires StdIsString<StrType>
   CVarSetEnums CVarsSetIt(const CVarMapIt &cvmiIt, const StrType &strValue,
     const CVarFlagsConst cvfcFlags,
-    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
+    const CVarCondFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { return cvmiIt->second.CVarCheckAndSetValue(StdString{ strValue },
       cvfcFlags, cvcfcFlags, strCBError); }
   /* -- Set value of the specified variable name --------------------------- */
@@ -132,13 +135,13 @@ struct CVars :                         // Start of vars class
     requires StdIsString<StrTypeVar> && StdIsString<StrTypeVal>
   CVarSetEnums CVarsSet(const StrTypeVar &strVar, const StrTypeVal &strValue,
     const CVarFlagsConst cvfcFlags,
-    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
+    const CVarCondFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { // Find item and if variable is found? Goto the next step
     const CVarMapIt cvmiIt{ CVarsFindVar(strVar) };
     if(cvmiIt != cvmActive.end())
       return CVarsSetIt(cvmiIt, strValue, cvfcFlags, cvcfcFlags);
     // Just return if missing else throw an error
-    if(cvcfcFlags.FlagIsSet(CCF_IGNOREIFMISSING)) return CVS_NOTFOUND;
+    if(cvcfcFlags.FlagIsSet(CCF_IGNOREMISSING)) return CVS_NOTFOUND;
     XC("CVar not found!", "Variable", strVar, "Value", strValue);
   }
   /* -- Check that the variable name is valid ------------------------------ */
@@ -179,13 +182,13 @@ struct CVars :                         // Start of vars class
   /* ----------------------------------------------------------------------- */
   CVarSetEnums CVarsResetIt(const CVarMapIt &cvmiIt,
     const CVarFlagsConst cvfcFlags = PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
+    const CVarCondFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { return cvmiIt->second.CvarCheckAndResetValue(cvfcFlags,
       cvcfcFlags, strCBError); }
   /* ----------------------------------------------------------------------- */
   CVarSetEnums CVarsReset(const CVarEnums cveId,
     const CVarFlagsConst cvfcFlags = PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
+    const CVarCondFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { // Get internal iterator and return value or empty string if invalid
     const CVarMapIt cvmiIt{ CVarsGetInternalList()[cveId] };
     return cvmiIt != cvmActive.cend() ?
@@ -194,7 +197,7 @@ struct CVars :                         // Start of vars class
   /* ----------------------------------------------------------------------- */
   CVarSetEnums CVarsSetInternal(const CVarEnums cveId,
     const StdString &strValue, const CVarFlagsConst cvfcFlags = PCONSOLE,
-    const CVarConditionFlagsConst cvcfcFlags = CCF_THROWONERROR)
+    const CVarCondFlagsConst cvcfcFlags = CCF_THROWONERROR)
   { // Get iterator and set the value if valid except return invalid
     const CVarMapIt cvmiIt{ CVarsGetInternalList()[cveId] };
     return cvmiIt != cvmActive.cend() ?
@@ -238,7 +241,7 @@ struct CVars :                         // Start of vars class
   CVarMapIt CVarsRegister(const StdStringView &ssvVar,
     const StdStringView &ssvValue, CbFunc cbTrigger,
     const CVarFlagsConst cvfcFlags,
-    const CVarConditionFlagsConst cvcfcFlags = CCF_NOTHING)
+    const CVarCondFlagsConst cvcfcFlags = CCF_NOTHING)
   { // Calculate set permission based on source
     auto SourceToPermission = [](const CVarFlagsConst cvfcS)->CVarFlagsConst
     { // Convert the S* flag to a P* flag and return it (order is important)
@@ -266,7 +269,9 @@ struct CVars :                         // Start of vars class
           // Permission required to set the value
           SourceToPermission(cvfcFlags),
           // Merge throw on error and new cvar flag to supplied flags
-          CVarFlagsConst{cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR}, strCBError);
+          CVarCondFlagsConst{cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR},
+          // Storage for error callback
+          strCBError);
       } // Exception occured?
       catch(const StdException &)
       { // Unregister the variable that was created to not cause problems when
@@ -301,7 +306,7 @@ struct CVars :                         // Start of vars class
         // Permission required to set the value
         SourceToPermission(cviRef),
         // Merge throw on error and new cvar flag to supplied flags
-        CVarFlagsConst{ cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR },
+        CVarCondFlagsConst{ cvcfcFlags|CCF_THROWONERROR|CCF_NEWCVAR },
         // Error call back destination string
         strCBError);
       // Return iterator
@@ -312,10 +317,10 @@ struct CVars :                         // Start of vars class
   /* -- Try to set the variable even if it doesnt exist and return result -- */
   bool CVarsSetVarOrInitial(const StdStringView &ssvVar,
     const StdStringView &ssvVal, const CVarFlagsConst cvfcFlags,
-    const CVarConditionFlagsConst cvcfcFlags)
+    const CVarCondFlagsConst cvcfcFlags)
   { // Try to set the variable and grab the result
     switch(CVarsSet(ssvVar, ssvVal, cvfcFlags,
-      CVarFlagsConst{ cvcfcFlags|CCF_IGNOREIFMISSING }))
+      CVarCondFlagsConst{ cvcfcFlags|CCF_IGNOREMISSING }))
     { // Not found? We need to add it to a standby list
       case CVS_NOTFOUND: break;
       // No error or not changed? return success!
@@ -689,6 +694,7 @@ struct CVars :                         // Start of vars class
   /* -- Default constructor ------------------------------------- */ protected:
   explicit CVars(const CVarItemStaticList &cvislDef) :
     /* -- Initialisers ----------------------------------------------------- */
+    GCHelper{ this, &cCVars },         // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Set function name for init helper
     stMaxInactiveCount(CVAR_MAX),      // Initially set to max cvar count
     sstReqActiveSet(-2),               // Initalised by cvar later
@@ -698,8 +704,8 @@ struct CVars :                         // Start of vars class
       { cvmPending, "unregistered" },  // Inactive cvars list
       { cvmActive,  "registered" } }}, // Active cvars list
     cvislList{ cvislDef }              // Default engine cvars list
-    /* -- Set global pointer to static class ------------------------------- */
-    { cCVars = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Destructor ---------------------------------------------- */ protected:
   DTORHELPER(~CVars, CVarsDeInit())
   /* --------------------------------------------------------------- */ public:
@@ -772,8 +778,8 @@ struct CVars :                         // Start of vars class
     size_t stGood = 0, stBad = 0;
     // Precompute compulsory flags
     const CVarFlagsConst cvfcFlags{ PAPPCFG|SAPPCFG };
-    const CVarConditionFlagsConst cvcfcFlags{
-      CCF_IGNOREIFMISSING|CCF_THROWONERROR|CCF_NOMARKCOMMIT };
+    const CVarCondFlagsConst cvcfcFlags{
+      CCF_IGNOREMISSING|CCF_THROWONERROR|CCF_NOMARKCOMMIT };
     // Add the characters the manifest file cares about
     StdForEach(par_unseq, rjvConstants.MemberBegin(), rjvConstants.MemberEnd(),
       [this, &stGood, &stBad, cvfcFlags, cvcfcFlags]

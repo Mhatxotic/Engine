@@ -45,8 +45,9 @@ namespace P {                          // Start of public module namespace
   using lt = s<bt>;                    /* Create alias for lock type        */\
   using hn = h<lt>;                    /* Create alias for collector type   */\
   struct p;                            /* Collector class prototype         */\
-  static p*c ## p = nullptr;           /* Address to global collector class */\
-  struct p : LuaIdent, hn              /* Lua name and collector class      */\
+  static p *c##p = nullptr;            /* Address to global collector class */\
+  struct p :                           /* The collector class body begins   */\
+    private GCHelper<p>, LuaIdent, hn  /* Global ptr, Lua name, CLHelper    */\
     __VA_ARGS__                        /* Any other custom class derives    */\
   { protected: p();                    /* Constructor prototype             */\
     ~p() noexcept(false);              /* Destructor prototype              */\
@@ -60,17 +61,17 @@ namespace P {                          // Start of public module namespace
     x                                  /* Any extra variables? (no comma!)  */
 /* -- Collector header that lets you use a custom container ---------------- */
 #define CTOR_HDR_CUSTCTR(p,m,l,h,s,x,...) \
-  CTOR_HDR_BEGIN(p,m,l,p ## Ctr,p ## It,p ## ItConst,h,p ## Base,h ## Lock,\
-    p ## Helper,s,x,## __VA_ARGS__)
+  CTOR_HDR_BEGIN(p,m,l,p##Ctr,p##It,p##ItConst,h,p##Base,h##Lock,\
+    p##Helper,s,x,##__VA_ARGS__)
 /* -- Collector header that assumes STL list for the container type -------- */
 #define CTOR_HDR_DEFCTR(p,m,h,s,x,...) \
-  CTOR_HDR_CUSTCTR(p,m,StdList,h,s,x,## __VA_ARGS__)
+  CTOR_HDR_CUSTCTR(p,m,StdList,h,s,x,##__VA_ARGS__)
 /* -- Collector footer that creates the global class pointer init in core -- */
 #define CTOR_HDR_END };
 /* -- Build a collector class with base classes and body ------------------- */
 #define CTOR_BEGIN(p,m,s,x,...) \
   CTOR_HDR_DEFCTR(p,m,CLHelper,        /* Insert standard header            */\
-    s,x,## __VA_ARGS__)                /*   with body and custom derives    */\
+    s,x,##__VA_ARGS__)                 /*   with body and custom derives    */\
   CTOR_HDR_END                         /* Insert standard footer             */
 /* -- Build a collector class body with a fully custom body ---------------- */
 #define CTOR_BEGIN_NOBASE(p,m,s,...) \
@@ -86,7 +87,7 @@ namespace P {                          // Start of public module namespace
   CTOR_HDR_END                         /* Insert standard footer             */
 /* -- Thread safe collector with user-defined variables or classes --------- */
 #define CTOR_BEGIN_ASYNC(p,m,h,x,...) \
-  CTOR_HDR_DEFCTR(p,m,CLHelperAsync,h,x,## __VA_ARGS__) \
+  CTOR_HDR_DEFCTR(p,m,CLHelperAsync,h,x,##__VA_ARGS__) \
   CTOR_HDR_END
 /* -- Tailing collector class macro with init and deinit calls ------------- */
 #define CTOR_END_EX(p,                 /* The parent (collector) class type */\
@@ -96,8 +97,8 @@ namespace P {                          // Start of public module namespace
                     d,                 /* Destructor deinitialisation code  */\
                     ...)               /* Constructor initialisers code     */\
   DTORHELPER(p::~p, if(IHDeInitialise()){d;} ) \
-  p::p() : LuaIdent{#m, LMT_ ## e}, __VA_ARGS__ \
-    { c ## p=this; IHInitialise(); i; }
+  p::p() : GCHelper{this,&c##p}, LuaIdent{#m,LMT_##e}, __VA_ARGS__ \
+    { IHInitialise(); i; }
 /* -- Tailing collector class macro that inits a collector helper ---------- */
 #define CTOR_END(p,m,c,i,d,...) \
   CTOR_END_EX(p,m,c,i,d,CLHelper{STR(p)} __VA_ARGS__)
@@ -105,10 +106,10 @@ namespace P {                          // Start of public module namespace
 #define CTOR_END_NOINITS(p,m,c) CTOR_END(p,m,c,,,)
 /* -- Tailing async collector class macro with init and deinit calls ------- */
 #define CTOR_END_ASYNC(p,m,c,e,i,d,...)  /* 'e' is the EvtMain event id     */\
-  CTOR_END_EX(p,m,c,i,d,CLHelperAsync{STR(p), EMC_MP_ ## e} __VA_ARGS__);
+  CTOR_END_EX(p,m,c,i,d,CLHelperAsync{STR(p), EMC_MP_##e} __VA_ARGS__);
 /* -- Tailing async collector class macro with no init nor deinit calls ---- */
 #define CTOR_END_ASYNC_NOFUNCS(p,m,c,e,...) \
-  CTOR_END_ASYNC(p,m,c,e,,,,## __VA_ARGS__)
+  CTOR_END_ASYNC(p,m,c,e,,,,##__VA_ARGS__)
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN_EX(p,           /* The collector type                */\
                           m,           /* The member type                   */\
@@ -120,7 +121,7 @@ namespace P {                          // Start of public module namespace
     __VA_ARGS__                        /* Add extra arguments if needed      */
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN(p,m,s,...) \
-  CTOR_MEM_BEGIN_EX(p,m,s,ICHelper ## m,## __VA_ARGS__)
+  CTOR_MEM_BEGIN_EX(p,m,s,ICHelper##m,##__VA_ARGS__)
 /* -- Same as above but adds a serial counter class ------------------------ */
 #define CTOR_MEM_BEGIN_CSLAVE(p,m,s) \
   CTOR_MEM_BEGIN(p,m,s,,public SerialSlave<>)
@@ -136,8 +137,7 @@ namespace P {                          // Start of public module namespace
     __VA_ARGS__                        /* Add extra arguments if needed      */
 /* -- Start building a member class for a collector ------------------------ */
 #define CTOR_MEM_BEGIN_ASYNC(p,m,s,...) \
-  CTOR_MEM_BEGIN_ASYNC_EX(p,m,s,ICHelper ## m, \
-    AsyncLoader ## m,## __VA_ARGS__)
+  CTOR_MEM_BEGIN_ASYNC_EX(p,m,s,ICHelper##m,AsyncLoader##m,##__VA_ARGS__)
 /* -- Same as above but adds a serial counter class ------------------------ */
 #define CTOR_MEM_BEGIN_ASYNC_CSLAVE(p,m,s) \
   CTOR_MEM_BEGIN_ASYNC(p,m,s,,         /* Use expanded macro                */\
@@ -281,7 +281,7 @@ struct CLHelperUnsafe :                // Members initially private
   IteratorType CLErase(IteratorType &itObj)
     { return this->CLBaseEraseUnsafe(itObj); }
   /* -- Wait for async operations ------------------------------------------ */
-  static void CLWaitAsync() { }
+  static void CLWaitAsync() {}
   /* -- Constructor -------------------------------------------------------- */
   explicit CLHelperUnsafe(
     /* -- Parameters ------------------------------------------------------- */
