@@ -543,20 +543,18 @@ LLFUNC(Grouped, 1,
 // ? - Hash:string = SHA512SSS(Salt:string, Data:string).
 /* -- Macro to create a function that creates a string hash ---------------- */
 #define HASH_FUNC_NOSALT_STR(pf, af, cf, ty) \
-  LLFUNC(pf ## af, 1, \
-    LuaUtilPushVar(lS, pf ## functions::H ## cf(ty{lS, 1}())))
+  LLFUNC(pf##af, 1, LuaUtilPushVar(lS, pf##functions::H##cf(ty{lS, 1}())))
 /* -- Macro to create a function that creates a raw hash ------------------- */
 #define HASH_FUNC_NOSALT_ASSET(pf, af, cf, ty) \
-  LLFUNC(pf ## af, 1, \
-    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(ty{lS, 1}())))
+  LLFUNC(pf##af, 1, AcAsset{lS}().MemSwap(pf##functions::H##cf(ty{lS, 1}())))
 /* -- Macro to create a function that creates a salted string hash --------- */
 #define HASH_FUNC_SALT_STR(pf, af, cf, t1, t2) \
-  LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
-    LuaUtilPushVar(lS, pf ## functions::H ## cf(aKey(), aData())))
+  LLFUNC(pf##af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
+    LuaUtilPushVar(lS, pf##functions::H##cf(aKey(), aData())))
 /* -- Macro to create a function that creates a salted raw hash ------------ */
 #define HASH_FUNC_SALT_ASSET(pf, af, cf, t1, t2) \
-  LLFUNC(pf ## af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
-    AcAsset{lS}().MemSwap(pf ## functions::H ## cf(aKey(), aData())))
+  LLFUNC(pf##af, 1, const t1 aKey{lS, 1}; const t2 aData{lS, 2}; \
+    AcAsset{lS}().MemSwap(pf##functions::H##cf(aKey(), aData())))
 /* -- Macro to create a bunch of functions with different rets/params ------ */
 #define HASH_FUNC_PACK(pf) \
   HASH_FUNC_NOSALT_ASSET(pf, AA, MM, AgAsset) \

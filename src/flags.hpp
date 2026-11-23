@@ -16,7 +16,7 @@ using namespace IStd::P;
 using std::memory_order_relaxed;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Apply the concept directly to the template --------------------------- */
+/* -- Readable flags ------------------------------------------------------- */
 template<typename StorageType> class FlagsConst
 { /* -- Private typdefs ---------------------------------------------------- */
   template<typename Int>struct Extract { using Type = Int; };
@@ -27,10 +27,10 @@ template<typename StorageType> class FlagsConst
   using ValueType  = typename Extract<StorageType>::Type;
   using AtomicType = StdAtomic<ValueType>;
   /* -- Handles ==, !=, <, >, <=, >= --------------------------------------- */
-  constexpr auto operator<=>(const FlagsConst &flOther) const
+  constexpr auto operator<=>(const FlagsConst &flOther) const noexcept
     { return static_cast<ValueType>(*this) <=>
              static_cast<ValueType>(flOther); }
-  constexpr auto operator<=>(ValueType vtOther) const
+  constexpr auto operator<=>(ValueType vtOther) const noexcept
     { return static_cast<ValueType>(*this) <=> vtOther; }
   /* -- Implicit conversion to plain integer ------------------------------- */
   constexpr operator ValueType() const
@@ -40,80 +40,84 @@ template<typename StorageType> class FlagsConst
     else return stoValue;
   }
   /* -- Unary Operators ---------------------------------------------------- */
-  constexpr ValueType operator~() const
+  constexpr ValueType operator~() const noexcept
     { return ~static_cast<ValueType>(*this); }
   /* -- Get a variable and return it as the specified type ----------------- */
   template<typename AnyType = ValueType>
     requires StdIsIntegral<AnyType>
-  constexpr AnyType FlagGet() const { return static_cast<AnyType>(*this); }
+  constexpr AnyType FlagGet() const noexcept
+    { return static_cast<AnyType>(*this); }
   /* -- Is bits lesser than specified value? ------------------------------- */
-  constexpr bool FlagIsLesser(const ValueType vtValue) const
-    { return *this < vtValue; }
+  constexpr bool FlagIsLesser(const ValueType vtValue)
+    const noexcept { return *this < vtValue; }
   /* -- Is bits lesser or equal to specified value? ------------------------ */
-  constexpr bool FlagIsLesserEqual(const ValueType vtValue) const
-    { return *this <= vtValue; }
+  constexpr bool FlagIsLesserEqual(const ValueType vtValue)
+    const noexcept { return *this <= vtValue; }
   /* -- Is bits greater to specified value? -------------------------------- */
-  constexpr bool FlagIsGreater(const ValueType vtValue) const
-    { return *this > vtValue; }
+  constexpr bool FlagIsGreater(const ValueType vtValue)
+    const noexcept { return *this > vtValue; }
   /* -- Is bits greater or equal to specified value? ----------------------- */
-  constexpr bool FlagIsGreaterEqual(const ValueType vtValue) const
-    { return *this >= vtValue; }
+  constexpr bool FlagIsGreaterEqual(const ValueType vtValue)
+    const noexcept { return *this >= vtValue; }
   /* -- Are there not any flags set? --------------------------------------- */
-  constexpr bool FlagIsZero() const
+  constexpr bool FlagIsZero() const noexcept
     { return *this == static_cast<ValueType>(0); }
   /* -- Are any flags actually set? ---------------------------------------- */
-  constexpr bool FlagIsNonZero() const { return !FlagIsZero(); }
+  constexpr bool FlagIsNonZero() const noexcept
+    { return !FlagIsZero(); }
   /* -- Return result of an & operation ------------------------------------ */
-  constexpr ValueType FlagAnd(const ValueType vtValue) const
+  constexpr ValueType FlagAnd(const ValueType vtValue) const noexcept
     { return (*this & vtValue); }
   /* -- Return result of an & operation with inverted source flags --------- */
-  constexpr ValueType FlagAndInverted(const ValueType vtValue) const
+  constexpr ValueType FlagAndInverted(const ValueType vtValue) const noexcept
     { return (~*this & vtValue); }
   /* -- Is flag set with specified value? ---------------------------------- */
-  constexpr bool FlagIsSet(const ValueType vtValue) const
+  constexpr bool FlagIsSet(const ValueType vtValue) const noexcept
     { return FlagAnd(vtValue) == vtValue; }
   /* -- Is any flag set with specified value? ------------------------------ */
-  constexpr bool FlagIsAnyOfSet(const ValueType vtValue) const
+  constexpr bool FlagIsAnyOfSet(const ValueType vtValue) const noexcept
     { return FlagAnd(vtValue) != 0; }
   /* -- Is bit clear of specified value? ----------------------------------- */
-  constexpr bool FlagIsClear(const ValueType vtValue) const
+  constexpr bool FlagIsClear(const ValueType vtValue) const noexcept
     { return FlagAndInverted(vtValue) == vtValue; }
   /* -- Is bit clear of specified value? ----------------------------------- */
-  constexpr bool FlagIsAnyOfClear(const ValueType vtValue) const
+  constexpr bool FlagIsAnyOfClear(const ValueType vtValue) const noexcept
     { return FlagAndInverted(vtValue) != 0; }
   /* -- Is flag set with specified value and clear with another? ----------- */
   constexpr bool FlagIsSetAndClear(const ValueType vtSet,
-    const ValueType vtClear) const
+    const ValueType vtClear) const noexcept
   { return FlagIsSet(vtSet) && FlagIsClear(vtClear); }
   /* -- Flags are not masked in specified other flags? --------------------- */
-  constexpr bool FlagIsNotInMask(const ValueType vtValue) const
+  constexpr bool FlagIsNotInMask(const ValueType vtValue) const noexcept
     { return *this & ~vtValue; }
   /* -- Flags are masked in specified other flags? ------------------------- */
-  constexpr bool FlagIsInMask(const ValueType vtValue) const
+  constexpr bool FlagIsInMask(const ValueType vtValue) const noexcept
     { return !FlagIsNotInMask(vtValue); }
   /* -- Is bits set? ------------------------------------------------------- */
   constexpr bool FlagIsEqualToBool(const ValueType vtValue,
-    const bool bState) const
+    const bool bState) const noexcept
   { return FlagIsSet(vtValue) == bState; }
   /* -- Is bits not set? --------------------------------------------------- */
   constexpr bool FlagIsNotEqualToBool(const ValueType vtValue,
-    const bool bState) const
+    const bool bState) const noexcept
   { return FlagIsSet(vtValue) != bState; }
   /* -- Return one variable or another if set ------------------------------ */
   template<typename AnyType>
     constexpr const AnyType FlagIsSetTwo(const ValueType vtValue,
-      const AnyType atSet, const AnyType atClear) const
+      const AnyType atSet, const AnyType atClear) const noexcept
   { return FlagIsSet(vtValue) ? atSet : atClear; }
   /* -- Constructor to initialise another FlagsConst struct ---------------- */
-  constexpr explicit FlagsConst(StorageType &stoV) : stoValue(stoV) {}
+  constexpr explicit FlagsConst(
+    StorageType &stoV) noexcept :  // cppcheck-suppress constParameterReference
+      stoValue(stoV) {}            // ...errors if I use const... smh!
   /* -- Constructor to initialise from an integer (if storage not atomic) -- */
-  constexpr explicit FlagsConst(ValueType vtValue = 0)
+  constexpr explicit FlagsConst(ValueType vtValue = 0) noexcept
     requires (!StdIsSame<StorageType, AtomicType>) : stoValue(vtValue) {}
   /* -- Constructor to initialise from an integer (if storage is atomic) --- */
-  constexpr explicit FlagsConst(ValueType vtValue)
+  constexpr explicit FlagsConst(ValueType vtValue) noexcept
     requires (StdIsSame<StorageType, AtomicType>)
   { stoValue.store(vtValue, memory_order_relaxed); }
-};/* ----------------------------------------------------------------------- */
+};/* -- Writable flags ----------------------------------------------------- */
 template<typename StorageType>
   class Flags : public FlagsConst<StorageType>
 { /* -- Public typedefs -------------------------------------------- */ public:
@@ -123,7 +127,7 @@ template<typename StorageType>
   /* -- Inherit constructors ----------------------------------------------- */
   using BaseType::BaseType;
   /* -- Assignment operator ------------------------------------------------ */
-  constexpr Flags& operator=(ValueType vtValue)
+  constexpr Flags& operator=(ValueType vtValue) noexcept
   { // If is atomic type, set and return the value in the atomic or the integer
     if constexpr(StdIsSame<StorageType, AtomicType>)
       this->stoValue.store(vtValue, memory_order_relaxed);
@@ -144,33 +148,39 @@ template<typename StorageType>
   COMOPER(^=, fetch_xor)
 #undef COMOPER
   /* -- Swap function ------------------------------------------------------ */
-  constexpr void FlagSwap(Flags &flOther)
+  constexpr void FlagSwap(Flags &flOther) noexcept
   { // Read both values first
     const ValueType vtTemp = static_cast<ValueType>(flOther);
     flOther = *this;
     *this = vtTemp;
   }
   /* -- Set bits ----------------------------------------------------------- */
-  constexpr void FlagSet(const ValueType vtOther) { *this |= vtOther; }
+  constexpr void FlagSet(const ValueType vtOther) noexcept
+    { *this |= vtOther; }
   /* -- Set all bits ------------------------------------------------------- */
-  constexpr void FlagReset(const ValueType vtOther = 0) { *this = vtOther; }
+  constexpr void FlagReset(const ValueType vtOther = 0) noexcept
+    { *this = vtOther; }
   /* -- Not specified bits ------------------------------------------------- */
-  constexpr void FlagNot(const ValueType vtValue) { *this = ~vtValue; }
+  constexpr void FlagNot(const ValueType vtValue) noexcept
+    { *this = ~vtValue; }
   /* -- Mask bits ---------------------------------------------------------- */
-  constexpr void FlagMask(const ValueType vtValue) { *this &= vtValue; }
+  constexpr void FlagMask(const ValueType vtValue) noexcept
+    { *this &= vtValue; }
   /* -- Toggle specified bits ---------------------------------------------- */
-  constexpr void FlagToggle(const ValueType vtValue) { *this ^= vtValue; }
+  constexpr void FlagToggle(const ValueType vtValue) noexcept
+    { *this ^= vtValue; }
   /* -- Clear specified bits ----------------------------------------------- */
-  constexpr void FlagClear(const ValueType vtValue) { *this &= ~vtValue; }
+  constexpr void FlagClear(const ValueType vtValue) noexcept
+    { *this &= ~vtValue; }
   /* -- Add or clear bits -------------------------------------------------- */
   constexpr void FlagSetOrClear(const ValueType vtValue, const bool bCondition)
-    { if(bCondition) FlagSet(vtValue); else FlagClear(vtValue); }
+    noexcept { if(bCondition) FlagSet(vtValue); else FlagClear(vtValue); }
   /* -- Add and clear bits from specified enum ----------------------------- */
   constexpr void FlagSetAndClear(const ValueType vtSet,
-    const ValueType vtClear) { FlagSet(vtSet); FlagClear(vtClear); }
+    const ValueType vtClear) noexcept { FlagSet(vtSet); FlagClear(vtClear); }
   /* -- Clear bits and add from specified enum ----------------------------- */
   constexpr void FlagClearAndSet(const ValueType vtClear,
-    const ValueType vtSet) { FlagClear(vtClear); FlagSet(vtSet); }
+    const ValueType vtSet) noexcept { FlagClear(vtClear); FlagSet(vtSet); }
 };/* ----------------------------------------------------------------------- */
 template<typename IntType>
   requires StdIsIntegral<IntType>
@@ -179,21 +189,19 @@ struct Flag
   using ValueType    = IntType;
   using UnsignedType = StdMakeUnsigned<IntType>;
   /* -- Number of bits in the specified IntTYpe ---------------------------- */
-  static constexpr size_t stWidth = StdLimits<UnsignedType>::digits;
+  constexpr static size_t stWidth = StdLimits<UnsignedType>::digits;
   /* -- Contains the integral value of each bit ---------------------------- */
   StdArray<IntType, stWidth + 1> aFlags{};
-  /* -- Constructor that bills 'aFlags' ------------------------------------ */
+  /* -- Constructor that fills 'aFlags' ------------------------------------ */
   consteval Flag() noexcept
-  { // No flags (zero)
+  { // Set no-flags and then fill in the rest
     aFlags[0] = IntType{0};
-    // Fill rest of flags
     for(size_t stBit = 1; stBit <= stWidth; ++stBit)
-      { aFlags[stBit] = static_cast<IntType>(UnsignedType{1} << (stBit - 1)); }
+      aFlags[stBit] = static_cast<IntType>(UnsignedType(1) << (stBit - 1));
   }
   /* -- Access the bit integer value with this array bounds access func ---- */
-  [[nodiscard]]constexpr IntType operator[](const size_t stIndex)
-    const noexcept
-  { return stIndex < aFlags.size() ? aFlags[stIndex] : IntType{0}; }
+  constexpr IntType operator[](const size_t stIndex) const noexcept
+    { return stIndex < aFlags.size() ? aFlags[stIndex] : IntType{0}; }
 };
 /* -- Flags helper macro --------------------------------------------------- */
 #define BUILD_FLAGS_EX(t, s, n, ...) \

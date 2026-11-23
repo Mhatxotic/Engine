@@ -127,63 +127,66 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
 #include "fontglph.hpp"                // Include glyph loading members inline
 #include "fontblit.hpp"                // Include glyph blitting members inline
   /* -- Recalculate line spacing ------------------------------------------- */
-  GLfloat GetLineSpacingHeight() const { return glfLSpacingHeight; }
-  void UpdateHeightPlusLineSpacing()
-    { glfLSpacingHeight = GetLineSpacing() + gldfScale.DimGetHeight(); }
+  GLfloat FontGetLineSpacingHeight() const { return glfLSpacingHeight; }
+  void FontUpdateHeightPlusLineSpacing()
+    { glfLSpacingHeight = FontGetLineSpacing() + gldfScale.DimGetHeight(); }
   /* -- Update character spacing of the font ------------------------------- */
-  GLfloat GetCharSpacingScale() const { return glfCSpacingScale; }
-  void UpdateCharSpacingTimesScale()
-    { glfCSpacingScale = GetCharSpacing() * glfScale; }
+  GLfloat FontGetCharSpacingScale() const { return glfCSpacingScale; }
+  void FontUpdateCharSpacingTimesScale()
+    { glfCSpacingScale = FontGetCharSpacing() * glfScale; }
   /* -- Return text height plus line spacing ------------------------------- */
-  void UpdateGlyphPaddingTimesScale() { glfGPadScaled = glfGPad * glfScale; }
+  void FontUpdateGlyphPaddingTimesScale()
+    { glfGPadScaled = glfGPad * glfScale; }
   /* -- Set glyph size --------------------------------------------- */ public:
-  void SetGlyphSize(const GLfloat glfSize)
-    { glfGlyphSize = glfSize; UpdateGlyphPaddingTimesScale(); }
+  void FontSetGlyphSize(const GLfloat glfSize)
+    { glfGlyphSize = glfSize; FontUpdateGlyphPaddingTimesScale(); }
   /* -- Get character count ------------------------------------------------ */
-  size_t GetCharCount() const { return gvData.size() / stMultiplier; }
+  size_t FontGetCharCount() const { return gvData.size() / stMultiplier; }
   /* -- Get character scale ------------------------------------------------ */
-  GLfloat GetCharScale() const { return glfScale; }
+  GLfloat FontGetCharScale() const { return glfScale; }
   /* -- Get bin occupancy -------------------------------------------------- */
-  double GetTexOccupancy() const { return ipData.Occupancy(); }
+  double FontGetTexOccupancy() const { return ipData.Occupancy(); }
   /* -- Get below baseline height of specified character ------------------- */
-  GLfloat GetBaselineBelow(const UtfCodepoint utcChar)
+  GLfloat FontGetBaselineBelow(const UtfCodepoint utcChar)
   { // Now get character info and return data
-    const Glyph &gRef = gvData[CheckGlyph(utcChar)];
+    const Glyph &gRef = gvData[FontCheckGlyph(utcChar)];
     return (gRef.CoordsGetY2() - gRef.DimGetHeight()) * glfScale;
   }
   /* -- Get/set line spacing ----------------------------------------------- */
-  GLfloat GetLineSpacing() const { return glfLSpacing; }
-  void SetLineSpacing(const GLfloat glfNLSpacing)
-    { glfLSpacing = glfNLSpacing; UpdateHeightPlusLineSpacing(); }
+  GLfloat FontGetLineSpacing() const { return glfLSpacing; }
+  void FontSetLineSpacing(const GLfloat glfNLSpacing)
+    { glfLSpacing = glfNLSpacing; FontUpdateHeightPlusLineSpacing(); }
   /* -- Set new glyph Y padding and the new scaling value ------------------ */
-  void SetGlyphPadding(const GLfloat glfNGPad)
-    { glfGPad = glfNGPad; UpdateGlyphPaddingTimesScale(); }
+  void FontSetGlyphPadding(const GLfloat glfNGPad)
+    { glfGPad = glfNGPad; FontUpdateGlyphPaddingTimesScale(); }
   /* -- Set character spacing of the font ---------------------------------- */
-  GLfloat GetCharSpacing() const { return glfCSpacing; }
-  void SetCharSpacing(const GLfloat glfNCSpacing)
-    { glfCSpacing = glfNCSpacing; UpdateCharSpacingTimesScale(); }
+  GLfloat FontGetCharSpacing() const { return glfCSpacing; }
+  void FontSetCharSpacing(const GLfloat glfNCSpacing)
+    { glfCSpacing = glfNCSpacing; FontUpdateCharSpacingTimesScale(); }
   /* -- Set size of the font ----------------------------------------------- */
-  void SetSize(const GLfloat glfNScale)
+  void FontSetSize(const GLfloat glfNScale)
   { // Set scale
     glfScale = UtilClamp(glfNScale, 0.0f, 1024.0f);
     // Update scaled dimensions
-    gldfScale.DimSet(GetTileWidthFloat() * glfScale,
-      GetTileHeightFloat() * glfScale);
+    gldfScale.DimSet(TextureTileGetWidthFloat() * glfScale,
+      TextureTileGetHeightFloat() * glfScale);
     // Update glyph size
-    SetGlyphSize(gldfScale.DimGetHeight());
+    FontSetGlyphSize(gldfScale.DimGetHeight());
     // Update frequently used values
-    UpdateCharSpacingTimesScale();
-    UpdateHeightPlusLineSpacing();
+    FontUpdateCharSpacingTimesScale();
+    FontUpdateHeightPlusLineSpacing();
   }
   /* -- Do initialise specified freetype character range ------------------- */
-  void InitFTCharRange(const UtfCodepoint utcStart, const UtfCodepoint utcEnd)
+  void FontInitFTCharRange(const UtfCodepoint utcStart,
+    const UtfCodepoint utcEnd)
   { // Ignore if not a freetype font.
     if(FtfIsNotLoaded()) return;
     // Log pre-cache progress
     cLog->LogDebugExSafe("Font '$' pre-caching character range $ to $...",
       NameGet(), utcStart, utcEnd);
     // Load the specified character range
-    DoInitFTCharRangeApplyStroker<HandleGlyphFunc::FreeType>(utcStart, utcEnd);
+    FontDoInitFTCharRangeApplyStroker
+      <HandleGlyphFunc::FreeType>(utcStart, utcEnd);
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
     // Log success
@@ -192,16 +195,16 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       NameGet(), utcStart, utcEnd);
   }
   /* -- Do initialise all freetype characters in specified string ---------- */
-  void InitFTCharString(const StdStringView ssvString)
+  void FontInitFTCharString(const StdStringView ssvString)
   { // Ignore if string not valid or font not loaded
     if(ssvString.empty() || FtfIsNotLoaded()) return;
     // Do load string characters
-    DoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(ssvString);
+    FontDoInitFTCharStringApplyStroker<HandleGlyphFunc::FreeType>(ssvString);
     // Check if any textures need reloading
     AtlasCheckReloadTexture();
   }
   /* -- Do initialise an extra freetype font ------------------------------- */
-  void InitFontExtraFtf(Ftf &ftfSrc)
+  void FontInitExtraFtf(Ftf &ftfSrc)
   {  // Show that we're loading the file
     cLog->LogDebugExSafe("Font '$' loading '$' as fallback at index $...",
       NameGet(), ftfSrc.NameGet(), ftflExtras.size());
@@ -213,7 +216,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       NameGet(), ftfSrc.NameGet());
   }
   /* -- Do initialise freetype font ---------------------------------------- */
-  void InitFontFtf(Ftf &ftfSrc, const GLuint gluISize,
+  void FontInitFtf(Ftf &ftfSrc, const GLuint gluISize,
     const GLuint gluNPadding, const OglFilterEnum ofeNFilter,
     const ImageFlagsConst &ifcFlags)
   { // Show that we're loading the file
@@ -224,7 +227,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     if(this != &ftfSrc) FtfSwap(ftfSrc);
     // Initialise load flags
     FlagSet(ifcFlags);
-    SetFontFreeType();
+    ImageDataSetFontFreeType();
     // Outline characters will be stored one after the opaque characters
     // thus doubling the size of the glyph data/texture coord lists. The
     // multiplier is already 1 by default so this just makes it equal 2.
@@ -237,10 +240,11 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     // Set requested font size for opengl
     gldfFont.DimSet(*this);
     // Set default scaled font size and line spacing adjust
-    SetSize(1.0f);
+    FontSetSize(1.0f);
     glfLSpacingHeight = Ftf::DimGetHeight();
     // Update tile size as GLfloat for opengl
-    dglfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
+    dglfTile.DimSet(TextureTileGetWidth<GLfloat>(),
+                    TextureTileGetHeight<GLfloat>());
     // Make enough space for initial tex coords set
     clTiles.resize(1);
     // Show that we've loaded the file
@@ -248,7 +252,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
       NameGet(), gluISize, uPadding, ofeFilter, StdIOSHex, ifcFlags.FlagGet());
   }
   /* -- Init a pre-rendered font directly ---------------------------------- */
-  void InitFontImage(Image &imSrc, const GLuint gluTWidth,
+  void FontInitImage(Image &imSrc, const GLuint gluTWidth,
     const GLuint gluTHeight, const GLuint gluPWidth, const GLuint gluPHeight,
     const OglFilterEnum ofeNFilter, const UtfCodepoint utcCharCount,
     const UtfCodepoint utcCharBegin, const UtfCodepoint utcCharDefault,
@@ -256,7 +260,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   { // Show filename
     cLog->LogDebugExSafe("Font loading bitmap '$'...", imSrc.NameGet());
     // Set Font's role as a Bitmap font.
-    SetFontBitmap();
+    ImageDataSetFontBitmap();
     // Set character ranges as size_t as we do array accesses
     const size_t stCharCount = static_cast<size_t>(utcCharCount),
                  stCharBegin = static_cast<size_t>(utcCharBegin),
@@ -309,7 +313,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     clFirst.reserve(stCharEnd);
     clFirst.resize(stCharBegin);
     // Init texture with custom parameters and generate tileset
-    InitTextureImage(imSrc, gluTWidth, gluTHeight, gluPWidth, gluPHeight,
+    TextureInitImage(imSrc, gluTWidth, gluTHeight, gluPWidth, gluPHeight,
       ofeFilter);
     // Initialise the left uninitialised texcoords with the default character
     const CoordData &cdRef = clFirst[stCharDefault];
@@ -321,19 +325,19 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     StdAdvance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
     // Initialise default font scale and line spacing to height
-    SetSize(1.0f);
+    FontSetSize(1.0f);
     glfLSpacingHeight = fH;
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
       NameGet(), gluTWidth, gluTHeight, ofeFilter);
   }
   /* -- Init a pre-rendered font with manifest ----------------------------- */
-  void InitFontImageManifest(Image &imSrc, const Json &jsDoc)
+  void FontInitImageManifest(Image &imSrc, const Json &jsDoc)
   { // Show filename
     cLog->LogDebugExSafe("Font loading bitmap '$' with manifest '$'...",
       imSrc.NameGet(), jsDoc.NameGet());
     // Set Font's role as a Bitmap font.
-    SetFontBitmap();
+    ImageDataSetFontBitmap();
     // Make sure correct version
     const unsigned uVersionRequired = 1,
                    uVersion = jsDoc.GetInteger("Version");
@@ -422,7 +426,7 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     const unsigned uPX = jsDoc.GetInteger("TileSpacingWidth"),
                    uPY = jsDoc.GetInteger("TileSpacingHeight");
     // Init texture with custom parameters and generate tileset
-    InitTextureImage(imSrc, uTW, uTH, uPX, uPY, ofeFilter);
+    TextureInitImage(imSrc, uTW, uTH, uPX, uPY, ofeFilter);
     // Get the texture coords for the default character
     const CoordData &cdRef = clFirst[utcDefaultChar];
     // Initialise the left uninitialised texcoords with the default character
@@ -434,9 +438,9 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
     StdAdvance(cliItRightBegin, stCharEnd);
     StdFill(par_unseq, cliItRightBegin, clFirst.end(), cdRef);
     // Initialise default font scale, line and letter spacing
-    SetSize(static_cast<GLfloat>(jsDoc.GetNumber("InitialScale")));
-    SetLineSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LineSpacing")));
-    SetCharSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LetterSpacing")));
+    FontSetSize(static_cast<GLfloat>(jsDoc.GetNumber("InitialScale")));
+    FontSetLineSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LineSpacing")));
+    FontSetCharSpacing(static_cast<GLfloat>(jsDoc.GetNumber("LetterSpacing")));
     // Show that we've loaded the file
     cLog->LogInfoExSafe("Font '$' loaded from bitmap (T:$x$;F:$).",
       NameGet(), uTW, uTH, ofeFilter);
@@ -463,7 +467,7 @@ static void FontDeInitTextures()
   if(cFonts->empty()) return;
   // De-init all the font textures and log pre/post deinit
   cLog->LogDebugExSafe("Fonts deinitialising $ objects...", cFonts->size());
-  for(Font*const fCptr : *cFonts) fCptr->DeInit();
+  for(Font*const fCptr : *cFonts) fCptr->TextureDeInit();
   cLog->LogInfoExSafe("Fonts deinitialising $ objects.", cFonts->size());
 }
 /* -- Reload Font Textures ------------------------------------------------- */
@@ -472,7 +476,7 @@ static void FontReInitTextures()
   if(cFonts->empty()) return;
   // Reinit all the font textures and log pre/post init
   cLog->LogDebugExSafe("Fonts reinitialising $ objects...", cFonts->size());
-  for(Font*const fCptr : *cFonts) fCptr->ReloadTexture();
+  for(Font*const fCptr : *cFonts) fCptr->TextureReloadTexture();
   cLog->LogInfoExSafe("Fonts reinitialising $ objects.", cFonts->size());
 }
 /* ------------------------------------------------------------------------- */

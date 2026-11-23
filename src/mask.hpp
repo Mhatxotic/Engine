@@ -247,11 +247,9 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Setup raw image
     const Image imOut{ ssvFile, StdMove(mDst), DimGetWidth<unsigned>(),
       DimGetHeight<unsigned>(), BD_BINARY };
-    // Capture exceptions
-    try
-    { // Save bitmap to PNG
-      imOut.SaveFile(imOut.NameGet(), 0, IFMT_PNG);
-    } // exception occured?
+    // Capture exceptions and save bitmap to PNG
+    try { imOut.ImageSaveFile(imOut.NameGet(), 0, IFMT_PNG); }
+    // exception occured?
     catch(const StdException &)
     { // Close the file and delete it
       DirFileUnlink(imOut.NameGet());
@@ -265,7 +263,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
   { // Set texture name
     NameSet(imC.NameGet());
     // Must have slots
-    if(imC.IsNoSlots())
+    if(imC.ImageDataIsNoSlots())
       XC("No data in image object!", "Name", NameGet());
     // Check dimensions. We're also working with ints for sizes so we have
     // to limit the size to signed int range so check for that too.
@@ -275,12 +273,14 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
         XC("Invalid tile dimensions!",
           "Name", NameGet(), "Width", uTileWidth, "Height", uTileHeight);
     // Get first image slot and show error as we are not reversing this.
-    ImageSlot &bData = imC.GetSlots().front();
+    ImageSlot &bData = imC.ImageDataGetSlots().front();
     // Check bit depth
-    if(imC.GetBitsPerPixel() != 1)
+    if(imC.ImageDataGetBitsPerPixel() != 1)
       XC("Image is not monochrome!",
-        "Name",   NameGet(),            "Width",        bData.DimGetWidth(),
-        "Height", bData.DimGetHeight(), "BitsPerPixel", imC.GetBitsPerPixel());
+        "Name",         NameGet(),
+        "Width",        bData.DimGetWidth(),
+        "Height",       bData.DimGetHeight(),
+        "BitsPerPixel", imC.ImageDataGetBitsPerPixel());
     // Check image dimensions too. Again we're dealing with ints!
     if(!bData.DimIsSet() ||
       UtilIntWillOverflow<int>(bData.DimGetWidth()) ||
@@ -322,7 +322,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Get source buffer
     const unsigned char*const ucpS = bData.MemPtr<unsigned char>();
     // If bitmap is reversed?
-    if(imC.IsReversed())
+    if(imC.ImageDataIsReversed())
     { // Get height and width minus one.
       const size_t stTHeightM1 = stTHeight - 1;
       // Start iterating rows from the bottom
@@ -375,7 +375,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Tell log what we did
     cLog->LogInfoExSafe("Mask created $ ($x$) tiles from a $x$ $ bitmask.",
       size(), stTWidth, stTHeight, stWidth, stHeight,
-      imC.IsReversed() ? "reversed" : "non-reversed");
+      imC.ImageDataIsReversed() ? "reversed" : "non-reversed");
     // Set new size and tile size
     DimSet(static_cast<int>(stTWidth), static_cast<int>(stTHeight));
   }

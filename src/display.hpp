@@ -868,9 +868,10 @@ class Display :                        // Members initially private
       if(cLog->LogHasLevel(LH_DEBUG))
         for(Image &imC : ivIcons)
         { // Get first icon and log data
-          const ImageSlot &imsD = imC.GetSlots().front();
+          const ImageSlot &imsD = imC.ImageDataGetSlots().front();
           cLog->LogNLCDebugExSafe("- $x$x$: $.", imsD.DimGetWidth(),
-            imsD.DimGetHeight(), imC.GetBitsPerPixel(), imC.NameGet());
+            imsD.DimGetHeight(), imC.ImageDataGetBitsPerPixel(),
+            imC.NameGet());
         }
     } // Using console mode
     else cSystem->UpdateIcons();
@@ -901,7 +902,7 @@ class Display :                        // Members initially private
           const Image &imC = ivIcons.emplace_back(Image{ StdString{ ssvName },
             ImageFlagsConst{ IL_REVERSE|IL_TORGB|IL_TO32BPP }});
           // Add to the available images we loaded
-          const ImageSlot &imsD = imC.GetSlots().front();
+          const ImageSlot &imsD = imC.ImageDataGetSlots().front();
           gfwivIcons.push_back({ imsD.DimGetWidth<int>(),
             imsD.DimGetHeight<int>(), imsD.MemPtr<unsigned char>() });
         }
@@ -914,15 +915,15 @@ class Display :                        // Members initially private
         { // Get string and set small icon from the last icon specified
           const Image imC{ StdString{ tsvIcons.back() },
             ImageFlagsConst{ IL_REVERSE|IL_TOBGR } };
-          const ImageSlot &imsD = imC.GetSlots().front();
+          const ImageSlot &imsD = imC.ImageDataGetSlots().front();
           cSystem->SetSmallIcon(imC.NameGet(), imsD.DimGetWidth(),
-            imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
+            imsD.DimGetHeight(), imC.ImageDataGetBitsPerPixel(), imsD);
         } // Set large icon from the first icon specified
         const Image imC{ StdString{ tsvIcons.front() },
           ImageFlagsConst{ IL_REVERSE|IL_TOBGR } };
-        const ImageSlot &imsD = imC.GetSlots().front();
+        const ImageSlot &imsD = imC.ImageDataGetSlots().front();
         cSystem->SetLargeIcon(imC.NameGet(), imsD.DimGetWidth(),
-          imsD.DimGetHeight(), imC.GetBitsPerPixel(), imsD);
+          imsD.DimGetHeight(), imC.ImageDataGetBitsPerPixel(), imsD);
        // Not using windows?
 #else
        // Log that we cannot set icons

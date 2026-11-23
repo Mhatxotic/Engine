@@ -245,7 +245,7 @@ class SysBase                          // Members initially private
     // Write floating point state
 # define XMM(x,e) << \
       D128X("Xmm" << StdIOSSetWidth(2) << StdIOSDec << x << StdIOSHex <<, \
-        Xmm ## x, e)
+        Xmm##x, e)
     osS XMM( 0,ssvSpc)  XMM( 1,ssvCrLf) XMM( 2,ssvSpc)  XMM( 3,ssvCrLf)
         XMM( 4,ssvSpc)  XMM( 5,ssvCrLf) XMM( 6,ssvSpc)  XMM( 7,ssvCrLf)
         XMM( 8,ssvSpc)  XMM( 9,ssvCrLf) XMM(10,ssvSpc)  XMM(11,ssvCrLf)
@@ -587,7 +587,7 @@ class SysBase                          // Members initially private
   void SEHDumpLog(StdOStringStream &osS, const CONTEXT*const cData,
     const StdString &strDialog) try
   { // Get filename
-#define LIFY2(x) L ## x
+#define LIFY2(x) L##x
 #define LIFY(x) LIFY2(x)
     const StdWideString wstrFile{
       SEHGetExecutableFileNameWithoutExtension() +

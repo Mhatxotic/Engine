@@ -71,7 +71,7 @@ using AgGLuintLG = AgIntegerLG<GLuint>;
 LLFUNC(Add, 0,
   const AgFont aFont{lS, 1};
   const AgFtfUnlocked aFtf{lS, 2};
-  aFont().InitFontExtraFtf(aFtf))
+  aFont().FontInitExtraFtf(aFtf))
 /* ========================================================================= */
 // $ Font:Destroy
 // ? Destroys the font and frees all the memory associated with it. The OpenGL
@@ -90,7 +90,7 @@ LLFUNC(Dump, 0,
   const AgFont aFont{lS, 1};
   const AgTextureId aTextureId{lS, 2, aFont};
   const AgFilename aFilename{lS, 3};
-  aFont().Dump(aTextureId, aFilename()))
+  aFont().TextureDump(aTextureId, aFilename()))
 /* ========================================================================= */
 // $ Font:GetHeight
 // < Height:integer=The tile height of the font.
@@ -142,7 +142,7 @@ LLFUNC(IsDestroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cFonts)))
 LLFUNC(LoadChars, 0,
   const AgFont aFont{lS, 1};
   const AgString aString{lS, 2};
-  aFont().InitFTCharString(aString()))
+  aFont().FontInitFTCharString(aString()))
 /* ========================================================================= */
 // $ Font:LoadRange
 // > Start:integer=The starting UNICODE character index.
@@ -155,7 +155,7 @@ LLFUNC(LoadRange, 0,
   const AgFont aFont{lS, 1};
   const AgCodepoint aStart{lS, 2};
   const AgIntegerLGE<UtfCodepoint> aEnd{lS, 3, aStart, 0x110000};
-  aFont().InitFTCharRange(aStart, aEnd))
+  aFont().FontInitFTCharRange(aStart, aEnd))
 /* ========================================================================= */
 // $ Font:Print
 // > X:number=The X screen position of the string.
@@ -168,7 +168,7 @@ LLFUNC(Print, 0,
   const AgGLfloat aX{lS, 2},
                   aY{lS, 3};
   const AgString aString{lS, 4};
-  aFont().Print(aX, aY, aString()))
+  aFont().FontPrint(aX, aY, aString()))
 /* ========================================================================= */
 // $ Font:PrintC
 // > X:number=The X screen position of the string.
@@ -181,7 +181,7 @@ LLFUNC(PrintC, 0,
   const AgGLfloat aX{lS, 2},
                   aY{lS, 3};
   const AgString aString{lS, 4};
-  aFont().PrintC(aX, aY, aString()))
+  aFont().FontPrintC(aX, aY, aString()))
 /* ========================================================================= */
 // $ Font:PrintCT
 // > X:number=The X position of where to start printing the string
@@ -196,7 +196,7 @@ LLFUNC(PrintCT, 0,
                   aY{lS, 3};
   const AgString aString{lS, 4};
   const AgTexture aTexture{lS, 5};
-  aFont().PrintCT(aX, aY, aString(), aTexture))
+  aFont().FontPrintCT(aX, aY, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:PrintM
 // > X:number=The X position of where to draw the string.
@@ -213,7 +213,7 @@ LLFUNC(PrintM, 0,
   const AgGLfloat aScroll{lS, 4};
   const AgPositive aWidth{lS, 5};
   const AgString aString{lS, 6};
-  aFont().PrintM(aX, aY, aScroll, aWidth, aString()))
+  aFont().FontPrintM(aX, aY, aScroll, aWidth, aString()))
 /* ========================================================================= */
 // $ Font:PrintMT
 // > X:number=The X position of where to draw the string.
@@ -233,7 +233,7 @@ LLFUNC(PrintMT, 0,
   const AgPositive aWidth{lS, 5};
   const AgString aString{lS, 6};
   const AgTexture aTexture{lS, 7};
-  aFont().PrintMT(aX, aY, aScroll, aWidth, aString(), aTexture))
+  aFont().FontPrintMT(aX, aY, aScroll, aWidth, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:PrintS
 // > Text:string=The string to simulate printing.
@@ -244,7 +244,7 @@ LLFUNC(PrintMT, 0,
 LLFUNC(PrintS, 1,
   const AgFont aFont{lS, 1};
   const AgString aString{lS, 2};
-  LuaUtilPushVar(lS, aFont().PrintS(aString())))
+  LuaUtilPushVar(lS, aFont().FontPrintS(aString())))
 /* ========================================================================= */
 // $ Font:PrintTS
 // > Text:string=The string to simulate printing.
@@ -257,7 +257,7 @@ LLFUNC(PrintTS, 1,
   const AgFont aFont{lS, 1};
   const AgString aString{lS, 2};
   const AgTexture aTexture{lS, 3};
-  LuaUtilPushVar(lS, aFont().PrintTS(aString(), aTexture)))
+  LuaUtilPushVar(lS, aFont().FontPrintTS(aString(), aTexture)))
 /* ========================================================================= */
 // $ Font:PrintW
 // > X:number=The X position of where to start printing the string
@@ -277,7 +277,7 @@ LLFUNC(PrintW, 1,
   const AgPositive aWidth{lS, 4},
                    aIndent{lS, 5};
   const AgString aString{lS, 6};
-  LuaUtilPushVar(lS, aFont().PrintW(aX, aY, aWidth, aIndent, aString())))
+  LuaUtilPushVar(lS, aFont().FontPrintW(aX, aY, aWidth, aIndent, aString())))
 /* ========================================================================= */
 // $ Font:PrintR
 // > X:number=The X screen position of the string.
@@ -290,7 +290,7 @@ LLFUNC(PrintR, 0,
   const AgGLfloat aX{lS, 2},
                   aY{lS, 3};
   const AgString aString{lS, 4};
-  aFont().PrintR(aX, aY, aString()))
+  aFont().FontPrintR(aX, aY, aString()))
 /* ========================================================================= */
 // $ Font:PrintRT
 // > X:number=The X position of where to start printing the string
@@ -308,7 +308,7 @@ LLFUNC(PrintRT, 0,
                   aY{lS, 3};
   const AgString aString{lS, 4};
   const AgTexture aTexture{lS, 5};
-  aFont().PrintRT(aX, aY, aString(), aTexture))
+  aFont().FontPrintRT(aX, aY, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:PrintT
 // > X:number=The X position of where to start printing the string
@@ -326,7 +326,7 @@ LLFUNC(PrintT, 0,
                   aY{lS, 3};
   const AgString aString{lS, 4};
   const AgTexture aTexture{lS, 5};
-  aFont().PrintT(aX, aY, aString(), aTexture))
+  aFont().FontPrintT(aX, aY, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:PrintU
 // > X:number=The X screen position of the string.
@@ -342,7 +342,7 @@ LLFUNC(PrintU, 0,
   const AgGLfloat aX{lS, 2},
                   aY{lS, 3};
   const AgString aString{lS, 4};
-  aFont().PrintU(aX, aY, aString()))
+  aFont().FontPrintU(aX, aY, aString()))
 /* ========================================================================= */
 // $ Font:PrintUC
 // > X:number=The X screen position of the string.
@@ -358,7 +358,7 @@ LLFUNC(PrintUC, 0,
   const AgGLfloat aX{lS, 2},
                   aY{lS, 3};
   const AgString aString{lS, 4};
-  aFont().PrintUC(aX, aY, aString()))
+  aFont().FontPrintUC(aX, aY, aString()))
 /* ========================================================================= */
 // $ Font:PrintUCT
 // > X:number=The X screen position of the string.
@@ -376,7 +376,7 @@ LLFUNC(PrintUCT, 0,
                   aY{lS, 3};
   const AgString aString{lS, 4};
   const AgTexture aTexture{lS, 5};
-  aFont().PrintUCT(aX, aY, aString(), aTexture))
+  aFont().FontPrintUCT(aX, aY, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:PrintUR
 // > X:number=The X screen position of the string.
@@ -392,7 +392,7 @@ LLFUNC(PrintUR, 0,
   const AgGLfloat aX{lS, 2},
                   aY{lS, 3};
   const AgString aString{lS, 4};
-  aFont().PrintUR(aX, aY, aString()))
+  aFont().FontPrintUR(aX, aY, aString()))
 /* ========================================================================= */
 // $ Font:PrintURT
 // > X:number=The X screen position of the string.
@@ -410,7 +410,7 @@ LLFUNC(PrintURT, 0,
                   aY{lS, 3};
   const AgString aString{lS, 4};
   const AgTexture aTexture{lS, 5};
-  aFont().PrintURT(aX, aY, aString(), aTexture))
+  aFont().FontPrintURT(aX, aY, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:PrintUS
 // > String:string=The string to print.
@@ -420,7 +420,7 @@ LLFUNC(PrintURT, 0,
 LLFUNC(PrintUS, 1,
   const AgFont aFont{lS, 1};
   const AgString aString{lS, 2};
-  LuaUtilPushVar(lS, aFont().PrintSU(aString())))
+  LuaUtilPushVar(lS, aFont().FontPrintSU(aString())))
 /* ========================================================================= */
 // $ Font:PrintWS
 // > WrapX:number=The X position to wrap the text at.
@@ -434,7 +434,7 @@ LLFUNC(PrintWS, 1,
   const AgPositive aWidth{lS, 2},
                    aIndent{lS, 3};
   const AgString aString{lS, 4};
-  LuaUtilPushVar(lS, aFont().PrintWS(aWidth, aIndent, aString())))
+  LuaUtilPushVar(lS, aFont().FontPrintWS(aWidth, aIndent, aString())))
 /* ========================================================================= */
 // $ Font:PrintWT
 // > X:number=The X position of where to start printing the string
@@ -456,7 +456,7 @@ LLFUNC(PrintWT, 0,
                    aIndent{lS, 5};
   const AgString aString{lS, 6};
   const AgTexture aTexture{lS, 7};
-  aFont().PrintWT(aX, aY, aWidth, aIndent, aString(), aTexture))
+  aFont().FontPrintWT(aX, aY, aWidth, aIndent, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:PrintWTS
 // > Width:number=The maximum width of a line before wrapping to the next.
@@ -474,7 +474,8 @@ LLFUNC(PrintWTS, 1,
                    aIndent{lS, 3};
   const AgString aString{lS, 4};
   const AgTexture aTexture{lS, 5};
-  LuaUtilPushVar(lS, aFont().PrintWTS(aWidth, aIndent, aString(), aTexture)))
+  LuaUtilPushVar(lS,
+    aFont().FontPrintWTS(aWidth, aIndent, aString(), aTexture)))
 /* ========================================================================= */
 // $ Font:PrintWU
 // > X:number=The X screen position of the string.
@@ -494,7 +495,7 @@ LLFUNC(PrintWU, 0,
   const AgPositive aWidth{lS, 4},
                    aIndent{lS, 5};
   const AgString aString{lS, 6};
-  aFont().PrintWU(aX, aY, aWidth, aIndent, aString()))
+  aFont().FontPrintWU(aX, aY, aWidth, aIndent, aString()))
 /* ========================================================================= */
 // $ Font:PrintWUT
 // > X:number=The X position of where to start printing the string
@@ -516,7 +517,7 @@ LLFUNC(PrintWUT, 0,
                    aIndent{lS, 5};
   const AgString aString{lS, 6};
   const AgTexture aTexture{lS, 7};
-  aFont().PrintWUT(aX, aY, aWidth, aIndent, aString(), aTexture))
+  aFont().FontPrintWUT(aX, aY, aWidth, aIndent, aString(), aTexture))
 /* ========================================================================= */
 // $ Font:SetCA
 // > Alpha:number=The transparency of the texture (0-1).
@@ -636,7 +637,7 @@ LLFUNC(SetCORGBAI, 0,
 LLFUNC(SetGPad, 0,
   const AgFont aFont{lS, 1};
   const AgGLfloat aPadding{lS, 2};
-  aFont().SetGlyphPadding(aPadding))
+  aFont().FontSetGlyphPadding(aPadding))
 /* ========================================================================= */
 // $ Font:SetGSize
 // > Scale:number=The new scale of the font glyphs.
@@ -645,7 +646,7 @@ LLFUNC(SetGPad, 0,
 LLFUNC(SetGSize, 0,
   const AgFont aFont{lS, 1};
   const AgPositive aScale{lS, 2};
-  aFont().SetGlyphSize(aScale))
+  aFont().FontSetGlyphSize(aScale))
 /* ========================================================================= */
 // $ Font:SetLSpacing
 // > Adjust:number=The new line spacing adjustment
@@ -654,7 +655,7 @@ LLFUNC(SetGSize, 0,
 LLFUNC(SetLSpacing, 0,
   const AgFont aFont{lS, 1};
   const AgGLfloat aSpacing{lS, 2};
-  aFont().SetLineSpacing(aSpacing))
+  aFont().FontSetLineSpacing(aSpacing))
 /* ========================================================================= */
 // $ Font:SetCR
 // > Red:number=The colour intensity of the texture's red component (0-1).
@@ -713,7 +714,7 @@ LLFUNC(SetCRGBAI, 0,
 LLFUNC(SetSize, 0,
   const AgFont aFont{lS, 1};
   const AgPositive aScale{lS, 2};
-  aFont().SetSize(aScale))
+  aFont().FontSetSize(aScale))
 /* ========================================================================= */
 // $ Font:SetSpacing
 // > Adjust:number=The new character spacing adjustment
@@ -722,7 +723,7 @@ LLFUNC(SetSize, 0,
 LLFUNC(SetSpacing, 0,
   const AgFont aFont{lS, 1};
   const AgGLfloat aSpacing{lS, 2};
-  aFont().SetCharSpacing(aSpacing))
+  aFont().FontSetCharSpacing(aSpacing))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Font:* methods structure                                            ## **
@@ -778,7 +779,7 @@ LLFUNC(Ftf, 1,
                    aPadding{lS, 3, 0, 16};
   const AgFilterId aFilterId{lS, 4};
   const AgFontFlags aFlags{lS, 5};
-  AcFont{lS}().InitFontFtf(aFtf, aSize, aPadding, aFilterId, aFlags))
+  AcFont{lS}().FontInitFtf(aFtf, aSize, aPadding, aFilterId, aFlags))
 /* ========================================================================= */
 // $ Font.GetClasses
 // < Count:integer=Total number of fonts created.
@@ -812,7 +813,7 @@ LLFUNC(Image, 1,
   const AgIntegerLG<UtfCodepoint> aCharDef{lS, 9, aCharBegin(),
     aCharBegin() + aCharCount()};
   const AgNumberVector<GLfloat> aWidths{lS, 10};
-  AcFont{lS}().InitFontImage(aImage, aTileWidth(), aTileHeight(),
+  AcFont{lS}().FontInitImage(aImage, aTileWidth(), aTileHeight(),
     aPaddingWidth(), aPaddingHeight(), aFilterId(), aCharCount(), aCharBegin(),
     aCharDef(),
     aWidths))
@@ -838,7 +839,7 @@ LLFUNC(Image, 1,
 LLFUNC(Manifest, 1,
   const AgImageUnlocked aImage{lS, 1};
   const AgJson aJson{lS, 2};
-  AcFont{lS}().InitFontImageManifest(aImage, aJson))
+  AcFont{lS}().FontInitImageManifest(aImage, aJson))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Font.* non-member functions structure                               ## **

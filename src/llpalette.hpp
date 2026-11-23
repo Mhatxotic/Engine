@@ -48,7 +48,7 @@ using AgSSizeTLEG = AgIntegerLEG<ssize_t>;
 // $ Palette:Commit
 // ? Use this function to commit the new palette to the shader.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Commit, 0, AgPalette{lS, 1}().Commit())
+LLFUNC(Commit, 0, AgPalette{lS, 1}().PaletteCommit())
 /* ========================================================================= */
 // $ Palette:Fill
 // > Id:integer=Palette entry to modify from (0-255).
@@ -67,7 +67,7 @@ LLFUNC(Fill, 0,
                   aGreen{lS, 5},
                   aBlue{lS, 6},
                   aAlpha{lS, 7};
-  aPalette().Fill(aColourId, aCount, aRed, aGreen, aBlue, aAlpha))
+  aPalette().PaletteFill(aColourId, aCount, aRed, aGreen, aBlue, aAlpha))
 /* ========================================================================= */
 // $ Palette:Copy
 // > Count:integer=The number of values to copy.
@@ -83,7 +83,8 @@ LLFUNC(Copy, 0,
   const AgSizeTLG aDstIndex{lS, 3, 0, stMaxEnd};
   const AgPalette aPaletteSource{lS, 4};
   const AgSizeTLG aSrcIndex{lS, 5, 0, stMaxEnd};
-  aPaletteDestination().Copy(aDstIndex, aPaletteSource, aSrcIndex, aCount))
+  aPaletteDestination().PaletteCopy(aDstIndex,
+    aPaletteSource, aSrcIndex, aCount))
 /* ========================================================================= */
 // $ Palette:Destroy
 // ? Destroys the palette and frees the memory associated with it. This does
@@ -99,7 +100,7 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroy<Palette>(lS, cPalettes))
 LLFUNC(GetA, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetAlpha(aColourId)))
+  LuaUtilPushVar(lS, aPalette().PaletteGetAlpha(aColourId)))
 /* ========================================================================= */
 // $ Palette:GetB
 // > Id:integer=Palette entry to modify (0-255).
@@ -109,7 +110,7 @@ LLFUNC(GetA, 1,
 LLFUNC(GetB, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetBlue(aColourId)))
+  LuaUtilPushVar(lS, aPalette().PaletteGetBlue(aColourId)))
 /* ========================================================================= */
 // $ Palette:GetG
 // > Id:integer=Palette entry to modify (0-255).
@@ -119,7 +120,7 @@ LLFUNC(GetB, 1,
 LLFUNC(GetG, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetGreen(aColourId)))
+  LuaUtilPushVar(lS, aPalette().PaletteGetGreen(aColourId)))
 /* ========================================================================= */
 // $ Palette:GetAI
 // > Id:integer=Palette entry to modify (0-255).
@@ -132,7 +133,7 @@ LLFUNC(GetG, 1,
 LLFUNC(GetAI, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetAlphaInt(aColourId)))
+  LuaUtilPushVar(lS, aPalette().PaletteGetAlphaInt(aColourId)))
 /* ========================================================================= */
 // $ Palette:GetBI
 // > Id:integer=Palette entry to modify (0-255).
@@ -145,7 +146,7 @@ LLFUNC(GetAI, 1,
 LLFUNC(GetBI, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetBlueInt(aColourId)));
+  LuaUtilPushVar(lS, aPalette().PaletteGetBlueInt(aColourId)));
 /* ========================================================================= */
 // $ Palette:GetGI
 // > Id:integer=Palette entry to modify (0-255).
@@ -158,7 +159,7 @@ LLFUNC(GetBI, 1,
 LLFUNC(GetGI, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetGreenInt(aColourId)))
+  LuaUtilPushVar(lS, aPalette().PaletteGetGreenInt(aColourId)))
 /* ========================================================================= */
 // $ Palette:GetRI
 // > Id:integer=Palette entry to modify (0-255).
@@ -171,7 +172,7 @@ LLFUNC(GetGI, 1,
 LLFUNC(GetRI, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetRedInt(aColourId)))
+  LuaUtilPushVar(lS, aPalette().PaletteGetRedInt(aColourId)))
 /* ========================================================================= */
 // $ Palette:GetRGBAI
 // > Id:integer=Palette entry to modify (0-255).
@@ -185,7 +186,7 @@ LLFUNC(GetRGBAI, 4,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const auto &fbocData =
-    aPalette().GetSlotConst(aColourId).ColourCast<lua_Integer>();
+    aPalette().PaletteGetSlot(aColourId).ColourCast<lua_Integer>();
   LuaUtilPushVar(lS, fbocData[0], fbocData[1], fbocData[2], fbocData[3]))
 /* ========================================================================= */
 // $ Palette:GetR
@@ -196,7 +197,7 @@ LLFUNC(GetRGBAI, 4,
 LLFUNC(GetR, 1,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  LuaUtilPushVar(lS, aPalette().GetRed(aColourId)))
+  LuaUtilPushVar(lS, aPalette().PaletteGetRed(aColourId)))
 /* ========================================================================= */
 // $ Palette:GetRGBA
 // > Id:integer=Palette entry to modify (0-255).
@@ -209,7 +210,7 @@ LLFUNC(GetR, 1,
 LLFUNC(GetRGBA, 4,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
-  const Colour &fbocData = aPalette().GetSlotConst(aColourId);
+  const Colour &fbocData = aPalette().PaletteGetSlot(aColourId);
   LuaUtilPushVar(lS, fbocData.ColourGetRed(), fbocData.ColourGetGreen(),
             fbocData.ColourGetBlue(), fbocData.ColourGetAlpha()))
 /* ========================================================================= */
@@ -241,7 +242,7 @@ LLFUNC(SetA, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgGLfloat aColour{lS, 3};
-  aPalette().SetAlpha(aColourId, aColour))
+  aPalette().PaletteSetAlpha(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetB
 // > Id:integer=Palette entry to modify (0-255).
@@ -252,7 +253,7 @@ LLFUNC(SetB, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgGLfloat aColour{lS, 3};
-  aPalette().SetBlue(aColourId, aColour))
+  aPalette().PaletteSetBlue(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetG
 // > Id:integer=Palette entry to modify (0-255).
@@ -263,7 +264,7 @@ LLFUNC(SetG, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgGLfloat aColour{lS, 3};
-  aPalette().SetGreen(aColourId, aColour))
+  aPalette().PaletteSetGreen(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetAI
 // > Id:integer=Palette entry to modify (0-255).
@@ -274,7 +275,7 @@ LLFUNC(SetAI, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgUIntLG aColour{lS, 3, 0, 255};
-  aPalette().SetAlphaInt(aColourId, aColour))
+  aPalette().PaletteSetAlphaInt(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetBI
 // > Id:integer=Palette entry to modify (0-255).
@@ -285,7 +286,7 @@ LLFUNC(SetBI, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgUIntLG aColour{lS, 3, 0, 255};
-  aPalette().SetBlueInt(aColourId, aColour))
+  aPalette().PaletteSetBlueInt(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetGI
 // > Id:integer=Palette entry to modify (0-255).
@@ -296,7 +297,7 @@ LLFUNC(SetGI, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgUIntLG aColour{lS, 3, 0, 255};
-  aPalette().SetGreenInt(aColourId, aColour))
+  aPalette().PaletteSetGreenInt(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetRI
 // > Id:integer=Palette entry to modify (0-255).
@@ -307,7 +308,7 @@ LLFUNC(SetRI, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgUIntLG aColour{lS, 3, 0, 255};
-  aPalette().SetRedInt(aColourId, aColour))
+  aPalette().PaletteSetRedInt(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetRGBAI
 // > Id:integer=Palette entry to modify (0-255).
@@ -327,7 +328,7 @@ LLFUNC(SetRGBAI, 0,
                  aGreen{lS, 4, 0, 255},
                  aBlue{lS, 5, 0, 255},
                  aAlpha{lS, 6, 0, 255};
-  aPalette().SetRGBAInt(aColourId, aRed, aGreen, aBlue, aAlpha))
+  aPalette().PaletteSetRGBAInt(aColourId, aRed, aGreen, aBlue, aAlpha))
 /* ========================================================================= */
 // $ Palette:SetR
 // > Id:integer=Palette entry to modify (0-255).
@@ -338,7 +339,7 @@ LLFUNC(SetR, 0,
   const AgPalette aPalette{lS, 1};
   const AgPosition aColourId{lS, 2};
   const AgGLfloat aColour{lS, 3};
-  aPalette().SetRed(aColourId, aColour))
+  aPalette().PaletteSetRed(aColourId, aColour))
 /* ========================================================================= */
 // $ Palette:SetRGBA
 // > Id:integer=Palette entry to modify (0-255).
@@ -355,7 +356,7 @@ LLFUNC(SetRGBA, 0,
                   aGreen{lS, 4},
                   aBlue{lS, 5},
                   aAlpha{lS, 6};
-  aPalette().SetRGBA(aColourId, aRed, aGreen, aBlue, aAlpha))
+  aPalette().PaletteSetRGBA(aColourId, aRed, aGreen, aBlue, aAlpha))
 /* ========================================================================= */
 // $ Palette:Shift
 // > Begin:integer=The starting palette index to shift up to.
@@ -366,10 +367,11 @@ LLFUNC(SetRGBA, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Shift, 0,
   const AgPalette aPalette{lS, 1};
-  const AgSSizeTLG aBegin{lS, 2, 0, aPalette().Size()};
-  const AgSSizeTLGE aEnd{lS, 3, 0, aPalette().Size() - aBegin};
-  const AgSSizeTLEG aAmount{lS, 4, aPalette().SizeN(), aPalette().Size()};
-  aPalette().Shift(aBegin, aEnd, aAmount))
+  const AgSSizeTLG aBegin{lS, 2, 0, aPalette().PaletteSize()};
+  const AgSSizeTLGE aEnd{lS, 3, 0, aPalette().PaletteSize() - aBegin};
+  const AgSSizeTLEG
+    aAmount{lS, 4, aPalette().PaletteSizeN(), aPalette().PaletteSize()};
+  aPalette().PaletteShift(aBegin, aEnd, aAmount))
 /* ========================================================================= */
 // $ Palette:ShiftB
 // > Begin:integer=The starting palette index to shift up to.
@@ -380,10 +382,10 @@ LLFUNC(Shift, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(ShiftB, 0,
   const AgPalette aPalette{lS, 1};
-  const AgSSizeTLGE aBegin{lS, 2, 0, aPalette().Size()},
-                    aEnd{lS, 3, aBegin, aPalette().Size()};
-  const AgSSizeTLG aAmount{lS, 4, 0, aPalette().Size() - aBegin};
-  aPalette().ShiftBck(aBegin, aEnd, aAmount))
+  const AgSSizeTLGE aBegin{lS, 2, 0, aPalette().PaletteSize()},
+                    aEnd{lS, 3, aBegin, aPalette().PaletteSize()};
+  const AgSSizeTLG aAmount{lS, 4, 0, aPalette().PaletteSize() - aBegin};
+  aPalette().PaletteShiftBck(aBegin, aEnd, aAmount))
 /* ========================================================================= */
 // $ Palette:ShiftF
 // > Begin:integer=The starting palette index to shift up to.
@@ -394,10 +396,10 @@ LLFUNC(ShiftB, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(ShiftF, 0,
   const AgPalette aPalette{lS, 1};
-  const AgSSizeTLGE aBegin{lS, 2, 0, aPalette().Size()},
-                    aEnd{lS, 3, aBegin, aPalette().Size()};
-  const AgSSizeTLG aAmount{lS, 4, 0, aPalette().Size() - aBegin};
-  aPalette().ShiftFwd(aBegin, aEnd, aAmount))
+  const AgSSizeTLGE aBegin{lS, 2, 0, aPalette().PaletteSize()},
+                    aEnd{lS, 3, aBegin, aPalette().PaletteSize()};
+  const AgSSizeTLG aAmount{lS, 4, 0, aPalette().PaletteSize() - aBegin};
+  aPalette().PaletteShiftFwd(aBegin, aEnd, aAmount))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Palette:* methods structure                                         ## **
@@ -427,7 +429,7 @@ LLRSEND                                // Palette:* methods end
 /* ------------------------------------------------------------------------- */
 LLFUNC(Create, 1,
   const AgNeString aName{lS, 1};
-  AcPalette{lS}().Init(aName()))
+  AcPalette{lS}().PaletteInit(aName()))
 /* ========================================================================= */
 // $ Palette.Default
 // > Name:string=Reference only user-defined identifier.
@@ -436,7 +438,7 @@ LLFUNC(Create, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(Default, 1,
   const AgNeString aName{lS, 1};
-  AcPalette{lS}().Init(aName(), cPalettes->palDefault))
+  AcPalette{lS}().PaletteInit(aName(), cPalettes->palDefault))
 /* ========================================================================= */
 // $ Palette.GetClasses
 // < Count:integer=Total number of palettes created.
@@ -452,7 +454,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cPalettes->CollectorCount()))
 LLFUNC(Image, 1,
   const AgNeString aName{lS, 1};
   const AgImage aImage{lS, 2};
-  AcPalette{lS}().Init(aName(), aImage))
+  AcPalette{lS}().PaletteInit(aName(), aImage))
 /* ========================================================================= */
 // $ Palette.Palette
 // > Name:string=Reference only user-defined identifier.
@@ -463,7 +465,7 @@ LLFUNC(Image, 1,
 LLFUNC(Palette, 1,
   const AgNeString aName{lS, 1};
   const AgPalette aSourcePalette{lS, 2};
-  AcPalette{lS}().Init(aName(), aSourcePalette))
+  AcPalette{lS}().PaletteInit(aName(), aSourcePalette))
 /* ========================================================================= */
 // $ Palette.Texture
 // > Name:string=Reference only user-defined identifier.
@@ -473,7 +475,7 @@ LLFUNC(Palette, 1,
 LLFUNC(Texture, 1,
   const AgNeString aName{lS, 1};
   const AgTexture aTexture{lS, 2};
-  AcPalette{lS}().Init(aName(), aTexture))
+  AcPalette{lS}().PaletteInit(aName(), aTexture))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Palette.* non-member functions structure                            ## **

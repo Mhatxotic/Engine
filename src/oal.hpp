@@ -25,15 +25,15 @@ using namespace LOal;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
-#define ALEX(EF,F,M,...)  do{ F; EF(M, ## __VA_ARGS__); }while(false) // :(
-#define ALL(F,M,...)      ALEX(cOal->OalLogALError, F, M, ## __VA_ARGS__)
-#define AL(F,M,...)       ALEX(cOal->OalCheckALError, F, M, ## __VA_ARGS__)
-#define ALNF(M,...)       AL(static_cast<void>(0), M, ## __VA_ARGS__)
+#define ALEX(EF,F,M,...)  do{ F; EF(M, ##__VA_ARGS__); }while(false) // :(
+#define ALL(F,M,...)      ALEX(cOal->OalLogALError, F, M, ##__VA_ARGS__)
+#define AL(F,M,...)       ALEX(cOal->OalCheckALError, F, M, ##__VA_ARGS__)
+#define ALNF(M,...)       AL(static_cast<void>(0), M, ##__VA_ARGS__)
 /* -- GL context error checking wrapper macros ----------------------------- */
-#define ALCL(F,M,...)     ALEX(cOal->OalLogALCError, F, M, ## __VA_ARGS__)
-#define ALCLNF(M,...)     ALCL(static_cast<void>(0), M, ## __VA_ARGS__)
-#define ALC(F,M,...)      ALEX(cOal->OalCheckALCError, F, M, ## __VA_ARGS__)
-#define ALCNF(M,...)      ALC(static_cast<void>(0), M, ## __VA_ARGS__)
+#define ALCL(F,M,...)     ALEX(cOal->OalLogALCError, F, M, ##__VA_ARGS__)
+#define ALCLNF(M,...)     ALCL(static_cast<void>(0), M, ##__VA_ARGS__)
+#define ALC(F,M,...)      ALEX(cOal->OalCheckALCError, F, M, ##__VA_ARGS__)
+#define ALCNF(M,...)      ALC(static_cast<void>(0), M, ##__VA_ARGS__)
 /* -- Typedefs ------------------------------------------------------------- */
 using ALUIntVector = StdVector<ALuint>; // A vector of ALuint's
 /* -- Public typedefs ------------------------------------------------------ */
@@ -67,10 +67,10 @@ class Oal :                            // Members initially private
   InitHelper,                          // Initialisation helper
   public OalFlags                      // OpenAL flags
 { /* -- Error macros for use inside the class only ------------------------- */
-#define IAL(F,M,...)  ALEX(OalCheckALError, F, M, ## __VA_ARGS__)
-#define IALNF(M,...)  IAL(static_cast<void>(0), M, ## __VA_ARGS__)
-#define IALC(F,M,...) ALEX(OalCheckALCError, F, M, ## __VA_ARGS__)
-#define IALCNF(M,...) IALC(static_cast<void>(0), M, ## __VA_ARGS__)
+#define IAL(F,M,...)  ALEX(OalCheckALError, F, M, ##__VA_ARGS__)
+#define IALNF(M,...)  IAL(static_cast<void>(0), M, ##__VA_ARGS__)
+#define IALC(F,M,...) ALEX(OalCheckALCError, F, M, ##__VA_ARGS__)
+#define IALCNF(M,...) IALC(static_cast<void>(0), M, ##__VA_ARGS__)
   /* ----------------------------------------------------------------------- */
   using ALenumMap = LookupMap<ALenum>; // A map of ALenum integers
   const ALenumMap  alemOALCodes,       // OpenAL standard error codes

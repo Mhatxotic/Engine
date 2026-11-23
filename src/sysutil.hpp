@@ -294,7 +294,7 @@ static unsigned SysMessage(const StdString &strTitle,
 /* ------------------------------------------------------------------------- */
 struct SysErrorPlugin final
 { /* -- Exception class helper macro for system errors --------------------- */
-#define XCS(r,...) throw Error<SysErrorPlugin>(r, ## __VA_ARGS__)
+#define XCS(r,...) throw Error<SysErrorPlugin>(r,##__VA_ARGS__)
   /* -- Constructor to add system error code ------------------------------- */
   explicit SysErrorPlugin(StdOStringStream &osS)
   { // Get system error code and add system formatted parameter

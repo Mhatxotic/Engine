@@ -169,7 +169,7 @@ static void CodecDecodeAES(const MemConst &mcSrc, Memory &mDest,
 static const char *CodecGetLzmaErrString(const int iCode)
 { // Helpful temporary defines
 #define SZERR "SZ_ERROR_"
-#define CASE(n) case SZ_ERROR_ ## n: return SZERR STR(n)
+#define CASE(n) case SZ_ERROR_##n: return SZERR STR(n)
   // Which code?
   switch(iCode)
   { // Supported codes
@@ -187,7 +187,7 @@ static const char *CodecGetLzmaErrString(const int iCode)
 static const char *CodecGetZLIBErrString(const int iCode)
 { // Helpful temporary defines
 #define ZERR "Z_"
-#define CASE(n) case Z_ ## n: return ZERR STR(n)
+#define CASE(n) case Z_##n: return ZERR STR(n)
   // Check zlib code
   switch(iCode)
   { // Supported codes
@@ -513,23 +513,23 @@ template<class EncPlugin>class CoEncoder :
 ** ######################################################################### **
 ** -- Command helper interface to a class with encoder data ---------------- */
 #define CODEC_HELPER(n,...) namespace CodecHelper { \
-  class n ## Encoder : public EncData { \
-    public: n ## Encoder(const MemConst &dS, Memory &mD, const size_t stU) : \
-      EncData{ CodecEncode ## n(dS, mD, stU, ## __VA_ARGS__, ENCHDR_SIZE) } {}\
+  class n##Encoder : public EncData { \
+    public: n##Encoder(const MemConst &dS, Memory &mD, const size_t stU) : \
+      EncData{ CodecEncode##n(dS, mD, stU, ##__VA_ARGS__, ENCHDR_SIZE) } {}\
   }; \
 };
 /* -- Encoder with an extra memory required intialiser variable ------------ */
 #define CODEC_PLUGINEX(n,is,...) \
-  CODEC_HELPER(n, ## __VA_ARGS__); \
-  class n ## Encoder : public CoEncoder<CodecHelper::n ## Encoder> { \
-    public: explicit n ## Encoder(const MemConst &dS, const size_t stU) : \
-      CoEncoder<CodecHelper::n ## Encoder>{ dS, is, stU } {} };
+  CODEC_HELPER(n, ##__VA_ARGS__); \
+  class n##Encoder : public CoEncoder<CodecHelper::n##Encoder> { \
+    public: explicit n##Encoder(const MemConst &dS, const size_t stU) : \
+      CoEncoder<CodecHelper::n##Encoder>{ dS, is, stU } {} };
 /* -- Encoder without an initialiser variable ------------------------------ */
 #define CODEC_PLUGIN(n,...) \
-  CODEC_HELPER(n, ## __VA_ARGS__); \
-  class n ## Encoder : public CoEncoder<CodecHelper::n ## Encoder> { \
-    public: explicit n ## Encoder(const MemConst &dS, const size_t stU) : \
-      CoEncoder<CodecHelper::n ## Encoder>{ dS, stU } {} };
+  CODEC_HELPER(n, ##__VA_ARGS__); \
+  class n##Encoder : public CoEncoder<CodecHelper::n##Encoder> { \
+    public: explicit n##Encoder(const MemConst &dS, const size_t stU) : \
+      CoEncoder<CodecHelper::n##Encoder>{ dS, stU } {} };
 /* -- The AES + ZLIB combined encoder (already provides init sizes) -------- */
 CODEC_PLUGIN(AESZLIB, cCrypt->pkKey.p.qpkData, cCrypt->pkKey.p.qivData)
 /* -- The AES + LZMA combined encoder (already provides init sizes) -------- */

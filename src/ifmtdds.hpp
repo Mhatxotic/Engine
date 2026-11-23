@@ -112,7 +112,7 @@ class CodecDDS :                       // Members initially private
       if(uFlags & ~DDSD_REQUIRED)
         XC("Header flags required!", "Flags", uFlags, "Mask", DDSD_REQUIRED);
     } // Get and check dimensions
-    if(!idData.SetDimSafe(fmData.FileMapReadVar32LE(),
+    if(!idData.ImageDataSetDimSafe(fmData.FileMapReadVar32LE(),
           fmData.FileMapReadVar32LE()))
       XC("Dimensions invalid!",
          "Width",  idData.DimGetWidth(), "Height", idData.DimGetHeight());
@@ -122,7 +122,7 @@ class CodecDDS :                       // Members initially private
     const unsigned uBPP = static_cast<ByteDepth>(fmData.FileMapReadVar32LE());
     // Get and check mipmap count. Theres still 1 image if this is zero.
     const unsigned uMipMapCount = fmData.FileMapReadVar32LE() + 1;
-    if(uMipMapCount > 1) idData.SetMipmaps();
+    if(uMipMapCount > 1) idData.ImageDataSetMipmaps();
     // Ignore the next 44 bytes. Apps like GIMP can use this space to write
     // whatever they want here, such as 'GIMP-DDS\'.
     fmData.FileMapSeekCur(sizeof(uint32_t) * 11);
@@ -148,15 +148,15 @@ class CodecDDS :                       // Members initially private
     { // Compare pixel format...
       switch(uPFFourCC)
       { // Only compressed texture formats supported right now
-        case FOURCC_DXT1: idData.SetPixelType(TT_DXT1); break;
-        case FOURCC_DXT3: idData.SetPixelType(TT_DXT3); break;
-        case FOURCC_DXT5: idData.SetPixelType(TT_DXT5); break;
+        case FOURCC_DXT1: idData.ImageDataSetPixelType(TT_DXT1); break;
+        case FOURCC_DXT3: idData.ImageDataSetPixelType(TT_DXT3); break;
+        case FOURCC_DXT5: idData.ImageDataSetPixelType(TT_DXT5); break;
         // Unknown compression
         default: XC("Only DXT1, DXT3 or DXT5 FourCC format supported!",
           "Type", uPFFourCC);
       } // All formats are 32-bpp and compressed
-      idData.SetBitsAndBytesPerPixel(BD_RGBA);
-      idData.SetCompressed();
+      idData.ImageDataSetBitsAndBytesPerPixel(BD_RGBA);
+      idData.ImageDataSetCompressed();
     } // Is RGB format?
     else if(uPFFlags & DDPF_RGB)
     { // Has alpha? Then it is RGBA else then it is RGB
@@ -166,15 +166,15 @@ class CodecDDS :                       // Members initially private
         { // RGBA pixels?
           case BD_RGBA:
             // Set 32-bits per pixel
-            idData.SetBitsAndBytesPerPixel(BD_RGBA);
+            idData.ImageDataSetBitsAndBytesPerPixel(BD_RGBA);
             // Pixels are in RGBA order?
             if(uPFRBitMask == 0x000000ff && uPFGBitMask == 0x0000ff00 &&
                uPFBBitMask == 0x00ff0000 && uPFABitMask == 0xff000000)
-              idData.SetPixelType(TT_RGBA);
+              idData.ImageDataSetPixelType(TT_RGBA);
             // Pixels are in BGRA order?
             else if(uPFRBitMask == 0x00ff0000 && uPFGBitMask == 0x0000ff00 &&
                     uPFBBitMask == 0x000000ff && uPFABitMask == 0xff000000)
-              idData.SetPixelType(TT_BGRA);
+              idData.ImageDataSetPixelType(TT_BGRA);
             // Unsupported RGBA order
             else XC("Unsupported RGBA pixel assignments!",
               "RedBitMask",   uPFRBitMask, "GreenBitMask", uPFGBitMask,
@@ -190,8 +190,8 @@ class CodecDDS :                       // Members initially private
                 "RedBitMask",   uPFRBitMask, "GreenBitMask", uPFGBitMask,
                 "BlueBitMask",  uPFBBitMask, "AlphaBitMask", uPFABitMask);
             // Set 32-bits per pixel and LUMINANCE ALPHA pixel type
-            idData.SetBitsAndBytesPerPixel(BD_GRAYALPHA);
-            idData.SetPixelType(TT_GRAYALPHA);
+            idData.ImageDataSetBitsAndBytesPerPixel(BD_GRAYALPHA);
+            idData.ImageDataSetPixelType(TT_GRAYALPHA);
             // DONE
             break;
           // Unsupported?
@@ -205,15 +205,15 @@ class CodecDDS :                       // Members initially private
           XC("Detected RGB but bit-depth not supported!",
             "PixelFormatBitCount", uPFRGBBitCount);
         // Set RGBA bit-depth and byte depth
-        idData.SetBitsAndBytesPerPixel(BD_RGB);
+        idData.ImageDataSetBitsAndBytesPerPixel(BD_RGB);
         // Pixels are in RGB order?
         if(uPFRBitMask == 0x000000ff && uPFGBitMask == 0x0000ff00 &&
            uPFBBitMask == 0x00ff0000 && uPFABitMask == 0x00000000)
-          idData.SetPixelType(TT_RGB);
+          idData.ImageDataSetPixelType(TT_RGB);
         // Pixels are in BGR order?
         else if(uPFRBitMask == 0x00ff0000 && uPFGBitMask == 0x0000ff00 &&
                 uPFBBitMask == 0x000000ff && uPFABitMask == 0x00000000)
-          idData.SetPixelType(TT_BGR);
+          idData.ImageDataSetPixelType(TT_BGR);
         // Unsupported RGB order
         else XC("Unsupported RGB pixel assignments!",
           "RedBitMask",  uPFRBitMask, "GreenBitMask", uPFGBitMask,
@@ -232,14 +232,16 @@ class CodecDDS :                       // Members initially private
           "RedBitMask",   uPFRBitMask, "GreenBitMask", uPFGBitMask,
           "BlueBitMask",  uPFBBitMask, "AlphaBitMask", uPFABitMask);
       // Set gray pixels
-      idData.SetBitsAndBytesPerPixel(BD_GRAY);
-      idData.SetPixelType(TT_GRAY);
+      idData.ImageDataSetBitsAndBytesPerPixel(BD_GRAY);
+      idData.ImageDataSetPixelType(TT_GRAY);
     } // We do not recognise this pixel format
     else XC("Unsupported pixel format!", "PixelFormatFlags", uPFFlags);
     // Check that bit-depth matches
-    if(uBPP && idData.GetBitsPerPixel() != uBPP)
-      XC("Detected bit-depth doesn't match the bit-depth in the header!"
-        "in the image.", "Detected", idData.GetBitsPerPixel(), "File", uBPP);
+    if(uBPP && idData.ImageDataGetBitsPerPixel() != uBPP)
+      XC("Detected bit-depth doesn't match the bit-depth in the header "
+         "in the image.",
+        "Detected", idData.ImageDataGetBitsPerPixel(),
+        "File",     uBPP);
     // Get primary capabilities and if set?
     if(const unsigned uCaps1 = fmData.FileMapReadVar32LE())
     { // Throw if not in range
@@ -267,24 +269,24 @@ class CodecDDS :                       // Members initially private
     if(uPitchOrLinearSize)
     { // Calculate actual memory for each scanline and check that it is same
       const unsigned uScanSize =
-        idData.DimGetWidth()*idData.GetBytesPerPixel();
+        idData.DimGetWidth()*idData.ImageDataGetBytesPerPixel();
       if(uScanSize != uPitchOrLinearSize)
         XC("Scan line size mismatch versus calculated!",
           "Width",      idData.DimGetWidth(),
-          "ByDepth",    idData.GetBytesPerPixel(),
+          "ByDepth",    idData.ImageDataGetBytesPerPixel(),
           "Calculated", uScanSize, "Expected", uPitchOrLinearSize);
     } // Alocate slots as mipmaps
-    idData.ReserveSlots(uMipMapCount);
+    idData.ImageDataReserveSlots(uMipMapCount);
     // DDS's are reversed
-    idData.SetReversed();
+    idData.ImageDataSetReversed();
     // DXT[n]? Compressed bitmaps need a special calculation
-    if(idData.IsCompressed()) for(unsigned
+    if(idData.ImageDataIsCompressed()) for(unsigned
       // Preinitialised variables
-      uBitDiv    = (idData.GetPixelType() == TT_DXT1 ? 8 : 16),
+      uBitDiv    = (idData.ImageDataGetPixelType() == TT_DXT1 ? 8 : 16),
       uMipIndex  = 0,
       uMipWidth  = idData.DimGetWidth(),
       uMipHeight = idData.DimGetHeight(),
-      uMipBPP    = idData.GetBytesPerPixel(),
+      uMipBPP    = idData.ImageDataGetBytesPerPixel(),
       uMipSize   = ((uMipWidth+3)/4)*((uMipHeight+3)/4)*uBitDiv;
       // Conditions
       uMipIndex < uMipMapCount &&
@@ -300,29 +302,29 @@ class CodecDDS :                       // Members initially private
       if(mPixels.MemSize() != uMipSize)
         XC("Read error!", "Expected", uMipSize, "Actual", mPixels.MemSize());
       // Push back a new slot for every new mipmap
-      idData.AddSlot(mPixels, uMipWidth, uMipHeight);
+      idData.ImageDataAddSlot(mPixels, uMipWidth, uMipHeight);
     } // Uncompressed image?
     else for(unsigned
       // Preinitialised variables
-      uMipIndex  = 0,                               // Mipmap index
-      uMipWidth  = idData.DimGetWidth(),            // Mipmap width
-      uMipHeight = idData.DimGetHeight(),           // Mipmap height
-      uMipBPP    = idData.GetBytesPerPixel(),       // Mipmap bytes-per-pixel
-      uMipSize   = uMipWidth*uMipHeight*uMipBPP; // Mipmap size in memory
+      uMipIndex  = 0,                                  // Mipmap index
+      uMipWidth  = idData.DimGetWidth(),               // Mipmap width
+      uMipHeight = idData.DimGetHeight(),              // Mipmap height
+      uMipBPP    = idData.ImageDataGetBytesPerPixel(), // Mipmap bytes pp
+      uMipSize   = uMipWidth*uMipHeight*uMipBPP;       // Mipmap size in memory
       // Conditions
-      uMipIndex < uMipMapCount &&    // Mipmap count not reached and...
-      (uMipWidth || uMipHeight);     // ...width and height is not zero
+      uMipIndex < uMipMapCount &&      // Mipmap count not reached and...
+      (uMipWidth || uMipHeight);       // ...width and height is not zero
       // Pocedures on each loop
-    ++uMipIndex,                      // Increment mipmap index
-      uMipWidth  >>= 1,               // Divide mipmap width by 2
-      uMipHeight >>= 1,               // Divide mipmap height by 2
+    ++uMipIndex,                       // Increment mipmap index
+      uMipWidth  >>= 1,                // Divide mipmap width by 2
+      uMipHeight >>= 1,                // Divide mipmap height by 2
       uMipSize = uMipWidth*uMipHeight*uMipBPP) // New mipmap size
     { // Read uncompressed data from file and show error if not enough data
       Memory mData{ fmData.FileMapReadBlock(uMipSize) };
       if(mData.MemSize() != uMipSize)
         XC("Read error!", "Expected", uMipSize, "Actual", mData.MemSize());
       // Push back a new slot for every new mipmap
-      idData.AddSlot(mData, uMipWidth, uMipHeight);
+      idData.ImageDataAddSlot(mData, uMipWidth, uMipHeight);
     } // Succeeded
     return true;
   }

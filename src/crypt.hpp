@@ -541,7 +541,7 @@ static Memory CryptHMACCall(const EVP_MD*const fFunc, const void*const vpSalt,
 }
 /* -- Hashing functions ---------------------------------------------------- */
 #define DEFINE_HASH_FUNCS(x, s, f) \
-  namespace x ## functions { \
+  namespace x##functions { \
     /* -- Hash raw ptr/size and return raw hash --------------------------- */\
     static Memory HMR(const unsigned char*const ucpIn, const size_t stLen) \
       { Memory mbOut{ s }; \

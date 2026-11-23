@@ -41,9 +41,9 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     // Capture exceptions
     try
     { // Reverse pixels or they will be upside down
-      ReversePixels();
+      ImageReversePixels();
       // Save the image to disk
-      SaveFile(NameGet(), 0, ifFormatId);
+      ImageSaveFile(NameGet(), 0, ifFormatId);
       // Success
       tftReturn = TS_OK;
     } // exception occured?
@@ -53,7 +53,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       // Errored return code
       tftReturn = TS_ERROR;
     } // Free the memory created with the bitmap
-    ResetAllData();
+    ImageDataResetAllData();
     // Return the code specified
     return tftReturn;
   }
@@ -92,7 +92,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       fboRef.NameGet(), NameGet(), fboRef.DimGetWidth(),
       fboRef.DimGetHeight(), bdBPP, ImageGetPixelFormat(ttMode));
     // Setup raw image
-    InitRaw(NameGet(), mBuffer, fboRef.DimGetWidth<unsigned>(),
+    ImageInitRaw(NameGet(), mBuffer, fboRef.DimGetWidth<unsigned>(),
       fboRef.DimGetHeight<unsigned>(), bdBPP);
     // Launch thread to write the screenshot to disk in the background
     tThread.ThreadStart();

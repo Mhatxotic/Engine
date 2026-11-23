@@ -119,7 +119,7 @@ static void ImageSave(const ImageFormat ifId, const StdStringView &ssvFile,
       { // Log that we saved the image successfully and return
         cLog->LogInfoExSafe("Image saved '$' as $<$>! ($x$x$)",
           strFileNX, ilRef.GetExt(), ifId, isData.DimGetWidth(),
-          isData.DimGetHeight(), idData.GetBitsPerPixel());
+          isData.DimGetHeight(), idData.ImageDataGetBitsPerPixel());
         return;
       } // Could not detect format so throw error
       throw StdRunTimeError{ "Failed to save image!" };
@@ -145,7 +145,7 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
     if(ilRef.GetDecoder()(fmData, idData))
       return cLog->LogInfoExSafe("Image loaded '$' directly as $<$>! ($x$x$)",
         fmData.NameGet(), ilRef.GetExt(), ifId, idData.DimGetWidth(),
-        idData.DimGetHeight(), idData.GetBitsPerPixel());
+        idData.DimGetHeight(), idData.ImageDataGetBitsPerPixel());
     // Could not detect format so throw error
     throw StdRunTimeError{ "Unable to load image!" };
   } // Error occured. Error used as title
@@ -169,7 +169,7 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
       if(ilRef.GetDecoder()(fmData, idData))
         return cLog->LogInfoExSafe("Image loaded '$' ($x$x$) as $!",
           fmData.NameGet(), idData.DimGetWidth(), idData.DimGetHeight(),
-          idData.GetBitsPerPixel(), ilRef.GetExt());
+          idData.ImageDataGetBitsPerPixel(), ilRef.GetExt());
     } // Error occured. Error used as title
     catch(const StdException &eReason)
     { // Throw an error with the specified reason
@@ -179,7 +179,7 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
     } // Rewind stream position
     fmData.FileMapRewind();
     // Reset other members to try next filter
-    idData.ResetAllData();
+    idData.ImageDataResetAllData();
   } // Could not detect so throw error
   XC("Unable to determine image format!",
     "Name", fmData.NameGet(), "Size", fmData.MemSize());

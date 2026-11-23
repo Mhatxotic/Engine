@@ -110,10 +110,10 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
           isSlot.MemPtr()),
           "Could not upload uncompressed texture to video ram!",
           "Name",      tTexture.NameGet(), "Index", stSubTexId,
-          "TexId",     tTexture.GetSubName(stSubTexId),
+          "TexId",     tTexture.TextureGetSubName(stSubTexId),
           "Level",     gliMipLevel,        "Width", isSlot.DimGetWidth(),
           "Height",    isSlot.DimGetHeight(),
-          "XCFormat",  ImageGetPixelFormat(tTexture.GetPixelType()),
+          "XCFormat",  ImageGetPixelFormat(tTexture.ImageDataGetPixelType()),
           "NICFormat", ImageGetPixelFormat(ttNICFormat),
           "NXCFormat", ImageGetPixelFormat(ttNXCFormat),
           "Size",      isSlot.MemSize(),   "Data",  isSlot.MemPtr<void>());
@@ -127,21 +127,21 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         const ImageSlot &isSlot)
       { // Upload pre-compressed texture to video ram
         GL(cOgl->OglUploadCompressedTextureTT(gliMipLevel,
-          tTexture.GetPixelType(), isSlot.DimGetWidth<GLsizei>(),
+          tTexture.ImageDataGetPixelType(), isSlot.DimGetWidth<GLsizei>(),
           isSlot.DimGetHeight<GLsizei>(), isSlot.MemSize<GLsizei>(),
           isSlot.MemPtr()),
           "Could not upload compressed texture to video ram!",
           "Name",     tTexture.NameGet(), "Index", stSubTexId,
-          "TexId",    tTexture.GetSubName(stSubTexId),
+          "TexId",    tTexture.TextureGetSubName(stSubTexId),
           "Level",    gliMipLevel,        "Width", isSlot.DimGetWidth(),
           "Height",   isSlot.DimGetHeight(),
-          "XCFormat", ImageGetPixelFormat(tTexture.GetPixelType()),
+          "XCFormat", ImageGetPixelFormat(tTexture.ImageDataGetPixelType()),
           "Size",     isSlot.MemSize(),   "Data",  isSlot.MemPtr<void>());
       }
     };
   };
   /* -- Do create textures ------------------------------------------------- */
-  void CreateTextureHandles(const size_t stCount)
+  void TextureCreateHandles(const size_t stCount)
   { // Resize array to fit texture names
     gluvTexture.resize(stCount);
     // Make OpenGL to generate texture names and throw error if failed
@@ -149,7 +149,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       "Name", NameGet(), "Count", stCount);
   }
   /* -- Generate mipmaps if needed ----------------------------------------- */
-  void ReGenerateMipmaps()
+  void TextureRegenMipmaps()
   { // Only need to generate mipmaps if we're actually using mipmapping
     switch(gliTexMinFilter)
     { // Any of the mipmapping settings? Generate mipmaps
@@ -164,46 +164,46 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
   }
   /* -- Do load texture from image class ----------------------------------- */
   template<class TexCompFtor>
-    void UploadTexture(const size_t stSlots, const ImageSlot &isSlot,
+    void TextureUpload(const size_t stSlots, const ImageSlot &isSlot,
       const TextureType ttNICFormat, const TextureType ttNXCFormat)
   { // Reset previous marked for deletion flag
     FlagClear(TF_DELETE);
     // If no mipmaps in this bitmap?
-    if(IsNotMipmaps())
+    if(ImageDataIsNotMipmaps())
     { // Image does not contain mipmaps?. No mipmaps
       gliMipmaps = 0;
       // Create texture handles
-      CreateTextureHandles(stSlots);
+      TextureCreateHandles(stSlots);
       // For each image slot
       for(size_t stSubTexId = 0; stSubTexId < stSlots; ++stSubTexId)
       { // Get next slot and verify that dimensions are different from slot 0
-        const ImageSlot &isRef = GetSlots()[stSubTexId];
+        const ImageSlot &isRef = ImageDataGetSlots()[stSubTexId];
         if(DimIsNotEqual(isRef))
           XC("Alternating image sizes are not supported!",
             "Name",       NameGet(),      "LastWidth", DimGetWidth(),
             "LastHeight", DimGetHeight(), "ThisWidth", isRef.DimGetWidth(),
             "ThisHeight", isRef.DimGetHeight());
         // Get texture id and bind it
-        const unsigned gluTexId = GetSubName(stSubTexId);
+        const unsigned gluTexId = TextureGetSubName(stSubTexId);
         GL(cOgl->OglBindTexture(gluTexId), "Texture id failed to bind!",
           "Name",    NameGet(), "Index", stSubTexId,
           "Maximum", stSlots,   "TexId", gluTexId);
         // Configure the texture
-        ConfigureTexture(stSubTexId);
+        TextureConfigure(stSubTexId);
         // Load the image
         TexCompFtor(*this, stSubTexId, 0, ttNICFormat, ttNXCFormat, isRef);
         // Automatically generate mipmaps if requested. This has to be done
         // for each uploaded texture
-        ReGenerateMipmaps();
+        TextureRegenMipmaps();
       }
     } // Bitmap has mipmaps?
     else
     { // Record number of mipmaps we have
       gliMipmaps = UtilIntOrMax<GLint>(stSlots);
       // Create only one texture handle as other slots are for mipmaps
-      CreateTextureHandles(1);
+      TextureCreateHandles(1);
       // Get texture id
-      const unsigned gluTexId = GetSubName();
+      const unsigned gluTexId = TextureGetSubName();
       // Bind the texture id
       GL(cOgl->OglBindTexture(gluTexId), "Mipmapped texture failed to bind!",
         "Name", NameGet(), "TexId", gluTexId);
@@ -211,11 +211,11 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       GL(cOgl->OglSetTexParam(GL_TEXTURE_BASE_LEVEL, 0),
         "Failed to set max mipmap base level on texture!",
         "Name", NameGet(), "TexId", gluTexId);
-      GL(cOgl->OglSetTexParam(GL_TEXTURE_MAX_LEVEL, GetMipmaps()),
+      GL(cOgl->OglSetTexParam(GL_TEXTURE_MAX_LEVEL, TextureGetMipmaps()),
         "Failed to set max mipmap max level on texture!",
-        "Name", NameGet(), "TexId", gluTexId, "Count", GetMipmaps());
+        "Name", NameGet(), "TexId", gluTexId, "Count", TextureGetMipmaps());
       // Configure the texture
-      ConfigureTexture(0);
+      TextureConfigure(0);
       // Upload first mipmap
       TexCompFtor(*this, 0, 0, ttNICFormat, ttNXCFormat, isSlot);
       // Done if there more slots to load
@@ -225,7 +225,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       // Load all the other mipmaps
       for(size_t stSubTexId = 1; stSubTexId < stSlots; ++stSubTexId)
       { // Get next slot
-        const ImageSlot &isRef = GetSlots()[stSubTexId];
+        const ImageSlot &isRef = ImageDataGetSlots()[stSubTexId];
         // Make sure size is smaller than the last
         if(isRef.DimGetWidth() >= uLWidth ||
            isRef.DimGetHeight() >= uLHeight)
@@ -243,18 +243,18 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     } // Log progress
     cLog->LogDebugExSafe("Texture '$'[S:$;F:$/$;M:$;D:$x$] uploaded.",
       NameGet(), stSlots, ImageGetPixelFormat(ttNXCFormat),
-      ImageGetPixelFormat(ttNICFormat), GetMipmaps(), isSlot.DimGetWidth(),
-      isSlot.DimGetHeight());
+      ImageGetPixelFormat(ttNICFormat), TextureGetMipmaps(),
+      isSlot.DimGetWidth(), isSlot.DimGetHeight());
   }
   /* -- Return a new texcoord tile converting 2D texture coords to 3D ------ */
-  const CoordData NewTile(const GLfloat glfX1, const GLfloat glfY1,
+  const CoordData TextureTileNew(const GLfloat glfX1, const GLfloat glfY1,
     const GLfloat glfX2, const GLfloat glfY2, const GLfloat glfWidth,
     const GLfloat glfHeight)
   { return { glfWidth, glfHeight, glfX1 / dglfImage.DimGetWidth(),
       1.0f - glfY1 / dglfImage.DimGetHeight(), glfX2 / dglfImage.DimGetWidth(),
       1.0f - glfY2 / dglfImage.DimGetHeight() }; }
   /* -- Set the texture co-ordinates of a tile ----------------------------- */
-  void SetTile(const size_t stSubTexId, const size_t stTileId,
+  void TextureTileSet(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2, const GLfloat glfWidth, const GLfloat glfHeight)
   { // Log the tile we will modify
@@ -264,41 +264,41 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
 #endif
     // Modify the tile
     clTiles[stSubTexId][stTileId] =
-      NewTile(glfX1, glfY1, glfX2, glfY2, glfWidth, glfHeight);
+      TextureTileNew(glfX1, glfY1, glfX2, glfY2, glfWidth, glfHeight);
   }
   /* -- Set the texture co-ordinates of a tile ----------------------------- */
-  void SetTile(const size_t stSubTexId, const size_t stTileId,
+  void TextureTileSet(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2)
-  { SetTile(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2,
+  { TextureTileSet(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2,
       glfX2 - glfX1, glfY2 - glfY1); }
   /* -- Set the texture co-ordinates of a tile that has reversed scanlines - */
-  void SetTileR(const size_t stSubTexId, const size_t stTileId,
+  void TextureTileSetR(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2)
   { const GLfloat glfNY1 = dglfImage.DimGetHeight() - glfY1,
                   glfNY2 = dglfImage.DimGetHeight() - glfY2;
-    SetTile(stSubTexId, stTileId, glfX1, glfNY1,
+    TextureTileSet(stSubTexId, stTileId, glfX1, glfNY1,
       glfX2, glfNY2, glfX2 - glfX1, glfNY1 - glfNY2); }
   /* -- Add a tile with width and height ----------------------------------- */
-  void SetTileWH(const size_t stSubTexId, const size_t stTileId,
+  void TextureTileSetWH(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfWidth,
     const GLfloat glfHeight)
   { const GLfloat glfNX2 = glfX1 + glfWidth,
                   glfNY2 = glfY1 + glfHeight;
-    SetTile(stSubTexId, stTileId, glfX1, glfY1, glfNX2, glfNY2,
+    TextureTileSet(stSubTexId, stTileId, glfX1, glfY1, glfNX2, glfNY2,
       glfNX2 - glfX1, glfNY2 - glfY1); }
   /* -- Add a reversed tile with width and height setting ------------------ */
-  void SetTileRWH(const size_t stSubTexId, const size_t stTileId,
+  void TextureTileSetRWH(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfWidth,
     const GLfloat glfHeight)
   { const GLfloat glfNY1 = dglfImage.DimGetHeight()-glfY1,
                   glfNY2 = glfNY1 + glfHeight,
                   glfNX2 = glfX1 + glfWidth;
-    SetTile(stSubTexId, stTileId, glfX1, glfY1, glfNX2, glfNY2,
+    TextureTileSet(stSubTexId, stTileId, glfX1, glfY1, glfNX2, glfNY2,
       glfNX2 - glfX1, glfNY1 - glfNY2); }
   /* -- Do add a tile with custom width and height setting ----------------- */
-  void AddTile(const size_t stSubTexId, const GLfloat glfX1,
+  void TileAdd(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfX2, const GLfloat glfY2,
     const GLfloat glfWidth, const GLfloat glfHeight)
   { // Get reference tile list
@@ -311,36 +311,36 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
 #endif
     // Add it to the list
     clData.emplace_back(
-      NewTile(glfX1, glfY1, glfX2, glfY2, glfWidth, glfHeight));
+      TextureTileNew(glfX1, glfY1, glfX2, glfY2, glfWidth, glfHeight));
   }
   /* -- Add a tile --------------------------------------------------------- */
-  void AddTile(const size_t stSubTexId, const GLfloat glfX1,
+  void TileAdd(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfX2, const GLfloat glfY2)
-  { AddTile(stSubTexId, glfX1, glfY1, glfX2, glfY2, glfX2 - glfX1,
+  { TileAdd(stSubTexId, glfX1, glfY1, glfX2, glfY2, glfX2 - glfX1,
       glfY2 - glfY1); }
   /* -- Add a reversed tile ------------------------------------------------ */
-  void AddTileR(const size_t stSubTexId, const GLfloat glfX1,
+  void TileAddR(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfX2, const GLfloat glfY2)
   { const GLfloat glfNY1 = dglfImage.DimGetHeight() - glfY1,
                   glfNY2 = dglfImage.DimGetHeight() - glfY2;
-    AddTile(stSubTexId, glfX1, glfNY1, glfX2, glfNY2,
+    TileAdd(stSubTexId, glfX1, glfNY1, glfX2, glfNY2,
       glfX2 - glfX1, glfNY1 - glfNY2); }
   /* -- Add a tile with width and height ----------------------------------- */
-  void AddTileWH(const size_t stSubTexId, const GLfloat glfX1,
+  void TileAddWH(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfWidth, const GLfloat glfHeight)
   { const GLfloat glfNX2 = glfX1 + glfWidth,
                   glfNY2 = glfY1 + glfHeight;
-    AddTile(stSubTexId, glfX1, glfY1, glfNX2, glfNY2, glfNX2 - glfX1,
+    TileAdd(stSubTexId, glfX1, glfY1, glfNX2, glfNY2, glfNX2 - glfX1,
       glfNY2 - glfY1); }
   /* -- Add a reversed tile with width and height -------------------------- */
-  void AddTileRWH(const size_t stSubTexId, const GLfloat glfX1,
+  void TileAddRWH(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfWidth, const GLfloat glfHeight)
   { const GLfloat glfNY1 = dglfImage.DimGetHeight() - glfY1,
                   glfNY2 = glfNY1 + glfHeight, glfNX2 = glfX1+glfWidth;
-    AddTile(stSubTexId, glfX1, glfY1, glfNX2, glfNY2, glfNX2 - glfX1,
+    TileAdd(stSubTexId, glfX1, glfY1, glfNX2, glfNY2, glfNX2 - glfX1,
       glfNY1 - glfNY2); }
   /* -- Configure the specified texture id --------------------------------- */
-  void ConfigureTexture(const size_t stSubTexId)
+  void TextureConfigure(const size_t stSubTexId)
   { // Start configuring the texture.
     GL(cOgl->OglSetTexParam(GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE),
       "Could not set texture wrapping S!",
@@ -362,11 +362,11 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       "MagFilter",  gliTexMagFilter);
   }
   /* -- Load texture from image class -------------------------------------- */
-  void LoadFromImage()
+  void TextureLoadImage()
   { // Get number of slots in this image and return if zero
-    if(IsNoSlots()) XC("No data in image object!", "Name", NameGet());
+    if(ImageDataIsNoSlots()) XC("No data in image object!", "Name", NameGet());
     // Get first slot
-    const ImageSlot &isSlot = GetSlots().front();
+    const ImageSlot &isSlot = ImageDataGetSlots().front();
     // Copy image dimensions to texture dimensions
     DimSet(isSlot);
     // Set image dimensions as float for opengl
@@ -379,13 +379,16 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         "Name",   NameGet(),             "Width",   isSlot.DimGetWidth(),
         "Height", isSlot.DimGetHeight(), "Maximum", uMaxSize);
     // Lookup internal pixel type chosen and check it
-    const TextureType ttICFormat = ImageBYtoTexType(GetBytesPerPixel());
+    const TextureType ttICFormat =
+      ImageBYtoTexType(ImageDataGetBytesPerPixel());
     if(ttICFormat == TT_NONE)
       XC("Unsupported texture colour type!",
-        "Name",         NameGet(), "BytesPerPixel", GetBytesPerPixel(),
-        "BitsPerPixel", GetBitsPerPixel());
+        "Name",          NameGet(),
+        "BytesPerPixel", ImageDataGetBytesPerPixel(),
+        "BitsPerPixel",  ImageDataGetBitsPerPixel());
     // Get usable slots
-    const size_t stSlots = GetSlotCount() - static_cast<size_t>(IsPalette());
+    const size_t stSlots =
+      ImageDataGetSlotCount() - static_cast<size_t>(ImageDataIsPalette());
     // Calculated internal and external format
     TextureType ttNXCFormat;
     // Because we're using shaders we can trick OpenGL into giving it a
@@ -396,7 +399,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     { // Texture is 8-bpp?
       case TT_GRAY:
         // Is palleted?
-        if(IsPalette())
+        if(ImageDataIsPalette())
         { // Set palette shader
           shpProgram = &cShaderCore->sh2D8Pal;
           // Force no filtering and no mipmapping or we get the wrong colours
@@ -405,27 +408,27 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         } // No palette
         else shpProgram = &cShaderCore->sh2D8;
         // Set requested external format
-        ttNXCFormat = GetPixelType();
+        ttNXCFormat = ImageDataGetPixelType();
         // Break to upload raw pixels
         break;
       // Texture is 16-bpp?
       case TT_GRAYALPHA:
         // Set GL_LUMINANCE_ALPHA decoding shader
         shpProgram = &cShaderCore->sh2D16;
-        ttNXCFormat = GetPixelType();
+        ttNXCFormat = ImageDataGetPixelType();
         // Break to upload raw pixels
         break;
       // Texture is 24 or 32-bpp?
       case TT_RGB: case TT_RGBA:
         // Whats the external format?
-        switch(GetPixelType())
+        switch(ImageDataGetPixelType())
         { // Compressed texture?
           case TT_DXT1: case TT_DXT3: case TT_DXT5:
             // Set compressed texture
-            ttNXCFormat = GetPixelType();
+            ttNXCFormat = ImageDataGetPixelType();
             shpProgram = &cShaderCore->sh2D;
             // Upload as compressed texture
-            UploadTexture<TexCompFtor::DXT>
+            TextureUpload<TexCompFtor::DXT>
               (stSlots, isSlot, ttICFormat, ttNXCFormat);
             // Return because we uploaded compressed pixels
             return;
@@ -447,73 +450,88 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
           case TT_RGB: case TT_RGBA:
             // Use RGB shader. No format change.
             shpProgram = &cShaderCore->sh2D;
-            ttNXCFormat = GetPixelType();
+            ttNXCFormat = ImageDataGetPixelType();
             // Break to upload raw pixels
             break;
           // Unknown external format
           default: XC("External colour type not acceptable!",
-            "Name", NameGet(), "XCFormat", GetPixelType());
+            "Name", NameGet(), "XCFormat", ImageDataGetPixelType());
         } // Done
         break;
       // Unknown internal format
       default: XC("Internal colour type not acceptable!",
         "Name",     NameGet(), "ICFormat", ttICFormat,
-        "XCFormat", GetPixelType());
+        "XCFormat", ImageDataGetPixelType());
     } // The pixel type is raw uniform pixels so upload them
-    UploadTexture<TexCompFtor::RAW>(stSlots, isSlot, ttICFormat, ttNXCFormat);
+    TextureUpload<TexCompFtor::RAW>(stSlots, isSlot, ttICFormat, ttNXCFormat);
   }
   /* -- Return tile dimensions as float ------------------------- */ protected:
-  GLfloat GetTileWidthFloat() const { return dglfTile.DimGetWidth(); }
-  GLfloat GetTileHeightFloat() const { return dglfTile.DimGetHeight(); }
+  GLfloat TextureTileGetWidthFloat() const { return dglfTile.DimGetWidth(); }
+  GLfloat TextureTileGetHeightFloat() const { return dglfTile.DimGetHeight(); }
   /* -- Return padding dimensions ---------------------------------- */ public:
-  GLfloat GetPaddingWidth() const { return dglfPad.DimGetWidth(); }
-  GLfloat GetPaddingHeight() const { return dglfPad.DimGetHeight(); }
+  GLfloat TextureGetPaddingWidth() const { return dglfPad.DimGetWidth(); }
+  GLfloat TextureGetPaddingHeight() const { return dglfPad.DimGetHeight(); }
   /* -- Return tile dimensions --------------------------------------------- */
   template<typename IntType = GLuint>
     requires StdIsArithmatic<IntType>
-  IntType GetTileWidth() const { return dgluTile.DimGetWidth<IntType>(); }
+  IntType TextureTileGetWidth() const
+    { return dgluTile.DimGetWidth<IntType>(); }
   template<typename IntType = GLuint>
     requires StdIsArithmatic<IntType>
-  IntType GetTileHeight() const { return dgluTile.DimGetHeight<IntType>(); }
+  IntType TextureTileGetHeight() const
+    { return dgluTile.DimGetHeight<IntType>(); }
   /* -- Return number of tiles --------------------------------------------- */
-  size_t GetTileCount(const size_t stSubTexId = 0) const
+  size_t TextureTileGetCount(const size_t stSubTexId = 0) const
     { return clTiles[stSubTexId].size(); }
   /* -- Set tile count ----------------------------------------------------- */
-  void SetTileCount(const size_t stCount, const size_t stSubTexId = 0)
+  void TextureTileSetCount(const size_t stCount, const size_t stSubTexId = 0)
     { clTiles[stSubTexId].resize(stCount); }
   /* -- Return the number of mipmaps in the texture ------------------------ */
-  GLint GetMipmaps() const { return gliMipmaps; }
+  GLint TextureGetMipmaps() const { return gliMipmaps; }
   /* -- Return the current texture filter index setting -------------------- */
-  OglFilterEnum GetTexFilter() const { return ofeTexFilter; }
+  OglFilterEnum TextureGetFilter() const { return ofeTexFilter; }
   /* -- Return the OpenGL texture name for the specified sub-textures ------ */
-  GLuint GetSubName(const size_t stSubTexId=0) const
+  GLuint TextureGetSubName(const size_t stSubTexId = 0) const
     { return gluvTexture[stSubTexId]; }
   /* -- Return number of sub-textures -------------------------------------- */
-  size_t GetSubCount() const { return gluvTexture.size(); }
+  size_t TextureGetSubCount() const { return gluvTexture.size(); }
   /* -- Check if texture is initialised ------------------------------------ */
-  bool IsNotInitialised() const { return gluvTexture.empty(); }
-  bool IsInitialised() const { return !IsNotInitialised(); }
+  bool TextureIsNotInitialised() const { return gluvTexture.empty(); }
+  bool TextureIsInitialised() const { return !TextureIsNotInitialised(); }
   /* -- Set a tile based on reversal --------------------------------------- */
-  void SetTileDOR(const size_t stSubTexId, const size_t stTileId,
+  void TextureTileSetDOR(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2)
-      { if(IsReversed())
-          SetTileR(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2);
-        else SetTile(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2); }
+  { // Texture is reversed scanline order? Add reversed triangles
+    if(ImageDataIsReversed())
+      TextureTileSetR(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2);
+    // Texture is correct scanline order? Add forward triangles
+    else TextureTileSet(stSubTexId,
+      stTileId, glfX1, glfY1, glfX2, glfY2);
+  }
   /* -- Set a tile based on reversal with width and height setting --------- */
-  void SetTileDORWH(const size_t stSubTexId, const size_t stTileId,
+  void TextureTileSetDORWH(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfWidth,
     const GLfloat glfHeight)
-  { if(IsReversed())
-      SetTileRWH(stSubTexId, stTileId, glfX1, glfY1, glfWidth, glfHeight);
-    else SetTileWH(stSubTexId, stTileId, glfX1, glfY1, glfWidth, glfHeight); }
+  { // Texture is reversed scanline order? Add reversed triangles
+    if(ImageDataIsReversed())
+      TextureTileSetRWH(stSubTexId,
+        stTileId, glfX1, glfY1, glfWidth, glfHeight);
+    // Texture is correct scanline order? Add forward triangles
+    else TextureTileSetWH(stSubTexId,
+      stTileId, glfX1, glfY1, glfWidth, glfHeight);
+  }
   /* -- Add a tile based on reversal setting ------------------------------- */
-  void AddTileDOR(const size_t stSubTexId, const GLfloat glfX1,
+  void TextureTileAddDOR(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfX2, const GLfloat glfY2)
-  { if(IsReversed()) AddTileR(stSubTexId, glfX1, glfY1, glfX2, glfY2);
-    else AddTile(stSubTexId, glfX1, glfY1, glfX2, glfY2); }
+  { // Texture is reversed scanline order? Add reversed triangles
+    if(ImageDataIsReversed()) TileAddR(stSubTexId, glfX1, glfY1, glfX2, glfY2);
+    // Texture is correct scanline order? Add forward triangles
+    else TileAdd(stSubTexId, glfX1, glfY1, glfX2, glfY2);
+  }
   /* -- Add multiple tile bounds (Reverse func / Forward func) ------------- */
-  size_t AddTileMulti(const GLUIntVector &gluvTiles, auto &&fCbR, auto &&fCbF)
+  size_t TextureTileAddMulti(const GLUIntVector &gluvTiles, auto &&fCbR,
+    auto &&fCbF)
   { // Check for excess elements
     constexpr static size_t stValues = 4;
     const size_t stExcess = gluvTiles.size() % stValues;
@@ -524,7 +542,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     CoordList &clFirst = clTiles.front();
     clFirst.reserve(clFirst.size() + (gluvTiles.size() / stValues));
     // Save position to return
-    const size_t stPosition = GetTileCount();
+    const size_t stPosition = TextureTileGetCount();
     // Shortcut to GLUIntVector const iterator
     using GLUIntVectorItConst = GLUIntVector::const_iterator;
     // Inline function to enumerate the vector of coords and send to callback
@@ -537,7 +555,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
             static_cast<GLfloat>(*(gluvicIt + 2)),
             static_cast<GLfloat>(*(gluvicIt + 3)));
     }; // Are image pixels reversed?
-    if(IsReversed())
+    if(ImageDataIsReversed())
       fFunc([&fCbR](const GLfloat glfX1, const GLfloat glfY1,
                     const GLfloat glfX2, const GLfloat glfY2)
         { fCbR(glfX1, glfY1, glfX2, glfY2); });
@@ -549,117 +567,130 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     return stPosition;
   }
   /* -- Add multiple tile bounds ------------------------------------------- */
-  size_t AddTileDORA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
-    { return AddTileMulti(gluvTiles,
-        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
-          const GLfloat glfX2, const GLfloat glfY2)
-            { AddTileR(stSubTexId, glfX1, glfY1, glfX2, glfY2); },
-        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
-          const GLfloat glfX2, const GLfloat glfY2)
-            { AddTile(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
+  size_t TextureTileAddDORA(const size_t stSubTexId,
+    const GLUIntVector &gluvTiles)
+  { return TextureTileAddMulti(gluvTiles,
+      [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+        const GLfloat glfX2, const GLfloat glfY2)
+          { TileAddR(stSubTexId, glfX1, glfY1, glfX2, glfY2); },
+      [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+        const GLfloat glfX2, const GLfloat glfY2)
+          { TileAdd(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
   /* -- Clear the entire tileset and add the tiles ------------------------- */
-  void SetTileDORA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
-    { clTiles[stSubTexId].clear(); AddTileDORA(stSubTexId, gluvTiles); }
+  void TextureTileSetDORA(const size_t stSubTexId,
+    const GLUIntVector &gluvTiles)
+  { clTiles[stSubTexId].clear(); TextureTileAddDORA(stSubTexId, gluvTiles); }
   /* -- Add a tile with width and height based on reversal ----------------- */
-  void AddTileDORWH(const size_t stSubTexId, const GLfloat glfX1,
+  void TextureTileAddDORWH(const size_t stSubTexId, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfWidth, const GLfloat glfHeight)
-  { if(IsReversed()) AddTileRWH(stSubTexId, glfX1, glfY1, glfWidth, glfHeight);
-    else AddTileWH(stSubTexId, glfX1, glfY1, glfWidth, glfHeight); }
+  { // Texture is reversed scanline order? Add reversed triangles
+    if(ImageDataIsReversed())
+      TileAddRWH(stSubTexId, glfX1, glfY1, glfWidth, glfHeight);
+    // Texture is correct scanline order? Add forward triangles
+    else TileAddWH(stSubTexId, glfX1, glfY1, glfWidth, glfHeight);
+  }
   /* -- Add multiple tile co-ordinates and dimensions ---------------------- */
-  size_t AddTileDORWHA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
-    { return AddTileMulti(gluvTiles,
-        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
-          const GLfloat glfX2, const GLfloat glfY2)
-            { AddTileRWH(stSubTexId, glfX1, glfY1, glfX2, glfY2); },
-        [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
-          const GLfloat glfX2, const GLfloat glfY2)
-            { AddTileWH(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
+  size_t TextureTileAddDORWHA(const size_t stSubTexId,
+    const GLUIntVector &gluvTiles)
+  { return TextureTileAddMulti(gluvTiles,
+      [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+        const GLfloat glfX2, const GLfloat glfY2)
+          { TileAddRWH(stSubTexId, glfX1, glfY1, glfX2, glfY2); },
+      [this, stSubTexId](const GLfloat glfX1, const GLfloat glfY1,
+        const GLfloat glfX2, const GLfloat glfY2)
+          { TileAddWH(stSubTexId, glfX1, glfY1, glfX2, glfY2); }); }
   /* -- Clear the entire tileset and add the tiles ------------------------- */
-  void SetTileDORWHA(const size_t stSubTexId, const GLUIntVector &gluvTiles)
-    { clTiles[stSubTexId].clear(); AddTileDORWHA(stSubTexId, gluvTiles); }
+  void TextureTileSetDORWHA(const size_t stSubTexId,
+    const GLUIntVector &gluvTiles)
+  { clTiles[stSubTexId].clear(); TextureTileAddDORWHA(stSubTexId, gluvTiles); }
   /* -- Blit a triangle ---------------------------------------------------- */
-  void BlitTri(const GLuint gluTexId, const TriTexData &ttdTex,
+  void TextureBlitTri(const GLuint gluTexId, const TriTexData &ttdTex,
     const TriPosData &tpdVert, const TriIntData &tidClr)
   { FboActive()->FboBlit(gluTexId, tpdVert, ttdTex, tidClr, 0, shpProgram); }
   /* -- Blit two triangles that form a square ------------------------------ */
-  void BlitQuad(const GLuint gluTexId, const QuadTexData &qtdVert,
+  void TextureBlitQuad(const GLuint gluTexId, const QuadTexData &qtdVert,
     const QuadPosData &qpdTex, const QuadIntData &qidClr)
   { for(size_t stTriId = 0; stTriId < stTrisPerQuad; ++stTriId)
-      BlitTri(gluTexId, qtdVert[stTriId], qpdTex[stTriId], qidClr[stTriId]); }
+      TextureBlitTri(gluTexId,
+        qtdVert[stTriId], qpdTex[stTriId], qidClr[stTriId]); }
   /* -- Blit with currently stored position, texture and colour ------------ */
-  void Blit(const size_t stSubTexId)
-    { BlitQuad(GetSubName(stSubTexId), FboItemGetTCData(), FboItemGetVData(),
-        FboItemGetCData()); }
+  void TextureBlit(const size_t stSubTexId)
+    { TextureBlitQuad(TextureGetSubName(stSubTexId), FboItemGetTCData(),
+        FboItemGetVData(), FboItemGetCData()); }
   /* -- Blit specified triangle with currently stored position ------------- */
-  void BlitT(const size_t stTriId, const size_t stTexId, const size_t stTileId)
-    { BlitTri(GetSubName(stTexId), clTiles[stTexId][stTileId][stTriId],
-        FboItemGetVData(stTriId), FboItemGetCData(stTriId)); }
+  void TextureBlitT(const size_t stTriId, const size_t stTexId,
+    const size_t stTileId)
+  { TextureBlitTri(TextureGetSubName(stTexId),
+      clTiles[stTexId][stTileId][stTriId], FboItemGetVData(stTriId),
+      FboItemGetCData(stTriId)); }
   /* -- Blit quad with position and stored size ---------------------------- */
-  void BlitLT(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLT(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1)
   { const CoordData &cdTex = clTiles[stSubTexId][stTileId];
-    BlitQuad(GetSubName(stSubTexId), cdTex,
+    TextureBlitQuad(TextureGetSubName(stSubTexId), cdTex,
       FboItemSetAndGetVertex(glfX1, glfY1, glfX1 + cdTex.DimGetWidth(),
         glfY1 + cdTex.DimGetHeight()), FboItemGetCData()); }
   /* -- Blit quad with custom colour (used by font) ------------------------ */
-  void BlitLTRBC(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLTRBC(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2, const QuadIntData &qidClr)
-  { BlitQuad(GetSubName(stSubTexId), clTiles[stSubTexId][stTileId],
+  { TextureBlitQuad(TextureGetSubName(stSubTexId),
+      clTiles[stSubTexId][stTileId],
       FboItemSetAndGetVertex(glfX1, glfY1, glfX2, glfY2), qidClr); }
   /* -- Blit quad with bounds ---------------------------------------------- */
-  void BlitLTRB(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLTRB(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2)
-  { BlitLTRBC(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2,
+  { TextureBlitLTRBC(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2,
       FboItemGetCData()); }
   /* -- Blit quad with coords and dimensions ------------------------------- */
-  void BlitLTWH(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLTWH(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfWidth,
     const GLfloat glfHeight)
-  { BlitLTRB(stSubTexId, stTileId, glfX1, glfY1,
+  { TextureBlitLTRB(stSubTexId, stTileId, glfX1, glfY1,
       glfX1 + glfWidth, glfY1 + glfHeight); }
   /* -- Blit quad with truncated texcoord width and colour ----------------- */
-  void BlitLTRBSC(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLTRBSC(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2, const GLfloat glfLEdge, const GLfloat glfREdge,
     const QuadIntData &qidClr)
-  { BlitQuad(GetSubName(stSubTexId),
+  { TextureBlitQuad(TextureGetSubName(stSubTexId),
       FboItemSetAndGetCoord(clTiles[stSubTexId][stTileId],
         glfLEdge, glfREdge),
       FboItemSetAndGetVertex(glfX1, glfY1, glfX2, glfY2,
         glfLEdge, glfREdge),
       qidClr); }
   /* -- Blit quad with truncated texcoord width ---------------------------- */
-  void BlitLTRBS(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLTRBS(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfX2,
     const GLfloat glfY2, const GLfloat glfLEdge, const GLfloat glfREdge)
-  { BlitLTRBSC(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2,
+  { TextureBlitLTRBSC(stSubTexId, stTileId, glfX1, glfY1, glfX2, glfY2,
       glfLEdge, glfREdge, FboItemGetCData()); }
   /* -- Blit quad with position, stored size and with angle ---------------- */
-  void BlitLTA(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLTA(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfAngle)
   { const CoordData &cdTex = clTiles[stSubTexId][stTileId];
-    BlitQuad(GetSubName(stSubTexId), cdTex,
+    TextureBlitQuad(TextureGetSubName(stSubTexId), cdTex,
       FboItemSetAndGetVertex(glfX1, glfY1, glfX1 + cdTex.DimGetWidth(),
         glfY1 + cdTex.DimGetHeight(), glfAngle), FboItemGetCData()); }
   /* -- Blit quad with coords, dimensions and angle ------------------------ */
-  void BlitLTWHA(const size_t stSubTexId, const size_t stTileId,
+  void TextureBlitLTWHA(const size_t stSubTexId, const size_t stTileId,
     const GLfloat glfX1, const GLfloat glfY1, const GLfloat glfWidth,
     const GLfloat glfHeight, const GLfloat glfAngle)
-  { BlitQuad(GetSubName(stSubTexId), clTiles[stSubTexId][stTileId],
+  { TextureBlitQuad(TextureGetSubName(stSubTexId),
+      clTiles[stSubTexId][stTileId],
       FboItemSetAndGetVertex(glfX1, glfY1, glfX1 + glfWidth, glfY1 + glfHeight,
         glfAngle), FboItemGetCData()); }
   /* -- Blit all quads as full image --------------------------------------- */
-  void BlitMulti(const GLuint gluColumns, const GLfloat glfX1,
+  void TextureBlitMulti(const GLuint gluColumns, const GLfloat glfX1,
     const GLfloat glfY1, const GLfloat glfX2, const GLfloat glfY2)
   { // Calculate perspective width
     const GLfloat
       glfNWidth = (glfX2 - glfX1) / static_cast<GLfloat>(gluColumns),
       glfNHeight = (glfY2 - glfY1) /
-        static_cast<GLfloat>(GetTileCount() / gluColumns);
+        static_cast<GLfloat>(TextureTileGetCount() / gluColumns);
     // For each image
-    for(size_t stTile = 0; stTile < GetTileCount(); ++stTile)
+    for(size_t stTile = 0; stTile < TextureTileGetCount(); ++stTile)
     { // Calculate X, Y co-ordinate
       const GLfloat
         glfNX1 = glfX1 +
@@ -667,13 +698,13 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         glfNY1 = glfY1 +
           static_cast<GLfloat>(stTile / gluColumns) * glfNHeight;
       // Blit the texture
-      BlitLTRB(0, stTile, glfNX1, glfNY1,
+      TextureBlitLTRB(0, stTile, glfNX1, glfNY1,
         glfNX1 + glfNWidth, glfNY1 + glfNHeight);
     }
   }
   /* -- Replace partial texture in VRAM from raw data ---------------------- */
-  void UpdateEx(const GLuint gluTexId, const GLint gliX1, const GLint gliY1,
-    const GLsizei glsiWidth, const GLsizei glsiHeight,
+  void TextureUpdateEx(const GLuint gluTexId, const GLint gliX1,
+    const GLint gliY1, const GLsizei glsiWidth, const GLsizei glsiHeight,
     const TextureType ttPixType, const GLvoid*const glvpData)
   { // Bind the specified texture
     GL(cOgl->OglBindTexture(gluTexId), "Failed to bind texture to update!",
@@ -687,15 +718,15 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       "Height",  glsiHeight, "SrcType", ImageGetPixelFormat(ttPixType));
     // Whats the minification value? We might need to regenerate mipmaps! If
     // we already had mipmaps, they will be overwritten.
-    ReGenerateMipmaps();
+    TextureRegenMipmaps();
     // Write that we updated the VRAM
     cLog->LogDebugExSafe("Texture '$'[$<$x$>] updated at $x$ with type $!",
       NameGet(), gluTexId, glsiWidth, glsiHeight, gliX1, gliY1,
       ImageGetPixelFormat(ttPixType));
   }
   /* -- Replace partial texture in VRAM from partial raw data -------------- */
-  void UpdateEx(const GLuint gluTexId, const GLint gliX1, const GLint gliY1,
-    const GLsizei glsiWidth, const GLsizei glsiHeight,
+  void TextureUpdateEx(const GLuint gluTexId, const GLint gliX1,
+    const GLint gliY1, const GLsizei glsiWidth, const GLsizei glsiHeight,
     const TextureType ttPixType, const GLvoid*const glvpData,
     const GLsizei glsiStride)
   { // Set stride and alignment
@@ -703,7 +734,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       "Failed to set unpack row length!",
       "Texture", NameGet(), "Stride", glsiStride);
     // Update the texture
-    UpdateEx(gluTexId, gliX1, gliY1, glsiWidth, glsiHeight, ttPixType,
+    TextureUpdateEx(gluTexId, gliX1, gliY1, glsiWidth, glsiHeight, ttPixType,
       glvpData);
     // Reset stride and alignment
     GL(cOgl->OglSetUnpackRowLength(cOgl->OglUnpackRowLength()),
@@ -711,27 +742,29 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       "Texture", NameGet(), "Stride", cOgl->OglUnpackRowLength());
   }
   /* -- Replace partial texture in VRAM from array ------------------------- */
-  void UpdateEx(const size_t stSubTexId, Image &imImage, const GLint gliX1,
-    const GLint gliY1)
+  void TextureUpdateEx(const size_t stSubTexId, Image &imImage,
+    const GLint gliX1, const GLint gliY1)
   { // Do the update
-    UpdateEx(GetSubName(stSubTexId), gliX1, gliY1,
+    TextureUpdateEx(TextureGetSubName(stSubTexId), gliX1, gliY1,
       imImage.DimGetWidth<GLsizei>(), imImage.DimGetHeight<GLsizei>(),
-      imImage.GetPixelType(), imImage.GetSlots().front().MemPtr());
+      imImage.ImageDataGetPixelType(),
+      imImage.ImageDataGetSlots().front().MemPtr());
   }
   /* -- Replace texture in VRAM from array --------------------------------- */
-  void Update(Image &imOther)
+  void TextureUpdate(Image &imOther)
   { // Deinit existing texture
-    DeInit();
+    TextureDeInit();
     // Replace image
     ImageSwap(imOther);
     // Reload texture
-    ReloadTexture();
+    TextureReloadTexture();
   }
   /* -- Download texture to array ------------------------------------------ */
-  Image Download(const size_t stSubTexId, const BitDepth bdDDepth=BD_RGBA,
+  Image TextureDownload(const size_t stSubTexId,
+    const BitDepth bdDDepth = BD_RGBA,
     const ByteDepth byDDepth = BY_RGBA) const
   { // Get texture id and bind it
-    GL(cOgl->OglBindTexture(GetSubName(stSubTexId)),
+    GL(cOgl->OglBindTexture(TextureGetSubName(stSubTexId)),
       "Failed to bind texture to download!",
       "Name", NameGet(), "Index", stSubTexId);
     // Create memory block for texture data and read RGBA texture into it
@@ -746,30 +779,31 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       bdDDepth };
   }
   /* -- Download texture and dump it to disk ------------------------------- */
-  void Dump(const size_t stSubTexId, const StdStringView &ssvFile) const
-    { Download(stSubTexId).SaveFile(ssvFile, stSubTexId, IFMT_PNG); }
+  void TextureDump(const size_t stSubTexId, const StdStringView &ssvFile) const
+    { TextureDownload(stSubTexId).
+        ImageSaveFile(ssvFile, stSubTexId, IFMT_PNG); }
   /* -- Reload texture array as normal texture ----------------------------- */
-  void ReloadTexture()
+  void TextureReloadTexture()
   { // If image was not loaded from disk? Just (re)load the image data
     // that already should be there and should NEVER be released.
-    if(IsDynamic()) LoadFromImage();
+    if(ImageDataIsDynamic()) TextureLoadImage();
     // Texture is static?
     else
     { // It can just be reloaded from disk
-      ReloadData();
+      ImageReloadData();
       // Load the image into memory
-      LoadFromImage();
+      TextureLoadImage();
       // Remove all image data because we can just load it from file again
       // and theres no point taking up precious memory for it.
-      ClearSlots();
+      ImageDataClearSlots();
     } // Error if no textures loaded
-    if(IsNotInitialised()) XC("No textures loaded!", "Name", NameGet());
+    if(TextureIsNotInitialised()) XC("No textures loaded!", "Name", NameGet());
     // Show what was loaded
     cLog->LogInfoExSafe("Texture loaded $ textures from '$'!",
-      GetSubCount(), NameGet());
+      TextureGetSubCount(), NameGet());
   }
   /* -- Init from a image class -------------------------------------------- */
-  void InitTextureImage(Image &imgSrc, const GLuint gluTileWidth,
+  void TextureInitImage(Image &imgSrc, const GLuint gluTileWidth,
     const GLuint gluTileHeight, const GLuint gluPadX, const GLuint gluPadY,
     const OglFilterEnum ofeFilter, const bool bGenerateTileset = true)
   { // Show filename
@@ -783,25 +817,27 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     ofeTexFilter = ofeFilter;
     cOgl->OglSetMipMapFilterById(ofeFilter, gliTexMinFilter, gliTexMagFilter);
     // Initialise
-    LoadFromImage();
+    TextureLoadImage();
     // Set specified tile dimensions and generate default tileset if needed
     dgluTile.DimSet(gluTileWidth, gluTileHeight);
     if(bGenerateTileset)
     { // Resize co-ords list to the number of usable slots we loaded
-      clTiles.resize(GetSubCount());
+      clTiles.resize(TextureGetSubCount());
       // Set override tile size from Image loader if specified
       if(duTileOR.DimIsSet()) dgluTile.DimSet(duTileOR);
       // Else clamp bounds to image size if unspecified or invalid size
-      else if(dgluTile.DimIsNotSet() || GetTileWidth() > DimGetWidth() ||
-          GetTileHeight() > DimGetHeight())
+      else if(dgluTile.DimIsNotSet()
+             || TextureTileGetWidth() > DimGetWidth()
+             || TextureTileGetHeight() > DimGetHeight())
         dgluTile.DimSet(*this);
       // Set tile dimensions as opengl float
-      dglfTile.DimSet(GetTileWidth<GLfloat>(), GetTileHeight<GLfloat>());
+      dglfTile.DimSet(TextureTileGetWidth<GLfloat>(),
+        TextureTileGetHeight<GLfloat>());
       // Calculate tile sizes
       const GLfloat
         // Tile size plus padding size
-        glfTPadX = dglfTile.DimGetWidth() + GetPaddingWidth(),
-        glfTPadY = dglfTile.DimGetHeight() + GetPaddingHeight(),
+        glfTPadX = dglfTile.DimGetWidth() + TextureGetPaddingWidth(),
+        glfTPadY = dglfTile.DimGetHeight() + TextureGetPaddingHeight(),
         // Tile counts.
 #if defined(MACOS) && defined(CISC)
         // There is a strange side effect on MacOS Rosetta when ONLY loading a
@@ -819,16 +855,18 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
         glfTSizeX = glfTCountX * glfTPadX,
         glfTSizeY = glfTCountY * glfTPadY;
       // For each texture we have
-      for(size_t stSubTexId = 0; stSubTexId < GetSubCount(); ++stSubTexId)
+      for(size_t stSubTexId = 0;
+                 stSubTexId < TextureGetSubCount();
+               ++stSubTexId)
       { // Add bottom to top image tile function
         auto AddReverse = [stSubTexId, this]
           (const GLfloat glfX, const GLfloat glfY)->void
-        { AddTileR(stSubTexId, glfX, glfY, glfX + dglfTile.DimGetWidth(),
+        { TileAddR(stSubTexId, glfX, glfY, glfX + dglfTile.DimGetWidth(),
                                            glfY + dglfTile.DimGetHeight()); };
         // Add top to bottom image tile function
         auto AddForward = [stSubTexId, this]
           (const GLfloat glfX, const GLfloat glfY)->void
-        { AddTile(stSubTexId, glfX, glfY, glfX + dglfTile.DimGetWidth(),
+        { TileAdd(stSubTexId, glfX, glfY, glfX + dglfTile.DimGetWidth(),
                                           glfY + dglfTile.DimGetHeight()); };
         // Get co-ordinates list
         CoordList &clData = clTiles[stSubTexId];
@@ -853,7 +891,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
               for(GLfloat glfX = 0.0f; glfX < glfTSizeX; glfX += glfTPadX)
                 if(aFunc(glfX, glfY)) return;
           }; // Do the appropriate function and finish if no more tiles
-          if(IsReversed()) Enumerate(AddReverseLimit);
+          if(ImageDataIsReversed()) Enumerate(AddReverseLimit);
           else Enumerate(AddForwardLimit);
         } // Have no tile limit?
         else
@@ -872,7 +910,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
               for(GLfloat glfX = 0.0f; glfX < glfTSizeX; glfX += glfTPadX)
                 aFunc(glfX, glfY);
           }; // Do the appropriate function and finish if no more tiles
-          if(IsReversed()) Enumerate(AddReverse);
+          if(ImageDataIsReversed()) Enumerate(AddReverse);
           else Enumerate(AddForward);
         }
       } // Log tiling data
@@ -880,29 +918,30 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
                            "- Tiles: $ ($ cols; $ rows; $ limit).\n"
                            "- Tile size: $x$ ($x$ excess).\n"
                            "- Padding size: $x$ ($x$ tile).",
-        GetSubCount(), DimGetWidth(), DimGetHeight(),
-        GetTileCount(), glfTCountX, glfTCountY, stTiles,
-        GetTileWidth(), GetTileHeight(),
+        TextureGetSubCount(), DimGetWidth(), DimGetHeight(),
+        TextureTileGetCount(), glfTCountX, glfTCountY, stTiles,
+        TextureTileGetWidth(), TextureTileGetHeight(),
           dglfImage.DimGetWidth() - glfTPadX,
           dglfImage.DimGetHeight() - glfTPadY,
-        GetPaddingWidth(), GetPaddingHeight(), glfTPadX, glfTPadY);
+        TextureGetPaddingWidth(), TextureGetPaddingHeight(),
+          glfTPadX, glfTPadY);
     }
     // Remove all image data because we can just load it from file again
     // and theres no point taking up precious memory for it.
-    if(IsNotDynamic()) ClearSlots();
+    if(ImageDataIsNotDynamic()) ImageDataClearSlots();
   }
   /* -- Init from a image class -------------------------------------------- */
-  void InitTextureImageTiles(Image &imgSrc, const OglFilterEnum ofeFilter,
+  void TextureInitImageTiles(Image &imgSrc, const OglFilterEnum ofeFilter,
     const GLUIntVector &gluvTiles)
   { // Generate the texture as normal but we'll be generating the tileset
-    InitTextureImage(imgSrc, 0, 0, 0, 0, ofeFilter, false);
+    TextureInitImage(imgSrc, 0, 0, 0, 0, ofeFilter, false);
     // Add image slot for tiles
     clTiles.resize(1);
     // Add all the specified tiles to texture
-    AddTileDORWHA(0, gluvTiles);
+    TextureTileAddDORWHA(0, gluvTiles);
   }
   /* -- Init from a manifest ----------------------------------------------- */
-  void InitTextureImageManifest(Image &imSrc, const Json &jsDoc)
+  void TextureInitImageManifest(Image &imSrc, const Json &jsDoc)
   { // Show filename and set it
     cLog->LogDebugExSafe("Texture loading '$' from manifest '$'.",
       imSrc.NameGet(), jsDoc.NameGet());
@@ -924,7 +963,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
                    gluPadX = jsDoc.GetInteger("PaddingWidth"),
                    gluPadY = jsDoc.GetInteger("PaddingHeight");
       // Load the texture
-      InitTextureImage(imSrc, gluTileWidth, gluTileHeight, gluPadX, gluPadY,
+      TextureInitImage(imSrc, gluTileWidth, gluTileHeight, gluPadX, gluPadY,
         ofeFilter, true);
       // We're done
       return;
@@ -943,7 +982,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     CoordList &clFirst = clTiles.front();
     clFirst.reserve(rjvTiles.Size());
     // Load the texture now
-    InitTextureImage(imSrc, 0, 0, 0, 0, ofeFilter, false);
+    TextureInitImage(imSrc, 0, 0, 0, 0, ofeFilter, false);
     // Walk the array which is of an unknown size
     StdForEach(seq, rjvTiles.Begin(), rjvTiles.End(),
       [this, &imSrc, &jsDoc, &clFirst](const Value &rjvValue)
@@ -970,20 +1009,20 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
           // Convert and assign the value
           aValues[uIndex] = static_cast<GLfloat>(rjvCoord.GetUint());
         } // Add the tile and then process the next tile
-        AddTileDORWH(0, aValues[0], aValues[1], aValues[2], aValues[3]);
+        TextureTileAddDORWH(0, aValues[0], aValues[1], aValues[2], aValues[3]);
       });
   }
   /* -- Deinitialise ------------------------------------------------------- */
-  void DeInit()
+  void TextureDeInit()
   { // Texture not loaded? return
-    if(IsNotInitialised() || FlagIsSet(TF_DELETE)) return;
+    if(TextureIsNotInitialised() || FlagIsSet(TF_DELETE)) return;
     // Mark texture for deletion
     cOgl->OglSetDeleteTextures(gluvTexture);
     // Texture has been marked for deleting
     FlagSet(TF_DELETE);
     // Report deinitialisation and texture memory
     cLog->LogInfoExSafe("Texture '$' with $ textures marked for deletion.",
-      NameGet(), GetSubCount());
+      NameGet(), TextureGetSubCount());
   }
   /* -- Constructor (Initialisation then registration) --------------------- */
   Texture() :
@@ -1002,28 +1041,28 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Destructor --------------------------------------------------------- */
-  DTORHELPER(~Texture, DeInit())
+  DTORHELPER(~Texture, TextureDeInit())
 };/* -- Finish the collector ----------------------------------------------- */
 CTOR_END_NOINITS(Textures, Texture, TEXTURE)
 /* -- DeInit Textures ------------------------------------------------------ */
-static void TextureDeInitTextures()
+static void TextureDeInit()
 { // Ignore if no textures
   if(cTextures->empty()) return;
   // De-init all the textures and log the pre/post init of them
   cLog->LogDebugExSafe("Textures deinitialising $ objects...",
     cTextures->size());
-  for(Texture*const tCptr : *cTextures) tCptr->DeInit();
+  for(Texture*const tCptr : *cTextures) tCptr->TextureDeInit();
   cLog->LogDebugExSafe("Textures deinitialised $ objects.",
     cTextures->size());
 }
 /* -- Reload Textures ------------------------------------------------------ */
-static void TextureReInitTextures()
+static void TextureReInit()
 { // Ignore if no textures
   if(cTextures->empty()) return;
   // Reload all the textures and log the pre/post init of them
   cLog->LogDebugExSafe("Textures reinitialising $ objects...",
     cTextures->size());
-  for(Texture*const tCptr : *cTextures) tCptr->ReloadTexture();
+  for(Texture*const tCptr : *cTextures) tCptr->TextureReloadTexture();
   cLog->LogDebugExSafe("Textures reinitialised $ objects.",
     cTextures->size());
 }

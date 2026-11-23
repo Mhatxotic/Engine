@@ -53,7 +53,8 @@ LLFUNC(Destroy, 0, LuaUtilClassDestroyChecked<Image>(lS, cImages))
 // < Height:integer=The bit-depth of the image in bits
 // ? Returns the bit-depth of the image
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetDepth, 1, LuaUtilPushVar(lS, AgImage{lS, 1}().GetBitsPerPixel()))
+LLFUNC(GetDepth, 1,
+  LuaUtilPushVar(lS, AgImage{lS, 1}().ImageDataGetBitsPerPixel()))
 /* ========================================================================= */
 // $ Image:GetFlags
 // < Flags:integer=Image flags value
@@ -104,7 +105,7 @@ LLFUNC(IsDestroyed, 1,
 LLFUNC(Replace, 0,
   const AgImage aImage{lS, 1};
   const AgAsset aAsset{lS, 2};
-  aImage().InitReplace(aAsset))
+  aImage().ImageInitReplace(aAsset))
 /* ========================================================================= */
 // $ Image:Save
 // < File:string=The filename to save to.
@@ -113,7 +114,7 @@ LLFUNC(Replace, 0,
 LLFUNC(Save, 0,
   const AgImage aImage{lS, 1};
   const AgFilename aFilename{lS, 2};
-  aImage().SaveFile(aFilename, 0, IFMT_PNG))
+  aImage().ImageSaveFile(aFilename, 0, IFMT_PNG))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Image:* methods structure                                           ## **
@@ -142,7 +143,7 @@ LLFUNC(Asset, 1,
   const AgNeString aName{lS, 1};
   const AgAsset aAsset{lS, 2};
   const AgImageFlags aFlags{lS, 3};
-  AcImage{lS}().InitArray(aName(), aAsset, aFlags))
+  AcImage{lS}().ImageInitArray(aName(), aAsset, aFlags))
 /* ========================================================================= */
 // $ Image.AssetAsync
 // > Name:string=A user-defined id of the image
@@ -160,7 +161,7 @@ LLFUNC(AssetAsync, 0,
   const AgAsset aAsset{lS, 2};
   const AgImageFlags aFlags{lS, 3};
   LuaUtilCheckFunc(lS, 4, 5, 6);
-  AcImage{lS}().InitAsyncArray(lS, aName(), aAsset, aFlags))
+  AcImage{lS}().ImageInitAsyncArray(lS, aName(), aAsset, aFlags))
 /* ========================================================================= */
 // $ Image.Blank
 // > Name:string=The name of the texture
@@ -176,7 +177,7 @@ LLFUNC(Blank, 1,
                     aHeight{lS, 3};
   const AgBoolean aAlpha{lS, 4},
                   aClear{lS, 5};
-  AcImage{lS}().InitBlank(aName(), aWidth, aHeight, aAlpha, aClear))
+  AcImage{lS}().ImageInitBlank(aName(), aWidth, aHeight, aAlpha, aClear))
 /* ========================================================================= */
 // $ Image.Colour
 // > Colour:integer=The colour of the pixel (Syntax: 0xAABBGGRR)
@@ -184,7 +185,7 @@ LLFUNC(Blank, 1,
 // ? Loads a 1x1 pixel for use as a solid.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Colour, 1, const AgUInt32 aColour{lS, 1};
-  AcImage{lS}().InitColour(aColour))
+  AcImage{lS}().ImageInitColour(aColour))
 /* ========================================================================= */
 // $ Image.File
 // > Filename:string=The filename of the image to load
@@ -196,7 +197,7 @@ LLFUNC(Colour, 1, const AgUInt32 aColour{lS, 1};
 LLFUNC(File, 1,
   const AgFilename aFilename{lS, 1};
   const AgImageFlags aFlags{lS, 2};
-  AcImage{lS}().InitFile(aFilename(), aFlags))
+  AcImage{lS}().ImageInitFile(aFilename(), aFlags))
 /* ========================================================================= */
 // $ Image.FileAsync
 // > Filename:string=The filename of the image to load
@@ -212,7 +213,7 @@ LLFUNC(FileAsync, 0,
   const AgFilename aFilename{lS, 1};
   const AgImageFlags aFlags{lS, 2};
   LuaUtilCheckFunc(lS, 3, 4, 5);
-  AcImage{lS}().InitAsyncFile(lS, aFilename(), aFlags))
+  AcImage{lS}().ImageInitAsyncFile(lS, aFilename(), aFlags))
 /* ========================================================================= */
 // $ Image.GetClasses
 // < Count:integer=Total number of images created.
@@ -245,7 +246,7 @@ LLFUNC(Raw, 1,
   const AgDimension aWidth{lS, 3},
                     aHeight{lS, 4};
   const AgIntegerLG<BitDepth> aBits{lS, 5, BD_BINARY, BD_RGBA};
-  AcImage{lS}().InitRaw(aName(), aAsset, aWidth, aHeight, aBits))
+  AcImage{lS}().ImageInitRaw(aName(), aAsset, aWidth, aHeight, aBits))
 /* ========================================================================= */
 // $ Image.WaitAsync
 // ? Halts main-thread execution until all async image events have completed

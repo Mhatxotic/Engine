@@ -27,7 +27,7 @@ namespace P {                          // Start of public module namespace
 /* -- Helper plugin for C runtime errno checking --------------------------- */
 struct ErrorPluginStandard final
 { /* -- Exception plugin to expand and report errno ------------------------ */
-#define XCL(r,...) throw Error<ErrorPluginStandard>(r, ## __VA_ARGS__)
+#define XCL(r,...) throw Error<ErrorPluginStandard>(r,##__VA_ARGS__)
   /* -- Constructor to add C runtime error code ---------------------------- */
   explicit ErrorPluginStandard(StdOStringStream &osS)
     { osS << "\n+ Reason<" << StdGetError() << "> = \""
@@ -249,7 +249,7 @@ class Error final :
     Param(StdForward<VarArgs>(vaArgs)...);
   }
 };/* -- Helper macro to trigger exceptions --------------------------------- */
-#define XC(r,...) throw Error<>(r, ## __VA_ARGS__)
+#define XC(r,...) throw Error<>(r,##__VA_ARGS__)
 /* ------------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

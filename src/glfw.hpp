@@ -199,7 +199,7 @@ class GlFW :                           // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     GCHelper{ this, &cGlFW },          // Initialise global pointer
     InitHelper{ __FUNCTION__ },        // Set class function name
-#define CURSOR(x) GlFWCursor{ GLFW_ ## x ## _CURSOR }
+#define CURSOR(x) GlFWCursor{ GLFW_##x##_CURSOR }
     CursorStandard{{                   // Define standard cursors
       CURSOR(ARROW),                   // [00] GLFW_ARROW_CURSOR
       CURSOR(CROSSHAIR),               // [01] GLFW_CROSSHAIR_CURSOR

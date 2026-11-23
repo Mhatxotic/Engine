@@ -201,7 +201,7 @@ struct AgTriangleId : public AgSizeTLGE {
 struct AgTextureId : public AgSizeTLGE {
   explicit AgTextureId(lua_State*const lS, const int iArg,
     const Texture &tCref) :
-      AgSizeTLGE{lS, iArg, 0, tCref.GetSubCount()}{} };
+      AgSizeTLGE{lS, iArg, 0, tCref.TextureGetSubCount()}{} };
 /* -- Read a volume value between 0 and 1 ---------------------------------- */
 struct AgVolume : public AgALfloatLG {
   explicit AgVolume(lua_State*const lS, const int iArg) :

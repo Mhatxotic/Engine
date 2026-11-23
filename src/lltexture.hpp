@@ -32,7 +32,7 @@ struct AcTexture : public ArClass<Texture> {
 /* -- Read a Tile id ------------------------------------------------------- */
 struct AgTileId : public AgIntegerLGE<size_t> {
   explicit AgTileId(lua_State*const lS, const int iArg, const Texture &tCref) :
-    AgIntegerLGE{lS, iArg, 0, tCref.GetTileCount()}{} };
+    AgIntegerLGE{lS, iArg, 0, tCref.TextureTileGetCount()}{} };
 /* -- Other types ---------------------------------------------------------- */
 using AgGLint = AgInteger<GLint>;
 /* -- Read vector of the specified integer type ---------------------------- */
@@ -52,7 +52,7 @@ template<class VectorValueType, class VectorType = StdVector<VectorValueType>>
 // ? and colour (SetC*). Using the Blit* functions will overwrite this stored
 // ? preset data.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Blit, 0, AgTexture{lS, 1}().Blit(0))
+LLFUNC(Blit, 0, AgTexture{lS, 1}().TextureBlit(0))
 /* ========================================================================= */
 // $ Texture:BlitILT
 // > TexIndex:integer=The texture index to use.
@@ -66,7 +66,7 @@ LLFUNC(BlitILT, 0,
   const AgTextureId aTextureId{lS, 2, aTexture};
   const AgGLfloat aLeft{lS, 3},
                   aTop{lS, 4};
-  aTexture().BlitLT(aTextureId, 0, aLeft, aTop))
+  aTexture().TextureBlitLT(aTextureId, 0, aLeft, aTop))
 /* ========================================================================= */
 // $ Texture:BlitILTA
 // > TexIndex:integer=The texture index to use.
@@ -83,7 +83,7 @@ LLFUNC(BlitILTA, 0,
   const AgGLfloat aLeft{lS, 3},
                   aTop{lS, 4};
   const AgAngle aAngle{lS, 5};
-  aTexture().BlitLTA(aTextureId, 0, aLeft, aTop, aAngle))
+  aTexture().TextureBlitLTA(aTextureId, 0, aLeft, aTop, aAngle))
 /* ========================================================================= */
 // $ Texture:BlitILTRB
 // > TexIndex:integer=The texture index to use.
@@ -100,7 +100,7 @@ LLFUNC(BlitILTRB, 0,
                   aTop{lS, 4},
                   aRight{lS, 5},
                   aBottom{lS, 6};
-  aTexture().BlitLTRB(aTextureId, 0, aLeft, aTop, aRight, aBottom))
+  aTexture().TextureBlitLTRB(aTextureId, 0, aLeft, aTop, aRight, aBottom))
 /* ========================================================================= */
 // $ Texture:BlitILTWH
 // > TexIndex:integer=The texture index to use.
@@ -118,7 +118,7 @@ LLFUNC(BlitILTWH, 0,
                   aTop{lS, 4},
                   aWidth{lS, 5},
                   aHeight{lS, 6};
-  aTexture().BlitLTWH(aTextureId, 0, aLeft, aTop, aWidth, aHeight))
+  aTexture().TextureBlitLTWH(aTextureId, 0, aLeft, aTop, aWidth, aHeight))
 /* ========================================================================= */
 // $ Texture:BlitILTWHA
 // > TexIndex:integer=The texture index to use.
@@ -138,7 +138,8 @@ LLFUNC(BlitILTWHA, 0,
                   aWidth{lS, 5},
                   aHeight{lS, 6};
   const AgAngle aAngle{lS, 7};
-  aTexture().BlitLTWHA(aTextureId, 0, aLeft, aTop, aWidth, aHeight, aAngle))
+  aTexture().TextureBlitLTWHA(aTextureId,
+    0, aLeft, aTop, aWidth, aHeight, aAngle))
 /* ========================================================================= */
 // $ Texture:BlitISLT
 // > TexIndex:integer=The texture index to use.
@@ -155,7 +156,7 @@ LLFUNC(BlitISLT, 0,
   const AgTileId aTileId{lS, 3, aTexture};
   const AgGLfloat aLeft{lS, 4},
                   aTop{lS, 5};
-  aTexture().BlitLT(aTextureId, aTileId, aLeft, aTop))
+  aTexture().TextureBlitLT(aTextureId, aTileId, aLeft, aTop))
 /* ========================================================================= */
 // $ Texture:BlitISLTA
 // > TexIndex:integer=The texture index to use.
@@ -174,7 +175,7 @@ LLFUNC(BlitISLTA, 0,
   const AgGLfloat aLeft{lS, 4},
                   aTop{lS, 5};
   const AgAngle aAngle{lS, 6};
-  aTexture().BlitLTA(aTextureId, aTileId, aLeft, aTop, aAngle))
+  aTexture().TextureBlitLTA(aTextureId, aTileId, aLeft, aTop, aAngle))
 /* ========================================================================= */
 // $ Texture:BlitISLTRB
 // > TexIndex:integer=The texture index to use.
@@ -194,7 +195,8 @@ LLFUNC(BlitISLTRB, 0,
                   aTop{lS, 5},
                   aRight{lS, 6},
                   aBottom{lS, 7};
-  aTexture().BlitLTRB(aTextureId, aTileId, aLeft, aTop, aRight, aBottom))
+  aTexture().TextureBlitLTRB(aTextureId,
+    aTileId, aLeft, aTop, aRight, aBottom))
 /* ========================================================================= */
 // $ Texture:BlitISLTWH
 // > TexIndex:integer=The texture index to use.
@@ -214,7 +216,8 @@ LLFUNC(BlitISLTWH, 0,
                   aTop{lS, 5},
                   aWidth{lS, 6},
                   aHeight{lS, 7};
-  aTexture().BlitLTWH(aTextureId, aTileId, aLeft, aTop, aWidth, aHeight))
+  aTexture().TextureBlitLTWH(aTextureId,
+    aTileId, aLeft, aTop, aWidth, aHeight))
 /* ========================================================================= */
 // $ Texture:BlitISLTWHA
 // > TexIndex:integer=The texture index to use.
@@ -236,8 +239,8 @@ LLFUNC(BlitISLTWHA, 0,
                   aWidth{lS, 6},
                   aHeight{lS, 7};
   const AgAngle aAngle{lS, 8};
-  aTexture().BlitLTWHA(aTextureId, aTileId, aLeft, aTop, aWidth, aHeight,
-    aAngle))
+  aTexture().TextureBlitLTWHA(aTextureId, aTileId, aLeft, aTop, aWidth,
+    aHeight, aAngle))
 /* ========================================================================= */
 // $ Texture:BlitLT
 // > Left:number=The starting column to draw from.
@@ -249,7 +252,7 @@ LLFUNC(BlitLT, 0,
   const AgTexture aTexture{lS, 1};
   const AgGLfloat aLeft{lS, 2},
                   aTop{lS, 3};
-  aTexture().BlitLT(0, 0, aLeft, aTop))
+  aTexture().TextureBlitLT(0, 0, aLeft, aTop))
 /* ========================================================================= */
 // $ Texture:BlitLTA
 // > Left:number=The starting column to draw from.
@@ -264,7 +267,7 @@ LLFUNC(BlitLTA, 0,
   const AgGLfloat aLeft{lS, 2},
                   aTop{lS, 3};
   const AgAngle aAngle{lS, 4};
-  aTexture().BlitLTA(0, 0, aLeft, aTop, aAngle))
+  aTexture().TextureBlitLTA(0, 0, aLeft, aTop, aAngle))
 /* ========================================================================= */
 // $ Texture:BlitLTRB
 // > Left:number=The starting column to draw from.
@@ -279,7 +282,7 @@ LLFUNC(BlitLTRB, 0,
                   aTop{lS, 3},
                   aRight{lS, 4},
                   aBottom{lS, 5};
-  aTexture().BlitLTRB(0, 0, aLeft, aTop, aRight, aBottom))
+  aTexture().TextureBlitLTRB(0, 0, aLeft, aTop, aRight, aBottom))
 /* ========================================================================= */
 // $ Texture:BlitLTWH
 // > Left:number=The starting column to draw from.
@@ -295,7 +298,7 @@ LLFUNC(BlitLTWH, 0,
                   aTop{lS, 3},
                   aWidth{lS, 4},
                   aHeight{lS, 5};
-  aTexture().BlitLTWH(0, 0, aLeft, aTop, aWidth, aHeight))
+  aTexture().TextureBlitLTWH(0, 0, aLeft, aTop, aWidth, aHeight))
 /* ========================================================================= */
 // $ Texture:BlitLTWHA
 // > Left:number=The starting column to draw from.
@@ -314,7 +317,7 @@ LLFUNC(BlitLTWHA, 0,
                   aWidth{lS, 4},
                   aHeight{lS, 5};
   const AgAngle aAngle{lS, 6};
-  aTexture().BlitLTWHA(0, 0, aLeft, aTop, aWidth, aHeight, aAngle))
+  aTexture().TextureBlitLTWHA(0, 0, aLeft, aTop, aWidth, aHeight, aAngle))
 /* ========================================================================= */
 // $ Texture:BlitM
 // > Columns:integer=The number of horizonal textures to blit.
@@ -332,7 +335,7 @@ LLFUNC(BlitM, 0,
                   aTop{lS, 4},
                   aRight{lS, 5},
                   aBottom{lS, 6};
-  aTexture().BlitMulti(aColumns, aLeft, aTop, aRight,
+  aTexture().TextureBlitMulti(aColumns, aLeft, aTop, aRight,
     aBottom))
 /* ========================================================================= */
 // $ Texture:BlitSLT
@@ -347,7 +350,7 @@ LLFUNC(BlitSLT, 0,
   const AgTileId aTileId{lS, 2, aTexture};
   const AgGLfloat aLeft{lS, 3},
                   aTop{lS, 4};
-  aTexture().BlitLT(0, aTileId, aLeft, aTop))
+  aTexture().TextureBlitLT(0, aTileId, aLeft, aTop))
 /* ========================================================================= */
 // $ Texture:BlitSLTA
 // > TileIndex:integer=The tile index of the texture to blit.
@@ -364,7 +367,7 @@ LLFUNC(BlitSLTA, 0,
   const AgGLfloat aLeft{lS, 3},
                   aTop{lS, 4};
   const AgAngle aAngle{lS, 5};
-  aTexture().BlitLTA(0, aTileId, aLeft, aTop, aAngle))
+  aTexture().TextureBlitLTA(0, aTileId, aLeft, aTop, aAngle))
 /* ========================================================================= */
 // $ Texture:BlitSLTRB
 // > TileIndex:integer=The tile index of the texture to blit.
@@ -381,7 +384,7 @@ LLFUNC(BlitSLTRB, 0,
                   aTop{lS, 4},
                   aRight{lS, 5},
                   aBottom{lS, 6};
-  aTexture().BlitLTRB(0, aTileId, aLeft, aTop, aRight, aBottom))
+  aTexture().TextureBlitLTRB(0, aTileId, aLeft, aTop, aRight, aBottom))
 /* ========================================================================= */
 // $ Texture:BlitSLTWH
 // > TileIndex:integer=The tile index of the texture to blit.
@@ -399,7 +402,7 @@ LLFUNC(BlitSLTWH, 0,
                   aTop{lS, 4},
                   aWidth{lS, 5},
                   aHeight{lS, 6};
-  aTexture().BlitLTWH(0, aTileId, aLeft, aTop, aWidth, aHeight))
+  aTexture().TextureBlitLTWH(0, aTileId, aLeft, aTop, aWidth, aHeight))
 /* ========================================================================= */
 // $ Texture:BlitSLTWHA
 // > TileIndex:integer=The tile index of the texture to blit.
@@ -419,7 +422,8 @@ LLFUNC(BlitSLTWHA, 0,
                   aWidth{lS, 5},
                   aHeight{lS, 6};
   const AgAngle aAngle{lS, 7};
-  aTexture().BlitLTWHA(0, aTileId, aLeft, aTop, aWidth, aHeight, aAngle))
+  aTexture().TextureBlitLTWHA(0,
+    aTileId, aLeft, aTop, aWidth, aHeight, aAngle))
 /* ========================================================================= */
 // $ Texture:Destroy
 // ? Destroys the texture and frees all the memory associated with it. The
@@ -445,7 +449,7 @@ LLFUNC(Destroyed, 1,
 LLFUNC(Download, 1,
   const AgTexture aTexture{lS, 1};
   const AgTextureId aTextureId{lS, 2, aTexture};
-  AcTexture{lS}().ImageSwap({ aTexture().Download(aTextureId) }))
+  AcTexture{lS}().ImageSwap({ aTexture().TextureDownload(aTextureId) }))
 /* ========================================================================= */
 // $ Texture:Dump
 // ? Dumps the texture to the specified file in the specified format.
@@ -454,7 +458,7 @@ LLFUNC(Dump, 0,
   const AgTexture aTexture{lS, 1};
   const AgTextureId aTextureId{lS, 2, aTexture};
   const AgFilename aFilename{lS, 3};
-  aTexture().Dump(aTextureId, aFilename))
+  aTexture().TextureDump(aTextureId, aFilename))
 /* ========================================================================= */
 // $ Texture:GetFlags
 // < Flags:integer=Texture flags value.
@@ -481,11 +485,40 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().Serial()))
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetName, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().NameGet()))
 /* ========================================================================= */
+// $ Texture:GetPaddingHeight
+// < Height:integer=The configured padding height of each tile in the texture.
+// ? Returns configured padding height of texture at creation.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetPaddingHeight, 1,
+  LuaUtilPushVar(lS, AgTexture{lS, 1}().TextureGetPaddingHeight()))
+/* ========================================================================= */
+// $ Texture:GetPaddingWidth
+// < Width:integer=The configured padding width of each tile in the texture.
+// ? Returns configured padding width of texture at creation.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetPaddingWidth, 1,
+  LuaUtilPushVar(lS, AgTexture{lS, 1}().TextureGetPaddingWidth()))
+/* ========================================================================= */
 // $ Texture:GetSubCount
 // < Count:integer=The number of sub-textures in this texture.
 // ? Returns number of sub-textures found in the loaded image file.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetSubCount, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().GetSubCount()))
+LLFUNC(GetSubCount, 1,
+  LuaUtilPushVar(lS, AgTexture{lS, 1}().TextureGetSubCount()))
+/* ========================================================================= */
+// $ Texture:GetTileHeight
+// < Height:integer=The configured tile height of each tile in the texture.
+// ? Returns configured tile height of texture at creation.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetTileHeight, 1,
+  LuaUtilPushVar(lS, AgTexture{lS, 1}().TextureTileGetHeight()))
+/* ========================================================================= */
+// $ Texture:GetTileWidth
+// < Width:integer=The configured padding width of each tile in the texture.
+// ? Returns configured tile width of texture at creation.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetTileWidth, 1,
+  LuaUtilPushVar(lS, AgTexture{lS, 1}().TextureTileGetWidth()))
 /* ========================================================================= */
 // $ Texture:GetWidth
 // < Width:integer=The width of the texture.
@@ -745,8 +778,8 @@ LLFUNC(TileA, 1,
                   aTop{lS, 3},
                   aRight{lS, 4},
                   aBottom{lS, 5};
-  aTexture().AddTileDOR(0, aLeft, aTop, aRight, aBottom);
-  LuaUtilPushVar(lS, aTexture().GetTileCount() - 1))
+  aTexture().TextureTileAddDOR(0, aLeft, aTop, aRight, aBottom);
+  LuaUtilPushVar(lS, aTexture().TextureTileGetCount() - 1))
 /* ========================================================================= */
 // $ Texture:TileAM
 // > Left:integer=The left pixel position on the texture.
@@ -761,7 +794,7 @@ LLFUNC(TileA, 1,
 LLFUNC(TileAM, 1,
   const AgTexture aTexture{lS, 1};
   const AgIntegerVector<GLuint> aTiles{lS, 2};
-  LuaUtilPushVar(lS, aTexture().AddTileDORA(0, aTiles)))
+  LuaUtilPushVar(lS, aTexture().TextureTileAddDORA(0, aTiles)))
 /* ========================================================================= */
 // $ Texture:TileAD
 // > Left:integer=The left pixel position on the texture.
@@ -778,8 +811,8 @@ LLFUNC(TileAD, 1,
                   aTop{lS, 3},
                   aWidth{lS, 4},
                   aHeight{lS, 5};
-  aTexture().AddTileDORWH(0, aLeft, aTop, aWidth, aHeight);
-  LuaUtilPushVar(lS, aTexture().GetTileCount() - 1))
+  aTexture().TextureTileAddDORWH(0, aLeft, aTop, aWidth, aHeight);
+  LuaUtilPushVar(lS, aTexture().TextureTileGetCount() - 1))
 /* ========================================================================= */
 // $ Texture:TileADM
 // > Left:integer=The left pixel position on the texture.
@@ -794,7 +827,7 @@ LLFUNC(TileAD, 1,
 LLFUNC(TileADM, 1,
   const AgTexture aTexture{lS, 1};
   const AgIntegerVector<GLuint> aTiles{lS, 2};
-  LuaUtilPushVar(lS, aTexture().AddTileDORWHA(0, aTiles)))
+  LuaUtilPushVar(lS, aTexture().TextureTileAddDORWHA(0, aTiles)))
 /* ========================================================================= */
 // $ Texture:TileAS
 // > Id:integer=The id of the sub-texture to add to.
@@ -813,8 +846,8 @@ LLFUNC(TileAS, 1,
                   aTop{lS, 4},
                   aRight{lS, 5},
                   aBottom{lS, 6};
-  aTexture().AddTileDOR(aTextureId, aLeft, aTop, aRight, aBottom);
-  LuaUtilPushVar(lS, aTexture().GetTileCount(aTextureId) - 1))
+  aTexture().TextureTileAddDOR(aTextureId, aLeft, aTop, aRight, aBottom);
+  LuaUtilPushVar(lS, aTexture().TextureTileGetCount(aTextureId) - 1))
 /* ========================================================================= */
 // $ Texture:TileASD
 // > Id:integer=The id of the sub-texture to add to.
@@ -833,8 +866,8 @@ LLFUNC(TileASD, 1,
                   aTop{lS, 4},
                   aWidth{lS, 5},
                   aHeight{lS, 6};
-  aTexture().AddTileDORWH(aTextureId, aLeft, aTop, aWidth, aHeight);
-  LuaUtilPushVar(lS, aTexture().GetTileCount(aTextureId) - 1))
+  aTexture().TextureTileAddDORWH(aTextureId, aLeft, aTop, aWidth, aHeight);
+  LuaUtilPushVar(lS, aTexture().TextureTileGetCount(aTextureId) - 1))
 /* ========================================================================= */
 // $ Texture:TileGSTC
 // > Id:integer=The id of the sub-texture to get the count for.
@@ -845,13 +878,14 @@ LLFUNC(TileASD, 1,
 LLFUNC(TileGSTC, 1,
   const AgTexture aTexture{lS, 1};
   const AgTileId aTileId{lS, 2, aTexture};
-  LuaUtilPushVar(lS, aTexture().GetTileCount(aTileId)))
+  LuaUtilPushVar(lS, aTexture().TextureTileGetCount(aTileId)))
 /* ========================================================================= */
 // $ Texture:TileGTC
 // < Count:integer=The handle of the texture created.
 // ? Returns number of tiles found in the loaded texture file.
 /* ------------------------------------------------------------------------- */
-LLFUNC(TileGTC, 1, LuaUtilPushVar(lS, AgTexture{lS, 1}().GetTileCount()))
+LLFUNC(TileGTC, 1,
+  LuaUtilPushVar(lS, AgTexture{lS, 1}().TextureTileGetCount()))
 /* ========================================================================= */
 // $ Texture:TileS
 // > Id:integer=The id of the tile to change.
@@ -869,7 +903,7 @@ LLFUNC(TileS, 0,
                   aTop{lS, 4},
                   aRight{lS, 5},
                   aBottom{lS, 6};
-  aTexture().SetTileDOR(0, aTileId, aLeft, aTop, aRight, aBottom))
+  aTexture().TextureTileSetDOR(0, aTileId, aLeft, aTop, aRight, aBottom))
 /* ========================================================================= */
 // $ Texture:TileSD
 // > Id:integer=The id of the tile to change.
@@ -887,7 +921,7 @@ LLFUNC(TileSD, 0,
                   aTop{lS, 4},
                   aWidth{lS, 5},
                   aHeight{lS, 6};
-  aTexture().SetTileDORWH(0, aTileId, aLeft, aTop, aWidth, aHeight))
+  aTexture().TextureTileSetDORWH(0, aTileId, aLeft, aTop, aWidth, aHeight))
 /* ========================================================================= */
 // $ Texture:TileSDM
 // > Left:integer=The left pixel position on the texture.
@@ -902,7 +936,7 @@ LLFUNC(TileSD, 0,
 LLFUNC(TileSDM, 0,
   const AgTexture aTexture{lS, 1};
   const AgIntegerVector<GLuint> aTiles{lS, 2};
-  aTexture().AddTileDORWHA(0, aTiles))
+  aTexture().TextureTileAddDORWHA(0, aTiles))
 /* ========================================================================= */
 // $ Texture:TileSM
 // > Left:integer=The left pixel position on the texture.
@@ -917,7 +951,7 @@ LLFUNC(TileSDM, 0,
 LLFUNC(TileSM, 0,
   const AgTexture aTexture{lS, 1};
   const AgIntegerVector<GLuint> aTiles{lS, 2};
-  aTexture().SetTileDORA(0, aTiles))
+  aTexture().TextureTileSetDORA(0, aTiles))
 /* ========================================================================= */
 // $ Texture:TileSS
 // > TexId:integer=The id of the sub texture to change.
@@ -937,7 +971,8 @@ LLFUNC(TileSS, 0,
                   aTop{lS, 5},
                   aRight{lS, 6},
                   aBottom{lS, 7};
-  aTexture().SetTileDOR(aTextureId, aTileId, aLeft, aTop, aRight, aBottom))
+  aTexture().TextureTileSetDOR(aTextureId,
+    aTileId, aLeft, aTop, aRight, aBottom))
 /* ========================================================================= */
 // $ Texture:TileSSD
 // > TexId:integer=The id of the sub texture to change.
@@ -957,7 +992,8 @@ LLFUNC(TileSSD, 0,
                   aTop{lS, 5},
                   aWidth{lS, 6},
                   aHeight{lS, 7};
-  aTexture().SetTileDORWH(aTextureId, aTileId, aLeft, aTop, aWidth, aHeight))
+  aTexture().TextureTileSetDORWH(aTextureId,
+    aTileId, aLeft, aTop, aWidth, aHeight))
 /* ========================================================================= */
 // $ Texture:TileSSDM
 // > TexId:integer=The id of the sub texture to change.
@@ -974,7 +1010,7 @@ LLFUNC(TileSSDM, 0,
   const AgTexture aTexture{lS, 1};
   const AgTextureId aTextureId{lS, 2, aTexture};
   const AgIntegerVector<GLuint> aTiles{lS, 3};
-  aTexture().SetTileDORWHA(aTextureId, aTiles))
+  aTexture().TextureTileSetDORWHA(aTextureId, aTiles))
 /* ========================================================================= */
 // $ Texture:TileSSM
 // > TexId:integer=The id of the sub texture to change.
@@ -991,7 +1027,7 @@ LLFUNC(TileSSM, 0,
   const AgTexture aTexture{lS, 1};
   const AgTextureId aTextureId{lS, 2, aTexture};
   const AgIntegerVector<GLuint> aTiles{lS, 3};
-  aTexture().SetTileDORA(aTextureId, aTiles))
+  aTexture().TextureTileSetDORA(aTextureId, aTiles))
 /* ========================================================================= */
 // $ Texture:TileSSTC
 // > Id:integer=The id of the sub-texture to set the size of.
@@ -1006,7 +1042,7 @@ LLFUNC(TileSSTC, 0,
   const AgTexture aTexture{lS, 1};
   const AgTextureId aTextureId{lS, 2, aTexture};
   const AgSizeTLG aCount{lS, 3, 0, UINT_MAX};
-  aTexture().SetTileCount(aCount, aTextureId))
+  aTexture().TextureTileSetCount(aCount, aTextureId))
 /* ========================================================================= */
 // $ Texture:TileSTC
 // > Count:integer=The new size of the tile list.
@@ -1019,7 +1055,7 @@ LLFUNC(TileSSTC, 0,
 LLFUNC(TileSTC, 0,
   const AgTexture aTexture{lS, 1};
   const AgSizeTLG aCount{lS, 2, 0, UINT_MAX};
-  aTexture().SetTileCount(aCount))
+  aTexture().TextureTileSetCount(aCount))
 /* ========================================================================= */
 // $ Texture:Upload
 // > Source:Image=The pixel data to update the texture with.
@@ -1029,7 +1065,7 @@ LLFUNC(TileSTC, 0,
 // ? the memory must match the actual texture memory. The source and
 // ? destination colour format must be the same, or use UploadEx
 /* ------------------------------------------------------------------------- */
-LLFUNC(Upload, 0, AgTexture{lS, 1}().Update(AgImage{lS,2}()))
+LLFUNC(Upload, 0, AgTexture{lS, 1}().TextureUpdate(AgImage{lS,2}()))
 /* ========================================================================= */
 // $ Texture:UploadEx
 // > TexId:Integer=The sub-id of the texture to download.
@@ -1045,36 +1081,34 @@ LLFUNC(UploadEx, 0,
   const AgTextureId aTextureId{lS, 2, aTexture};
   const AgImage aImage{lS, 3};
   const AgGLint aX{lS, 4}, aY{lS, 5};
-  aTexture().UpdateEx(aTextureId, aImage, aX, aY))
+  aTexture().TextureUpdateEx(aTextureId, aImage, aX, aY))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Texture:* methods structure                                         ## **
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Texture:* methods begin
-  LLRSFUNC(Blit),        LLRSFUNC(BlitILT),     LLRSFUNC(BlitILTA),
-  LLRSFUNC(BlitILTRB),   LLRSFUNC(BlitILTWH),   LLRSFUNC(BlitILTWHA),
-  LLRSFUNC(BlitISLT),    LLRSFUNC(BlitISLTA),   LLRSFUNC(BlitISLTRB),
-  LLRSFUNC(BlitISLTWH),  LLRSFUNC(BlitISLTWHA), LLRSFUNC(BlitLT),
-  LLRSFUNC(BlitLTA),     LLRSFUNC(BlitLTRB),    LLRSFUNC(BlitLTWH),
-  LLRSFUNC(BlitLTWHA),   LLRSFUNC(BlitM),       LLRSFUNC(BlitSLT),
-  LLRSFUNC(BlitSLTA),    LLRSFUNC(BlitSLTRB),   LLRSFUNC(BlitSLTWH),
-  LLRSFUNC(BlitSLTWHA),  LLRSFUNC(Destroy),     LLRSFUNC(Destroyed),
-  LLRSFUNC(Download),    LLRSFUNC(Dump),        LLRSFUNC(GetFlags),
-  LLRSFUNC(GetHeight),   LLRSFUNC(GetId),       LLRSFUNC(GetName),
-  LLRSFUNC(GetSubCount), LLRSFUNC(GetWidth),    LLRSFUNC(PopColour),
-  LLRSFUNC(PushColour),  LLRSFUNC(SetCA),       LLRSFUNC(SetCB),
-  LLRSFUNC(SetCG),       LLRSFUNC(SetCR),       LLRSFUNC(SetCRGB),
-  LLRSFUNC(SetCRGBA),    LLRSFUNC(SetCRGBAI),   LLRSFUNC(SetCX),
-  LLRSFUNC(SetTCLTRB),   LLRSFUNC(SetTCLTWH),   LLRSFUNC(SetTCX),
-  LLRSFUNC(SetVLTRB),    LLRSFUNC(SetVLTWH),    LLRSFUNC(SetVLTWHA),
-  LLRSFUNC(SetVX),       LLRSFUNC(TileA),       LLRSFUNC(TileAM),
-  LLRSFUNC(TileAD),      LLRSFUNC(TileADM),     LLRSFUNC(TileAS),
-  LLRSFUNC(TileASD),     LLRSFUNC(TileGSTC),    LLRSFUNC(TileGTC),
-  LLRSFUNC(TileS),       LLRSFUNC(TileSD),      LLRSFUNC(TileSDM),
-  LLRSFUNC(TileSM),      LLRSFUNC(TileSS),      LLRSFUNC(TileSSD),
-  LLRSFUNC(TileSSM),     LLRSFUNC(TileSSDM),    LLRSFUNC(TileSSTC),
-  LLRSFUNC(TileSTC),     LLRSFUNC(Upload),      LLRSFUNC(UploadEx),
+  LLRSFUNC(Blit), LLRSFUNC(BlitILT), LLRSFUNC(BlitILTA), LLRSFUNC(BlitILTRB),
+  LLRSFUNC(BlitILTWH), LLRSFUNC(BlitILTWHA), LLRSFUNC(BlitISLT),
+  LLRSFUNC(BlitISLTA), LLRSFUNC(BlitISLTRB), LLRSFUNC(BlitISLTWH),
+  LLRSFUNC(BlitISLTWHA), LLRSFUNC(BlitLT), LLRSFUNC(BlitLTA),
+  LLRSFUNC(BlitLTRB), LLRSFUNC(BlitLTWH), LLRSFUNC(BlitLTWHA),
+  LLRSFUNC(BlitM), LLRSFUNC(BlitSLT), LLRSFUNC(BlitSLTA), LLRSFUNC(BlitSLTRB),
+  LLRSFUNC(BlitSLTWH), LLRSFUNC(BlitSLTWHA), LLRSFUNC(Destroy),
+  LLRSFUNC(Destroyed), LLRSFUNC(Download), LLRSFUNC(Dump), LLRSFUNC(GetFlags),
+  LLRSFUNC(GetHeight), LLRSFUNC(GetId), LLRSFUNC(GetName),
+  LLRSFUNC(GetPaddingHeight), LLRSFUNC(GetPaddingWidth), LLRSFUNC(GetSubCount),
+  LLRSFUNC(GetTileHeight), LLRSFUNC(GetTileWidth), LLRSFUNC(GetWidth),
+  LLRSFUNC(PopColour), LLRSFUNC(PushColour), LLRSFUNC(SetCA), LLRSFUNC(SetCB),
+  LLRSFUNC(SetCG), LLRSFUNC(SetCR), LLRSFUNC(SetCRGB), LLRSFUNC(SetCRGBA),
+  LLRSFUNC(SetCRGBAI), LLRSFUNC(SetCX), LLRSFUNC(SetTCLTRB),
+  LLRSFUNC(SetTCLTWH), LLRSFUNC(SetTCX), LLRSFUNC(SetVLTRB),
+  LLRSFUNC(SetVLTWH), LLRSFUNC(SetVLTWHA), LLRSFUNC(SetVX), LLRSFUNC(TileA),
+  LLRSFUNC(TileAM), LLRSFUNC(TileAD), LLRSFUNC(TileADM), LLRSFUNC(TileAS),
+  LLRSFUNC(TileASD), LLRSFUNC(TileGSTC), LLRSFUNC(TileGTC), LLRSFUNC(TileS),
+  LLRSFUNC(TileSD), LLRSFUNC(TileSDM), LLRSFUNC(TileSM), LLRSFUNC(TileSS),
+  LLRSFUNC(TileSSD), LLRSFUNC(TileSSM), LLRSFUNC(TileSSDM), LLRSFUNC(TileSSTC),
+  LLRSFUNC(TileSTC), LLRSFUNC(Upload), LLRSFUNC(UploadEx),
 LLRSEND                                // Texture:* methods end
 /* ========================================================================= **
 ** ######################################################################### **
@@ -1102,7 +1136,7 @@ LLFUNC(Console, 1,
 LLFUNC(Create, 1,
   const AgImageUnlocked aImage{lS, 1};
   const AgFilterId aFilterId{lS, 2};
-  AcTexture{lS}().InitTextureImage(aImage, 0, 0, 0, 0, aFilterId))
+  AcTexture{lS}().TextureInitImage(aImage, 0, 0, 0, 0, aFilterId))
 /* ========================================================================= */
 // $ Texture.GetClasses
 // < Count:integer=Total number of textures created.
@@ -1122,7 +1156,7 @@ LLFUNC(GetClasses, 1, LuaUtilPushVar(lS, cTextures->CollectorCount()))
 LLFUNC(Manifest, 1,
   const AgImageUnlocked aImage{lS, 1};
   const AgJson aJson{lS, 2};
-  AcTexture{lS}().InitTextureImageManifest(aImage, aJson))
+  AcTexture{lS}().TextureInitImageManifest(aImage, aJson))
 /* ========================================================================= */
 // $ Texture.MaxSize
 // < Size:integer=Maximum supported texture size.
@@ -1148,7 +1182,7 @@ LLFUNC(CreateTS, 1,
   const AgUIntLG aTW{lS, 2, 0, UINT_MAX}, aTH{lS, 3, 0, UINT_MAX},
                  aPW{lS, 4, 0, UINT_MAX}, aPH{lS, 5, 0, UINT_MAX};
   const AgFilterId aFilterId{lS, 6};
-  AcTexture{lS}().InitTextureImage(aImage, aTW, aTH, aPW, aPH, aFilterId))
+  AcTexture{lS}().TextureInitImage(aImage, aTW, aTH, aPW, aPH, aFilterId))
 /* ========================================================================= */
 // $ Texture.ImageUT
 // > Source:Image=The image class to load from.
@@ -1164,16 +1198,15 @@ LLFUNC(ImageUT, 1,
   const AgImageUnlocked aImage{lS, 1};
   const AgFilterId aFilterId{lS, 2};
   const AgIntegerVector<GLuint> aTiles{lS, 3};
-  AcTexture{lS}().InitTextureImageTiles(aImage, aFilterId, aTiles))
+  AcTexture{lS}().TextureInitImageTiles(aImage, aFilterId, aTiles))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Texture.* non-member functions structure                            ## **
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSBEGIN                              // Texture.* non-member functions begin
-  LLRSFUNC(Create),   LLRSFUNC(GetClasses), LLRSFUNC(ImageUT),
-  LLRSFUNC(Manifest), LLRSFUNC(MaxSize),    LLRSFUNC(CreateTS),
-  LLRSFUNC(Console),
+  LLRSFUNC(Create), LLRSFUNC(GetClasses), LLRSFUNC(ImageUT),
+  LLRSFUNC(Manifest), LLRSFUNC(MaxSize), LLRSFUNC(CreateTS), LLRSFUNC(Console),
 LLRSEND                                // Texture.* non-member functions end
 /* ========================================================================= */
 }                                      // End of Texture namespace

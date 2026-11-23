@@ -263,7 +263,7 @@ class EvtMain :                        // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     GCHelper{ this, &cEvtMain },       // Initialise global pointer
     LookupArray{{                      // Build event list
-#define EMC(x) STR(EMC_ ## x)          // Helper to define event id strings
+#define EMC(x) STR(EMC_##x)            // Helper to define event id strings
       EMC(NONE),             EMC(SUSPEND),          EMC(QUIT),
       EMC(QUIT_HWREINIT),    EMC(QUIT_RESTART),     EMC(QUIT_RESTARTNP),
       EMC(QUIT_THREAD),      EMC(QUIT_VREINIT),     EMC(LUA_ASKEXIT),

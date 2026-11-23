@@ -27,10 +27,10 @@ constexpr static const GLuint gluMax = StdLimits<GLuint>::max();
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- GL error checking wrapper macros ------------------------------------- */
-#define GLEX(EF,F,M,...)  do{ F; EF(M, ## __VA_ARGS__); }while(false)
-#define GLL(F,M,...)      GLEX(cOgl->OglCheckLogError, F, M, ## __VA_ARGS__)
-#define GL(F,M,...)       GLEX(cOgl->OglCheckExceptError, F, M, ## __VA_ARGS__)
-#define GLC(M,...)        GLEX(cOgl->OglCheckExceptError, , M, ## __VA_ARGS__)
+#define GLEX(EF,F,M,...)  do{ F; EF(M, ##__VA_ARGS__); }while(false)
+#define GLL(F,M,...)      GLEX(cOgl->OglCheckLogError, F, M, ##__VA_ARGS__)
+#define GL(F,M,...)       GLEX(cOgl->OglCheckExceptError, F, M, ##__VA_ARGS__)
+#define GLC(M,...)        GLEX(cOgl->OglCheckExceptError, , M, ##__VA_ARGS__)
 /* -- Public typedefs ------------------------------------------------------ */
 BUILD_FLAGS(unsigned, Ogl,             // OpenGL flags
   /* ----------------------------------------------------------------------- */
@@ -113,9 +113,9 @@ class Ogl :                            // Members initially private
   public FboBlend,                     // OGL global blend cache
   public OglFlags                      // OGL init flags
 { /* -- Defines ------------------------------------------------------------ */
-#define IGLL(F,M,...) GLEX(OglCheckLogError, F, M, ## __VA_ARGS__)
-#define IGL(F,M,...)  GLEX(OglCheckExceptError, F, M, ## __VA_ARGS__)
-#define IGLC(M,...)   GLEX(OglCheckExceptError, , M, ## __VA_ARGS__)
+#define IGLL(F,M,...) GLEX(OglCheckLogError, F, M, ##__VA_ARGS__)
+#define IGL(F,M,...)  GLEX(OglCheckExceptError, F, M, ##__VA_ARGS__)
+#define IGLC(M,...)   GLEX(OglCheckExceptError, , M, ##__VA_ARGS__)
   /* -- Private typedefs --------------------------------------------------- */
   using OglVHandles = StdArray<GLuint, 2>; // Vertex Array/Buffer handles type
   /* -- String defines ----------------------------------------------------- */

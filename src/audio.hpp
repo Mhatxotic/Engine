@@ -21,7 +21,7 @@ using namespace ISysUtil::P;           using namespace IThread::P;
 using namespace IVideo::P;             using namespace LOal::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
-/* -- Class prototype and global pointer ----------------------------------- */
+/* -- Class prototype and global ------------------------------------------- */
 class Audio;                           // Class prototype
 static Audio *cAudio = nullptr;        // Pointer to global class
 /* -- Class body ----------------------------------------------------------- */

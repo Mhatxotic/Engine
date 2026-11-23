@@ -234,9 +234,8 @@ class ShaderCore :                     // Members initially private
       "ycbcr.z=texture(texCr,vec2(texcoordout)).r-0.5;";
     // 3D YCbCr shader helper macro
 #define SHDR(r,rn,c,k,kn) \
-    Init3DYCbCrTemplate(sh3DYCbCr ## k ## c ## r ## R, \
-      "FRAG-3D YCbCr>" STR(r) STR(c) ">RGB" STR(k), \
-      ssv ## rn, ssv ## c, ssv ## kn)
+    Init3DYCbCrTemplate(sh3DYCbCr##k##c##r##R, \
+      "FRAG-3D YCbCr>" STR(r) STR(c) ">RGB" STR(k), ssv##rn, ssv##c, ssv##kn)
     // Initialise the YCbCr to RGBA conversion shaders
     SHDR(F, Full,    601,  , NoKey);   // BT.601 (Full 0-255) unkeyed
     SHDR(P, Partial, 601,  , NoKey);   // BT.601 (Partial 16-235) unkeyed

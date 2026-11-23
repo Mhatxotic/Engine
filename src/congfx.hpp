@@ -60,7 +60,7 @@ class ConGfx :                         // Members initially private
     Ftf fFTFont;
     fFTFont.FtfInitFile(cCVars->CVarsGetStrInternal(CON_FONT), glfFontWidth,
       glfFontHeight, 96, 96, 0.0f);
-    ConGfxGetFontRef().InitFontFtf(fFTFont,
+    ConGfxGetFontRef().FontInitFtf(fFTFont,
       cCVars->CVarsGetInternal<GLuint>(CON_FONTTEXSIZE),
       cCVars->CVarsGetInternal<GLuint>(CON_FONTPADDING), OF_L_L_MM_L,
       ConGfxGetFontRef());
@@ -72,7 +72,7 @@ class ConGfx :                         // Members initially private
            cCVars->CVarsGetInternal<unsigned>(CON_FONTPCMAX))
         // If maximum is above the minimum? Pre-cache the characters range
         if(utcCharMax >= utcCharMin)
-          ConGfxGetFontRef().InitFTCharRange(utcCharMin, utcCharMax);
+          ConGfxGetFontRef().FontInitFTCharRange(utcCharMin, utcCharMax);
     // Set default font parameters
     ConGfxRestoreDefaultProperties();
     // LUA not allowed to deallocate this font!
@@ -85,24 +85,24 @@ class ConGfx :                         // Members initially private
     if(strCT.empty())
     { // Create simple image for solid colour and load it into a texture
       Image imgData{ 0xFFFFFFFF };
-      ConGfxGetTextureRef().InitTextureImage(imgData, 0, 0, 0, 0, OF_N_N);
+      ConGfxGetTextureRef().TextureInitImage(imgData, 0, 0, 0, 0, OF_N_N);
     } // Else filename specified so load it!
     else
     { // Load image from disk and load it into a texture
       Image imgData{ strCT, IL_NONE };
-      ConGfxGetTextureRef().InitTextureImage(imgData, 0, 0, 0, 0, OF_L_L_MM_L);
+      ConGfxGetTextureRef().TextureInitImage(imgData, 0, 0, 0, 0, OF_L_L_MM_L);
     } // LUA will not be allowed to garbage collect this texture class!
     ConGfxGetTextureRef().LockSet();
   }
   /* -- Commit default text scale ------------------------------------------ */
   void ConGfxCommitScale()
-    { ConGfxGetFontRef().SetSize(glfFontScale); }
+    { ConGfxGetFontRef().FontSetSize(glfFontScale); }
   /* -- Commit default letter spacing -------------------------------------- */
   void ConGfxCommitLetterSpacing()
-    { ConGfxGetFontRef().SetCharSpacing(glfLetterSpacing); }
+    { ConGfxGetFontRef().FontSetCharSpacing(glfLetterSpacing); }
   /* -- Commit default line spacing ---------------------------------------- */
   void ConGfxCommitLineSpacing()
-    { ConGfxGetFontRef().SetLineSpacing(glfLineSpacing); }
+    { ConGfxGetFontRef().FontSetLineSpacing(glfLineSpacing); }
   /* -- Reset defaults (for lreset) ---------------------------------------- */
   void ConGfxRestoreDefaultProperties()
   { // Restore default settings from cvar registry
@@ -239,7 +239,7 @@ class ConGfx :                         // Members initially private
       ConGfxGetMainFBOStage().CoordsGetY2() - fYAdj);
     // Set console texture colour and blit the console background
     ConGfxGetTextureRef().FboItemSetQuadRGBAInt(ulTexColour);
-    ConGfxGetTextureRef().BlitLTRB(0, 0,
+    ConGfxGetTextureRef().TextureBlitLTRB(0, 0,
       ConGfxGetFBOStage().CoordsGetX1(),
       ConGfxGetFBOStage().CoordsGetY1(),
       ConGfxGetFBOStage().CoordsGetX2(),
@@ -250,11 +250,11 @@ class ConGfx :                         // Members initially private
     ConGfxRestoreDefaultProperties();
     // Get below baseline height
     const GLfloat glfBL = (ConGfxGetFBOStage().CoordsGetY2() -
-      ConGfxGetFontRef().GetBaselineBelow('g')) +
-      ConGfxGetFontRef().GetLineSpacing();
+      ConGfxGetFontRef().FontGetBaselineBelow('g')) +
+      ConGfxGetFontRef().FontGetLineSpacing();
     // Draw input text and subtract the height drawn from Y position
     GLfloat glfY = glfBL -
-      ConGfxGetFontRef().PrintWU(ConGfxGetFBOStage().CoordsGetX1(), glfBL,
+      ConGfxGetFontRef().FontPrintWU(ConGfxGetFBOStage().CoordsGetX1(), glfBL,
         ConGfxGetFBOStage().CoordsGetX2(),
         ConGfxGetFontRef().gldfScale.DimGetWidth(),
         StrFormat(">$\rc000000ff$\rr$", cConsole->GetConsoleBegin(), cCursor,
@@ -269,7 +269,7 @@ class ConGfx :                         // Members initially private
       // Set text foreground colour with opaqueness already set above
       ConGfxGetFontRef().FboItemSetQuadRGBInt(ConColourToRGB(clD.ccColour));
       // Draw the text and move upwards of the height that was used
-      glfY -= ConGfxGetFontRef().PrintWU(ConGfxGetFBOStage().CoordsGetX1(),
+      glfY -= ConGfxGetFontRef().FontPrintWU(ConGfxGetFBOStage().CoordsGetX1(),
         glfY, ConGfxGetFBOStage().CoordsGetX2(),
         ConGfxGetFontRef().gldfScale.DimGetWidth(), clD.strLine);
     } // Finish and render
@@ -282,23 +282,24 @@ class ConGfx :                         // Members initially private
     { if(cConsole->IsVisible()) cFboCore->FboCoreBlitConsoleToMain(); }
   /* -- DeInit console texture and font ------------------------------------ */
   void ConGfxDeInitTextureAndFont()
-    { ConGfxGetTextureRef().DeInit(); ConGfxGetFontRef().DeInit(); }
+    { ConGfxGetTextureRef().TextureDeInit();
+      ConGfxGetFontRef().TextureDeInit(); }
   /* -- Reload console texture and font ------------------------------------ */
   void ConGfxReInitTextureAndFont()
-    { ConGfxGetTextureRef().ReloadTexture();
-      ConGfxGetFontRef().ReloadTexture(); }
+    { ConGfxGetTextureRef().TextureReloadTexture();
+      ConGfxGetFontRef().TextureReloadTexture(); }
   /* -- Estimate number of triangles needed to fill screen ----------------- */
   size_t ConGfxGetTrianglesEstimate()
   { // Calculate characters per row
     const GLfloat
       glfMainWidth     = ConGfxGetMainFBO().DimGetWidth<GLfloat>(),
       glfFoScWidth     = glfFontWidth * glfFontScale,
-      glfSpacingWidth  = ConGfxGetFontRef().GetCharSpacingScale(),
+      glfSpacingWidth  = ConGfxGetFontRef().FontGetCharSpacingScale(),
       glfFoSpWidth     = glfFoScWidth + glfSpacingWidth,
       glfCharRow       = glfMainWidth / glfFoSpWidth * 2.0f,
       glfMainHeight    = ConGfxGetMainFBO().DimGetHeight<GLfloat>(),
       glfFoScHeight    = glfFontHeight * glfFontScale,
-      glfSpacingHeight = ConGfxGetFontRef().GetLineSpacing(),
+      glfSpacingHeight = ConGfxGetFontRef().FontGetLineSpacing(),
       glfFoSpHeight    = glfFoScHeight + glfSpacingHeight,
       glfCharColumn    = glfMainHeight / glfFoSpHeight * 2.0f;
     // Then return total number of triangles on screen
@@ -307,7 +308,7 @@ class ConGfx :                         // Members initially private
   /* -- Init framebuffer object -------------------------------------------- */
   void ConGfxInitFBO()
   { // Ignore if terminal mode
-    if(ConGfxGetFontRef().IsNotInitialised()) return;
+    if(ConGfxGetFontRef().TextureIsNotInitialised()) return;
     // Get reference to main FBO and initialise it
     cFboCore->FboCoreInitConsole(ConGfxGetTrianglesEstimate());
     // Redraw FBO
@@ -375,7 +376,7 @@ class ConGfx :                         // Members initially private
     if(!CVarToBoolReturn(CVarSimpleSetIntNLG(glfFontScale,
       glfNScale, 0.01f, 16.0f))) return DENY;
     // If font initialised?
-    if(ConGfxGetFontRef().IsInitialised())
+    if(ConGfxGetFontRef().TextureIsInitialised())
     { // Set console text size so the scaled size is properly calculated
       ConGfxCommitScale();
       // Estimate amount of triangles that would fit in the console

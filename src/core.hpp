@@ -70,13 +70,13 @@ static Core *cCore = nullptr;          // Pointer to static class
 class Core final :                     // Members initially private
   /* -- Base classes (order is critical!) ---------------------------------- */
   GCHelper<Core>, Stats, Threads, EvtMain, System, LuaFuncs, Archives, Assets,
-  Crypt, Urls, Frame, Sqls, Sql, Jsons, Metadata, CVarItemStaticList, CVars,
-  Sockets, ConCmdStaticList, Console, GlFW, Credits, FreeType, Ftfs, Files,
-  Masks, Bins, Oal, PcmLibs, CodecWAV, CodecCAF, CodecOGG, Pcms, Mixer, Audio,
-  Sources, Samples, Streams, EvtWin, Ogl, ImageLibs, CodecPNG, CodecJPG,
-  CodecGIF, CodecDDS, CodecWEBP, Images, Shaders, Clips, Display, Input,
-  ShaderCore, Fbos, FboCore, SShots, Textures, Palettes, Atlases, Fonts,
-  Videos, ConGfx, Variables, Commands, Lua
+  Crypt, Urls, Frame, Sqls, Sql, GCHelper<Sql>, Jsons, Metadata,
+  CVarItemStaticList, CVars, Sockets, ConCmdStaticList, Console, GlFW, Credits,
+  FreeType, Ftfs, Files, Masks, Bins, Oal, PcmLibs, CodecWAV, CodecCAF,
+  CodecOGG, Pcms, Mixer, Audio, Sources, Samples, Streams, EvtWin, Ogl,
+  ImageLibs, CodecPNG, CodecJPG, CodecGIF, CodecDDS, CodecWEBP, Images,
+  Shaders, Clips, Display, Input, ShaderCore, Fbos, FboCore, SShots, Textures,
+  Palettes, Atlases, Fonts, Videos, ConGfx, Variables, Commands, Lua
 { /* -- Private typedefs to run a function when scope exits ---------------- */
   template<typename FuncType>struct ScopeGuard { FuncType ftFunc;
     explicit ScopeGuard(FuncType &&ftNFunc) : ftFunc(StdMove(ftNFunc)) {}
@@ -116,7 +116,7 @@ class Core final :                     // Members initially private
       InputResetEnvironment();
       FboCoreResetEnvironment();
       OglResetBinds();
-      palDefault.Commit();
+      palDefault.PaletteCommit();
       // Reset matrix to original settings and reset the cursor
       DisplayCommitDefaultMatrix();
       DisplayRequestResetCursor();
@@ -138,7 +138,7 @@ class Core final :                     // Members initially private
     // Reset unique ids. Remember some classes aren't registered in the
     // collector, such as the console and main FBO.
 #define RSCEX(x,y,v) y::CLHelperBase::SerialReset(y::CollectorCount() + v)
-#define RSCX(x,v) RSCEX(ICHelper ## x, x ## s, v)
+#define RSCX(x,v) RSCEX(ICHelper##x, x##s, v)
 #define RSC(x) RSCX(x, 0)
     RSC(Archive); RSC(Asset);    RSC(Atlase); RSC(Bin);     RSC(Clip);
     RSC(Command); RSCX(Fbo, 2);  RSC(File);   RSC(Font);    RSC(Ftf);
@@ -404,7 +404,7 @@ class Core final :                     // Members initially private
         // Unload font, texture, videos and curor textures
         VideoDeInitTextures();
         FontDeInitTextures();
-        TextureDeInitTextures();
+        TextureDeInit();
         // Done
         break;
       // Were exiting to deinitialise everything
@@ -455,18 +455,16 @@ class Core final :                     // Members initially private
       ConsoleInit();
       ConGfxInit();
       InputInit();
-    } // Not initialising for the first time?
-    else
-    { // Reinitialise systems that rely on OpenGL and/or GLFW.
-      DisplayCommitMatrix();
-      DisplayUpdateIcons();
-      FboReInit();
-      ConGfxReInitTextureAndFont();
-      FontReInitTextures();
-      TextureReInitTextures();
-      VideoReInitTextures();
-      InputCommitCursor();
-    }
+      return;
+    } // Reinit so reload systems that rely on OpenGL and GLFW.
+    DisplayCommitMatrix();
+    DisplayUpdateIcons();
+    FboReInit();
+    ConGfxReInitTextureAndFont();
+    FontReInitTextures();
+    TextureReInit();
+    VideoReInitTextures();
+    InputCommitCursor();
   }
   /* -- Engine thread (member function) ------------------------------------ */
   ThreadFlagsType CoreThreadMain(Thread&) try
@@ -847,7 +845,8 @@ class Core final :                     // Members initially private
   Core() :
     /* -- Initialisers ----------------------------------------------------- */
     Lockable{ true },                  // Static virtual objects can't be GC'd
-    GCHelper<Core>{ this, &cCore },    // Initialise global pointer
+    GCHelper<Core>{ this, &cCore },    // Initialise core global pointer
+    GCHelper<Sql>{ this, &cSql },      // Initialise main db global pointer
 #include "cvarlib.hpp"                 // Defines cvar list
     CVars{ static_cast<CVarItemStaticList&>(*this) },
 #include "conlib.hpp"                  // Defines console command list
@@ -857,8 +856,8 @@ class Core final :                     // Members initially private
     uErrorCount(0),                    // Init number of errors occured
     uErrorLimit(0),                    // Init number of errors allowed
     ivForceFrame{ cd1S }               // Force render frame after 1 second
-    /* -- Set main SQL class global pointer to this ------------------------ */
-    { cSql = this; }
+    /* -- No code ---------------------------------------------------------- */
+    {}
   /* -- Process compatibility flags ---------------------------------------- */
   static CVarReturn CoreProcessCompatibilityFlags(const uint64_t ullFlags)
   { // Nothing yet

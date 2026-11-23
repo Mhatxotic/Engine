@@ -193,11 +193,10 @@ using StrVSetConstIt = StrVSet::const_iterator;
 using StrVUSet       = StdUnorderedSet<StdStringView> ;
 /* -- Helper macro to build typedefs for a new map type -------------------- */
 #define MAPPACK_BUILD(n,t1,t2) \
-  using n ## MapPair = StdPair<t1, t2>; \
-  using n ## Map = StdMap<n ## MapPair::first_type, \
-                          n ## MapPair::second_type>; \
-  using n ## MapIt = n ## Map::iterator; \
-  using n ## MapConstIt = n ## Map::const_iterator;
+  using n##MapPair = StdPair<t1, t2>; \
+  using n##Map = StdMap<n##MapPair::first_type, n##MapPair::second_type>; \
+  using n##MapIt = n##Map::iterator; \
+  using n##MapConstIt = n##Map::const_iterator;
 /* -- Map of strings and unsigned integers --------------------------------- */
 MAPPACK_BUILD(StrUInt, const StdString, const unsigned)
 using StrUIntMapConstItVector = StdVector<StrUIntMapConstIt>;

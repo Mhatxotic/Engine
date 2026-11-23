@@ -63,34 +63,34 @@ class ImageData :                      // Members initially private
     stTiles = imdRef.stTiles;
   }
   /* -- Set width and height and return if they are valid ------------------ */
-  bool SetDimSafe(const unsigned uNWidth, const unsigned uNHeight)
+  bool ImageDataSetDimSafe(const unsigned uNWidth, const unsigned uNHeight)
     { DimSet(uNWidth, uNHeight); return uNWidth && uNHeight; }
   /* -- Set bits per pixel ------------------------------------------------- */
-  void SetBitsPerPixel(const BitDepth bdNBPP) { bdDepth = bdNBPP; }
+  void ImageDataSetBitsPerPixel(const BitDepth bdNBPP) { bdDepth = bdNBPP; }
   void SetBitsPerPixelCast(const auto aNBPP)
-    { SetBitsPerPixel(static_cast<BitDepth>(aNBPP)); }
+    { ImageDataSetBitsPerPixel(static_cast<BitDepth>(aNBPP)); }
   /* -- Set bytes per pixel ------------------------------------------------ */
-  void SetBytesPerPixel(const ByteDepth byNBPP) { byDepth = byNBPP; }
+  void ImageDataSetBytesPerPixel(const ByteDepth byNBPP) { byDepth = byNBPP; }
   void SetBytesPerPixelCast(const auto aNBPP)
-    { SetBytesPerPixel(static_cast<ByteDepth>(aNBPP)); }
+    { ImageDataSetBytesPerPixel(static_cast<ByteDepth>(aNBPP)); }
   /* -- Set bits per pixel and auto update bytes per pixel ----------------- */
-  void SetBitsAndBytesPerPixel(const BitDepth bdNBPP)
-    { SetBitsPerPixel(bdNBPP); SetBytesPerPixelCast(bdNBPP / 8); }
-  void SetBitsAndBytesPerPixelCast(const auto aNBPP)
-    { SetBitsAndBytesPerPixel(static_cast<BitDepth>(aNBPP)); }
+  void ImageDataSetBitsAndBytesPerPixel(const BitDepth bdNBPP)
+    { ImageDataSetBitsPerPixel(bdNBPP); SetBytesPerPixelCast(bdNBPP / 8); }
+  void ImageDataSetBitsAndBytesPerPixelCast(const auto aNBPP)
+    { ImageDataSetBitsAndBytesPerPixel(static_cast<BitDepth>(aNBPP)); }
   /* -- Set bytes per pixel and auto update bits per pixel ----------------- */
-  void SetBytesAndBitsPerPixel(const ByteDepth byNBPP)
-    { SetBytesPerPixel(byNBPP); SetBitsPerPixelCast(byNBPP * 8); }
-  void SetBytesAndBitsPerPixelCast(const auto aNBPP)
-    { SetBytesAndBitsPerPixel(static_cast<ByteDepth>(aNBPP)); }
+  void ImageDataSetBytesAndBitsPerPixel(const ByteDepth byNBPP)
+    { ImageDataSetBytesPerPixel(byNBPP); SetBitsPerPixelCast(byNBPP * 8); }
+  void ImageDataSetBytesAndBitsPerPixelCast(const auto aNBPP)
+    { ImageDataSetBytesAndBitsPerPixel(static_cast<ByteDepth>(aNBPP)); }
   /* ----------------------------------------------------------------------- */
   size_t GetAlloc() const { return stAlloc; }
   /* ----------------------------------------------------------------------- */
 #define FH(n, f) \
-  bool Is ## n() const { return FlagIsSet(f); } \
-  bool IsNot ## n() const { return !Is ## n(); } \
-  void Set ## n(bool bState=true) { FlagSetOrClear(f, bState); } \
-  void Clear ## n() { Set ## n(false); }
+  bool ImageDataIs##n() const { return FlagIsSet(f); } \
+  bool ImageDataIsNot##n() const { return !ImageDataIs##n(); } \
+  void ImageDataSet##n(bool bState = true) { FlagSetOrClear(f, bState); } \
+  void ImageDataClear##n() { ImageDataSet##n(false); }
   /* ----------------------------------------------------------------------- */
   FH(FontFreeType,     FT_FREETYPE)    // Is/IsNot/Set/ClearFontFreeType
   FH(FontBitmap,       FT_BITMAP)      // Is/IsNot/Set/ClearFontBitmap
@@ -126,71 +126,74 @@ class ImageData :                      // Members initially private
   /* ----------------------------------------------------------------------- */
 #undef FH                              // Done with this macro
   /* ----------------------------------------------------------------------- */
-  void SetPixelType(const TextureType ttNType) { ttType = ttNType; }
+  void ImageDataSetPixelType(const TextureType ttNType) { ttType = ttNType; }
   /* ----------------------------------------------------------------------- */
-  TextureType GetPixelType() const { return ttType; }
+  TextureType ImageDataGetPixelType() const { return ttType; }
   /* ----------------------------------------------------------------------- */
-  size_t TotalPixels() const
+  size_t ImageDataGetTotalPixels() const
     { return DimGetWidth<size_t>() * DimGetHeight<size_t>(); }
   /* ----------------------------------------------------------------------- */
-  decltype(bdDepth) GetBitsPerPixel() const { return bdDepth; }
+  decltype(bdDepth) ImageDataGetBitsPerPixel() const { return bdDepth; }
   /* ----------------------------------------------------------------------- */
-  decltype(byDepth) GetBytesPerPixel() const { return byDepth; }
+  decltype(byDepth) ImageDataGetBytesPerPixel() const { return byDepth; }
   /* -- Get slots ---------------------------------------------------------- */
-  SlotList &GetSlots() { return slSlots; }
+  SlotList &ImageDataGetSlots() { return slSlots; }
+  const SlotList &ImageDataGetSlots() const { return slSlots; }
   /* -- Add a new slot ----------------------------------------------------- */
-  void AddSlot(Memory &mData, const unsigned uSWidth, const unsigned uSHeight)
+  void ImageDataAddSlot(Memory &mData, const unsigned uSWidth,
+    const unsigned uSHeight)
   { // Add the slot moving the memory over
-    GetSlots().push_back({ StdMove(mData), uSWidth, uSHeight });
+    ImageDataGetSlots().push_back({ StdMove(mData), uSWidth, uSHeight });
     // Add to memory bytes allocated counter
-    IncreaseAlloc(GetSlots().back().MemSize());
+    ImageDataIncreaseAlloc(ImageDataGetSlots().back().MemSize());
   }
   /* -- Add a new slot using our image size -------------------------------- */
-  void AddSlot(Memory &mData)
-    { AddSlot(mData, DimGetWidth(), DimGetHeight()); }
+  void ImageDataAddSlot(Memory &mData)
+    { ImageDataAddSlot(mData, DimGetWidth(), DimGetHeight()); }
   /* -- Helps with one-liners (temporary variables) ------------------------ */
-  void AddSlot(Memory &&mData) { AddSlot(mData); }
-  /* -- Get read-only slots ------------------------------------------------ */
-  const SlotList &GetSlots() const { return slSlots; }
+  void ImageDataAddSlot(Memory &&mData) { ImageDataAddSlot(mData); }
   /* -- Is no slots? ------------------------------------------------------- */
-  bool IsNoSlots() const { return GetSlots().empty(); }
+  bool ImageDataIsNoSlots() const { return ImageDataGetSlots().empty(); }
   /* -- Clear slots -------------------------------------------------------- */
-  void ClearSlots() { GetSlots().clear(); }
+  void ImageDataClearSlots() { ImageDataGetSlots().clear(); }
   /* -- Recover slot memory ------------------------------------------------ */
-  void CompactSlots() { GetSlots().shrink_to_fit(); }
+  void ImageDataCompactSlots() { ImageDataGetSlots().shrink_to_fit(); }
   /* -- Get slots count ---------------------------------------------------- */
-  size_t GetSlotCount() const { return GetSlots().size(); }
+  size_t ImageDataGetSlotCount() const { return ImageDataGetSlots().size(); }
   /* -- Set allocated data size -------------------------------------------- */
-  void SetAlloc(const size_t stNAlloc) { stAlloc = stNAlloc; }
+  void ImageDataSetAlloc(const size_t stNAlloc) { stAlloc = stNAlloc; }
   /* -- Reserve allocated slots -------------------------------------------- */
-  void ReserveSlots(const size_t stCount) { GetSlots().reserve(stCount); }
+  void ImageDataReserveSlots(const size_t stCount)
+    { ImageDataGetSlots().reserve(stCount); }
   /* -- Increase allocated data size --------------------------------------- */
-  void IncreaseAlloc(const size_t stNAlloc) { stAlloc += stNAlloc; }
+  void ImageDataIncreaseAlloc(const size_t stNAlloc) { stAlloc += stNAlloc; }
   /* -- Decrease allocated data size --------------------------------------- */
-  void DecreaseAlloc(const size_t stNAlloc) { stAlloc -= stNAlloc; }
+  void ImageDataDecreaseAlloc(const size_t stNAlloc) { stAlloc -= stNAlloc; }
   /* -- Adjust allocation from old and new value --------------------------- */
-  void AdjustAlloc(const size_t stOldAlloc, const size_t stNewAlloc)
+  void ImageDataAdjustAlloc(const size_t stOldAlloc, const size_t stNewAlloc)
   { // If new alloc is greater then the total value increased
-    if(stNewAlloc > stOldAlloc) IncreaseAlloc(stNewAlloc - stOldAlloc);
+    if(stNewAlloc > stOldAlloc)
+      ImageDataIncreaseAlloc(stNewAlloc - stOldAlloc);
     // If the new alloc is lesser then the total value decreased
-    else if(stNewAlloc < stOldAlloc) DecreaseAlloc(stOldAlloc - stNewAlloc);
+    else if(stNewAlloc < stOldAlloc)
+      ImageDataDecreaseAlloc(stOldAlloc - stNewAlloc);
   }
   /* -- Clear slots and allocation size ------------------------------------ */
-  void Clear() { SetAlloc(0); ClearSlots(); }
+  void ImageDataClear() { ImageDataSetAlloc(0); ImageDataClearSlots(); }
   /* -- Reset all data ----------------------------------------------------- */
-  void ResetAllData()
+  void ImageDataResetAllData()
   { // Reset dimensions and pixel data
     DimSet();
-    SetBitsPerPixel(BD_NONE);
-    SetBytesPerPixel(BY_NONE);
-    SetPixelType(TT_NONE);
+    ImageDataSetBitsPerPixel(BD_NONE);
+    ImageDataSetBytesPerPixel(BY_NONE);
+    ImageDataSetPixelType(TT_NONE);
     // Remove image property flags
-    ClearMipmaps();
-    ClearReversed();
-    ClearCompressed();
-    ClearPalette();
+    ImageDataClearMipmaps();
+    ImageDataClearReversed();
+    ImageDataClearCompressed();
+    ImageDataClearPalette();
     // Clear slots list and set allocation to zero
-    Clear();
+    ImageDataClear();
   }
   /* -- Constructor with default purpose ----------------------------------- */
   explicit ImageData(const ImageFlagsConst ifcPurpose = IP_IMAGE) :

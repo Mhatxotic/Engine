@@ -780,8 +780,8 @@ const function ShowFontInfo{ [](Statistic &sTable, const Font &fRef)
   { sTable.DataN(fRef.Atlas::Serial())
           .DataE({
             { fRef.LockIsSet(),                'L' },
-            { fRef.IsFontBitmap(),             'B' },
-            { fRef.IsFontFreeType(),           'T' },
+            { fRef.ImageDataIsFontBitmap(),    'B' },
+            { fRef.ImageDataIsFontFreeType(),  'T' },
             { fRef.FlagIsSet(FF_USEGLYPHSIZE), 'S' },
             { fRef.FlagIsSet(FF_STROKETYPE2),  'A' },
             { fRef.FlagIsSet(FF_FLOORADVANCE), 'F' },
@@ -789,9 +789,9 @@ const function ShowFontInfo{ [](Statistic &sTable, const Font &fRef)
             { fRef.FlagIsSet(FF_ROUNDADVANCE), 'R' }
           })
           .DataN(fRef.ftflExtras.size())
-          .DataN(fRef.GetCharScale(), 6)
-          .DataN(fRef.GetTexOccupancy(), 6)
-          .DataN(fRef.GetCharCount()).Data(fRef.NameGet()); }
+          .DataN(fRef.FontGetCharScale(), 6)
+          .DataN(fRef.FontGetTexOccupancy(), 6)
+          .DataN(fRef.FontGetCharCount()).Data(fRef.NameGet()); }
 }; // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("ID").Header("FLAG").Header("SUB").Header("SCALE")
@@ -917,20 +917,21 @@ if(aArgs.size() == 2)
     return cConsole->ConsoleAddLine("Invalid image id!");
   const Image &iRef = **StdNext(cImages->cbegin(), static_cast<ssize_t>(stId));
   // If image is dynamic to save memory then there will be no slots
-  if(!iRef.GetSlotCount())
+  if(!iRef.ImageDataGetSlotCount())
     return cConsole->ConsoleAddLineF("Image ($) at $ is not dynamic!",
       iRef.NameGet(), stId);
   // Text table class to help us write neat output
   Statistic sTable;
   sTable.Header("SIZX").Header("SIZY").Header("SIZE")
-        .Reserve(iRef.GetSlotCount());
+        .Reserve(iRef.ImageDataGetSlotCount());
   // For each slot
-  for(const ImageSlot &imdD : iRef.GetSlots())
+  for(const ImageSlot &imdD : iRef.ImageDataGetSlots())
     sTable.DataN(imdD.DimGetWidth()).DataN(imdD.DimGetHeight())
           .DataN(imdD.MemSize());
   // Log texture counts
   return cConsole->ConsoleAddLineF("$$ in $.", sTable.Finish(),
-    StrPluraliseNum(iRef.GetSlotCount(), "slot", "slots"), iRef.NameGet());
+    StrPluraliseNum(iRef.ImageDataGetSlotCount(), "slot", "slots"),
+      iRef.NameGet());
 } // Text table class to help us write neat output
 Statistic sTable;
 sTable.Header("#").Header("ID").Header("FLAG", false).Header("SIZW")
@@ -942,25 +943,41 @@ for(const Image*const iPtr : *cImages)
 { // Get reference to class and write its data to the table
   const Image &iRef = *iPtr;
   sTable.DataN(stIndex++).DataN(iRef.Serial()).DataE({
-    { iRef.LockIsSet(),         'L' }, { iRef.IsDynamic(),         'D' },
-    { iRef.IsPurposeFont(),     'F' }, { iRef.IsPurposeImage(),    'I' },
-    { iRef.IsPurposeTexture(),  'T' }, { iRef.IsLoadAsPNG(),       '0' },
-    { iRef.IsLoadAsJPEG(),      '1' }, { iRef.IsLoadAsGIF(),       '2' },
-    { iRef.IsLoadAsDDS(),       '3' }, { iRef.IsLoadAsWEBP(),      '4' },
-    { iRef.IsConvertAtlas(),    'a' }, { iRef.IsActiveAtlas(),     'A' },
-    { iRef.IsConvertReverse(),  's' }, { iRef.IsActiveReverse(),   'S' },
-    { iRef.IsConvertRGB(),      'u' }, { iRef.IsActiveRGB(),       'U' },
-    { iRef.IsConvertRGBA(),     'x' }, { iRef.IsActiveRGBA(),      'X' },
-    { iRef.IsConvertBGROrder(), 'y' }, { iRef.IsActiveBGROrder(),  'Y' },
-    { iRef.IsConvertBinary(),   'b' }, { iRef.IsActiveBinary(),    'B' },
-    { iRef.IsConvertRGBOrder(), 'z' }, { iRef.IsActiveRGBOrder(),  'Z' },
-    { iRef.IsConvertGPUCompat(),'g' }, { iRef.IsActiveGPUCompat(), 'G' },
-    { iRef.IsCompressed(),      'C' }, { iRef.IsPalette(),         'P' },
-    { iRef.IsMipmaps(),         'M' }, { iRef.IsReversed(),        'R' },
+    { iRef.LockIsSet(),                  'L' },
+    { iRef.ImageDataIsDynamic(),         'D' },
+    { iRef.ImageDataIsPurposeFont(),     'F' },
+    { iRef.ImageDataIsPurposeImage(),    'I' },
+    { iRef.ImageDataIsPurposeTexture(),  'T' },
+    { iRef.ImageDataIsLoadAsPNG(),       '0' },
+    { iRef.ImageDataIsLoadAsJPEG(),      '1' },
+    { iRef.ImageDataIsLoadAsGIF(),       '2' },
+    { iRef.ImageDataIsLoadAsDDS(),       '3' },
+    { iRef.ImageDataIsLoadAsWEBP(),      '4' },
+    { iRef.ImageDataIsConvertAtlas(),    'a' },
+    { iRef.ImageDataIsActiveAtlas(),     'A' },
+    { iRef.ImageDataIsConvertReverse(),  's' },
+    { iRef.ImageDataIsActiveReverse(),   'S' },
+    { iRef.ImageDataIsConvertRGB(),      'u' },
+    { iRef.ImageDataIsActiveRGB(),       'U' },
+    { iRef.ImageDataIsConvertRGBA(),     'x' },
+    { iRef.ImageDataIsActiveRGBA(),      'X' },
+    { iRef.ImageDataIsConvertBGROrder(), 'y' },
+    { iRef.ImageDataIsActiveBGROrder(),  'Y' },
+    { iRef.ImageDataIsConvertBinary(),   'b' },
+    { iRef.ImageDataIsActiveBinary(),    'B' },
+    { iRef.ImageDataIsConvertRGBOrder(), 'z' },
+    { iRef.ImageDataIsActiveRGBOrder(),  'Z' },
+    { iRef.ImageDataIsConvertGPUCompat(),'g' },
+    { iRef.ImageDataIsActiveGPUCompat(), 'G' },
+    { iRef.ImageDataIsCompressed(),      'C' },
+    { iRef.ImageDataIsPalette(),         'P' },
+    { iRef.ImageDataIsMipmaps(),         'M' },
+    { iRef.ImageDataIsReversed(),        'R' },
   }).DataN(iRef.DimGetWidth()).DataN(iRef.DimGetHeight())
-    .DataN(iRef.GetBitsPerPixel()).DataN(iRef.GetBytesPerPixel())
-    .DataN(iRef.GetSlotCount()).DataN(iRef.GetAlloc())
-    .Data(ImageGetPixelFormat(iRef.GetPixelType()))
+    .DataN(iRef.ImageDataGetBitsPerPixel())
+    .DataN(iRef.ImageDataGetBytesPerPixel())
+    .DataN(iRef.ImageDataGetSlotCount()).DataN(iRef.GetAlloc())
+    .Data(ImageGetPixelFormat(iRef.ImageDataGetPixelType()))
     .Data(iRef.NameGet());
 } // Log texture counts
 cConsole->ConsoleAddLineA(sTable.Finish(),
@@ -1559,7 +1576,7 @@ using MemoryUsageItems = StdList<MemoryUsageItem>;
 #define MSSX(s,c) { c->NameGet(), \
                     c->CollectorCount(), \
                     c->CollectorCount() * sizeof(s) }
-#define MSS(x) MSSX(x, c ## x ## s)
+#define MSS(x) MSSX(x, c##x##s)
 // Build memory usage items database
 const MemoryUsageItems muiList{ {
   MSS(Archive),  MSS(Asset),   MSSX(Atlas, cAtlases),      MSS(Bin),
@@ -2352,11 +2369,11 @@ const function ShowTextureInfo{
                 { tRef.FlagIsSet(TF_DELETE),  'D' },
                 { tRef.FlagIsSet(IP_FONT),    'F' },
                 { tRef.FlagIsSet(IP_TEXTURE), 'T' }})
-        .DataN(tRef.GetSubCount()).DataN(tRef.GetMipmaps())
-        .DataN(tRef.GetTexFilter()).DataN(tRef.GetTileCount())
-        .DataN(tRef.GetTileWidth()).DataN(tRef.GetTileHeight())
-        .DataN(tRef.GetPaddingWidth(), 0).DataN(tRef.GetPaddingHeight(), 0)
-        .Data(tRef.NameGet());
+        .DataN(tRef.TextureGetSubCount()).DataN(tRef.TextureGetMipmaps())
+        .DataN(tRef.TextureGetFilter()).DataN(tRef.TextureTileGetCount())
+        .DataN(tRef.TextureTileGetWidth()).DataN(tRef.TextureTileGetHeight())
+        .DataN(tRef.TextureGetPaddingWidth(), 0)
+        .DataN(tRef.TextureGetPaddingHeight(), 0).Data(tRef.NameGet());
 } };
 // Text table class to help us write neat output
 Statistic sTable;

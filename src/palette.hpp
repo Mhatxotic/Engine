@@ -31,91 +31,91 @@ class Pal :                            // Members initially public
   using PalDataIt      = PalData::iterator;         // Forward iterator
   using PalDataConstIt = PalData::const_iterator;   // Const forward iterator
   /* -- Get PalData ------------------------------------------------ */ public:
-  const Colour &GetSlotConst(const size_t stSlot) const
+  const Colour &PaletteGetSlot(const size_t stSlot) const
     { return (*this)[stSlot]; }
-  Colour &GetSlot(const size_t stSlot) { return (*this)[stSlot]; }
+  Colour &PaletteGetSlot(const size_t stSlot) { return (*this)[stSlot]; }
   /* -- Commit palette ----------------------------------------------------- */
-  void Commit() const
+  void PaletteCommit() const
     { cShaderCore->sh2D8Pal.UpdatePalette(size(),
         reinterpret_cast<const GLfloat*>(data())); }
   /* -- Set palette entry -------------------------------------------------- */
-  void SetRGBA(const size_t stPos, const GLfloat glfRed,
+  void PaletteSetRGBA(const size_t stPos, const GLfloat glfRed,
     const GLfloat glfGreen, const GLfloat glfBlue, const GLfloat glfAlpha)
-  { GetSlot(stPos) = { glfRed, glfGreen, glfBlue, glfAlpha }; }
+  { PaletteGetSlot(stPos) = { glfRed, glfGreen, glfBlue, glfAlpha }; }
   /* -- Set palette entry as integer --------------------------------------- */
-  void SetRGBAInt(const size_t stPos, const unsigned uRed,
+  void PaletteSetRGBAInt(const size_t stPos, const unsigned uRed,
     const unsigned uGreen, const unsigned uBlue, const unsigned uAlpha)
-  { GetSlot(stPos) = { uRed, uGreen, uBlue, uAlpha }; }
+  { PaletteGetSlot(stPos) = { uRed, uGreen, uBlue, uAlpha }; }
   /* -- Get red palette entry ---------------------------------------------- */
-  GLfloat GetRed(const size_t stPos) const
-    { return GetSlotConst(stPos).ColourGetRed(); }
-  unsigned GetRedInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned>(GetRed(stPos)); }
+  GLfloat PaletteGetRed(const size_t stPos) const
+    { return PaletteGetSlot(stPos).ColourGetRed(); }
+  unsigned PaletteGetRedInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(PaletteGetRed(stPos)); }
   /* -- Get green palette entry -------------------------------------------- */
-  GLfloat GetGreen(const size_t stPos) const
-    { return GetSlotConst(stPos).ColourGetGreen(); }
-  unsigned GetGreenInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned>(GetGreen(stPos)); }
+  GLfloat PaletteGetGreen(const size_t stPos) const
+    { return PaletteGetSlot(stPos).ColourGetGreen(); }
+  unsigned PaletteGetGreenInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(PaletteGetGreen(stPos)); }
   /* -- Get green palette entry -------------------------------------------- */
-  GLfloat GetBlue(const size_t stPos) const
-    { return GetSlotConst(stPos).ColourGetBlue(); }
-  unsigned GetBlueInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned>(GetBlue(stPos)); }
+  GLfloat PaletteGetBlue(const size_t stPos) const
+    { return PaletteGetSlot(stPos).ColourGetBlue(); }
+  unsigned PaletteGetBlueInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(PaletteGetBlue(stPos)); }
   /* -- Get alpha palette entry -------------------------------------------- */
-  GLfloat GetAlpha(const size_t stPos) const
-    { return GetSlotConst(stPos).ColourGetAlpha(); }
-  unsigned GetAlphaInt(const size_t stPos) const
-    { return UtilDenormalise<unsigned>(GetAlpha(stPos)); }
+  GLfloat PaletteGetAlpha(const size_t stPos) const
+    { return PaletteGetSlot(stPos).ColourGetAlpha(); }
+  unsigned PaletteGetAlphaInt(const size_t stPos) const
+    { return UtilDenormalise<unsigned>(PaletteGetAlpha(stPos)); }
   /* -- Set red palette entry ---------------------------------------------- */
-  void SetRed(const size_t stPos, const GLfloat glfRed)
-    { GetSlot(stPos).ColourSetRed(glfRed); }
-  void SetRedInt(const size_t stPos, const unsigned uRed)
-    { GetSlot(stPos).ColourSetRedInt(uRed); }
+  void PaletteSetRed(const size_t stPos, const GLfloat glfRed)
+    { PaletteGetSlot(stPos).ColourSetRed(glfRed); }
+  void PaletteSetRedInt(const size_t stPos, const unsigned uRed)
+    { PaletteGetSlot(stPos).ColourSetRedInt(uRed); }
   /* -- Set green palette entry -------------------------------------------- */
-  void SetGreen(const size_t stPos, const GLfloat glfGreen)
-    { GetSlot(stPos).ColourSetGreen(glfGreen); }
-  void SetGreenInt(const size_t stPos, const unsigned uGreen)
-    { GetSlot(stPos).ColourSetGreenInt(uGreen); }
+  void PaletteSetGreen(const size_t stPos, const GLfloat glfGreen)
+    { PaletteGetSlot(stPos).ColourSetGreen(glfGreen); }
+  void PaletteSetGreenInt(const size_t stPos, const unsigned uGreen)
+    { PaletteGetSlot(stPos).ColourSetGreenInt(uGreen); }
   /* -- Set blue palette entry --------------------------------------------- */
-  void SetBlue(const size_t stPos, const GLfloat glfBlue)
-    { GetSlot(stPos).ColourSetBlue(glfBlue); }
-  void SetBlueInt(const size_t stPos, const unsigned uBlue)
-    { GetSlot(stPos).ColourSetBlueInt(uBlue); }
+  void PaletteSetBlue(const size_t stPos, const GLfloat glfBlue)
+    { PaletteGetSlot(stPos).ColourSetBlue(glfBlue); }
+  void PaletteSetBlueInt(const size_t stPos, const unsigned uBlue)
+    { PaletteGetSlot(stPos).ColourSetBlueInt(uBlue); }
   /* -- Set alpha palette entry -------------------------------------------- */
-  void SetAlpha(const size_t stPos, const GLfloat glfAlpha)
-    { GetSlot(stPos).ColourSetAlpha(glfAlpha); }
-  void SetAlphaInt(const size_t stPos, const unsigned uAlpha)
-    { GetSlot(stPos).ColourSetAlphaInt(uAlpha); }
+  void PaletteSetAlpha(const size_t stPos, const GLfloat glfAlpha)
+    { PaletteGetSlot(stPos).ColourSetAlpha(glfAlpha); }
+  void PaletteSetAlphaInt(const size_t stPos, const unsigned uAlpha)
+    { PaletteGetSlot(stPos).ColourSetAlphaInt(uAlpha); }
   /* -- Size as signed size_t --------------------------------------------- */
-  ssize_t Size() const { return static_cast<ssize_t>(size()); }
-  ssize_t SizeM1() const { return Size() - 1; }
-  ssize_t SizeN() const { return -Size(); }
+  ssize_t PaletteSize() const { return static_cast<ssize_t>(size()); }
+  ssize_t PaletteSizeM1() const { return PaletteSize() - 1; }
+  ssize_t PaletteSizeN() const { return -PaletteSize(); }
   /* -- Shift limited palette entries backwards ---------------------------- */
-  void ShiftBck(const ssize_t stBegin, const ssize_t stEnd,
+  void PaletteShiftBck(const ssize_t stBegin, const ssize_t stEnd,
     const ssize_t stRot)
   { // Get starting position and rotate backwards
-    const PalDataRevIt pdriStart{ rbegin() + (SizeM1() - stEnd) };
+    const PalDataRevIt pdriStart{ rbegin() + (PaletteSizeM1() - stEnd) };
     StdRotate(seq, pdriStart, pdriStart + stRot,
-      rbegin() + (Size() - stBegin));
+      rbegin() + (PaletteSize() - stBegin));
   }
   /* -- Shift limited palette entries forwards ----------------------------- */
-  void ShiftFwd(const ssize_t stBegin, const ssize_t stEnd,
+  void PaletteShiftFwd(const ssize_t stBegin, const ssize_t stEnd,
     const ssize_t stRot)
   { // Get starting position and rotate forwards
     const PalDataIt pdiStart{ begin() + stBegin };
     StdRotate(seq, pdiStart, pdiStart + stRot, begin() + stEnd + 1);
   }
   /* -- Shift palette entries backwards or forwards ------------------------ */
-  void Shift(const ssize_t stBegin, const ssize_t stLimit,
+  void PaletteShift(const ssize_t stBegin, const ssize_t stLimit,
     const ssize_t stRot)
   { // Shift backwards?
-    if(stRot < 0) ShiftBck(stBegin, stLimit, -stRot);
+    if(stRot < 0) PaletteShiftBck(stBegin, stLimit, -stRot);
     // Shift forwards?
-    else if(stRot > 0) ShiftFwd(stBegin, stLimit, stRot);
+    else if(stRot > 0) PaletteShiftFwd(stBegin, stLimit, stRot);
   }
   /* -- Copy a from other palette ------------------------------------------ */
-  void Copy(const size_t stDstPos, const PalData &pdSrc, const size_t stSrcPos,
-    const size_t stSrcCount)
+  void PaletteCopy(const size_t stDstPos, const PalData &pdSrc,
+    const size_t stSrcPos, const size_t stSrcCount)
   { // Get source data position and then copy it to output
     const PalDataConstIt pdciIt
       { StdNext(pdSrc.cbegin(), static_cast<ssize_t>(stSrcPos)) };
@@ -124,7 +124,7 @@ class Pal :                            // Members initially public
       StdNext(begin() + static_cast<ssize_t>(stDstPos)));
   }
   /* -- Fill with specified value ------------------------------------------ */
-  void Fill(const size_t stIndex, const size_t stCount,
+  void PaletteFill(const size_t stIndex, const size_t stCount,
     const GLfloat glfRed = 0.0f, const GLfloat glfGreen = 0.0f,
     const GLfloat glfBlue = 0.0f, const GLfloat glfAlpha = 0.0f)
   { // Get start and fill in the array
@@ -149,25 +149,25 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public Pal                           // Base Palette class
 { /* -- Init name only --------------------------------------------- */ public:
-  void Init(const StdStringView &ssvName) { NameSet(ssvName); }
+  void PaletteInit(const StdStringView &ssvName) { NameSet(ssvName); }
   /* -- Init name and data from another palette ---------------------------- */
-  void Init(const StdStringView &ssvName, const Pal &palOther)
-    { Init(ssvName); Pal::operator=(palOther); }
+  void PaletteInit(const StdStringView &ssvName, const Pal &palOther)
+    { PaletteInit(ssvName); Pal::operator=(palOther); }
   /* -- Load palette from image -------------------------------------------- */
-  void Init(const StdStringView &ssvName, const Image &imOther)
+  void PaletteInit(const StdStringView &ssvName, const Image &imOther)
   { // Set name from image
     NameSet(ssvName);
     // Throw error if image doesn't have a palette
-    if(imOther.IsNotPalette())
+    if(imOther.ImageDataIsNotPalette())
       XC("Image does not have a palette!",
         "Palette", ssvName, "Image", imOther.NameGet());
     // Must have two images
-    if(imOther.GetSlotCount() != 2)
+    if(imOther.ImageDataGetSlotCount() != 2)
       XC("Image must must have two slots!",
         "Palette", ssvName, "Image", imOther.NameGet(),
-        "Slots",   imOther.GetSlotCount());
+        "Slots",   imOther.ImageDataGetSlotCount());
     // Get last item
-    const ImageSlot &isPalette = imOther.GetSlots().back();
+    const ImageSlot &isPalette = imOther.ImageDataGetSlots().back();
     // Dimensions must be valid
     if(isPalette.DimIsNotWidthSet() || isPalette.DimGetWidth() > size())
       XC("Image palette has invalid count!",
@@ -182,13 +182,13 @@ CTOR_MEM_BEGIN_CSLAVE(Palettes, Palette, ICHelperUnsafe),
     for(size_t stIndex = 0; stIndex < isPalette.DimGetWidth(); ++stIndex)
     { // Calculate position and set the new value
       const size_t stPos = stIndex * BY_RGB;
-      GetSlot(stIndex) = {
+      PaletteGetSlot(stIndex) = {
         isPalette.MemReadInt<uint8_t>(stPos+sizeof(uint16_t)),
         isPalette.MemReadInt<uint8_t>(stPos+sizeof(uint8_t)),
         isPalette.MemReadInt<uint8_t>(stPos)
       };
     } // Fill the rest of the entries if we need to
-    Fill(isPalette.DimGetWidth(), size() - isPalette.DimGetWidth());
+    PaletteFill(isPalette.DimGetWidth(), size() - isPalette.DimGetWidth());
   }
   /* -- Default constructor ------------------------------------------------ */
   Palette() :

@@ -22,9 +22,10 @@ class GCHelper                         // Members initially private
   using ClassType = ParentType;        // Expose parent class type
   using SelfType  = GCHelper;          // Expose this class type
   /* -- Destructor that clears the global class pointer -------------------- */
-  ~GCHelper() { *ptAddr = nullptr; }
+  constexpr ~GCHelper() { *ptAddr = nullptr; }
   /* -- Constructor that initialises the global class pointer -------------- */
-  explicit GCHelper(ParentType*const ptPtr, ParentType**const ptNAddr) :
+  constexpr explicit GCHelper(ParentType*const ptPtr,
+                              ParentType**const ptNAddr) noexcept :
     /* -- Initialisers ----------------------------------------------------- */
     ptAddr{ ptNAddr }                  // Store address of class pointer
     /* -- Initialise address of global class pointer ----------------------- */

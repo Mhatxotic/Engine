@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.11.16.18 -->
-<!-- Automatically built at Mon Nov 16 15:49:52 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.11.16.18 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.23.116 -->
+<!-- Automatically built at Mon Nov 23 22:19:19 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.23.116 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.16.18">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.23.116">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.16.18">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.23.116">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.16.18">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.23.116">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.11.16.18 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.23.116 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.11.16.18 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.23.116 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.11.16.18 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.23.116 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 955 functions (423 members, 532 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 959 functions (423 members, 536 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1461,7 +1461,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(69 methods)</I>
+								<B>Methods</B> <I>(73 methods)</I>
 								<OL>
 									<LI><A href="#Texture:Blit">Blit</A></LI>
 									<LI><A href="#Texture:BlitILT">BlitILT</A></LI>
@@ -1493,7 +1493,11 @@
 									<LI><A href="#Texture:GetHeight">GetHeight</A></LI>
 									<LI><A href="#Texture:GetId">GetId</A></LI>
 									<LI><A href="#Texture:GetName">GetName</A></LI>
+									<LI><A href="#Texture:GetPaddingHeight">GetPaddingHeight</A></LI>
+									<LI><A href="#Texture:GetPaddingWidth">GetPaddingWidth</A></LI>
 									<LI><A href="#Texture:GetSubCount">GetSubCount</A></LI>
+									<LI><A href="#Texture:GetTileHeight">GetTileHeight</A></LI>
+									<LI><A href="#Texture:GetTileWidth">GetTileWidth</A></LI>
 									<LI><A href="#Texture:GetWidth">GetWidth</A></LI>
 									<LI><A href="#Texture:PopColour">PopColour</A></LI>
 									<LI><A href="#Texture:PushColour">PushColour</A></LI>
@@ -9708,6 +9712,26 @@
 		<PRE>If this texture was loaded by a filename or it was set with a custom id.<BR>This function returns that name which was assigned to it.<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Texture:GetPaddingHeight" style="display:none">
+		<H3>Texture:GetPaddingHeight</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Height</U> = Texture:GetPaddingHeight()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Height</U> <I>(integer)</I> = The configured padding height of each tile in the texture.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns configured padding height of texture at creation.<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture:GetPaddingWidth" style="display:none">
+		<H3>Texture:GetPaddingWidth</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U> = Texture:GetPaddingWidth()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(integer)</I> = The configured padding width of each tile in the texture.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns configured padding width of texture at creation.<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Texture:GetSubCount" style="display:none">
 		<H3>Texture:GetSubCount</H3>
 		<H4>Syntax:-</H4>
@@ -9716,6 +9740,26 @@
 		<PRE><U>Count</U> <I>(integer)</I> = The number of sub-textures in this texture.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Returns number of sub-textures found in the loaded image file.<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture:GetTileHeight" style="display:none">
+		<H3>Texture:GetTileHeight</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Height</U> = Texture:GetTileHeight()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Height</U> <I>(integer)</I> = The configured tile height of each tile in the texture.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns configured tile height of texture at creation.<BR></PRE>
+		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Texture:GetTileWidth" style="display:none">
+		<H3>Texture:GetTileWidth</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Width</U> = Texture:GetTileWidth()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Width</U> <I>(integer)</I> = The configured padding width of each tile in the texture.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns configured tile width of texture at creation.<BR></PRE>
 		<H4><A href="#idx:Texture">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Texture:GetWidth" style="display:none">
@@ -13982,6 +14026,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Mon Nov 16 15:49:52 2026 +0000</ADDRESS>
+	This document was generated at Mon Nov 23 22:19:19 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

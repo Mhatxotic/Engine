@@ -76,7 +76,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
       { // Reset reload command incase of error
         rtCmd = RT_NONE;
         // Full reload of texture
-        ReloadTexture();
+        TextureReloadTexture();
         // Log that we reuploaded the texture
         cLog->LogDebugExSafe("Atlas '$' full texture reload (S:$,$).",
           NameGet(), DimGetWidth(), DimGetHeight());
@@ -91,15 +91,15 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
           cgluRedraw.CoordsGetY1(), DimGetWidth(), 2);
         // Calculate position in buffer to read from
         const GLubyte*const ucpSrc =
-          GetSlots().front().MemRead<GLubyte>(stRTPos, DimGetWidth());
+          ImageDataGetSlots().front().MemRead<GLubyte>(stRTPos, DimGetWidth());
         // Update partial texture
-        UpdateEx(GetSubName(),
+        TextureUpdateEx(TextureGetSubName(),
           cgluRedraw.CoordsGetX1<GLint>(), cgluRedraw.CoordsGetY1<GLint>(),
           static_cast<GLsizei>(cgluRedraw.CoordsGetX2() -
             cgluRedraw.CoordsGetX1()),
           static_cast<GLsizei>(cgluRedraw.CoordsGetY2() -
             cgluRedraw.CoordsGetY1()),
-          GetPixelType(), ucpSrc, DimGetWidth<GLsizei>());
+          ImageDataGetPixelType(), ucpSrc, DimGetWidth<GLsizei>());
         // Log that we partially reuploaded the texture
         cLog->LogDebugExSafe("Atlas '$' partial re-upload (B:$,$,$,$;P:$).",
           NameGet(), cgluRedraw.CoordsGetX1(), cgluRedraw.CoordsGetY1(),
@@ -223,7 +223,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     const GLuint uTPWidth = uTWidth + uPadding,
                  uTPHeight = uTHeight + uPadding;
     // Get image slot and data we're writing to
-    ImageSlot &isRef = GetSlots().front();
+    ImageSlot &isRef = ImageDataGetSlots().front();
     // Get co-ordinates to tile on texture
     CoordData &cdRef = clTiles.front()[stSlot];
     // Put this glyph in the bin packer and if succeeded
@@ -303,7 +303,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     const size_t stOldAlloc = isRef.MemSize();
     isRef.MemSwap(mDst);
     mDst.MemDeInit();
-    AdjustAlloc(stOldAlloc, isRef.MemSize());
+    ImageDataAdjustAlloc(stOldAlloc, isRef.MemSize());
     // Calculate how much the image increased. This should really be 2
     // every time but we'll just make a calculation like this just
     // incase.
@@ -371,9 +371,10 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // Clear it with uniformed transparent pixels
     itData.Init(mPixels);
      // Initialise the 'Image' class.
-    InitRaw(ssvIdent, mPixels, DimGetWidth(), DimGetHeight(), itData.biDepth);
+    ImageInitRaw(ssvIdent,
+      mPixels, DimGetWidth(), DimGetHeight(), itData.biDepth);
     // Initialise the 'Texture' class.
-    InitTextureImage(*this,
+    TextureInitImage(*this,
       uTWidth, uTHeight, uPadding, uPadding, ofeFilter, false);
   }
   /* -- Constructor (Initialisation then registration) --------------------- */

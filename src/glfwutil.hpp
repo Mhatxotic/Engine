@@ -76,8 +76,8 @@ class GlFWUtil                         // Members initially private
   /* -- Create functions to access all attributes -------------------------- */
 #define SET(nc,nu) \
   /* ---------------------------------------------------------------------- */\
-  void GlFWSet ## nc[[maybe_unused]](const int iNewMode) \
-    { GlFWSetHint(GLFW_ ## nu, iNewMode); }
+  void GlFWSet##nc[[maybe_unused]](const int iNewMode) \
+    { GlFWSetHint(GLFW_##nu, iNewMode); }
   /* ----------------------------------------------------------------------- */
   SET(RedBits, RED_BITS)               // Set depth of red component
   SET(GreenBits, GREEN_BITS)           // Set depth of green component
@@ -101,10 +101,10 @@ class GlFWUtil                         // Members initially private
   /* -- Create functions to access all attributes -------------------------- */
 #define SET(nc,nu) \
   /* ---------------------------------------------------------------------- */\
-  void GlFWSet ## nc(const bool bState) \
-    { GlFWSetHintBoolean(GLFW_ ## nu, bState); } \
-  void GlFWSet ## nc ## Enabled() { GlFWSetHintEnabled(GLFW_ ## nu); } \
-  void GlFWSet ## nc ## Disabled() { GlFWSetHintDisabled(GLFW_ ## nu); }
+  void GlFWSet##nc(const bool bState) \
+    { GlFWSetHintBoolean(GLFW_##nu, bState); } \
+  void GlFWSet##nc##Enabled() { GlFWSetHintEnabled(GLFW_##nu); } \
+  void GlFWSet##nc##Disabled() { GlFWSetHintDisabled(GLFW_##nu); }
   /* ----------------------------------------------------------------------- */
   SET(AutoIconify, AUTO_ICONIFY)       // Set window auto-minimise state
   SET(CentreCursor, CENTER_CURSOR)     // Set window cursor centre state

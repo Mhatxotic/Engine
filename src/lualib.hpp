@@ -16,7 +16,7 @@ using namespace ILuaUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Macros to simplify creating lualib functions ------------------------- */
-#define LLFUNCBEGIN(n)       static int Cb ## n(lua_State*const lS) {
+#define LLFUNCBEGIN(n)       static int Cb##n(lua_State*const lS) {
 #define LLFUNCBEGINTMPL(n)   template<typename IntType>LLFUNCBEGIN(n)
 #define LLFUNCEND            LLFUNCENDEX(0)
 #define LLFUNCENDEX(x)       static_cast<void>(lS); return x; }
@@ -26,14 +26,14 @@ namespace P {                          // Start of public module namespace
 #define LLRSBEGIN            static const luaL_Reg llrFunctions[]{
 #define LLRSEND              llrLast };
 #define LLRSCONSTBEGIN       static const LuaTable ltConsts[]{
-#define LLRSCONST(n)         { #n, { lkiConsts ## n } }
+#define LLRSCONST(n)         { #n, { lkiConsts##n } }
 #define LLRSCONSTEND         };
-#define LLRSFUNC(n)          { #n, LuaUtilCallback<&Cb ## n> }
-#define LLRSFUNCEX(n,f)      { #n, LuaUtilCallback<&Cb ## f> }
-#define LLRSKTBEGIN(n)       static const LuaKeyInt lkiConsts ## n[]{
+#define LLRSFUNC(n)          { #n, LuaUtilCallback<&Cb##n> }
+#define LLRSFUNCEX(n,f)      { #n, LuaUtilCallback<&Cb##f> }
+#define LLRSKTBEGIN(n)       static const LuaKeyInt lkiConsts##n[]{
 #define LLRSKTEND            };
-#define LLRSKTITEM(p,n)      LLRSKTITEMEX2(#n, p ## n)
-#define LLRSKTITEMEX(p,n,u)  LLRSKTITEMEX2(#n, p ## n ## u)
+#define LLRSKTITEM(p,n)      LLRSKTITEMEX2(#n, p##n)
+#define LLRSKTITEMEX(p,n,u)  LLRSKTITEMEX2(#n, p##n##u)
 #define LLRSKTITEMEX2(k,v)   { k, static_cast<lua_Integer>(v) }
 #define LLRSMFBEGIN          static const luaL_Reg llrMethods[]{
 /* -- Empty last entries --------------------------------------------------- */
@@ -115,11 +115,11 @@ template<typename AnyType, int itSize>
 ** ## LUA GLOBAL API ARRAY STRUCTURE                                      ## **
 ** ######################################################################### **
 ** -- Namespace name builder helper macro ---------------------------------- */
-#define LLNS(n,t)  LL ## n::l ## t
+#define LLNS(n,t)  LL##n::l##t
 /* -- Items in a table helper macro ---------------------------------------- */
 #define LLAL(n,t)  LLArrLen(LLNS(n, t))
 /* -- Destructor function builder helper macro ----------------------------- */
-#define LLDF(n)    LuaUtilCallback<&LL ## n::CbDestroy>
+#define LLDF(n)    LuaUtilCallback<&LL##n::CbDestroy>
 /* -- Macro to actually build an item in the main API array ---------------- */
 #define LLITEM(lmt,                    /* LMT_* identifier (luadef.hpp)     */\
                ns,                     /* Name of namespace or class        */\
@@ -131,7 +131,7 @@ template<typename AnyType, int itSize>
                mf,                     /* " garbage collector function      */\
                ca,                     /* Class const variables array       */\
                cc)                     /* " items in above array            */\
-  { LMT_ ## lmt, #ns, CFL_ ## cfl, sa, sc, ma, mc, mf, {ca}, sc+mc+cc }
+  { LMT_##lmt, #ns, CFL_##cfl, sa, sc, ma, mc, mf, {ca}, sc+mc+cc }
 /* -- Helper macros to use when actually defining the main API array ------- */
 #define LLFxx(n,f)                                   /* Function only       */\
   LLITEM(TOTAL, n, f,                                /* Just a namespace    */\

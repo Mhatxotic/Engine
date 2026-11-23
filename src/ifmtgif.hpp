@@ -80,11 +80,11 @@ class CodecGIF :                       // Members initially private
       // Get information about gif and if we got it?
      	if(const nsgif_info_t*const nsgInfo = nsgif_get_info(nsgCtx))
       { // Reserve memory for frames
-        idData.ReserveSlots(nsgInfo->frame_count);
+        idData.ImageDataReserveSlots(nsgInfo->frame_count);
         // Set image properties
-        idData.SetBitsAndBytesPerPixel(BD_RGBA);
-        idData.SetPixelType(TT_RGBA);
-        idData.SetReversed();
+        idData.ImageDataSetBitsAndBytesPerPixel(BD_RGBA);
+        idData.ImageDataSetPixelType(TT_RGBA);
+        idData.ImageDataSetReversed();
         idData.DimSet(nsgInfo->width, nsgInfo->height);
         // Decode the frames
         for(unsigned uIndex = 0; uIndex < nsgInfo->frame_count; ++uIndex)
@@ -101,11 +101,11 @@ class CodecGIF :                       // Members initially private
             GIFError(nsgif_frame_decode(nsgCtx, uFrame, &nsgBitmap),
               "Failed to decode frame!", "Frame", uFrame);
             // Calculate image size
-            const size_t stSize =
-              nsgInfo->width * nsgInfo->height * idData.GetBytesPerPixel();
+            const size_t stSize = nsgInfo->width * nsgInfo->height *
+              idData.ImageDataGetBytesPerPixel();
             // Now we can just copy the memory over
             Memory mData{ stSize, nsgBitmap };
-            idData.AddSlot(mData, nsgInfo->width, nsgInfo->height);
+            idData.ImageDataAddSlot(mData, nsgInfo->width, nsgInfo->height);
           } // Failed to get frame data
           else XC("Failed to get frame data!");
         } // Frame decoding enumeration

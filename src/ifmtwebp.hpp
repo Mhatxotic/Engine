@@ -53,11 +53,11 @@ class CodecWEBP :                      // Members initially private
         XC("Failed to decode WebP image!", "Code", switErrDecode);
       simplewebp_unload(swpData);
       // Success, add the image data to list and set RGBA and reversed
-      idData.AddSlot(mPixels);
-      idData.SetBitsPerPixel(BD_RGBA);
-      idData.SetBytesPerPixel(BY_RGBA);
-      idData.SetPixelType(TT_RGBA);
-      idData.SetReversed();
+      idData.ImageDataAddSlot(mPixels);
+      idData.ImageDataSetBitsPerPixel(BD_RGBA);
+      idData.ImageDataSetBytesPerPixel(BY_RGBA);
+      idData.ImageDataSetPixelType(TT_RGBA);
+      idData.ImageDataSetReversed();
     } // Failure so clear input stream and rethrow
     catch(const StdException&) { simplewebp_unload(swpData); throw; }
     // We are done!

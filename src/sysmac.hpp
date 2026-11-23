@@ -368,9 +368,9 @@ class SysCore :
       } uMagic;
       // Build swap class functors
       using namespace IEndian::P;
-#define MKFUNCTOR(n,t) struct Swap ## n ## Ftor \
-  { const t tVal; explicit Swap ## n ## Ftor(const t tNVal) : \
-    tVal(EndianTo ## n(tNVal)) {} }
+#define MKFUNCTOR(n,t) struct Swap##n##Ftor \
+  { const t tVal; explicit Swap##n##Ftor(const t tNVal) : \
+    tVal(EndianTo##n(tNVal)) {} }
       MKFUNCTOR(32LE, uint32_t); // Make force 32-bit LE functor (Swap32LEFtor)
       MKFUNCTOR(32BE, uint32_t); // Make force 32-bit BE functor (Swap32BEFtor)
       MKFUNCTOR(64LE, uint64_t); // Make force 64-bit LE functor (Swap64LEFtor)
@@ -631,7 +631,7 @@ class SysCore :
       MacCpuListMapPair::second_type>;
     using MacCpuListMapConstIt = MacCpuListMap::const_iterator;
     const MacCpuListMap mclmData{
-#define CPUPACKEX(n,x) { "Apple M" STR(n) x, uipM ## n }
+#define CPUPACKEX(n,x) { "Apple M" STR(n) x, uipM##n }
 #define CPUPACK(n) CPUPACKEX(n,), CPUPACKEX(n, " Pro"), \
                    CPUPACKEX(n, " Max"), CPUPACKEX(n, " Ultra")
       CPUPACK(1), CPUPACK(2), CPUPACK(3), CPUPACK(4), CPUPACK(5), CPUPACK(6) };

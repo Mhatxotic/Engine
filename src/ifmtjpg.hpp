@@ -51,8 +51,9 @@ class CodecJPG :                       // Members initially private
   bool Encode(const FStream &fmData, const ImageData &idData,
     const ImageSlot &isData)
   { // Only support 24-bit per pixel images
-    if(idData.GetBitsPerPixel() != BD_RGB)
-      XC("Only RGB supported!", "BitsPerPixel", idData.GetBitsPerPixel());
+    if(idData.ImageDataGetBitsPerPixel() != BD_RGB)
+      XC("Only RGB supported!",
+        "BitsPerPixel", idData.ImageDataGetBitsPerPixel());
     // Check for valid dimensions
     if(isData.DimIsNotSet())
       XC("Dimensions are invalid!",
@@ -83,7 +84,7 @@ class CodecJPG :                       // Members initially private
     // Set image information
     ciData.image_width = isData.DimGetWidth();
     ciData.image_height = isData.DimGetHeight();
-    ciData.input_components = idData.GetBitsPerPixel() / 8;
+    ciData.input_components = idData.ImageDataGetBitsPerPixel() / 8;
     ciData.in_color_space = JCS_RGB;
     // Call the setup defualts helper function to give us a starting point.
     // Note, don't call any of the helper functions before you call this, they
@@ -248,21 +249,22 @@ class CodecJPG :                       // Members initially private
     if(!jpeg_start_decompress(&ciData))
       XC("Jpeg start decompression failed!");
     // Make sure component count is valid
-    idData.SetPixelType(ImageBYtoTexType(
+    idData.ImageDataSetPixelType(ImageBYtoTexType(
       static_cast<ByteDepth>(ciData.output_components)));
-    if(idData.GetPixelType() == TT_NONE)
+    if(idData.ImageDataGetPixelType() == TT_NONE)
       XC("Component count unsupported!",
          "OutputComponents", ciData.output_components);
     // Set dimensions and pixel bit depth
     idData.DimSet(ciData.output_width, ciData.output_height);
-    idData.SetBytesAndBitsPerPixelCast(ciData.output_components);
+    idData.ImageDataSetBytesAndBitsPerPixelCast(ciData.output_components);
     // Jpegs are reversed
-    idData.SetReversed();
+    idData.ImageDataSetReversed();
     // Create space for decompressed image
-    Memory mPixels{ idData.TotalPixels() * idData.GetBytesPerPixel() };
+    Memory mPixels{ idData.ImageDataGetTotalPixels() *
+      idData.ImageDataGetBytesPerPixel() };
     // Get row stride (or number of bytes in a scanline of image data)
     const size_t stRowStride =
-      idData.DimGetWidth() * idData.GetBytesPerPixel();
+      idData.DimGetWidth() * idData.ImageDataGetBytesPerPixel();
     // Decompress scanlines
     while(ciData.output_scanline < ciData.output_height)
     { // For storing info
@@ -272,7 +274,7 @@ class CodecJPG :                       // Members initially private
       jpeg_read_scanlines(&ciData, reinterpret_cast<JSAMPARRAY>(caPtr.data()),
         static_cast<JDIMENSION>(caPtr.size()));
     } // Add data to image list
-    idData.AddSlot(mPixels);
+    idData.ImageDataAddSlot(mPixels);
     // Success
     return true;
   }

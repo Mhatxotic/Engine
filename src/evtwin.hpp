@@ -84,7 +84,7 @@ class EvtWin :                         // Members initially private
     /* -- Initialisers ----------------------------------------------------- */
     GCHelper{ this, &cEvtWin },        // Initialise global pointer
     LookupArray{{                      // Initialise event strings
-#define EWC(x) STR(EWC_ ## x)          // Helper to define event id strings
+#define EWC(x) STR(EWC_##x)            // Helper to define event id strings
       EWC(NONE),            EWC(WIN_ATTENTION),   EWC(WIN_CENTRE),
       EWC(WIN_CURPOSGET),   EWC(WIN_CURRESET),    EWC(WIN_CURSET),
       EWC(WIN_CURSETVIS),   EWC(WIN_FOCUS),       EWC(WIN_LIMITS),

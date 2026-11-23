@@ -87,7 +87,7 @@ class Credits :                        // Members initially private
   GCHelper<Credits>                    // Global pointer helper
 { /* -- License data ------------------------------------------------------- */
 #define BEGINLICENSE(n,s) \
-  constexpr static const StdArray<const uint8_t,s> l ## n{
+  constexpr static const StdArray<const uint8_t,s> l##n{
 #define ENDLICENSE };                  // Helper functions for licenses header
 #include "license.hpp"                 // Load up compressed licenses
 #undef ENDLICENSE                      // Done with this macro
@@ -142,7 +142,7 @@ class Credits :                        // Members initially private
       // t = Title of dependency         v = Version of dependency
       // n = license variable name       c = is dependency copyrighted?
       // a = Author of dependency
-#define LD(i,t,v,c,a,n) { i, t, v, c, a, l ## n.data(), l ## n.size() }
+#define LD(i,t,v,c,a,n) { i, t, v, c, a, l##n.data(), l##n.size() }
       // The credits data structure (Keep the engine credit as the first)
       LD(CL_MSE, cSystem->ENGName(), cSystem->ENGVersion(),
         cSystem->ENGAuthor(), true, ENGINE),

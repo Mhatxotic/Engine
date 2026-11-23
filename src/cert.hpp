@@ -176,7 +176,7 @@ struct Certs                            // Certificates store
     xsCerts(nullptr),                  // No certificate chain initialised
     adullCertBypass{{0, 0}},           // No bypass flags setup yet
     strExtension{ "." DER_EXTENSION }, // Default extension
-#define X509ERR(b,f,e) { X509_V_ERR_ ## e, { STR(e), b, 1ULL << f } }
+#define X509ERR(b,f,e) { X509_V_ERR_##e, { STR(e), b, 1ULL << f } }
     xErrDB{                            // Init X509 Error code definitions
       X509ERR(0, 0, UNSPECIFIED),
       X509ERR(0, 1, UNABLE_TO_GET_ISSUER_CERT),

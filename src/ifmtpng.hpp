@@ -134,7 +134,7 @@ class CodecPNG :                       // Members initially private
     // Bit depth and colour type of data
     int iColourType;
     // Compare bitrate
-    switch(idData.GetBitsPerPixel())
+    switch(idData.ImageDataGetBitsPerPixel())
     { // Monochrome (1-bpp)?
       case BD_BINARY:
         // Set binary header type
@@ -163,7 +163,8 @@ class CodecPNG :                       // Members initially private
         // Set location of each scanline
         for(size_t stScanIndex = 0,
                    stScanLinesM1 = ppvList.size() - 1,
-                   stStride = isData.DimGetWidth() * idData.GetBytesPerPixel();
+                   stStride = isData.DimGetWidth() *
+                     idData.ImageDataGetBytesPerPixel();
                    stScanIndex < ppvList.size();
                  ++stScanIndex)
           ppvList[stScanIndex] =
@@ -172,7 +173,7 @@ class CodecPNG :                       // Members initially private
         break;
       // Un-supported format
       default: XC("Image is not binary or 24-bit!",
-        "BitsPerPixel", idData.GetBitsPerPixel());
+        "BitsPerPixel", idData.ImageDataGetBitsPerPixel());
     } // Finish write image
     pwC.Finish(ppvList.data());
     // Success
@@ -225,8 +226,9 @@ class CodecPNG :                       // Members initially private
     { // 1 bits-per-CHANNEL? (binary image)
       case 1:
         // Expand if requested or there is an alpha channel
-        if(idData.IsNotConvertRGBA() && idData.IsNotConvertRGB() &&
-           idData.IsNotConvertGPUCompat())
+        if(idData.ImageDataIsNotConvertRGBA() &&
+           idData.ImageDataIsNotConvertRGB() &&
+           idData.ImageDataIsNotConvertGPUCompat())
         { // Strip alpha if it is there
           if(bAlpha) png_set_strip_alpha(psData);
           // Transfomrations complete so update
@@ -234,14 +236,15 @@ class CodecPNG :                       // Members initially private
           png_read_update_info(psData, piData);
           // Update the pixel type to zero. This means that this format only
           // works with our BitMask system.
-          idData.SetBitsPerPixel(BD_BINARY);
-          idData.SetBytesPerPixel(BY_GRAY);
-          idData.SetPixelType(TT_NONE);
+          idData.ImageDataSetBitsPerPixel(BD_BINARY);
+          idData.ImageDataSetBytesPerPixel(BY_GRAY);
+          idData.ImageDataSetPixelType(TT_NONE);
           // Set image dimensions
           idData.DimSet(png_get_image_width(psData, piData),
                         png_get_image_height(psData, piData));
           // Initialise memory
-          Memory mPixels{ static_cast<size_t>(idData.TotalPixels() + 7) / 8 };
+          Memory mPixels{ static_cast<size_t>
+            (idData.ImageDataGetTotalPixels() + 7) / 8 };
           // Create vector array to hold scanline pointers and size it
           PngPtrVec ppvList{ idData.DimGetHeight<size_t>() };
           // For each scanline
@@ -258,7 +261,7 @@ class CodecPNG :                       // Members initially private
           png_read_image(psData, ppvList.data());
           png_read_end(psData, piData);
           // Success, add the image data to list
-          idData.AddSlot(mPixels);
+          idData.ImageDataAddSlot(mPixels);
           // OK!
           return true;
         } // Fall through to expand packed bits
@@ -278,23 +281,23 @@ class CodecPNG :                       // Members initially private
     { // 8-bits per channel (Palleted texture)
       case PNG_COLOR_TYPE_PALETTE:
         // If conversion to RGBA or RGB is required?
-        if(idData.IsConvertRGBA() || idData.IsConvertRGB())
+        if(idData.ImageDataIsConvertRGBA() || idData.ImageDataIsConvertRGB())
         { // Convert entire bitmap to 24-bits per pixel RGB
           png_set_palette_to_rgb(psData);
           // Jump to PNG_COLOR_TYPE_RGB case label
           goto RGB;
         } // If we're making sure this texture loads in OpenGL?
-        else if(idData.IsConvertGPUCompat())
+        else if(idData.ImageDataIsConvertGPUCompat())
         { // Convert entire bitmap to 24-bits per pixel RGB
           png_set_palette_to_rgb(psData);
           // Image should be loadable in OpenGL now
-          idData.SetActiveGPUCompat();
+          idData.ImageDataSetActiveGPUCompat();
           // Jump to PNG_COLOR_TYPE_RGB case label
           goto RGB;
         } // We need this else so 'goto' works with constructing 'saHist' var.
         else
         { // Set that we're uploading a palette
-          idData.SetPalette();
+          idData.ImageDataSetPalette();
           // Read palette and show error if failed
           if(!png_get_PLTE(psData, piData, &palData, &iPalette))
             XC("Failed to read palette!");
@@ -310,7 +313,7 @@ class CodecPNG :                       // Members initially private
       // 16-bits per channel (Luminance / Gray + Alpha)?
       case PNG_COLOR_TYPE_GRAY_ALPHA:
         // If conversion to RGBA or RGB is required?
-        if(idData.IsConvertRGBA() || idData.IsConvertRGB())
+        if(idData.ImageDataIsConvertRGBA() || idData.ImageDataIsConvertRGB())
         { // Convert entire bitmap to 24-bits per pixel RGB
           png_set_palette_to_rgb(psData);
           // Jump to PNG_COLOR_TYPE_RGB case label
@@ -322,11 +325,11 @@ class CodecPNG :                       // Members initially private
       // 24-bits per channel (RGB)?
       case PNG_COLOR_TYPE_RGB: RGB:;
         // If convert to RGBA requested and no alpha set?
-        if(idData.IsConvertRGBA() && !bAlpha)
+        if(idData.ImageDataIsConvertRGBA() && !bAlpha)
         { // Add an alpha channel if no alpha
           png_set_add_alpha(psData, 0xFF, PNG_FILLER_AFTER);
           // We converted to RGBA here
-          idData.SetActiveRGBA();
+          idData.ImageDataSetActiveRGBA();
         } // If alpha is set in image? expand tRNS to alpha
         else if(bAlpha) png_set_tRNS_to_alpha(psData);
         // Done
@@ -336,11 +339,11 @@ class CodecPNG :                       // Members initially private
         // If alpha set in image?
         if(bAlpha)
         { // If convert to RGB requested?
-          if(idData.IsConvertRGB())
+          if(idData.ImageDataIsConvertRGB())
           { // Strip the alpha channel
             png_set_strip_alpha(psData);
             // We converted to RGBA here
-            idData.SetActiveRGB();
+            idData.ImageDataSetActiveRGB();
           } // Expand tRNS to alpha
           else png_set_tRNS_to_alpha(psData);
         } // Done
@@ -352,26 +355,28 @@ class CodecPNG :                       // Members initially private
     // Transformations complete so update
     png_read_update_info(psData, piData);
     // All pixels should be 8bpc so set bytes and bits per pixel
-    idData.SetBytesAndBitsPerPixelCast(png_get_channels(psData, piData));
-    switch(idData.GetBitsPerPixel())
+    idData.ImageDataSetBytesAndBitsPerPixelCast(
+      png_get_channels(psData, piData));
+    switch(idData.ImageDataGetBitsPerPixel())
     { // 32-bpp
-      case BD_RGBA: idData.SetPixelType(TT_RGBA); break;
+      case BD_RGBA: idData.ImageDataSetPixelType(TT_RGBA); break;
       // 24-bpp
-      case BD_RGB: idData.SetPixelType(TT_RGB); break;
+      case BD_RGB: idData.ImageDataSetPixelType(TT_RGB); break;
       // 16-bpp (Gray + Alpha)
-      case BD_GRAYALPHA: idData.SetPixelType(TT_GRAYALPHA); break;
+      case BD_GRAYALPHA: idData.ImageDataSetPixelType(TT_GRAYALPHA); break;
       // 8-bits-per-pixel (Gray)
       case BD_GRAY: [[fallthrough]];
       // 1-bits-per-pixel (Monochrome
-      case BD_BINARY: idData.SetPixelType(TT_GRAY); break;
+      case BD_BINARY: idData.ImageDataSetPixelType(TT_GRAY); break;
       // Unsupported bit-depth
       default: XC("Unsupported bit-depth!",
-                  "BitsPerPixel", idData.GetBitsPerPixel());
+                  "BitsPerPixel", idData.ImageDataGetBitsPerPixel());
     } // Get image dimensions
     idData.DimSet(png_get_image_width(psData, piData),
                   png_get_image_height(psData, piData));
     // Initialise memory
-    Memory mPixels{ idData.TotalPixels() * idData.GetBytesPerPixel() };
+    Memory mPixels{ idData.ImageDataGetTotalPixels() *
+      idData.ImageDataGetBytesPerPixel() };
     // Create vector array to hold scanline pointers and size it
     PngPtrVec ppvList{ idData.DimGetHeight<size_t>() };
     // For each scanline. Set the pointer to the data pointer + i times the
@@ -381,7 +386,7 @@ class CodecPNG :                       // Members initially private
     for(size_t stHeight = idData.DimGetHeight<size_t>(),
                stHeightM1 = stHeight - 1,
                stStride = idData.DimGetWidth<size_t>() *
-                          idData.GetBytesPerPixel(),
+                          idData.ImageDataGetBytesPerPixel(),
                stRow = 0;
                stRow < stHeight;
              ++stRow)
@@ -391,10 +396,11 @@ class CodecPNG :                       // Members initially private
     png_read_image(psData, ppvList.data());
     png_read_end(psData, piData);
     // Success, add the image data to list
-    idData.AddSlot(mPixels);
+    idData.ImageDataAddSlot(mPixels);
     // Add palette data if it is there
     if(iPalette)
-      idData.AddSlot(mPalette, static_cast<unsigned>(iPalette), BY_RGB);
+      idData.ImageDataAddSlot(mPalette,
+        static_cast<unsigned>(iPalette), BY_RGB);
     // We are done!
     return true;
   }

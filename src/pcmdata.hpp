@@ -81,10 +81,10 @@ class PcmData :                        // Audio data structure
   }
   /* -- Macro helper to check and manipulate flags ------------------------- */
 #define FH(n, f) \
-  bool PcmDataIs ## n() const { return FlagIsSet(f); } \
-  bool PcmDataIsNot ## n() const { return !PcmDataIs ## n(); } \
-  void PcmDataSet ## n(bool bState = true) { FlagSetOrClear(f, bState); } \
-  void PcmDataClear ## n() { PcmDataSet ## n(false); }
+  bool PcmDataIs##n() const { return FlagIsSet(f); } \
+  bool PcmDataIsNot##n() const { return !PcmDataIs##n(); } \
+  void PcmDataSet##n(bool bState = true) { FlagSetOrClear(f, bState); } \
+  void PcmDataClear##n() { PcmDataSet##n(false); }
   /* ----------------------------------------------------------------------- */
   FH(BigEndian,           PL_BE)       // Is big-endian encoded?
   FH(Dynamic,             PL_DYNAMIC)  // Is/Set/ClearDynamic

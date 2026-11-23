@@ -38,17 +38,18 @@ struct InitCharFunc                    // Members initially public
 { /* -- Load type class functors for InitFTChar() -------------------------- */
   struct NoOutline { NoOutline(Font*const foP, FT_GlyphSlot &ftgD,
     const UtfCodepoint utcStart, const UtfCodepoint utcEnd, const GLfloat glfA)
-  { foP->DoInitFTChar<StrokerFunc::NoOutline>
+  { foP->FontDoInitFTChar<StrokerFunc::NoOutline>
       (ftgD, utcStart, utcEnd, glfA); } };
   /* -- Outline required --------------------------------------------------- */
   struct Outline2 { Outline2(Font*const foP, FT_GlyphSlot &ftgD,
     const UtfCodepoint utcStart, const UtfCodepoint utcEnd, const GLfloat glfA)
-  { foP->DoInitFTCharOutline<StrokerFunc::OutlineInside, StrokerFunc::Outline>
-      (ftgD, utcStart, utcEnd, glfA); } };
+  { foP->FontDoInitFTCharOutline
+      <StrokerFunc::OutlineInside, StrokerFunc::Outline>
+        (ftgD, utcStart, utcEnd, glfA); } };
   /* -- Outside outline required ------------------------------------------- */
   struct Outline1 { Outline1(Font*const foP, FT_GlyphSlot &ftgD,
     const UtfCodepoint utcStart, const UtfCodepoint utcEnd, const GLfloat glfA)
-  { foP->DoInitFTCharOutline<StrokerFunc::NoOutline, StrokerFunc::Outline>
+  { foP->FontDoInitFTCharOutline<StrokerFunc::NoOutline, StrokerFunc::Outline>
       (ftgD, utcStart, utcEnd, glfA); } };
   /* ----------------------------------------------------------------------- */
 };                                     // End of InitCharFunc
@@ -58,7 +59,7 @@ struct StrokerCheckFunc                // Members initially public
   template<class InitCharFuncType>struct Auto
     { Auto(Font*const foP, FT_GlyphSlot &ftgD, const UtfCodepoint utcStart,
         const UtfCodepoint utcEnd, const GLfloat glfA)
-      { foP->DoSelectOutlineType(ftgD, utcStart, utcEnd, glfA); } };
+      { foP->FontDoSelectOutlineType(ftgD, utcStart, utcEnd, glfA); } };
   /* -- Functor to set outline method manually ----------------------------- */
   template<class InitCharFuncType>struct Manual : private InitCharFuncType
     { Manual(Font*const foP, FT_GlyphSlot &ftgD, const UtfCodepoint utcStart,
@@ -134,7 +135,7 @@ struct HandleGlyphFunc                 // Members initially public
     template<class StrokerCheckFuncType, class RoundCheckFuncType>
       size_t DoHandleGlyph(Font*const foP, const UtfCodepoint utcChar,
       const UtfCodepoint utcCharOutline)
-    { return foP->DoSelectFontType<StrokerCheckFuncType,
+    { return foP->FontDoSelectFontType<StrokerCheckFuncType,
         RoundCheckFuncType>(utcChar, utcCharOutline); }
   };/* -- Freetype font selector functor ----------------------------------- */
   struct FreeType                     // Members initially public
@@ -142,7 +143,7 @@ struct HandleGlyphFunc                 // Members initially public
     template<class StrokerCheckFuncType, class RoundCheckFuncType>
       size_t DoHandleGlyph(Font*const foP, const UtfCodepoint utcChar,
       const UtfCodepoint utcCharOutline)
-    { return foP->DoHandleFTGlyph<StrokerCheckFuncType,
+    { return foP->FontDoHandleFTGlyph<StrokerCheckFuncType,
         RoundCheckFuncType>(utcChar, utcCharOutline); }
   };/* -- Standard glyph font selector functor ----------------------------- */
   struct Glyph                        // Members initially public
@@ -150,13 +151,14 @@ struct HandleGlyphFunc                 // Members initially public
     template<class StrokerCheckFuncType, class RoundCheckFuncType>
       static size_t DoHandleGlyph(Font*const foP, const UtfCodepoint utcChar,
       const UtfCodepoint utcCharOutline)
-    { return foP->DoHandleStaticGlyph(utcChar, utcCharOutline); }
+    { return foP->FontDoHandleStaticGlyph(utcChar, utcCharOutline); }
   };/* --------------------------------------------------------------------- */
 };                                     // End of HandleGlyphFunc
 /* -- Do load character function ------------------------------------------- */
 template<class StrokerFuncType>
-  void DoInitFTChar(FT_GlyphSlot &ftgsRef, const UtfCodepoint utcCharOutline,
-    const UtfCodepoint utcChar, const GLfloat glfAdvance)
+  void FontDoInitFTChar(FT_GlyphSlot &ftgsRef,
+    const UtfCodepoint utcCharOutline, const UtfCodepoint utcChar,
+    const GLfloat glfAdvance)
 { // Move The Face's Glyph Into A Glyph Object to get outline
   FT_Glyph gData;
   cFreeType->FreeTypeCheckError(FT_Get_Glyph(ftgsRef, &gData),
@@ -208,18 +210,18 @@ template<class StrokerFuncType>
 }
 /* -- Initialise freetype char and set types ------------------------------- */
 template<class StrokerFuncNormalType, class StrokerFuncOutlineType>
-  void DoInitFTCharOutline(FT_GlyphSlot &ftgsRef,
+  void FontDoInitFTCharOutline(FT_GlyphSlot &ftgsRef,
     const UtfCodepoint utcCharOutline, const UtfCodepoint utcChar,
     const GLfloat glfAdvance)
 { // Initialise main character
-  DoInitFTChar<StrokerFuncNormalType>
+  FontDoInitFTChar<StrokerFuncNormalType>
     (ftgsRef, utcCharOutline, utcChar, glfAdvance);
   // Initialise outline character
-  DoInitFTChar<StrokerFuncOutlineType>
+  FontDoInitFTChar<StrokerFuncOutlineType>
    (ftgsRef, utcCharOutline+1, utcChar, glfAdvance);
 }
 /* -- Function to select correct outline method ---------------------------- */
-void DoSelectOutlineType(FT_GlyphSlot &ftgsRef,
+void FontDoSelectOutlineType(FT_GlyphSlot &ftgsRef,
   const UtfCodepoint utcCharOutline, const UtfCodepoint utcChar,
   const GLfloat glfAdvance)
 { // Stroker loaded?
@@ -237,7 +239,7 @@ void DoSelectOutlineType(FT_GlyphSlot &ftgsRef,
 }
 /* ------------------------------------------------------------------------- */
 template<class StrokerCheckFuncType, class RoundCheckFuncType>
-  bool DoHandleFTGlyph(Ftf &ftfSrc, const UtfCodepoint utcChar,
+  bool FontDoHandleFTGlyph(Ftf &ftfSrc, const UtfCodepoint utcChar,
     const UtfCodepoint utcCharOutline)
 { // Convert the character to glyph and if successful?
   if(const FT_UInt uGl = ftfSrc.FtfCharToGlyph(static_cast<FT_ULong>(utcChar)))
@@ -259,7 +261,7 @@ template<class StrokerCheckFuncType, class RoundCheckFuncType>
 }
 /* ------------------------------------------------------------------------- */
 template<class StrokerCheckFuncType, class RoundCheckFuncType>
-  size_t DoHandleFTGlyph(const UtfCodepoint utcChar,
+  size_t FontDoHandleFTGlyph(const UtfCodepoint utcChar,
     const UtfCodepoint utcCharOutline)
 { // If position is not allocated?
   if(utcCharOutline >= gvData.size())
@@ -274,22 +276,22 @@ template<class StrokerCheckFuncType, class RoundCheckFuncType>
   } // Return the position if already loaded
   else if(gvData[utcCharOutline].GlyphIsLoaded()) return utcCharOutline;
   // Translate character to glyph and if succeeded?
-  if(DoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(*this,
+  if(FontDoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(*this,
      utcChar, utcCharOutline)) return utcCharOutline;
   // Try alternate fonts
   for(Ftf &ftfExtra : ftflExtras)
-    if(DoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(ftfExtra,
+    if(FontDoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(ftfExtra,
        utcChar, utcCharOutline)) return utcCharOutline;
   // Show error if we couldn't load the default character
   if(utcChar == utcDefaultChar)
     XC("Default character not available!",
       "Name", NameGet(), "Index", utcChar, "Position", utcCharOutline);
   // Try to load the default character instead.
-  return DoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(
+  return FontDoHandleFTGlyph<StrokerCheckFuncType, RoundCheckFuncType>(
     utcDefaultChar, utcDefaultChar * utcMultiplier);
 }
 /* -- Do handle a static glyph --------------------------------------------- */
-size_t DoHandleStaticGlyph(const UtfCodepoint utcChar,
+size_t FontDoHandleStaticGlyph(const UtfCodepoint utcChar,
   const UtfCodepoint utcCharOutline)
 { // Static font. If character is in range and loaded
   if(utcCharOutline < gvData.size() && gvData[utcCharOutline].GlyphIsLoaded())
@@ -308,64 +310,64 @@ size_t DoHandleStaticGlyph(const UtfCodepoint utcChar,
 }
 /* -- Function to select correct outline method ---------------------------- */
 template<class StrokerCheckFuncType, class RoundCheckFuncType>
-  size_t DoSelectFontType(const UtfCodepoint utcChar,
+  size_t FontDoSelectFontType(const UtfCodepoint utcChar,
   const UtfCodepoint utcCharOutline)
 { return FtfIsLoaded() ?
-    DoHandleFTGlyph<StrokerCheckFuncType,
+    FontDoHandleFTGlyph<StrokerCheckFuncType,
       RoundCheckFuncType>(utcChar, utcCharOutline) :
-    DoHandleStaticGlyph(utcChar, utcCharOutline); }
+    FontDoHandleStaticGlyph(utcChar, utcCharOutline); }
 /* -- Check if a character needs initialising ------------------------------ */
 template<class FontCheckFunc, class StrokerCheckFuncType,
   class RoundCheckFuncType>
-size_t DoCheckGlyph(const UtfCodepoint utcChar)
+size_t FontDoCheckGlyph(const UtfCodepoint utcChar)
 { return FontCheckFunc().template DoHandleGlyph<StrokerCheckFuncType,
     RoundCheckFuncType>(this, utcChar, utcChar * utcMultiplier); }
 /* -- Do initialise all freetype characters in specified range ------------- */
 template<class HandleGlyphFuncType,
   class InitCharFuncType,
   class RoundCheckFuncType>
-void DoInitFTCharRange(const UtfCodepoint utcStart, const UtfCodepoint utcEnd)
-  { for(UtfCodepoint utcChar = utcStart; utcChar < utcEnd; ++utcChar)
-      DoCheckGlyph<HandleGlyphFuncType,
-                   InitCharFuncType,
-                   RoundCheckFuncType>(utcChar); }
+void FontDoInitFTCharRange(const UtfCodepoint utcStart,
+  const UtfCodepoint utcEnd)
+{ for(UtfCodepoint utcChar = utcStart; utcChar < utcEnd; ++utcChar)
+    FontDoCheckGlyph<HandleGlyphFuncType, InitCharFuncType,
+      RoundCheckFuncType>(utcChar); }
 /* -- Apply rounding functor before entering loop -------------------------- */
 template<class HandleGlyphFuncType, class InitCharFuncType>
-  void DoInitFTCharRangeApplyRound(const UtfCodepoint utcStart,
+  void FontDoInitFTCharRangeApplyRound(const UtfCodepoint utcStart,
     const UtfCodepoint utcEnd)
 { // Load the character with floor rounding?
   if(FlagIsSet(FF_FLOORADVANCE))
-    DoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
+    FontDoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
       RoundCheckFunc::Manual<RoundFunc::Floor<GLfloat>>>(utcStart, utcEnd);
   // Load the character with ceil rounding?
   else if(FlagIsSet(FF_CEILADVANCE))
-    DoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
+    FontDoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
       RoundCheckFunc::Manual<RoundFunc::Ceil<GLfloat>>>(utcStart, utcEnd);
   // Load the character with round rounding?
   else if(FlagIsSet(FF_ROUNDADVANCE))
-    DoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
+    FontDoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
       RoundCheckFunc::Manual<RoundFunc::Round<GLfloat>>>(utcStart, utcEnd);
   // No rounding (allows subpixel drawing)
-  DoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
+  FontDoInitFTCharRange<HandleGlyphFuncType, InitCharFuncType,
     RoundCheckFunc::Manual<RoundFunc::Straight<GLfloat>>>(utcStart, utcEnd);
 }
 /* -- Apply stroker functor before entering loop --------------------------- */
 template<class HandleGlyphFuncType>
-  void DoInitFTCharRangeApplyStroker(const UtfCodepoint utcStart,
+  void FontDoInitFTCharRangeApplyStroker(const UtfCodepoint utcStart,
     const UtfCodepoint utcEnd)
 { // Stroker requested
   if(FtfIsStrokerLoaded())
   { // Load entire stroker?
     if(FlagIsSet(FF_STROKETYPE2))
-      DoInitFTCharRangeApplyRound<HandleGlyphFuncType,
+      FontDoInitFTCharRangeApplyRound<HandleGlyphFuncType,
         StrokerCheckFunc::Manual<InitCharFunc::Outline2>>
           (utcStart, utcEnd);
     // Load outside stroker (default)
-    else DoInitFTCharRangeApplyRound<HandleGlyphFuncType,
+    else FontDoInitFTCharRangeApplyRound<HandleGlyphFuncType,
       StrokerCheckFunc::Manual<InitCharFunc::Outline1>>
         (utcStart, utcEnd);
   }  // Load no stroker
-  else DoInitFTCharRangeApplyRound<HandleGlyphFuncType,
+  else FontDoInitFTCharRangeApplyRound<HandleGlyphFuncType,
     StrokerCheckFunc::Manual<InitCharFunc::NoOutline>>
       (utcStart, utcEnd);
 }
@@ -373,56 +375,56 @@ template<class HandleGlyphFuncType>
 template<class HandleGlyphFuncType,
          class InitCharFuncType,
          class RoundCheckFuncType>
-void DoInitFTCharString(const StdStringView &ssvStr)
+void FontDoInitFTCharString(const StdStringView &ssvStr)
 { // Build a new utfstring class with the string
   UtfDecoder udStr{ ssvStr };
   // Enumerate trough the entire string
   while(const UtfCodepoint utcChar = udStr.UtfNext())
-    DoCheckGlyph<HandleGlyphFuncType,
-                 InitCharFuncType,
-                 RoundCheckFuncType>(utcChar);
+    FontDoCheckGlyph<HandleGlyphFuncType, InitCharFuncType,
+      RoundCheckFuncType>(utcChar);
 }
 /* -- Apply rounding functor before entering loop -------------------------- */
 template<class HandleGlyphFuncType, class InitCharFuncType>
-  void DoInitFTCharStringApplyRound(const StdStringView &ssvStr)
+  void FontDoInitFTCharStringApplyRound(const StdStringView &ssvStr)
 { // Load the character with floor rounding?
   if(FlagIsSet(FF_FLOORADVANCE))
-    DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
+    FontDoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
       RoundCheckFunc::Manual<RoundFunc::Floor<GLfloat>>>(ssvStr);
   // Load the character with ceil rounding?
   else if(FlagIsSet(FF_CEILADVANCE))
-    DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
+    FontDoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
       RoundCheckFunc::Manual<RoundFunc::Ceil<GLfloat>>>(ssvStr);
   // Load the character with round rounding?
   else if(FlagIsSet(FF_ROUNDADVANCE))
-    DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
+    FontDoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
       RoundCheckFunc::Manual<RoundFunc::Round<GLfloat>>>(ssvStr);
   // No rounding (allows subpixel drawing)
-  DoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
+  FontDoInitFTCharString<HandleGlyphFuncType, InitCharFuncType,
     RoundCheckFunc::Manual<RoundFunc::Straight<GLfloat>>>(ssvStr);
 }
 /* -- Apply rounding functor before entering loop -------------------------- */
 template<class HandleGlyphFuncType>
-  void DoInitFTCharStringApplyStroker(const StdStringView &ssvStr)
+  void FontDoInitFTCharStringApplyStroker(const StdStringView &ssvStr)
 { // If stroker is loaded?
   if(FtfIsStrokerLoaded())
   { // Load entire stroker outline?
     if(FlagIsSet(FF_STROKETYPE2))
-      DoInitFTCharStringApplyRound<HandleGlyphFuncType,
+      FontDoInitFTCharStringApplyRound<HandleGlyphFuncType,
         StrokerCheckFunc::Manual<InitCharFunc::Outline2>>(ssvStr);
     // Load outside of stroker (default)
-    else DoInitFTCharStringApplyRound<HandleGlyphFuncType,
+    else FontDoInitFTCharStringApplyRound<HandleGlyphFuncType,
       StrokerCheckFunc::Manual<InitCharFunc::Outline1>>(ssvStr);
   } // Load no stroker
-  else DoInitFTCharStringApplyRound<HandleGlyphFuncType,
+  else FontDoInitFTCharStringApplyRound<HandleGlyphFuncType,
     StrokerCheckFunc::Manual<InitCharFunc::NoOutline>>(ssvStr);
 }
 /* -- Check if a character needs initialising ------------------------------ */
-size_t CheckGlyph(const UtfCodepoint utcChar)
-{ return DoCheckGlyph<HandleGlyphFunc::Auto,
+size_t FontCheckGlyph(const UtfCodepoint utcChar)
+{ return FontDoCheckGlyph<HandleGlyphFunc::Auto,
     StrokerCheckFunc::Auto<InitCharFunc::NoOutline>,
     RoundCheckFunc::Auto<RoundFunc::Straight<GLfloat>>>(utcChar); }
 /* -- Get modified character width at specified position ------------------- */
-GLfloat GetCharWidth(const size_t stPos)
-  { return (gvData[stPos].GlyphGetAdvance() + GetCharSpacing()) * glfScale; }
+GLfloat FontGetCharWidth(const size_t stPos)
+  { return (gvData[stPos].GlyphGetAdvance() +
+      FontGetCharSpacing()) * glfScale; }
 /* == EoF =========================================================== EoF == */

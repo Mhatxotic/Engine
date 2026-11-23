@@ -318,16 +318,16 @@ class GlFWWindow :                     // GLFW window class
   /* -- Create functions to access all attributes -------------------------- */
 #define SET(nc,nu) \
   /* ---------------------------------------------------------------------- */\
-  void WinSet ## nc ## Attrib[[maybe_unused]](const bool bState) const \
-    { WinSetAttribBoolean(GLFW_ ## nu, bState); } \
-  void WinSet ## nc ## AttribEnabled[[maybe_unused]]() const \
-    { WinSetAttribEnabled(GLFW_ ## nu); } \
-  void WinSet ## nc ## AttribDisabled[[maybe_unused]]() const \
-    { WinSetAttribDisabled(GLFW_ ## nu); } \
-  bool WinIs ## nc ## AttribEnabled[[maybe_unused]]() const \
-    { return WinGetAttribBoolean(GLFW_ ## nu); } \
-  bool WinIs ## nc ## AttribDisabled[[maybe_unused]]() const \
-    { return !WinIs ## nc ## AttribEnabled(); }
+  void WinSet##nc##Attrib[[maybe_unused]](const bool bState) const \
+    { WinSetAttribBoolean(GLFW_##nu, bState); } \
+  void WinSet##nc##AttribEnabled[[maybe_unused]]() const \
+    { WinSetAttribEnabled(GLFW_##nu); } \
+  void WinSet##nc##AttribDisabled[[maybe_unused]]() const \
+    { WinSetAttribDisabled(GLFW_##nu); } \
+  bool WinIs##nc##AttribEnabled[[maybe_unused]]() const \
+    { return WinGetAttribBoolean(GLFW_##nu); } \
+  bool WinIs##nc##AttribDisabled[[maybe_unused]]() const \
+    { return !WinIs##nc##AttribEnabled(); }
   /* ----------------------------------------------------------------------- */
   SET(AutoIconify, AUTO_ICONIFY)       // Set window auto-minimise state
   SET(CentreCursor, CENTER_CURSOR)     // Set window cursor centre state
@@ -396,16 +396,16 @@ class GlFWWindow :                     // GLFW window class
   /* -- Create functions to set and get input mode ------------------------- */
 #define SET(nc,nu) \
   /* ---------------------------------------------------------------------- */\
-  void WinSet ## nc ## InputMode[[maybe_unused]](const bool bState) const \
-    { WinSetInputMode(GLFW_ ## nu, bState); } \
-  void WinSet ## nc ## InputModeEnabled[[maybe_unused]]() const \
-    { WinSet ## nc ## InputMode(true); } \
-  void WinSet ## nc ## InputModeDisabled[[maybe_unused]]() const \
-    { WinSet ## nc ## InputMode(false); } \
-  bool WinIs ## nc ## InputModeEnabled[[maybe_unused]]() const \
-    { return WinGetInputMode(GLFW_ ## nu); } \
-  bool WinIs ## nc ## InputModeDisabled[[maybe_unused]]() const \
-    { return !WinIs ## nc ## InputModeEnabled(); }
+  void WinSet##nc##InputMode[[maybe_unused]](const bool bState) const \
+    { WinSetInputMode(GLFW_##nu, bState); } \
+  void WinSet##nc##InputModeEnabled[[maybe_unused]]() const \
+    { WinSet##nc##InputMode(true); } \
+  void WinSet##nc##InputModeDisabled[[maybe_unused]]() const \
+    { WinSet##nc##InputMode(false); } \
+  bool WinIs##nc##InputModeEnabled[[maybe_unused]]() const \
+    { return WinGetInputMode(GLFW_##nu); } \
+  bool WinIs##nc##InputModeDisabled[[maybe_unused]]() const \
+    { return !WinIs##nc##InputModeEnabled(); }
   /* ----------------------------------------------------------------------- */
   SET(RawMouse,           RAW_MOUSE_MOTION)     // Raw mouse motion
   SET(LockKeyMods,        LOCK_KEY_MODS)        // Mod key locking behaviour
