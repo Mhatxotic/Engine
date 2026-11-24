@@ -977,7 +977,7 @@ for(const Image*const iPtr : *cImages)
     .DataN(iRef.ImageDataGetBitsPerPixel())
     .DataN(iRef.ImageDataGetBytesPerPixel())
     .DataN(iRef.ImageDataGetSlotCount()).DataN(iRef.GetAlloc())
-    .Data(ImageGetPixelFormat(iRef.ImageDataGetPixelType()))
+    .Data(ImageLibGetPixelFormat(iRef.ImageDataGetPixelType()))
     .Data(iRef.NameGet());
 } // Log texture counts
 cConsole->ConsoleAddLineA(sTable.Finish(),

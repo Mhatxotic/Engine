@@ -17,24 +17,16 @@ using namespace IEvtMain::P;           using namespace IFileMap::P;
 using namespace IGCHelper::P;          using namespace IImageData::P;
 using namespace IImageDef::P;          using namespace IImageLib::P;
 using namespace IImageSlot::P;         using namespace ILog::P;
-using namespace ILookupMap::P;         using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IName::P;              using namespace IOgl::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IName::P;
+using namespace IOgl::P;               using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* == Image collector and member class ===================================== */
-CTOR_BEGIN_ASYNC(Images, Image, CLHelperUnsafe,
-  /* ----------------------------------------------------------------------- */
-  using LumTexType = LookupMap<TextureType>;      // Pixel format modes map
-  const LumTexType lttFormatModes;,    // Human readable
-);/* ----------------------------------------------------------------------- */
-template<typename IntType>             // Prototype
-  static const StdStringView &ImageGetPixelFormat(const IntType);
-/* ------------------------------------------------------------------------- */
-CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
+CTOR_BEGIN_ASYNC_DUO(Images, Image, CLHelperUnsafe, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public AsyncLoaderImage,             // For loading images off main thread
   public ImageData                     // Raw image data
@@ -67,13 +59,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
     // For each slot
     for(ImageSlot &isRef : ImageDataGetSlots())
     { // Swap pixels
-      const int iResult = ImageSwapPixels(isRef.MemPtr<char>(),
+      const int iResult = ImageLibSwapPixels(isRef.MemPtr<char>(),
         isRef.MemSize(), ImageDataGetBytesPerPixel(), 0, 2);
       if(iResult < 0)
         XC("Pixel reorder failed!",
           "Code",          iResult,
-          "FromFormat",    ImageGetPixelFormat(ImageDataGetPixelType()),
-          "ToFormat",      ImageGetPixelFormat(ttNType),
+          "FromFormat",    ImageLibGetPixelFormat(ImageDataGetPixelType()),
+          "ToFormat",      ImageLibGetPixelFormat(ttNType),
           "BytesPerPixel", ImageDataGetBytesPerPixel(),
           "Address",       isRef.MemPtr<void>(),
           "Length",        isRef.MemSize());
@@ -747,8 +739,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
           cCommon->CommonBlankStr(),
         ttOld != ImageDataGetPixelType() ?
           StrFormat("\n- Pixel type: $<$$> -> $<$$>.",
-            ImageGetPixelFormat(ttOld), StdIOSHex, ttOld,
-            ImageGetPixelFormat(ImageDataGetPixelType()),
+            ImageLibGetPixelFormat(ttOld), StdIOSHex, ttOld,
+            ImageLibGetPixelFormat(ImageDataGetPixelType()),
               ImageDataGetPixelType(), StdIOSDec) : cCommon->CommonBlankStr(),
         stOld != GetAlloc() ?
           StrFormat("\n- Memory usage: $ -> $ bytes.",
@@ -775,13 +767,13 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   { // Force load a certain type of image (for speed?) but in Async mode,
     // force detection doesn't really matter as much, but overall, still
     // needed if speed is absolutely neccesary.
-    if(ImageDataIsLoadAsPNG()) ImageLoad(IFMT_PNG, fmData, *this);
-    else if(ImageDataIsLoadAsJPEG()) ImageLoad(IFMT_JPEG, fmData, *this);
-    else if(ImageDataIsLoadAsGIF()) ImageLoad(IFMT_GIF, fmData, *this);
-    else if(ImageDataIsLoadAsDDS()) ImageLoad(IFMT_DDS, fmData, *this);
-    else if(ImageDataIsLoadAsWEBP()) ImageLoad(IFMT_WEBP, fmData, *this);
+    if(ImageDataIsLoadAsPNG()) ImageLibLoad(IFMT_PNG, fmData, *this);
+    else if(ImageDataIsLoadAsJPEG()) ImageLibLoad(IFMT_JPEG, fmData, *this);
+    else if(ImageDataIsLoadAsGIF()) ImageLibLoad(IFMT_GIF, fmData, *this);
+    else if(ImageDataIsLoadAsDDS()) ImageLibLoad(IFMT_DDS, fmData, *this);
+    else if(ImageDataIsLoadAsWEBP()) ImageLibLoad(IFMT_WEBP, fmData, *this);
     // Auto detection of image
-    else ImageLoad(fmData, *this);
+    else ImageLibLoad(fmData, *this);
     // Apply filters if image has no special circumstances
     if(ImageDataIsNotCompressed() && ImageDataIsNotMipmaps())
       ImageApplyFilters();
@@ -802,7 +794,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Save image using a type id ----------------------------------------- */
   void ImageSaveFile(const StdStringView &ssvFile, const size_t stSId,
     const ImageFormat ifPId) const
-  { ImageSave(ifPId, ssvFile, *this, ImageDataGetSlots()[stSId]); }
+  { ImageLibSave(ifPId, ssvFile, *this, ImageDataGetSlots()[stSId]); }
   /* -- Load image from memory asynchronously ------------------------------ */
   template<class StrType>
     requires StdIsStrOrCStr<StrType>
@@ -903,7 +895,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
             ImageDataGetPixelType() <= TT_DXT3)
       XC("Compressed images not supported yet!",
         "File", NameGet(),
-        "Type", ImageGetPixelFormat(ImageDataGetPixelType()));
+        "Type", ImageLibGetPixelFormat(ImageDataGetPixelType()));
     // Set expected number of bytes
     else stExpect = ImageDataGetTotalPixels() * ImageDataGetBytesPerPixel();
     // Check that the size matches
@@ -1057,19 +1049,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Images, Image, ICHelperUnsafe),
   /* -- Destructor --------------------------------------------------------- */
   DTORHELPER(~Image, AsyncCancel())    // Wait for loading thread to cancel
 };/* -- End ---------------------------------------------------------------- */
-CTOR_END_ASYNC(Images, Image, IMAGE, IMAGE,,,, lttFormatModes{{
-  /* ----------------------------------------------------------------------- */
-  IDMAPSTR(TT_NONE),                   IDMAPSTR(TT_BGR),
-  IDMAPSTR(TT_BGRA),                   IDMAPSTR(TT_DXT1),
-  IDMAPSTR(TT_DXT3),                   IDMAPSTR(TT_DXT5),
-  IDMAPSTR(TT_GRAY),                   IDMAPSTR(TT_GRAYALPHA),
-  IDMAPSTR(TT_RGB),                    IDMAPSTR(TT_RGBA),
-  /* ----------------------------------------------------------------------- */
-}, "TT_UNKNOWN"})                      // Unknown pixel format mode
-/* ------------------------------------------------------------------------- */
-template<typename IntType> // Forcing any type to GLenum
-  static const StdStringView &ImageGetPixelFormat(const IntType itMode)
-     { return cImages->lttFormatModes.Get(static_cast<TextureType>(itMode)); }
+CTOR_END_ASYNC_NOFUNCS(Images, Image, IMAGE, IMAGE)
 /* ------------------------------------------------------------------------- */
 using ImageVector = StdVector<Image>;  // Vector of images
 /* ------------------------------------------------------------------------- */

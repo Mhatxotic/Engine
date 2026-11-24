@@ -131,14 +131,16 @@ constexpr const uint64_t StdMaxUInt64 = StdLimits<uint64_t>::max();
 constexpr const size_t StdMaxSizeT = StdLimits<size_t>::max(),
                        StdSizeTN1 = static_cast<size_t>(-1),
                        StdNPos = StdString::npos;
+/* -- Error number basic type (int& -> int) -------------------------------- */
+using StdErrNo = StdRemoveConstVolRef<decltype(errno)>;
 /* -- Set error number ----------------------------------------------------- */
-static void StdSetError(const int iValue) { errno = iValue; }
+static void StdSetError(const StdErrNo enNew) { errno = enNew; }
 /* -- Get error number ----------------------------------------------------- */
-static int StdGetError() { return errno; }
+static StdErrNo StdGetError() { return errno; }
 /* -- Is error number equal to --------------------------------------------- */
-static bool StdIsError(const int iValue) { return StdGetError() == iValue; }
+static bool StdIsError(const StdErrNo enErr) { return StdGetError() == enErr; }
 /* -- Is error number not equal to ----------------------------------------- */
-static bool StdIsNotError(const int iValue) { return !StdIsError(iValue); }
+static bool StdIsNotError(const StdErrNo enErr) { return !StdIsError(enErr); }
 /* -- Is error number non-zero? -------------------------------------------- */
 static bool StdIsErrorSet[[maybe_unused]]() { return StdIsNotError(0); }
 /* -- Is error number out of disk space ------------------------------------ */

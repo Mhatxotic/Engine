@@ -20,7 +20,7 @@ Development is mainly focused by myself on the [MacOS](https://en.wikipedia.org/
 * Use of LUA interpreter with configurability and infinite-loop timeout.
 * Full and safe error reporting with extensive use of C++ exceptions.
 * Front-end choice of Unix NCurses, Win32 console or OpenGL 2-D interface.
-* Asynchronous image format loading (such as PNG, JPG, GIF and DDS).
+* Asynchronous image format loading (such as PNG, JPG, GIF, WEBP and DDS).
 * Support for transparent frame buffer objects and window transparency.
 * Optional global 8-bit colour palette system for retro applications.
 * Asynchronous audio format loading (such as WAV, CAF and OGG).

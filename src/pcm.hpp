@@ -174,11 +174,11 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
   { // Force load a certain type of audio (for speed?) but in Async mode,
     // force detection doesn't really matter as much, but overall, still
     // needed if speed is absolutely neccesary.
-    if     (FlagIsSet(PL_FCE_WAV)) PcmLoadFile(PFMT_WAV, fmData, *this);
-    else if(FlagIsSet(PL_FCE_CAF)) PcmLoadFile(PFMT_CAF, fmData, *this);
-    else if(FlagIsSet(PL_FCE_OGG)) PcmLoadFile(PFMT_OGG, fmData, *this);
+    if     (FlagIsSet(PL_FCE_WAV)) PcmLibLoadFile(PFMT_WAV, fmData, *this);
+    else if(FlagIsSet(PL_FCE_CAF)) PcmLibLoadFile(PFMT_CAF, fmData, *this);
+    else if(FlagIsSet(PL_FCE_OGG)) PcmLibLoadFile(PFMT_OGG, fmData, *this);
     // Auto detection of pcm audio
-    else PcmLoadFile(fmData, *this);
+    else PcmLibLoadFile(fmData, *this);
     // Apply filters if image has no special circumstances
     PcmApplyFilters();
     // Split into two channels if audio in stereo

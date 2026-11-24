@@ -82,7 +82,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
       "Name", fboRef.NameGet(), "Id", fboRef.gluFbotex);
     GL(cOgl->OglReadTextureTT(ttMode, mBuffer.MemPtr<GLvoid>()),
       "Failed to read Fbo pixel data!",
-      "Name", fboRef.NameGet(), "Mode", ImageGetPixelFormat(ttMode));
+      "Name", fboRef.NameGet(), "Mode", ImageLibGetPixelFormat(ttMode));
     // Get new filename or original filename
     NameSet(StrIsBlank(ssvFile,
       StrAppend(cMetadata->MetadataGetShortTitle(),
@@ -90,7 +90,7 @@ CTOR_MEM_BEGIN(SShots, SShot, ICHelperUnsafe, /* n/a */),
     // Log status
     cLog->LogDebugExSafe("SShot '$' screen capture to '$' ($x$x$;$)...",
       fboRef.NameGet(), NameGet(), fboRef.DimGetWidth(),
-      fboRef.DimGetHeight(), bdBPP, ImageGetPixelFormat(ttMode));
+      fboRef.DimGetHeight(), bdBPP, ImageLibGetPixelFormat(ttMode));
     // Setup raw image
     ImageInitRaw(NameGet(), mBuffer, fboRef.DimGetWidth<unsigned>(),
       fboRef.DimGetHeight<unsigned>(), bdBPP);

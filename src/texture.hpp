@@ -15,15 +15,15 @@ using namespace ICollector::P;         using namespace IDim::P;
 using namespace IError::P;             using namespace IFbo::P;
 using namespace IFboCmd::P;            using namespace IFboItem::P;
 using namespace IGCHelper::P;          using namespace IImage::P;
-using namespace IImageDef::P;          using namespace IImageSlot::P;
-using namespace IJson::P;              using namespace ILog::P;
-using namespace ILuaBase::P;           using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IMemory::P;
-using namespace IOgl::P;               using namespace ISerial::P;
-using namespace IShader::P;            using namespace IShaders::P;
-using namespace IStd::P;               using namespace ISysUtil::P;
-using namespace ITexDef::P;            using namespace IUtil::P;
-using namespace LOgl::Types;
+using namespace IImageDef::P;          using namespace IImageLib::P;
+using namespace IImageSlot::P;         using namespace IJson::P;
+using namespace ILog::P;               using namespace ILuaBase::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IMemory::P;            using namespace IOgl::P;
+using namespace ISerial::P;            using namespace IShader::P;
+using namespace IShaders::P;           using namespace IStd::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
+using namespace IUtil::P;              using namespace LOgl::Types;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Define texture collector class --------------------------------------- */
@@ -109,14 +109,14 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
           isSlot.DimGetHeight<GLsizei>(), ttNICFormat, ttNXCFormat,
           isSlot.MemPtr()),
           "Could not upload uncompressed texture to video ram!",
-          "Name",      tTexture.NameGet(), "Index", stSubTexId,
-          "TexId",     tTexture.TextureGetSubName(stSubTexId),
-          "Level",     gliMipLevel,        "Width", isSlot.DimGetWidth(),
-          "Height",    isSlot.DimGetHeight(),
-          "XCFormat",  ImageGetPixelFormat(tTexture.ImageDataGetPixelType()),
-          "NICFormat", ImageGetPixelFormat(ttNICFormat),
-          "NXCFormat", ImageGetPixelFormat(ttNXCFormat),
-          "Size",      isSlot.MemSize(),   "Data",  isSlot.MemPtr<void>());
+          "Name",   tTexture.NameGet(), "Index", stSubTexId,
+          "TexId",  tTexture.TextureGetSubName(stSubTexId),
+          "Level",  gliMipLevel,        "Width", isSlot.DimGetWidth(),
+          "Height", isSlot.DimGetHeight(),
+          "XCFmt",  ImageLibGetPixelFormat(tTexture.ImageDataGetPixelType()),
+          "NICFmt", ImageLibGetPixelFormat(ttNICFormat),
+          "NXCFmt", ImageLibGetPixelFormat(ttNXCFormat),
+          "Size",   isSlot.MemSize(),   "Data",  isSlot.MemPtr<void>());
       }
     };
     /* -- Load as compressed dxt pixels ------------------------------------ */
@@ -135,7 +135,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
           "TexId",    tTexture.TextureGetSubName(stSubTexId),
           "Level",    gliMipLevel,        "Width", isSlot.DimGetWidth(),
           "Height",   isSlot.DimGetHeight(),
-          "XCFormat", ImageGetPixelFormat(tTexture.ImageDataGetPixelType()),
+          "XCFormat", ImageLibGetPixelFormat(tTexture.ImageDataGetPixelType()),
           "Size",     isSlot.MemSize(),   "Data",  isSlot.MemPtr<void>());
       }
     };
@@ -242,8 +242,8 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       }
     } // Log progress
     cLog->LogDebugExSafe("Texture '$'[S:$;F:$/$;M:$;D:$x$] uploaded.",
-      NameGet(), stSlots, ImageGetPixelFormat(ttNXCFormat),
-      ImageGetPixelFormat(ttNICFormat), TextureGetMipmaps(),
+      NameGet(), stSlots, ImageLibGetPixelFormat(ttNXCFormat),
+      ImageLibGetPixelFormat(ttNICFormat), TextureGetMipmaps(),
       isSlot.DimGetWidth(), isSlot.DimGetHeight());
   }
   /* -- Return a new texcoord tile converting 2D texture coords to 3D ------ */
@@ -715,14 +715,14 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
       "Failed to update VRAM with image!",
       "Name",    NameGet(),  "OffsetX", gliX1,
       "OffsetY", gliY1,      "Width",   glsiWidth,
-      "Height",  glsiHeight, "SrcType", ImageGetPixelFormat(ttPixType));
+      "Height",  glsiHeight, "SrcType", ImageLibGetPixelFormat(ttPixType));
     // Whats the minification value? We might need to regenerate mipmaps! If
     // we already had mipmaps, they will be overwritten.
     TextureRegenMipmaps();
     // Write that we updated the VRAM
     cLog->LogDebugExSafe("Texture '$'[$<$x$>] updated at $x$ with type $!",
       NameGet(), gluTexId, glsiWidth, glsiHeight, gliX1, gliY1,
-      ImageGetPixelFormat(ttPixType));
+      ImageLibGetPixelFormat(ttPixType));
   }
   /* -- Replace partial texture in VRAM from partial raw data -------------- */
   void TextureUpdateEx(const GLuint gluTexId, const GLint gliX1,
@@ -773,7 +773,7 @@ CTOR_MEM_BEGIN(Textures, Texture, ICHelperUnsafe, /* No SerialSlave<> */),
     GL(cOgl->OglReadTextureTT(ttPixType, mOut.MemPtr<GLvoid>()),
       "Download texture failed!",
       "Name",   NameGet(), "Index", stSubTexId, "Buffer", mOut.MemSize(),
-      "Format", ImageGetPixelFormat(ttPixType));
+      "Format", ImageLibGetPixelFormat(ttPixType));
     // Return a newly created image class containing this data
     return Image{ NameGet(), StdMove(mOut), DimGetWidth(), DimGetHeight(),
       bdDDepth };

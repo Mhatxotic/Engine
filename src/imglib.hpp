@@ -39,14 +39,19 @@ using namespace IDir::P;               using namespace IError::P;
 using namespace IFileMap::P;           using namespace IFStream::P;
 using namespace IGCHelper::P;          using namespace IImageDef::P;
 using namespace IImageData::P;         using namespace IImageSlot::P;
-using namespace ILog::P;               using namespace ILuaIdent::P;
-using namespace ILuaLib::P;            using namespace IName::P;
-using namespace ISerial::P;            using namespace IStd::P;
-using namespace IString::P;            using namespace ISysUtil::P;
+using namespace ILog::P;               using namespace ILookupMap::P;
+using namespace ILuaIdent::P;          using namespace ILuaLib::P;
+using namespace IName::P;              using namespace ISerial::P;
+using namespace IStd::P;               using namespace IString::P;
+using namespace ISysUtil::P;           using namespace ITexDef::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Image libraries collector class as a vector for direct access -------- */
-CTOR_BEGIN_CUSTCTR(ImageLibs, ImageLib, StdVector, CLHelperUnsafe)
+CTOR_BEGIN_CUSTCTR(ImageLibs, ImageLib, StdVector, CLHelperUnsafe,
+  /* ----------------------------------------------------------------------- */
+  using LumTexType = LookupMap<TextureType>; // Pixel format modes map
+  const LumTexType lttFormatModes;     // Human readable
+)/* ------------------------------------------------------------------------ */
 /* -- Image libraries format object class ---------------------------------- */
 CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
@@ -97,9 +102,17 @@ CTOR_MEM_BEGIN_CSLAVE(ImageLibs, ImageLib, ICHelperUnsafe),
     {}
 };/* -- End of objects collector (reserve and set limit for formats) ------- */
 CTOR_END(ImageLibs, ImageLib, IMAGELIB,
-  reserve(IFMT_MAX); CollectorSetLimit(IFMT_MAX),)
+  reserve(IFMT_MAX); CollectorSetLimit(IFMT_MAX),,, lttFormatModes{{
+  /* ----------------------------------------------------------------------- */
+  IDMAPSTR(TT_NONE),                   IDMAPSTR(TT_BGR),
+  IDMAPSTR(TT_BGRA),                   IDMAPSTR(TT_DXT1),
+  IDMAPSTR(TT_DXT3),                   IDMAPSTR(TT_DXT5),
+  IDMAPSTR(TT_GRAY),                   IDMAPSTR(TT_GRAYALPHA),
+  IDMAPSTR(TT_RGB),                    IDMAPSTR(TT_RGBA),
+  /* ----------------------------------------------------------------------- */
+}, "TT_UNKNOWN"})                      // Unknown pixel format mode
 /* -- Save a image using a specific type ----------------------------------- */
-static void ImageSave(const ImageFormat ifId, const StdStringView &ssvFile,
+static void ImageLibSave(const ImageFormat ifId, const StdStringView &ssvFile,
   const ImageData &idData, const ImageSlot &isData)
 { // Get plugin class
   const ImageLib &ilRef = *cImageLibs->at(ifId);
@@ -135,7 +148,7 @@ static void ImageSave(const ImageFormat ifId, const StdStringView &ssvFile,
   }
 }
 /* -- Load a image using a specific type ----------------------------------- */
-static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
+static void ImageLibLoad(const ImageFormat ifId, FileMap &fmData,
   ImageData &idData)
 { // Get plugin class
   const ImageLib &ilRef = *cImageLibs->at(ifId);
@@ -158,7 +171,7 @@ static void ImageLoad(const ImageFormat ifId, FileMap &fmData,
   }
 }
 /* -- Load a image and automatically detect type --------------------------- */
-static void ImageLoad(FileMap &fmData, ImageData &idData)
+static void ImageLibLoad(FileMap &fmData, ImageData &idData)
 { // For each plugin registered
   for(const ImageLib*const ilPtr : *cImageLibs)
   { // Get reference to plugin
@@ -184,8 +197,11 @@ static void ImageLoad(FileMap &fmData, ImageData &idData)
   XC("Unable to determine image format!",
     "Name", fmData.NameGet(), "Size", fmData.MemSize());
 }
-/* ------------------------------------------------------------------------- */
-static int ImageSwapPixels(char*const cpSrc, const size_t stSrc,
+/* -- Convert an texture type ID to readable name (texdef.hpp) ------------- */
+static const StdStringView &ImageLibGetPixelFormat(const TextureType ttId)
+  { return cImageLibs->lttFormatModes.Get(ttId); }
+/* -- Swap pixels ---------------------------------------------------------- */
+static int ImageLibSwapPixels(char*const cpSrc, const size_t stSrc,
   const size_t stPixel, const size_t stSwapA, const size_t stSwapB)
 { // Check parameters
   if(!stSrc) return 0;
