@@ -21,7 +21,7 @@ class GlFWUtil                         // Members initially private
   const HintList   hsStrings;            // Hint strings
   /* -- Convert window hint id to string --------------------------- */ public:
   const StdStringView &GlFWGetHintAttribStr(const int iTarget) const
-    { return hsStrings.Get(iTarget); }
+    { return hsStrings.LukMapGet(iTarget); }
   /* -- Set window hint ---------------------------------------------------- */
   void GlFWSetHint(const int iVar, const int iVal)
   { // Set window hint directly

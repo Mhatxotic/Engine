@@ -532,7 +532,7 @@ class Oal :                            // Members initially private
     { return static_cast<IntType>(OalGetContextIntArray<1>(alceId)[0]); }
   /* -- Convert PCM format identifier to short identifier string ----------- */
   const StdStringView &OalFormatToString(const ALenum aleFormat) const
-    { return alemFormatCodes.Get(aleFormat); }
+    { return alemFormatCodes.LukMapGet(aleFormat); }
   /* -- Get source counts -------------------------------------------------- */
   size_t OalGetMaxMonoSources() const { return stMaxMonoSources; }
   size_t OalGetMaxStereoSources() const { return stMaxStereoSources; }
@@ -550,12 +550,12 @@ class Oal :                            // Members initially private
   template<typename IntType>
     requires StdIsIntegral<IntType>
   const StdStringView &OalGetALErr(const IntType tCode) const
-    { return alemOALCodes.Get(static_cast<ALenum>(tCode)); }
+    { return alemOALCodes.LukMapGet(static_cast<ALenum>(tCode)); }
   /* ----------------------------------------------------------------------- */
   template<typename IntType>
     requires StdIsIntegral<IntType>
   const StdStringView &OalGetALCErr(const IntType tCode) const
-    { return alemOALCCodes.Get(static_cast<ALenum>(tCode)); }
+    { return alemOALCCodes.LukMapGet(static_cast<ALenum>(tCode)); }
   /* -- AL is initialised? ------------------------------------------------- */
   bool OalIsInitialised() const { return alcDevice && alcContext; }
   bool OalIsNotInitialised() const { return !OalIsInitialised(); }

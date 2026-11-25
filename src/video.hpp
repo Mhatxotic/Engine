@@ -590,10 +590,10 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   }
   /* -- Convert colour space to name --------------------------------------- */
   const StdStringView &VideoColourSpaceToString(const th_colorspace csId) const
-    { return cVideos->csStrings.Get(csId); }
+    { return cVideos->csStrings.LukArrayGet(csId); }
   /* -- Convert pixel format to name --------------------------------------- */
   const StdStringView &VideoPixelFormatToString(const th_pixel_fmt pfId) const
-    { return cVideos->pfStrings.Get(pfId); }
+    { return cVideos->pfStrings.LukArrayGet(pfId); }
   /* -- Update textures without lock --------------------------------------- */
   void VideoRenderUnsafe()
   { // Get frame

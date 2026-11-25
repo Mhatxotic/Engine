@@ -15,36 +15,31 @@ using namespace IStd::P;
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Id to string list helper class --------------------------------------- */
-template<
-  class KeyType = unsigned,            // The user specified type of the key
-  class ValueType = StdStringView,     // The user specified type of the value
-  class PairType =                     // The pair type to hold key/value pairs
-    StdPair<const KeyType,             // The pair key type
-            const ValueType>,          // The pair value type
-  class MapType =                      // The map type to hold key/value pairs
-    StdMap<const KeyType,              // The key type
-           const ValueType>,           // The value type
-  class IteratorType =                 // The iter type to hold key/value pairs
-    MapType::const_iterator>           // The iterator type
-struct LookupMap :                     // Members initially public
+template<class KeyType>                // The user specified type of the key
+class LookupMap :                      // Members initially private
   /* -- Dependencies ------------------------------------------------------- */
-  private NameConst,                   // Alternative if id is unknown
-  private MapType                      // Map of key->value pairs
-{ /* -- Macros ------------------------------------------------------------- */
+  NameConst,                                 // Alternative if id is unknown
+  StdMap<const KeyType, const StdStringView> // Map of key->val pairs
+{ /* -- Private typedefs --------------------------------------------------- */
+  using PairType     = StdPair<const KeyType, const StdStringView>;
+  using ValueType    = PairType::second_type;
+  using MapType      = StdMap<typename PairType::first_type, ValueType>;
+  using IteratorType = MapType::const_iterator;
+  /* -- Macros ------------------------------------------------------------- */
 #define IDMAPSTR(e) { e, #e }          // Helper macro
-  /* -- Constructor with alternative string -------------------------------- */
+  /* -- Constructor with alternative string ------------------------ */ public:
   explicit LookupMap(
     /* -- Parameters ------------------------------------------------------- */
-    const MapType &mtList,             // Source map
-    const StdStringView &ssvIdent =    // Unknown item string...
+    MapType &&mtList,                  // Source map
+    StdStringView &&ssvIdent =         // Unknown item string...
       cCommon->CommonBlankStr()) :     // ...default blank string
     /* -- Initialisers ----------------------------------------------------- */
-    NameConst{ ssvIdent },             // Unknown item string
-    MapType{ mtList }                  // Items map
+    NameConst{ StdForward<decltype(ssvIdent)>(ssvIdent) }, // Alternate id
+    MapType{ StdForward<decltype(mtList)>(mtList) }        // Items map
     /* -- No code ---------------------------------------------------------- */
     {}
   /* -- Test all items as flags and return a list of strings set ----------- */
-  StrViewVector Test(const KeyType ktValue) const
+  StrViewVector LukMapTest(const KeyType ktValue) const
   { // There will be at least this amount of strings in the list
     StdReserved<StrViewVector> svvOut{ this->size() };
     // Enumerate through all the items and add the string if the bit is set
@@ -58,7 +53,7 @@ struct LookupMap :                     // Members initially public
     return svvOut;
   }
   /* -- Get string --------------------------------------------------------- */
-  const ValueType &Get(const KeyType ktId) const
+  const ValueType &LukMapGet(const KeyType ktId) const
   { // Find code and return custom error if not found else return string
     const IteratorType ptName{ this->find(ktId) };
     return ptName != this->cend() ? ptName->second : NameGet();

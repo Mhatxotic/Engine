@@ -942,7 +942,7 @@ class Display :                        // Members initially private
   /* -- Get window full-screen type ---------------------------------------- */
   FSType DisplayGetFSType() const { return fsType; }
   const StdStringView &DisplayGetFSTypeString(const FSType fsT) const
-    { return fstStrings.Get(fsT); }
+    { return fstStrings.LukArrayGet(fsT); }
   const StdStringView &DisplayGetFSTypeString() const
     { return DisplayGetFSTypeString(DisplayGetFSType()); }
   /* -- Get window position ------------------------------------------------ */

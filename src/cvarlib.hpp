@@ -29,7 +29,7 @@ CVarItemStaticList{{
 // ? Shows the commandline sent to the application it cannot be changed at all.
 /* ------------------------------------------------------------------------- */
 { CFL_BASIC, "app_cmdline", "", CBSTR(cCore->CoreParseCmdLine),
-    CVarFlagsConst{ CONFIDENTIAL|TSTRING|MTRIM|PCMDLINE }},
+    CVarFlagsConst{ CONFIDENTIAL|TSTRING|MTRIM|PCMDLINE|CEMPTY }},
 /* == Core cvars (don't modify order) ====================================== */
 // ! LOG_LEVEL
 // ? Specifies the logging level...

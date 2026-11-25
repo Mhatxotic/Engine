@@ -187,8 +187,9 @@ lceConditions{{                        // Conditional flags
   IDMAPSTR(CALPHA),                    IDMAPSTR(CNUMERIC),
   IDMAPSTR(CSAVEABLE),                 IDMAPSTR(CPROTECTED),
   IDMAPSTR(CDEFLATE),                  IDMAPSTR(CNOTEMPTY),
-  IDMAPSTR(CUNSIGNED),                 IDMAPSTR(CPOW2),
-  IDMAPSTR(CFILENAME),                 IDMAPSTR(CTRUSTEDFN),
+  IDMAPSTR(CEMPTY),                    IDMAPSTR(CUNSIGNED),
+  IDMAPSTR(CPOW2),                     IDMAPSTR(CFILENAME),
+  IDMAPSTR(CTRUSTEDFN),
 }, "NONE" },
 /* ------------------------------------------------------------------------- */
 lcePermissions{{                       // Permission flags
@@ -219,24 +220,24 @@ static StdString VariablesMakeInformation(const CVarItem &cviVar)
     "- Permissions: $.\n"              "- Source: $.\n"
     "- Other: $.\n"                    "- Default: [$/$] \"$\".\n"
     "- Modified: $.\n"                 "- Current: [$/$] \"$\".",
-      cviVar.CVarGetVar(),
-      StrFromBoolTF(cviVar.CVarIsTriggerSet()),
-      StdIOSHex, cviVar, StdIOSDec,
-      StrImplode(cVariables->lceTypes.Test(cviVar),
-        cVariables->ssvCommaSpace),
-      StrImplode(cVariables->lceConditions.Test(cviVar),
-        cVariables->ssvCommaSpace),
-      StrImplode(cVariables->lcePermissions.Test(cviVar),
-        cVariables->ssvCommaSpace),
-      StrImplode(cVariables->lceSources.Test(cviVar),
-        cVariables->ssvCommaSpace),
-      StrImplode(cVariables->lceOther.Test(cviVar),
-        cVariables->ssvCommaSpace),
-      cviVar.CVarGetDefLength(), cviVar.CVarGetDefCapacity(),
-        cviVar.CVarGetDefValue(),
-      StrFromBoolTF(cviVar.CVarIsValueChanged()),
-      cviVar.CVarGetValueLength(), cviVar.CVarGetValueCapacity(),
-        cviVar.CVarGetValue());
+    cviVar.CVarGetVar(),
+    StrFromBoolTF(cviVar.CVarIsTriggerSet()),
+    StdIOSHex, cviVar, StdIOSDec,
+    StrImplode(cVariables->lceTypes.LukMapTest(cviVar),
+      cVariables->ssvCommaSpace),
+    StrImplode(cVariables->lceConditions.LukMapTest(cviVar),
+      cVariables->ssvCommaSpace),
+    StrImplode(cVariables->lcePermissions.LukMapTest(cviVar),
+      cVariables->ssvCommaSpace),
+    StrImplode(cVariables->lceSources.LukMapTest(cviVar),
+      cVariables->ssvCommaSpace),
+    StrImplode(cVariables->lceOther.LukMapTest(cviVar),
+      cVariables->ssvCommaSpace),
+    cviVar.CVarGetDefLength(), cviVar.CVarGetDefCapacity(),
+      cviVar.CVarGetDefValue(),
+    StrFromBoolTF(cviVar.CVarIsValueChanged()),
+    cviVar.CVarGetValueLength(), cviVar.CVarGetValueCapacity(),
+      cviVar.CVarGetValue());
 }
 /* -- Return human readable tokenised string about CVar -------------==----- */
 static void VariablesMakeInformationTokens(Statistic &sTable,
@@ -245,11 +246,11 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
   sTable.Data(StrFromEvalTokens({
     // Types
     { true, cviVar.FlagIsSet(TBOOLEAN)   ? 'B' :
-           (cviVar.FlagIsSet(CFILENAME)  ? 'F' :
            (cviVar.FlagIsSet(TINTEGER)   ? 'I' :
            (cviVar.FlagIsSet(TFLOAT)     ? 'N' :
-           (cviVar.FlagIsSet(TSTRING)    ? 'S' :
+           (cviVar.FlagIsSet(CFILENAME)  ? 'F' :
            (cviVar.FlagIsSet(CTRUSTEDFN) ? 'T' :
+           (cviVar.FlagIsSet(TSTRING)    ? 'S' :
                                            '?'))))) },
     // Permissions
     { cviVar.FlagIsSet(PAPPCFG),  'A' }, { cviVar.FlagIsSet(PCMDLINE), 'C' },
@@ -271,7 +272,8 @@ static void VariablesMakeInformationTokens(Statistic &sTable,
     { cviVar.FlagIsSet(MTRIM),         'R' },
     { cviVar.FlagIsSet(CSAVEABLE),     'S' },
     { cviVar.FlagIsSet(CPOW2),         'T' },
-    { cviVar.FlagIsSet(CNOTEMPTY),     'Y' }
+    { cviVar.FlagIsSet(CNOTEMPTY),     'Y' },
+    { cviVar.FlagIsSet(CEMPTY),        'y' }
   // Name and value
   })).Data(cviVar.CVarGetVar()).Data(cviVar.CVarGetValueSafe());
 }

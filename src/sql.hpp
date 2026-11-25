@@ -141,10 +141,10 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   ClkDuration      cdQuery;            // Last query execution time
   /* -- Convert sql error id to string ---------------------------- */ private:
   const StdStringView &SqlResultToString(const int iCode) const
-    { return ctParent.elStrings.Get(iCode); }
+    { return ctParent.elStrings.LukArrayGet(iCode); }
   /* -- Convert ADR id to string ------------------------------------------- */
   const StdStringView &SqlADResultToString(const ADResult adrResult) const
-    { return ctParent.adrlStrings.Get(adrResult); }
+    { return ctParent.adrlStrings.LukArrayGet(adrResult); }
   /* -- Build a new node into the a records list --------------------------- */
   void SqlDoPair(SqlRecordsMap &srmMap, const int iType,
     const char*const cpKey, const void*const vpPtr, const size_t stSize)
@@ -1515,7 +1515,7 @@ static void SqlInit()
   const int iCode = sqlite3_initialize();
   if(iCode != SQLITE_OK)
     XC("Failed to initialise SQLite!",
-       "Error", iCode, "Reason", cSqls->elStrings.Get(iCode));
+       "Error", iCode, "Reason", cSqls->elStrings.LukArrayGet(iCode));
 }
 /* -- Heap used ------------------------------------------------------------ */
 static size_t SqlHeapUsed()

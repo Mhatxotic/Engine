@@ -29,7 +29,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
 { /* -- Variables ---------------------------------------------------------- */
   size_t           stAlloc;            // Size of all mask bitmaps in array
   /* -- Two masks overlap? ----------------------------------------- */ public:
-  bool IsCollide(const size_t stSourceId, const int iSrcX, const int iSrcY,
+  bool MaskIsCollide(const size_t stSourceId, const int iSrcX, const int iSrcY,
     const Mask &mCdest, const size_t stDestId, const int iDestX,
     const int iDestY) const
   { // Caculate distances and lengths between both bounds
@@ -64,7 +64,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     return false;
   }
   /* -- Two masks overlap with raycasting? --------------------------------- */
-  bool Raycast(const size_t stSourceId, const int iSrcX, const int iSrcY,
+  bool MaskIsRaycast(const size_t stSourceId, const int iSrcX, const int iSrcY,
     const Mask &mCdest, const size_t stDestId, const int iFromX,
     const int iFromY, int &iToX, int &iToY) const
   { // Make calculations
@@ -80,7 +80,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     // Iterations
     for(;iN > 0; --iN)
     { // Check collision and return if found? Set last good position
-      if(IsCollide(stSourceId, iSrcX, iSrcY, mCdest, stDestId, iX, iY))
+      if(MaskIsCollide(stSourceId, iSrcX, iSrcY, mCdest, stDestId, iX, iY))
         { iToX = iLX; iToY = iLY; return true; }
       // Check for errors
       else if(iError > 0) { iLX = iX; iX += iXinc; iError -= iDY; }
@@ -90,7 +90,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     return false;
   }
   /* -- Copy specified mask into this one ---------------------------------- */
-  void Copy(const size_t stDestId, const Mask &mCsrc,
+  void MaskCopy(const size_t stDestId, const Mask &mCsrc,
     const size_t stSourceId, const int iDestX, const int iDestY)
   { // Caculate distances and lengths between both bounds
     const int
@@ -121,7 +121,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Merge specified mask into this one --------------------------------- */
-  void Merge(const Mask &mCsrc, const size_t stSourceId,
+  void MaskMerge(const Mask &mCsrc, const size_t stSourceId,
     const int iDestX, const int iDestY)
   { // Caculate distances and lengths between both bounds
     const int
@@ -147,7 +147,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Erase specified mask into this one --------------------------------- */
-  void Erase(const size_t stDestId)
+  void MaskErase(const size_t stDestId)
   { // Bail if out of bounds
     if(DimGetWidth() <= 0 || DimGetHeight() <= 0) return;
     // Get bit mask surfaces for both masks
@@ -162,7 +162,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Fill specified mask ------------------------------------------------ */
-  void Fill(const int iDX, const int iDY, const int iW, const int iH)
+  void MaskFill(const int iDX, const int iDY, const int iW, const int iH)
   { // Calculate distances and lengths between both bounds
     const int
       iXMax2 = iDX + iW,                iYMax2 = iDY + iH,
@@ -183,7 +183,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Clear specified mask ----------------------------------------------- */
-  void Clear(const int iDX, const int iDY, const int iW, const int iH)
+  void MaskClear(const int iDX, const int iDY, const int iW, const int iH)
   { // Caculate distances and lengths between both bounds
     const int
       iXMax2 = iDX + iW,               iYMax2 = iDY + iH,
@@ -199,12 +199,11 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     { // Calculate destination position
       const int iDestYPos = iY * DimGetWidth();
       // Enumerate X-axis positions and fill the bits
-      for(int iX = iXMin; iX < iXMax; ++iX)
-        BitClear(cpD, iDestYPos + iX);
+      for(int iX = iXMin; iX < iXMax; ++iX) BitClear(cpD, iDestYPos + iX);
     }
   }
   /* -- Init --------------------------------------------------------------- */
-  void InitBlank(const StdStringView &ssvName, const unsigned uWidth,
+  void MaskInitBlank(const StdStringView &ssvName, const unsigned uWidth,
     const unsigned uHeight)
   { // Check dimension parameters
     if(!uWidth || !uHeight ||
@@ -221,23 +220,23 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     DimSet(static_cast<int>(uWidth), static_cast<int>(uHeight));
   }
   /* -- Init filled mask --------------------------------------------------- */
-  void InitOne(const StdStringView &ssvName, const unsigned uWidth,
+  void MaskInitOne(const StdStringView &ssvName, const unsigned uWidth,
     const unsigned uHeight)
   { // Initialise new mask memory
-    InitBlank(ssvName, uWidth, uHeight);
+    MaskInitBlank(ssvName, uWidth, uHeight);
     // Now fill it with 1's
-    back().MemFill<uint64_t>(0xFFFFFFFFFFFFFFFF);
+    back().MemFill<uint64_t>(0xFFFFFFFFFFFFFFFFULL);
   }
   /* -- Init cleared mask -------------------------------------------------- */
-  void InitZero(const StdStringView &ssvName, const unsigned uWidth,
+  void MaskInitZero(const StdStringView &ssvName, const unsigned uWidth,
     const unsigned uHeight)
   { // Initialise new mask memory
-    InitBlank(ssvName, uWidth, uHeight);
+    MaskInitBlank(ssvName, uWidth, uHeight);
     // Now fill it with zero's
     back().MemFill();
   }
   /* -- Dump a tile to disk ------------------------------------------------ */
-  void Dump(const size_t stId, const StdStringView &ssvFile) const
+  void MaskDump(const size_t stId, const StdStringView &ssvFile) const
   { // Get source slot
     const MemConst &mcSrc = (*this)[stId];
     // Copy the slot because the image init moves it
@@ -258,7 +257,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     }
   }
   /* -- Initialise from an Image class ------------------------------------- */
-  void InitFromImage(Image &imC, const unsigned uTileWidth,
+  void MaskInitImage(Image &imC, const unsigned uTileWidth,
     const unsigned uTileHeight)
   { // Set texture name
     NameSet(imC.NameGet());
@@ -380,7 +379,7 @@ CTOR_BEGIN_DUO(Masks, Mask, CLHelperUnsafe, ICHelperUnsafe),
     DimSet(static_cast<int>(stTWidth), static_cast<int>(stTHeight));
   }
   /* -- Get size of all masks ---------------------------------------------- */
-  size_t GetAlloc() const { return stAlloc; }
+  size_t MaskGetAlloc() const { return stAlloc; }
   /* -- Constructor -------------------------------------------------------- */
   Mask() :
     /* -- Initialisers ----------------------------------------------------- */

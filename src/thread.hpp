@@ -116,7 +116,7 @@ CTOR_MEM_BEGIN_CSLAVE(Threads, Thread, ICHelperSafe),
             Serial(), NameGet(),
             durShort.Parse(ClockTimePointRangeToClampedDouble(
               ThreadGetEndTime(), ThreadGetStartTime())),
-            ctParent.imCodes.Get(tfcResult), StdIOSHex, FlagGet());
+            ctParent.imCodes.LukMapGet(tfcResult), StdIOSHex, FlagGet());
           // Finished
           return;
         // Thread wants to retry? Then just retry!

@@ -196,7 +196,7 @@ LLFUNC(SetBlend, 0,
 /* ------------------------------------------------------------------------- */
 LLFUNC(SetClear, 0, AgFbo{lS, 1}().FboSetClear(AgBoolean{lS, 2}))
 /* ========================================================================= */
-// $ Fbo:SetClearColour
+// $ Fbo:SetCCRGBA
 // > Red:number=The red component intensity (0 to 1).
 // > Green:number=The green component intensity (0 to 1).
 // > Blue:number=The blue component intensity (0 to 1).
@@ -206,13 +206,23 @@ LLFUNC(SetClear, 0, AgFbo{lS, 1}().FboSetClear(AgBoolean{lS, 2}))
 // ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glClear.xml.
 // ? See: https://www.opengl.org/sdk/docs/man2/xhtml/glClearColor.xml.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SetClearColour, 0,
+LLFUNC(SetCCRGBA, 0,
   const AgFbo aFbo{lS, 1};
   const AgGLfloat aRed{lS, 2},
                   aGreen{lS, 3},
                   aBlue{lS, 4},
                   aAlpha{lS, 5};
   aFbo().ColourSet(aRed, aGreen, aBlue, aAlpha))
+/* ========================================================================= */
+// $ Fbo:SetCCRGBAI
+// > Colour:integer=The 32-bit integer for the background colour
+// ? An integer version of Fbo:SetClearColour where it accepts a 32-bit integer
+// ? for the entire colour you want to set the Fbo too
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetCCRGBAI, 0,
+  const AgFbo aFbo{lS, 1};
+  const AgGLuint aColour{lS, 2};
+  aFbo().ColourSetInt(aColour))
 /* ========================================================================= */
 // $ Fbo:SetCRGBA
 // > Red:number=The entire FBO texture red colour intensity (0 to 1).
@@ -411,11 +421,12 @@ LLRSMFBEGIN                            // Fbo:* methods begin
   LLRSFUNC(GetFloatCount),  LLRSFUNC(GetId),         LLRSFUNC(GetLFloatCount),
   LLRSFUNC(GetHeight),      LLRSFUNC(GetMatrix),     LLRSFUNC(GetName),
   LLRSFUNC(GetWidth),       LLRSFUNC(IsDestroyed),   LLRSFUNC(Reserve),
-  LLRSFUNC(SetBlend),       LLRSFUNC(SetClear),      LLRSFUNC(SetClearColour),
-  LLRSFUNC(SetCRGBA),       LLRSFUNC(SetCX),         LLRSFUNC(SetFilter),
-  LLRSFUNC(SetMatrix),      LLRSFUNC(SetTCLTRB),     LLRSFUNC(SetTCLTWH),
-  LLRSFUNC(SetTCX),         LLRSFUNC(SetVLTRB),      LLRSFUNC(SetVLTWH),
-  LLRSFUNC(SetVLTWHA),      LLRSFUNC(SetVX),         LLRSFUNC(SetWireframe),
+  LLRSFUNC(SetBlend),       LLRSFUNC(SetClear),      LLRSFUNC(SetCCRGBA),
+  LLRSFUNC(SetCCRGBAI),     LLRSFUNC(SetCRGBA),      LLRSFUNC(SetCX),
+  LLRSFUNC(SetFilter),      LLRSFUNC(SetMatrix),     LLRSFUNC(SetTCLTRB),
+  LLRSFUNC(SetTCLTWH),      LLRSFUNC(SetTCX),        LLRSFUNC(SetVLTRB),
+  LLRSFUNC(SetVLTWH),       LLRSFUNC(SetVLTWHA),     LLRSFUNC(SetVX),
+  LLRSFUNC(SetWireframe),
 LLRSEND                                // Fbo:* methods end
 /* ========================================================================= **
 ** ######################################################################### **

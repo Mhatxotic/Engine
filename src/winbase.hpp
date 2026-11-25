@@ -651,7 +651,7 @@ class SysBase                          // Members initially private
         << " of thread " << GetCurrentThreadId()
         << " in process " << GetCurrentProcessId()
         << " caused exception 0x" << StdIOSHex << erData.ExceptionCode
-        << " (" << eclStrings.Get(erData.ExceptionCode)
+        << " (" << eclStrings.LukMapGet(erData.ExceptionCode)
         << ") with flags 0x" << erData.ExceptionFlags << StdIOSDec << '.';
     SEHDumpExceptionMemoryAddresses(osS, erData);
     osS << cCommon->CommonCrLf2();

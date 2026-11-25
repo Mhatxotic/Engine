@@ -115,11 +115,11 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Streams, Stream, ICHelperSafe),
   /* -- Convert stop reason to string -------------------------------------- */
   const StdStringView
     &StreamStopReasonToString(const StreamStopReason ssrReason) const
-  { return ctParent.srStrings.Get(ssrReason); }
+  { return ctParent.srStrings.LukArrayGet(ssrReason); }
   /* -- Convert stop reason to string -------------------------------------- */
   const StdStringView
     &StreamStateReasonToString(const StreamPlayState psReason) const
-  { return ctParent.psStrings.Get(psReason); }
+  { return ctParent.psStrings.LukArrayGet(psReason); }
   /* -- Stop (without locks) ----------------------------------------------- */
   void StreamStop(const StreamStopReason ssrReason)
   { // Don't have source class? There is nothing else to do!

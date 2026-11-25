@@ -610,6 +610,8 @@ class Console :                        // Members initially private
                 << cCVars->CVarsGetCBError(); break;
           // String empty
           case CVS_EMPTY: osS << "must not be empty!"; break;
+          // String not empty
+          case CVS_NOTEMPTY: osS << "must be empty!"; break;
           // Integer is zero
           case CVS_ZERO: osS << "must not be zero!"; break;
           // No type is set

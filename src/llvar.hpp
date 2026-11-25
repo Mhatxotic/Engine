@@ -290,7 +290,8 @@ LLRSKTBEGIN(Result)                    // Beginning of cvar result flags
   LLRSKTITEM(CVS_,NOTNUMERIC),         LLRSKTITEM(CVS_,NOTALPHANUMERIC),
   LLRSKTITEM(CVS_,NOTFILENAME),        LLRSKTITEM(CVS_,TRIGGERDENIED),
   LLRSKTITEM(CVS_,TRIGGEREXCEPTION),   LLRSKTITEM(CVS_,EMPTY),
-  LLRSKTITEM(CVS_,ZERO),               LLRSKTITEM(CVS_,NOTYPESET),
+  LLRSKTITEM(CVS_,NOTEMPTY),           LLRSKTITEM(CVS_,ZERO),
+  LLRSKTITEM(CVS_,NOTYPESET),
 LLRSKTEND                              // End of cvar result flags
 /* ========================================================================= **
 ** ######################################################################### **

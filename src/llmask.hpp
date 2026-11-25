@@ -56,7 +56,7 @@ LLFUNC(Copy, 0,
   const AgTileId aSrcTileId{lS, 3, aSrcMask};
   const AgInt aDestX{lS, 4},
               aDestY{lS, 5};
-  aDestMask().Copy(0, aSrcMask, aSrcTileId, aDestX, aDestY))
+  aDestMask().MaskCopy(0, aSrcMask, aSrcTileId, aDestX, aDestY))
 /* ========================================================================= */
 // $ Mask:Destroy
 // ? destroys the mask and frees all the memory associated with it. The object
@@ -78,7 +78,7 @@ LLFUNC(Clear, 0,
               aDestY{lS, 3},
               aDestWidth{lS, 4},
               aDestHeight{lS, 5};
-  aDestMask().Clear(aDestX, aDestY, aDestWidth, aDestHeight))
+  aDestMask().MaskClear(aDestX, aDestY, aDestWidth, aDestHeight))
 /* ========================================================================= */
 // $ Mask:Erase
 // > DestTileId:integer=The id number of the destination mask.
@@ -87,7 +87,7 @@ LLFUNC(Clear, 0,
 LLFUNC(Erase, 0,
   const AgMask aDestMask{lS, 1};
   const AgTileId aDestTileId{lS, 2, aDestMask};
-  aDestMask().Erase(aDestTileId))
+  aDestMask().MaskErase(aDestTileId))
 /* ========================================================================= */
 // $ Mask:Fill
 // > DestX:integer=Destination X position to start filling at.
@@ -102,7 +102,7 @@ LLFUNC(Fill, 0,
               aDestY{lS, 3},
               aDestWidth{lS, 4},
               aDestHeight{lS, 5};
-  aDestMask().Fill(aDestX, aDestY, aDestWidth, aDestHeight))
+  aDestMask().MaskFill(aDestX, aDestY, aDestWidth, aDestHeight))
 /* ========================================================================= */
 // $ Mask:GetHeight
 // < Height:integer=Height of each tile in sub-masks.
@@ -149,7 +149,7 @@ LLFUNC(IsCollide, 1,
   const AgTileId aDestTileId{lS, 3, aDestMask};
   const AgInt aDestX{lS, 4},
               aDestY{lS, 5};
-  LuaUtilPushVar(lS, aSrcMask().IsCollide(0, 0, 0, aDestMask, aDestTileId,
+  LuaUtilPushVar(lS, aSrcMask().MaskIsCollide(0, 0, 0, aDestMask, aDestTileId,
     aDestX, aDestY)))
 /* ========================================================================= */
 // $ Mask:IsCollideEx
@@ -172,8 +172,8 @@ LLFUNC(IsCollideEx, 1,
   const AgTileId aDestTileId{lS, 6, aDestMask};
   const AgInt aDestX{lS, 7},
               aDestY{lS, 8};
-  LuaUtilPushVar(lS, aSrcMask().IsCollide(aSrcTileId, aSrcX, aSrcY, aDestMask,
-    aDestTileId, aDestX, aDestY)))
+  LuaUtilPushVar(lS, aSrcMask().MaskIsCollide(aSrcTileId, aSrcX, aSrcY,
+    aDestMask, aDestTileId, aDestX, aDestY)))
 /* ========================================================================= */
 // $ Mask:IsDestroyed
 // < Destroyed:boolean=If the Mask class is destroyed
@@ -207,8 +207,8 @@ LLFUNC(IsRaycast, 3,
               aDestStartY{lS, 8};
   int iX = LuaUtilGetInt<decltype(iX)>(lS, 9),
       iY = LuaUtilGetInt<decltype(iY)>(lS, 10);
-  LuaUtilPushVar(lS, aSrcMask().Raycast(aSrcTileId, aSrcX, aSrcY, aDestMask,
-    aDestTileId, aDestStartX, aDestStartY, iX, iY), iX, iY))
+  LuaUtilPushVar(lS, aSrcMask().MaskIsRaycast(aSrcTileId, aSrcX, aSrcY,
+    aDestMask, aDestTileId, aDestStartX, aDestStartY, iX, iY), iX, iY))
 /* ========================================================================= */
 // $ Mask:Merge
 // > SrcHandle:Mask=Source mask to merge from.
@@ -224,7 +224,7 @@ LLFUNC(Merge, 0,
   const AgTileId aSrcTileId{lS, 3, aSrcMask};
   const AgInt aDestX{lS, 4},
               aDestY{lS, 5};
-  aDestMask().Merge(aSrcMask, aSrcTileId, aDestX, aDestY))
+  aDestMask().MaskMerge(aSrcMask, aSrcTileId, aDestX, aDestY))
 /* ========================================================================= */
 // $ Mask:Save
 // > Id:integer=The id number of the mask to dump.
@@ -235,7 +235,7 @@ LLFUNC(Save, 0,
   const AgMask aMask{lS, 1};
   const AgTileId aTileId{lS, 2, aMask};
   const AgFilename aFilename{lS, 3};
-  aMask().Dump(aTileId, aFilename))
+  aMask().MaskDump(aTileId, aFilename))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Mask:* methods structure                                            ## **
@@ -266,7 +266,7 @@ LLFUNC(Create, 1,
   const AgImage aImage{lS, 1};
   const AgUInt aWidth{lS, 2},
                aHeight{lS, 3};
-  AcMask{lS}().InitFromImage(aImage, aWidth, aHeight))
+  AcMask{lS}().MaskInitImage(aImage, aWidth, aHeight))
 /* ========================================================================= */
 // $ Mask.CreateOne
 // > Name:string=The identifier of the mask.
@@ -280,7 +280,7 @@ LLFUNC(CreateOne, 1,
   const AgNeString aName{lS, 1};
   const AgUInt aWidth{lS, 2},
                aHeight{lS, 3};
-  AcMask{lS}().InitOne(aName, aWidth, aHeight))
+  AcMask{lS}().MaskInitOne(aName, aWidth, aHeight))
 /* ========================================================================= */
 // $ Mask.CreateZero
 // > Name:string=The identifier of the mask.
@@ -294,7 +294,7 @@ LLFUNC(CreateZero, 1,
   const AgNeString aName{lS, 1};
   const AgUInt aWidth{lS, 2},
                aHeight{lS, 3};
-  AcMask{lS}().InitZero(aName, aWidth, aHeight))
+  AcMask{lS}().MaskInitZero(aName, aWidth, aHeight))
 /* ========================================================================= */
 // $ Mask.GetClasses
 // < Count:integer=Total number of masks created.

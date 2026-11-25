@@ -27,7 +27,7 @@ class CodecOGG :                       // OGG codec object
   /* -- Base classes ------------------------------------------------------- */
   GCHelper<CodecOGG>,                  // Global pointer helper
   PcmLib,                              // Pcm format helper class
-  LookupMap<>                          // Ogg error codes
+  LookupMap<unsigned>                  // Ogg error codes
 { /* -- Private variables -------------------------------------------------- */
   const ov_callbacks ovcCallbacks;     // Vorbis callbacks
   /* -- Vorbis read callback --------------------------------------- */ public:
@@ -83,7 +83,7 @@ class CodecOGG :                       // OGG codec object
   }
   template<typename IntType>
     const StdStringView &GetOggErr(const IntType itCode) const
-      { return Get(static_cast<unsigned>(itCode)); }
+      { return LukMapGet(static_cast<unsigned>(itCode)); }
   /* -- Loader for WAV files ----------------------------------------------- */
   bool Decode(FileMap &fmData, PcmData &pdData)
   { // Check magic and that the file has the OggS string header

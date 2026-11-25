@@ -989,9 +989,9 @@ class Ogl :                            // Members initially private
     // Enable the extension and log result
     IGL(sAPI.glEnable(gleExtension), "Enable extension failed!",
       "Extension",   gleExtension,
-      "ExtensionId", glemExtensions.Get(gleExtension));
+      "ExtensionId", glemExtensions.LukMapGet(gleExtension));
     cLog->LogDebugExSafe("Ogl enabled extension $<0x$$>.",
-      glemExtensions.Get(gleExtension), StdIOSHex, gleExtension);
+      glemExtensions.LukMapGet(gleExtension), StdIOSHex, gleExtension);
   }
   /* -- Disable an extension ----------------------------------------------- */
   void OglDisableExtension(const GLenum gleExtension) const
@@ -999,9 +999,9 @@ class Ogl :                            // Members initially private
     if(!sAPI.glIsEnabled(gleExtension)) return;
     // Disable the extension and log result
     IGL(sAPI.glDisable(gleExtension), "Disable extension failed!",
-      "Key", gleExtension, "KeyId", glemExtensions.Get(gleExtension));
+      "Key", gleExtension, "KeyId", glemExtensions.LukMapGet(gleExtension));
     cLog->LogDebugExSafe("Ogl disabled extension $<0x$$>.",
-      glemExtensions.Get(gleExtension), StdIOSHex, gleExtension);
+      glemExtensions.LukMapGet(gleExtension), StdIOSHex, gleExtension);
   }
   /* -- Commit blending algorithms ----------------------------------------- */
   void OglCommitBlend() const
@@ -1017,16 +1017,16 @@ class Ogl :                            // Members initially private
   template<typename IntType> // Forcing any type to GLenum
     requires StdIsIntegral<IntType>
   const StdStringView &OglGetPixelFormat(const IntType glitMode) const
-    { return glemFormatModes.Get(static_cast<GLenum>(glitMode)); }
+    { return glemFormatModes.LukMapGet(static_cast<GLenum>(glitMode)); }
   /* -- Update hint -------------------------------------------------------- */
   void OglSetHint(const GLenum gleTarget, const GLenum gleMode) const
   { // Get opengl hint and throw if not failed else set hint
     IGL(sAPI.glHint(gleTarget, gleMode), "Failed to set hint!",
-      "Target", glemHintTargets.Get(gleTarget), "TargetId", gleTarget,
-      "Mode",   glemHintModes.Get(gleMode),     "ModeId",   gleMode);
+      "Target", glemHintTargets.LukMapGet(gleTarget), "TargetId", gleTarget,
+      "Mode",   glemHintModes.LukMapGet(gleMode),     "ModeId",   gleMode);
     cLog->LogDebugExSafe("Ogl set hint $<0x$$> to $<0x$>.",
-      glemHintTargets.Get(gleTarget), StdIOSHex, gleTarget,
-      glemHintModes.Get(gleMode), gleMode);
+      glemHintTargets.LukMapGet(gleTarget), StdIOSHex, gleTarget,
+      glemHintModes.LukMapGet(gleMode), gleMode);
   }
   /* -- GL is initialised? ------------------------------------------------- */
   bool OglIsGLInitialised() const { return FlagIsSet(GFL_INITIALISED); }
@@ -1183,7 +1183,7 @@ class Ogl :                            // Members initially private
   template<typename IntType>
     requires StdIsIntegral<IntType>
   const StdStringView &OglGetGLErr(const IntType itCode) const
-    { return glemOGLCodes.Get(static_cast<GLenum>(itCode)); }
+    { return glemOGLCodes.LukMapGet(static_cast<GLenum>(itCode)); }
   /* -- Return potential fps limit ----------------------------------------- */
   double OglGetLimit() const { return ClockDurationToDouble(cdLimit); }
   /* -- Flush pipeline and wait for GPU to finish -------------------------- */

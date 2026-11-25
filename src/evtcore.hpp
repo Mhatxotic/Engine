@@ -221,7 +221,7 @@ struct EvtCore :                         // Start of common event system class
     { return MutexCall([this](){ return qlEvents.empty(); }); }
   /* -- Convert event id to string ----------------------------------------- */
   const StdStringView &EvtCoreIdToString(const Cmd cCmd) const
-    { return islEventStrings.Get(cCmd); }
+    { return islEventStrings.LukArrayGet(cCmd); }
   /* -- Lock access to events list and return number of elements in queue -- */
   size_t EvtCoreSizeSafe()
     { return MutexCall([this](){ return qlEvents.size(); }); }

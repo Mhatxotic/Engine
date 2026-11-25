@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.11.23.116 -->
-<!-- Automatically built at Mon Nov 23 22:19:19 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.11.23.116 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.25.5 -->
+<!-- Automatically built at Wed Nov 25 20:36:18 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.25.5 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.23.116">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.25.5">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.23.116">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.25.5">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.23.116">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.25.5">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.11.23.116 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.25.5 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.11.23.116 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.25.5 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.11.23.116 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.25.5 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 959 functions (423 members, 536 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 960 functions (423 members, 537 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -582,7 +582,7 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(29 methods)</I>
+								<B>Methods</B> <I>(30 methods)</I>
 								<OL>
 									<LI><A href="#Fbo:Activate">Activate</A></LI>
 									<LI><A href="#Fbo:Blit">Blit</A></LI>
@@ -599,10 +599,11 @@
 									<LI><A href="#Fbo:GetWidth">GetWidth</A></LI>
 									<LI><A href="#Fbo:IsDestroyed">IsDestroyed</A></LI>
 									<LI><A href="#Fbo:Reserve">Reserve</A></LI>
+									<LI><A href="#Fbo:SetCCRGBA">SetCCRGBA</A></LI>
+									<LI><A href="#Fbo:SetCCRGBAI">SetCCRGBAI</A></LI>
 									<LI><A href="#Fbo:SetCRGBA">SetCRGBA</A></LI>
 									<LI><A href="#Fbo:SetCX">SetCX</A></LI>
 									<LI><A href="#Fbo:SetClear">SetClear</A></LI>
-									<LI><A href="#Fbo:SetClearColour">SetClearColour</A></LI>
 									<LI><A href="#Fbo:SetFilter">SetFilter</A></LI>
 									<LI><A href="#Fbo:SetMatrix">SetMatrix</A></LI>
 									<LI><A href="#Fbo:SetTCLTRB">SetTCLTRB</A></LI>
@@ -4620,6 +4621,26 @@
 		<PRE>Reserves memory the respective number of triangles and commands.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Fbo:SetCCRGBA" style="display:none">
+		<H3>Fbo:SetCCRGBA</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Fbo:SetCCRGBA(<I><U>Red</U>, <U>Green</U>, <U>Blue</U>, <U>Alpha</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Red</U> <I>(number)</I> = The red component intensity (0 to 1).<BR><U>Green</U> <I>(number)</I> = The green component intensity (0 to 1).<BR><U>Blue</U> <I>(number)</I> = The blue component intensity (0 to 1).<BR><U>Alpha</U> <I>(number)</I> = The alpha component intensity (0 to 1).<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Same as glClearColour(). Allows you to set the colour for glClear(), meaning the FBO is cleared with this colour on each new frame loop.<BR>See: https://www.opengl.org/sdk/docs/man2/xhtml/glClear.xml.<BR>See: https://www.opengl.org/sdk/docs/man2/xhtml/glClearColor.xml.<BR></PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Fbo:SetCCRGBAI" style="display:none">
+		<H3>Fbo:SetCCRGBAI</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Fbo:SetCCRGBAI(<I><U>Colour</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Colour</U> <I>(integer)</I> = The 32-bit integer for the background colour<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>An integer version of Fbo:SetClearColour where it accepts a 32-bit integer for the entire colour you want to set the Fbo too </PRE>
+		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Fbo:SetCRGBA" style="display:none">
 		<H3>Fbo:SetCRGBA</H3>
 		<H4>Syntax:-</H4>
@@ -4648,16 +4669,6 @@
 		<PRE><U>State</U> <I>(bool)</I> = New clear state<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Sets if the FBO should be cleared before rendering to it </PRE>
-		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
-	</DIV>
-	<DIV id="Fbo:SetClearColour" style="display:none">
-		<H3>Fbo:SetClearColour</H3>
-		<H4>Syntax:-</H4>
-		<PRE>Fbo:SetClearColour(<I><U>Red</U>, <U>Green</U>, <U>Blue</U>, <U>Alpha</U></I>)</PRE>
-		<H4>Function Parameters:-</H4>
-		<PRE><U>Red</U> <I>(number)</I> = The red component intensity (0 to 1).<BR><U>Green</U> <I>(number)</I> = The green component intensity (0 to 1).<BR><U>Blue</U> <I>(number)</I> = The blue component intensity (0 to 1).<BR><U>Alpha</U> <I>(number)</I> = The alpha component intensity (0 to 1).<BR></PRE>
-		<H4>Synopsis:-</H4>
-		<PRE>Same as glClearColour(). Allows you to set the colour for glClear(), meaning the FBO is cleared with this colour on each new frame loop.<BR>See: https://www.opengl.org/sdk/docs/man2/xhtml/glClear.xml.<BR>See: https://www.opengl.org/sdk/docs/man2/xhtml/glClearColor.xml.<BR></PRE>
 		<H4><A href="#idx:Fbo">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Fbo:SetFilter" style="display:none">
@@ -14026,6 +14037,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Mon Nov 23 22:19:19 2026 +0000</ADDRESS>
+	This document was generated at Wed Nov 25 20:36:18 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

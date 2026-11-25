@@ -199,7 +199,7 @@ static void ImageLibLoad(FileMap &fmData, ImageData &idData)
 }
 /* -- Convert an texture type ID to readable name (texdef.hpp) ------------- */
 static const StdStringView &ImageLibGetPixelFormat(const TextureType ttId)
-  { return cImageLibs->lttFormatModes.Get(ttId); }
+  { return cImageLibs->lttFormatModes.LukMapGet(ttId); }
 /* -- Swap pixels ---------------------------------------------------------- */
 static int ImageLibSwapPixels(char*const cpSrc, const size_t stSrc,
   const size_t stPixel, const size_t stSwapA, const size_t stSwapB)

@@ -312,10 +312,12 @@ class FboCore :                        // Members initially private
     { ColourSetInt(uColour); return ACCEPT; }
   /* -- Set minimum orthagonal matrix ratio -------------------------------- */
   CVarReturn FboCoreSetMinAspect(const GLfloat fMinimum)
-    { return CVarSimpleSetIntNLG(glfAspectMin, fMinimum, 1.0f, glfAspectMax); }
+    { return CVarSimpleSetIntNLG(glfAspectMin,
+        fMinimum, 1.0000f, glfAspectMax); }
   /* -- Set maximum orthagonal matrix ratio -------------------------------- */
   CVarReturn FboCoreSetMaxAspect(const GLfloat fMaximum)
-    { return CVarSimpleSetIntNLG(glfAspectMax, fMaximum, glfAspectMin, 2.0f); }
+    { return CVarSimpleSetIntNLG(glfAspectMax,
+        fMaximum, glfAspectMin, 2.4444f); }
   /* -- Set simple matrix -------------------------------------------------- */
   CVarReturn FboCoreSetSimpleMatrix(const bool bState)
     { return CVarSimpleSetInt(bSimpleMatrix, bState); }

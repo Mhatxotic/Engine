@@ -1441,8 +1441,8 @@ for(const Mask*const mPtr : *cMasks)
 { // Get reference to class and write its data to the table
   const Mask &mRef = *mPtr;
   sTable.DataN(mRef.Serial()).DataN(mRef.DimGetWidth())
-        .DataN(mRef.DimGetHeight()).DataN(mRef.size()).DataN(mRef.GetAlloc())
-        .Data(mRef.NameGet());
+        .DataN(mRef.DimGetHeight()).DataN(mRef.size())
+        .DataN(mRef.MaskGetAlloc()).Data(mRef.NameGet());
 } // Output data
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cMasks->size(), "mask.", "masks."));

@@ -78,12 +78,13 @@ BUILD_FLAGS(uint64_t, CVar,            // CVar flags
   CALPHA               {CVarFlag[10]}, // Var string can contain letters?
   CDEFLATE             {CVarFlag[11]}, // Variable is compressed?
   CFILENAME            {CVarFlag[12]}, // Variable must be a valid filename?
-  CNOTEMPTY            {CVarFlag[13]}, // Var can't be empty (str) or 0? (int)
-  CNUMERIC             {CVarFlag[14]}, // Variable string can contain numerics?
-  CPOW2                {CVarFlag[15]}, // Variable integer must be power of 2?
-  CPROTECTED           {CVarFlag[16]}, // Variable is protected?
-  CSAVEABLE            {CVarFlag[17]}, // Variable is written to database?
-  CUNSIGNED            {CVarFlag[18]}, // Variable must be unsigned?
+  CEMPTY               {CVarFlag[13]}, // Variable can only be empty (internal)
+  CNOTEMPTY            {CVarFlag[14]}, // Var can't be empty (str) or 0? (int)
+  CNUMERIC             {CVarFlag[15]}, // Variable string can contain numerics?
+  CPOW2                {CVarFlag[16]}, // Variable integer must be power of 2?
+  CPROTECTED           {CVarFlag[17]}, // Variable is protected?
+  CSAVEABLE            {CVarFlag[18]}, // Variable is written to database?
+  CUNSIGNED            {CVarFlag[19]}, // Variable must be unsigned?
   /* -- Manipulation (M) --------------------------------------------------- */
   MLOWER               {CVarFlag[20]}, // Variable string should be lowcased?
   MTRIM                {CVarFlag[21]}, // Variable string should be trimmed?

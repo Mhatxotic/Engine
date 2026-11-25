@@ -174,7 +174,7 @@ class Log :                            // Members initially private
   }
   /* -- Convert log level to a string -------------------------------------- */
   const StdStringView &LogLevelToString(const LHLevel lhId)
-    { return llLevels.Get(lhId); }
+    { return llLevels.LukArrayGet(lhId); }
   /* --------------------------------------------------------------- */ public:
   size_t Clear()
   { // Get num log lines for returning

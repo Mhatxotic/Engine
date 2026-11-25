@@ -54,8 +54,9 @@ enum CVarSetEnums : unsigned           // Cvar set return codes
   CVS_TRIGGERDENIED,                   // [13] Trigger callback denied change
   CVS_TRIGGEREXCEPTION,                // [14] Exception occured in trigger
   CVS_EMPTY,                           // [15] Value set was an empty string
-  CVS_ZERO,                            // [16] Value not allowed to be zero
-  CVS_NOTYPESET,                       // [17] No type is set
+  CVS_NOTEMPTY,                        // [16] Value set was not an empty str
+  CVS_ZERO,                            // [17] Value not allowed to be zero
+  CVS_NOTYPESET,                       // [18] No type is set
 };/* ----------------------------------------------------------------------- */
 BUILD_FLAGS(unsigned, CVarCond,        // Set condition flags For Set() func
   /* ----------------------------------------------------------------------- */
@@ -253,12 +254,24 @@ class CVarItem :                       // Members initially private
   CVarSetEnums CheckAndSetString(const StdString &strNValue,
     const CVarFlagsConst cvfcFlags, const CVarCondFlagsConst ccfcFlags,
     StdString &strCBError)
-  { // String cannot be empty and string is empty?
-    if(FlagIsSet(CNOTEMPTY) && strNValue.empty())
-    { // If we should not abort? Just return error else throw exception
-      if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
-        return CVS_EMPTY;
-      XC("CVar specified cannot be empty!", "Variable", CVarGetVar());
+  { // String is empty?
+    if(strNValue.empty())
+    { // String cannot be empty?
+      if(FlagIsSet(CNOTEMPTY))
+      { // If we should not abort? Just return error else throw exception
+        if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
+          return CVS_NOTEMPTY;
+        XC("CVar specified cannot be empty!", "Variable", CVarGetVar());
+      }
+    } // String is not empty?
+    else
+    { // String must be empty?
+      if(FlagIsSet(CEMPTY))
+      { // If we should not abort? Just return error else throw exception
+        if(ccfcFlags.FlagIsClear(CCF_THROWONERROR))
+          return CVS_EMPTY;
+        XC("CVar specified must be empty!", "Variable", CVarGetVar());
+      }
     } // Check if valid untrusted pathname required
     if(FlagIsSet(CFILENAME))
     { // Check filename and get result

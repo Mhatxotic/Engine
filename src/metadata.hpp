@@ -19,7 +19,8 @@ static Metadata *cMetadata = nullptr;  // Global access to class
 /* -- Class body ----------------------------------------------------------- */
 class Metadata :                       // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  GCHelper<Metadata>                   // Global pointer helper
+  GCHelper<Metadata>,                  // Global pointer helper
+  LookupArray<16>                      // List of possible combinations
 { /* -- Private variables -------------------------------------------------- */
   StdStringView    ssvTitle,           // Guest title
                    ssvShortTitle,      // Guest short title
@@ -30,9 +31,6 @@ class Metadata :                       // Members initially private
                    ssvWebsite;         // Guest website
   /* ----------------------------------------------------------------------- */
   CoreFlags        cfMode;             // Requested core subsystem flags
-  /* ----------------------------------------------------------------------- */
-  using ModeList = LookupArray<16>;    // List of possible combinations
-  const ModeList   mList;              // Modes list
    /* -- Get descriptor strings ------------------------------------ */ public:
   const StdStringView &MetadataGetTitle() const { return ssvTitle; }
   const StdStringView &MetadataGetShortTitle() const { return ssvShortTitle; }
@@ -64,7 +62,7 @@ class Metadata :                       // Members initially private
   /* ----------------------------------------------------------------------- */
   const StdStringView
     &MetadataGetCoreFlagsString(const CoreFlagsConst cfFlags) const
-  { return mList.Get(cfFlags); }
+  { return LukArrayGet(cfFlags); }
   /* ----------------------------------------------------------------------- */
   const StdStringView &MetadataGetCoreFlagsString() const
     { return MetadataGetCoreFlagsString(MetadataGetCoreFlags()); }
@@ -72,8 +70,7 @@ class Metadata :                       // Members initially private
   Metadata() :
     /* -- Initialisers ----------------------------------------------------- */
     GCHelper{ this, &cMetadata },      // Initialise global pointer
-    cfMode{ CFL_MASK },                // Guimode initially set by cvars
-    mList{{                            // Initialise mode strings list
+    LookupArray{{                      // Initialise mode strings list
       "stdout",                        // [00<      0>] (nothing)
       "text",                          // [01<      1>] (text)
       "audio",                         // [02<      2>] (audio)
@@ -90,14 +87,15 @@ class Metadata :                       // Members initially private
       "text+video+timer",              // [13<  1|4|8>] (video+text+timer)
       "audio+video+timer",             // [14<  2|4|8>] (video+audio+timer)
       "text+audio+video+timer",        // [15<1|2|4|8>] (text+audio+video+timr)
-    }}                                 // Mode strings list initialised
+    }},                                // Mode strings list initialised
+    cfMode{ CFL_MASK }                 // Guimode initially set by cvars
   /* -- No code ------------------------------------------------------------ */
   {}
   /* -- CVar callbacks to update guest descriptor strings ---------- */ public:
   CVarReturn MetadataSetTitle(const StdString&, const StdString &strV)
     { ssvTitle = strV; return ACCEPT; }
   CVarReturn MetadataSetShortTitle(const StdString&, const StdString &strV)
-  { ssvShortTitle = strV; return ACCEPT; }
+    { ssvShortTitle = strV; return ACCEPT; }
   CVarReturn MetadataSetVersion(const StdString&, const StdString &strV)
     { ssvVersion = strV; return ACCEPT; }
   CVarReturn MetadataSetAuthor(const StdString&, const StdString &strV)
@@ -105,7 +103,7 @@ class Metadata :                       // Members initially private
   CVarReturn MetadataSetCopyright(const StdString&, const StdString &strV)
     { ssvCopyright = strV; return ACCEPT; }
   CVarReturn MetadataSetDescription(const StdString&, const StdString &strV)
-  { ssvDescription = strV; return ACCEPT; }
+    { ssvDescription = strV; return ACCEPT; }
   CVarReturn MetadataSetWebsite(const StdString&, const StdString &strV)
     { ssvWebsite = strV; return ACCEPT; }
   /* -- Set GUI mode status ------------------------------------------------ */

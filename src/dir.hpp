@@ -51,16 +51,14 @@ static DirBase *cDirBase = nullptr;    // Pointer to global class
 /* -- Class body ----------------------------------------------------------- */
 class DirBase :                        // Members initially private
   /* -- Base classes ------------------------------------------------------- */
-  GCHelper<DirBase>                    // Global pointer helper
-{ /* -- Private typedefs --------------------------------------------------- */
-  using VRList = LookupArray<VR_MAX>;  // List of ValidName strings typedef
-  /* -- Private variables -------------------------------------------------- */
-  const VRList     vrlStrings;         // " container
+  GCHelper<DirBase>,                   // Global pointer helper
+  LookupArray<VR_MAX>                  // Strings for each VT_* enum
+{ /* -- Private variables -------------------------------------------------- */
   const StrVUSet   svusReserved;       // Reserved names
   ValidType        vtMode;             // Default safety mode
   /* -- Convert a valid result from ValidName to string ------------ */ public:
   const StdStringView &DirBaseVNRtoStr(const ValidResult vrId) const
-    { return vrlStrings.Get(vrId); }
+    { return LukArrayGet(vrId); }
   /* -- Return if a name is reserved --------------------------------------- */
   bool DirBaseIsReservedName(const StdStringView &ssvName) const
     { return svusReserved.contains(ssvName); }
@@ -70,7 +68,7 @@ class DirBase :                        // Members initially private
   DirBase() :
     /* -- Initialisers ----------------------------------------------------- */
     GCHelper{ this, &cDirBase },       // Initialise global pointer
-    vrlStrings{{                       // Init ValidNameResult strings
+    LookupArray{{                      // Init ValidNameResult strings
       "Pathname is valid",         /*0001*/ "Empty pathname denied",
       "Pathname too long",         /*0203*/ "Root directory denied",
       "Drive letter denied",       /*0405*/ "Invalid drive letter",
