@@ -8,9 +8,9 @@
 ** ========================================================================= */
 #pragma once                           // Only one incursion allowed
 /* -- HTTP Socket main thread function ---------------------------- */ private:
-ThreadFlagsType HTTPMain()
+ThreadFlagsType SocketHTTPMain()
 { // Connect and send http request and break loop if failed.
-  if(InitialConnect() == TS_ERROR) return TS_ERROR;
+  if(SocketInitialConnect() == TS_ERROR) return TS_ERROR;
   // Check if websocket
   enum { HTTP, HTTP_HEAD, WEBSOCKET } eMode;
   { // Check for websocket key and if we have it
@@ -28,7 +28,7 @@ ThreadFlagsType HTTPMain()
     else eMode = GetRegistry(ctParent.strRegVarMETHOD) == "HEAD" ?
                    HTTP_HEAD : HTTP;
   } // Set sending request status event
-  AddStatus(SS_SENDREQUEST);
+  SocketAddStatus(SS_SENDREQUEST);
   { // Get resource requested
     const StdString strReq{ StdMove(GetRegistry(ctParent.strRegVarREQ)) };
     // Get body requested
@@ -40,9 +40,9 @@ ThreadFlagsType HTTPMain()
     const StdString strPk{
       StrAppend(strReq, strHdrs, cCommon->CommonCrLf(), strBody) };
     // Write the full request to the server and return if failed
-    if(SockWrite(strPk) == static_cast<size_t>(TS_ERROR)) return TS_ERROR;
+    if(SocketWrite(strPk) == static_cast<size_t>(TS_ERROR)) return TS_ERROR;
     // Set sent request status event and log the event
-    AddStatus(SS_REPLYWAIT);
+    SocketAddStatus(SS_REPLYWAIT);
     SocketLogSafe(LH_DEBUG, "request of $ bytes sent...",
       strPk.size());
   } // Content read and content-length
@@ -56,11 +56,11 @@ ThreadFlagsType HTTPMain()
   // Begin monitoring for reply and break if thread should exit
   while(tReader.ThreadShouldNotExit())
   { // Wait for data from connected server
-    const size_t stRead = SockRead(mDest.MemPtr<char>(), mDest.MemSize());
+    const size_t stRead = SocketRead(mDest.MemPtr<char>(), mDest.MemSize());
     // Connection error or server closed connection?
     if(stRead == static_cast<size_t>(TS_ERROR))
     { // If we were waiting for headers still?
-      if(bHeaders) return SetErrorSafe("Response failed!");
+      if(bHeaders) return SocketSetErrorSafe("Response failed!");
       // We were downloading so if there was a content length?
       if(stContentLength)
       { // Read the correct number of bytes? Or we're just doing a HEAD req?
@@ -69,7 +69,7 @@ ThreadFlagsType HTTPMain()
           SocketLogSafe(LH_DEBUG, "download successful.");
         // We did not get the correct number of bytes? Set error code.
         else return
-          SetErrorSafe(StrFormat("Download failed at $ bytes!",
+          SocketSetErrorSafe(StrFormat("Download failed at $ bytes!",
             stContentRead));
       } // There was no content length? Just log the bytes downloaded
       else SocketLogSafe(LH_DEBUG, "downloaded $ bytes.", stContentRead);
@@ -81,7 +81,7 @@ ThreadFlagsType HTTPMain()
       stContentRead += stRead;
       // Push data into RX list. Truncate bytes read if we have a content
       // length and the we read past the content length.
-      PushDataSafe(plRX, stRX, mDest.MemPtr<char>(),
+      SocketPushDataSafe(plRX, stRX, mDest.MemPtr<char>(),
         stContentLength && stContentRead > stContentLength ?
           stRead - static_cast<size_t>(stContentLength - stContentRead) :
           stRead);
@@ -100,7 +100,7 @@ ThreadFlagsType HTTPMain()
     if(stEnd == StdNPos)
     { // Check for binary data and if we found binary data? Bail out!
       if(!ValidHeaderPacket(ssvResp))
-        return SetErrorStaticSafe("Binary code in headers");
+        return SocketSetErrorStaticSafe("Binary code in headers");
       // Add to full headers string
       strHeaders += ssvResp;
       // Wait for next packet
@@ -111,42 +111,44 @@ ThreadFlagsType HTTPMain()
     const size_t stInitial = ssvResp.size() - (stEnd + 4);
     if(stInitial > 0)
     { // Push data into RX list
-      PushDataSafe(plRX, stRX, mDest.MemRead(stEnd+4), stInitial);
+      SocketPushDataSafe(plRX, stRX, mDest.MemRead(stEnd+4), stInitial);
       // Increment content read
       stContentRead += stInitial;
       // Truncate extra bytes
       ssvResp = { mDest.MemPtr<char>(), stEnd };
     } // Check for binary code in the last packet returned? Bail out!
     if(!ValidHeaderPacket(ssvResp))
-      return SetErrorStaticSafe("Binary code in headers!");
+      return SocketSetErrorStaticSafe("Binary code in headers!");
     // Add rest of response to headers
     strHeaders += ssvResp;
     // Build output headers list by exploding header string
     psvRegistry.ParserReInit(strHeaders, cCommon->CommonCrLf(), ':');
-    if(psvRegistry.empty()) return SetErrorStaticSafe("No response!");
+    if(psvRegistry.empty()) return SocketSetErrorStaticSafe("No response!");
     // Done with the headers string
     strHeaders.clear();
     strHeaders.shrink_to_fit();
     // Find initial reponse (should be #0 set by VARS class)
     const StrNCStrMapConstIt
       vlR{ GetRegistryIterator(ctParent.strRegVarRESPONSE) };
-    if(vlR == psvRegistry.cend()) return SetErrorStaticSafe("Bad response!");
+    if(vlR == psvRegistry.cend())
+      return SocketSetErrorStaticSafe("Bad response!");
     // Split into words. We should have got at least three words
     const TokenStrView tsvWords{ vlR->second, cCommon->CommonSpace() };
-    if(tsvWords.size() < 3) return SetErrorStaticSafe("Unknown response!");
+    if(tsvWords.size() < 3)
+      return SocketSetErrorStaticSafe("Unknown response!");
     // Get protocol and if it is not valid?
     const StdStringView &ssvProtoRecv = tsvWords.front();
     if(ssvProtoRecv != "HTTP/1.0" && ssvProtoRecv != "HTTP/1.1")
-      return SetErrorStaticSafe(
+      return SocketSetErrorStaticSafe(
         StrFormat("Bad protocol '$'!", ssvProtoRecv));
     // Get http status code string and if not a valid number?
     const StdStringView &ssvStatus = tsvWords[1];
     if(!StrIsInt(ssvStatus))
-      return SetErrorStaticSafe(StrFormat("Bad status '$'!", ssvStatus));
+      return SocketSetErrorStaticSafe(StrFormat("Bad status '$'!", ssvStatus));
     // Convert to integer and if valid?
     const size_t stStatus = StrToNum<size_t>(ssvStatus);
     if(stStatus < 100 || stStatus > 999)
-      return SetErrorStaticSafe(
+      return SocketSetErrorStaticSafe(
         StrFormat("Bad status code '$'!", ssvStatus));
     // If the status code is anything but an error? Log successful code
     if(stStatus < 400) SocketLogSafe(LH_DEBUG, "status code $.", ssvStatus);
@@ -156,8 +158,8 @@ ThreadFlagsType HTTPMain()
     // throw an error because the socket might be left in a waiting state
     // which our client expects the server to close the connection.
     if(stStatus == 101)
-      return eMode == WEBSOCKET ? WebSocketMain(mDest):
-        SetErrorStaticSafe("Not upgrading");
+      return eMode == WEBSOCKET ? SocketWebMain(mDest):
+        SocketSetErrorStaticSafe("Not upgrading");
     // Add protocol and status code to registry so guest can read them
     // without having to perform any special string operations
     psvRegistry.ParserPushOrUpdatePair(ctParent.strRegVarPROTO,
@@ -171,10 +173,10 @@ ThreadFlagsType HTTPMain()
       { // Get items and push into TX since we're not using it anymore. Make
         // sure to include the null-terminator so we can use StdStringView
         // for when LUA grabs the list.
-        PushData(plTX, stTX,
+        SocketPushData(plTX, stTX,
           StrToLowCaseRef(UtilToNonConst(sncsmpPair.first)).data(),
           sncsmpPair.first.size() + 1);
-        PushData(plTX, stTX, sncsmpPair.second.data(),
+        SocketPushData(plTX, stTX, sncsmpPair.second.data(),
           sncsmpPair.second.size() + 1);
       }
     });
@@ -200,7 +202,7 @@ ThreadFlagsType HTTPMain()
         SocketLogSafe(LH_DEBUG, "content length is $ bytes.",
           stContentLength);
       } // Set downloading status
-      AddStatus(SS_DOWNLOADING);
+      SocketAddStatus(SS_DOWNLOADING);
       // If we already got enough bytes from the header packet?
       if(stInitial == stContentLength)
         SocketLogSafe(LH_DEBUG, "downloaded resource in one packet.");
@@ -216,35 +218,35 @@ ThreadFlagsType HTTPMain()
     else
     { // Set zero content length and downloading flag
       stContentLength = 0;
-      AddStatus(SS_DOWNLOADING);
+      SocketAddStatus(SS_DOWNLOADING);
     } // Wait for next packet, thread abort or server disconnect
   } // Got here because the thread was aborted
-  return SetAborted();
+  return SocketSetAborted();
 }
 /* -- Socket http connection ----------------------------------------------- */
 ThreadFlagsType SocketHTTPThreadMain(Thread &)
 { // Return code
   ThreadFlagsType tftReturn;
   // Capture exceptions and switch to thiscall
-  try { tftReturn = HTTPMain(); }
+  try { tftReturn = SocketHTTPMain(); }
   // Exception occurred?
   catch(const StdException &eReason)
   { // Report error
     cLog->LogErrorExSafe("(SOCKET HTTP THREAD EXCEPTION) $", eReason);
     // Set error message
-    tftReturn = SetErrorStaticSafe(eReason.what());
+    tftReturn = SocketSetErrorStaticSafe(eReason.what());
   } // If we're a websocket then stop the writer thread
   SocketTerminateWriteThread();
   // Clear connection and clean-up
-  SendDisconnect();
-  FinishDisconnect();
+  SocketSendDisconnect();
+  SocketFinishDisconnect();
   // Required to stop memory leak
   OPENSSL_thread_stop();
   // Return status
   return tftReturn;
 }
 /* -- Init --------------------------------------------------------- */ public:
-void HTTPRequest(lua_State*const lS, const StdStringView &ssvName,
+void SocketHTTPRequest(lua_State*const lS, const StdStringView &ssvName,
   const StdStringView &ssvCipher,  const StdStringView &ssvAddress,
   const unsigned uNPort, const StdStringView &ssvRequest,
   const StdStringView &ssvMethod, const StdStringView &ssvHeaders,
@@ -255,7 +257,7 @@ void HTTPRequest(lua_State*const lS, const StdStringView &ssvName,
   if(ssvRequest.front() != '/')
     XC("Resource is invalid!", "Resource", ssvRequest);
   // Set address and TLS cipher
-  SetAddressAndCipher(ssvAddress, uNPort, ssvCipher);
+  SocketSetAddressAndCipher(ssvAddress, uNPort, ssvCipher);
   // Initialise registry with headers
   psvRegistry.ParserReInit(StdString{ ssvHeaders },
     cCommon->CommonLf(), ':');

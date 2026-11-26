@@ -30,9 +30,9 @@ CTOR_BEGIN_NOBB(Atlases, Atlas, CLHelperUnsafe)
 // we do not have to initialise all these variables more than once as we have
 // more than one constructor in the main Atlas class.
 /* ------------------------------------------------------------------------- */
-class AtlasBase :                      // Members initially private
+struct AtlasBase :                     // Members initially public
   /* -- Base classes ------------------------------------------------------- */
-  public Texture                       // Texture class
+  Texture                              // Texture class
 { /* -- Protected typedefs -------------------------------------- */ protected:
   using IntPack     = Pack<GLint>;     // Bin pack using GLint
   using IntPackRect = IntPack::Rect;   // Bin pack rectangle
@@ -227,7 +227,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // Get co-ordinates to tile on texture
     CoordData &cdRef = clTiles.front()[stSlot];
     // Put this glyph in the bin packer and if succeeded
-    IntPackRect iprNew{ ipData.Insert(uTPWidth, uTPHeight) };
+    IntPackRect iprNew{ ipData.BinInsert(uTPWidth, uTPHeight) };
     if(iprNew.DimGetHeight() > 0)
     { // The result rect will include padding so remove it
       iprNew.DimDec(static_cast<int>(uPadding));
@@ -275,8 +275,8 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     // space must support the glyph as well. Then try placing it in the
     // bin again and if it still failed then there is nothing more we can
     // do for now.
-    ipData.Resize(uSize, uSize);
-    iprNew = ipData.Insert(uTPWidth, uTPHeight);
+    ipData.BinResize(uSize, uSize);
+    iprNew = ipData.BinInsert(uTPWidth, uTPHeight);
     if(iprNew.DimGetHeight() <= 0)
       XC("No texture space left for tile!",
         "Name",          NameGet(), "Slot",           stSlot,
@@ -284,7 +284,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
         "BinHeight",     ipData.DimGetHeight(),
         "TileWidth",     uTWidth,   "TileHeight",     uTHeight,
         "TileWidth+Pad", uTPWidth,  "TileHeight+Pad", uTPHeight,
-        "Occupancy",     ipData.Occupancy(),
+        "Occupancy",     ipData.BinOccupancy(),
         "Maximum",       cOgl->OglMaxTexSize());
     // THe result rect will include padding so remove it
     iprNew.DimDec(static_cast<int>(uPadding));
@@ -331,7 +331,9 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
     cLog->LogDebugExSafe("Atlas enlarged '$' by a factor of $ to $x$.",
       NameGet(), fDivisor, DimGetWidth(), DimGetHeight());
   }
-  /* -- Initialise the atlas --------------------------------------- */ public:
+  /* -- Get bin occupancy ------------------------------------------ */ public:
+  double AtlasOccupancy() const { return ipData.BinOccupancy(); }
+  /* -- Initialise the atlas ----------------------------------------------- */
   template<class ImageType>void AtlasInit(const StdStringView &ssvIdent,
     const GLuint uTWidth, const GLuint uTHeight, const GLuint uISize,
     const GLuint uTPadding, const OglFilterEnum ofeTFilter)
@@ -363,7 +365,7 @@ CTOR_MEM_BEGIN(Atlases, Atlas, ICHelperUnsafe, /* n/a */),
                  stGRows = DimGetHeight() / uTHeight,
                  stGTotal = UtilNearestPow2<size_t>(stGColumns * stGRows);
     // Init the virtual space where we place the bounds of each tile
-    ipData.Init(DimGetWidth(), DimGetHeight(), stGTotal, stGTotal);
+    ipData.BinInit(DimGetWidth(), DimGetHeight(), stGTotal, stGTotal);
     // Get image processing data
     ImageType itData;
     // Allocate memory for bitmap surface pixels

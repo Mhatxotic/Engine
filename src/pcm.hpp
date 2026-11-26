@@ -192,6 +192,8 @@ CTOR_BEGIN_ASYNC_DUO(Pcms, Pcm, CLHelperUnsafe, ICHelperUnsafe),
     FileMap fmData{ AssetExtract(NameGet()) };
     // Reset memory usage to zero
     PcmDataSetAlloc(0);
+    // Clear active PCM post-processing flags
+    FlagClear(PL_ACTIVE);
     // Run codecs and filters on it
     AsyncReady(fmData);
   }

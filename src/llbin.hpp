@@ -58,7 +58,7 @@ LLFUNC(Enlarge, 1,
   const AgBin aBin{lS, 1};
   const AgDimension aWidth{lS, 2},
                     aHeight{lS, 3};
-  LuaUtilPushVar(lS, aBin().Resize(aWidth, aHeight)))
+  LuaUtilPushVar(lS, aBin().BinResize(aWidth, aHeight)))
 /* ========================================================================= */
 // $ Bin:GetHeight
 // < Height:integer=The height of the bin in units
@@ -76,7 +76,7 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().Serial()))
 // < Height:integer=The height of the bin in units
 // ? Returns the height of the bin in units.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetOccupancy, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().Occupancy()))
+LLFUNC(GetOccupancy, 1, LuaUtilPushVar(lS, AgBin{lS, 1}().BinOccupancy()))
 /* ========================================================================= */
 // $ Bin:GetWidth
 // < Width:integer=The width of the bin in units
@@ -98,7 +98,7 @@ LLFUNC(Insert, 4,
   const AgBin aBin{lS, 1};
   const AgDimension aWidth{lS, 2},
                     aHeight{lS, 3};
-  const Pack<int>::Rect &rAllotted = aBin().Insert(aWidth, aHeight);
+  const Pack<int>::Rect &rAllotted = aBin().BinInsert(aWidth, aHeight);
   LuaUtilPushVar(lS, rAllotted.CoordGetX(), rAllotted.CoordGetY(),
     rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
 /* ========================================================================= */
@@ -122,7 +122,7 @@ LLFUNC(Test, 4,
   const AgBin aBin{lS, 1};
   const AgDimension aWidth{lS, 2},
                     aHeight{lS, 3};
-  const Pack<int>::Rect &rAllotted = aBin().Test(aWidth, aHeight);
+  const Pack<int>::Rect &rAllotted = aBin().BinTest(aWidth, aHeight);
   LuaUtilPushVar(lS, rAllotted.CoordGetX(), rAllotted.CoordGetY(),
     rAllotted.DimGetWidth(), rAllotted.DimGetHeight()))
 /* ========================================================================= **
@@ -149,7 +149,7 @@ LLRSEND                                // Bin:* methods end
 LLFUNC(Create, 1,
   const AgDimension aWidth{lS, 1},
                     aHeight{lS, 2};
-  AcBin{lS}().Init(aWidth, aHeight))
+  AcBin{lS}().BinInit(aWidth, aHeight))
 /* ========================================================================= */
 // $ Bin.GetClasses
 // < Count:integer=Total number of bins created.

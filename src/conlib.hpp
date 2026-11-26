@@ -191,8 +191,8 @@ for(const Bin*const bPtr : *cBins)
 { // Get reference to class and write its data to the table
   const Bin &bRef = *bPtr;
   sTable.DataN(bRef.Serial()).DataN(bRef.DimGetWidth())
-        .DataN(bRef.DimGetHeight()).DataN(bRef.Occupancy(), 7)
-        .DataN(bRef.Total()).DataN(bRef.Used()).DataN(bRef.Free());
+        .DataN(bRef.DimGetHeight()).DataN(bRef.BinOccupancy(), 7)
+        .DataN(bRef.BinTotal()).DataN(bRef.BinUsed()).DataN(bRef.BinFree());
 } // Log counts
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cBins->size(), "bin.", "bins."));
@@ -790,7 +790,7 @@ const function ShowFontInfo{ [](Statistic &sTable, const Font &fRef)
           })
           .DataN(fRef.ftflExtras.size())
           .DataN(fRef.FontGetCharScale(), 6)
-          .DataN(fRef.FontGetTexOccupancy(), 6)
+          .DataN(fRef.AtlasOccupancy(), 6)
           .DataN(fRef.FontGetCharCount()).Data(fRef.NameGet()); }
 }; // Text table class to help us write neat output
 Statistic sTable;
@@ -1863,11 +1863,12 @@ if(aArgs.size() == 2)
       uId, sRef.NameGet(),
       ssvStatus, StdIOSHex, sfcFlags.FlagGet(), StdIOSDec, sRef.GetError(),
         sRef.GetFD(), StdIOSHex, sRef.GetFD(),
-      sRef.GetAddress(), StdIOSDec, sRef.GetPort(), sRef.GetIPAddress(),
+      sRef.SocketGetAddress(), StdIOSDec, sRef.SocketGetPort(),
+        sRef.SocketGetIPAddress(),
       sRef.FlagIsSet(SS_VHOST) ?
-        StrFormat("\n- Real host: $.", sRef.GetRealHost()) :
+        StrFormat("\n- Real host: $.", sRef.SocketGetRealHost()) :
         cCommon->CommonBlankStr(),
-      sRef.IsSecure() ?
+      sRef.SocketIsSecure() ?
         StrFormat("\n- Encryption: $.",
           StrIsBlank(sRef.GetCipher(), cCommon->CommonUnresolved())) :
         cCommon->CommonBlankStr()) };
@@ -1876,25 +1877,25 @@ if(aArgs.size() == 2)
     return cConsole->ConsoleAddLine(strOutput);
    // Use disconnect time or connect time
   const double dConnect = sfcFlags.FlagIsSet(SS_STANDBY) ?
-    ClockTimePointRangeToClampedDouble(sRef.GetTDisconnected(),
-      sRef.GetTConnected()) :
-    cmHiRes.ClockTimePointToClampedDouble(sRef.GetTConnected()),
+    ClockTimePointRangeToClampedDouble(sRef.SocketGetTDisconnected(),
+      sRef.SocketGetTConnected()) :
+    cmHiRes.ClockTimePointToClampedDouble(sRef.SocketGetTConnected()),
   // Set connected to connection time
-  dInitial = ClockTimePointRangeToClampedDouble(sRef.GetTConnected(),
-    sRef.GetTConnect()),
+  dInitial = ClockTimePointRangeToClampedDouble(sRef.SocketGetTConnected(),
+    sRef.SocketGetTConnect()),
   // Get last read and write time
-  dRead = cmHiRes.ClockTimePointToClampedDouble(sRef.GetTRead()),
-  dWrite = cmHiRes.ClockTimePointToClampedDouble(sRef.GetTWrite());
+  dRead = cmHiRes.ClockTimePointToClampedDouble(sRef.SocketGetTRead()),
+  dWrite = cmHiRes.ClockTimePointToClampedDouble(sRef.SocketGetTWrite());
   // Write connected information
   return cConsole->ConsoleAddLineF("$\n"
     "- RX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
     "- TX Queue: $; Packets: $; Bytes: $ ($); Last: $ ago.\n"
     "- Connected: $; Initial: $; Latency: $.",
     strOutput,
-    sRef.GetRXQCount(), sRef.GetRXpkt(), sRef.GetRX(),
-      StrToBytes(sRef.GetRX()), TimeToShortDuration(dRead),
-    sRef.GetTXQCount(), sRef.GetTXpkt(), sRef.GetTX(),
-      StrToBytes(sRef.GetTX()), TimeToShortDuration(dWrite),
+    sRef.SocketGetRXQCount(), sRef.SocketGetRXpkt(), sRef.SocketGetRX(),
+      StrToBytes(sRef.SocketGetRX()), TimeToShortDuration(dRead),
+    sRef.SocketGetTXQCount(), sRef.SocketGetTXpkt(), sRef.SocketGetTX(),
+      StrToBytes(sRef.SocketGetTX()), TimeToShortDuration(dWrite),
       TimeToShortDuration(dConnect), TimeToShortDuration(dInitial),
       TimeToShortDuration(UtilMaximum(dRead - dWrite, dWrite - dRead)));
 } // Make neatly formatted table
@@ -1922,8 +1923,8 @@ for(const Socket*const sPtr : *cSockets)
     { sRef.GetError() != 0,                  'E' },
     { sfcFlags.FlagIsSet(SS_CLOSEDBYSERVER), 'S' },
     { sfcFlags.FlagIsSet(SS_CLOSEDBYCLIENT), 'C' }
-  }).Data(sRef.GetIPAddress()).DataN(sRef.GetPort()).Data(sRef.GetAddress())
-    .Data(sRef.NameGet());
+  }).Data(sRef.SocketGetIPAddress()).DataN(sRef.SocketGetPort())
+    .Data(sRef.SocketGetAddress()).Data(sRef.NameGet());
 } // Show result
 cConsole->ConsoleAddLineF("$$ ($ connected).\n"
   "Total RX Packets: $; Bytes: $ ($).\n"
@@ -1955,7 +1956,7 @@ const SocketsItConst sicIt{ SocketFind(uId) };
 if(sicIt == cSockets->cend())
   cConsole->ConsoleAddLine("The specified socket id was not matched!");
 else cConsole->ConsoleAddLineF("Connection $ $ closed.",
-  uId, ((*sicIt)->SendDisconnect() ? "has been" : "is already"));
+  uId, ((*sicIt)->SocketSendDisconnect() ? "has been" : "is already"));
 /* ------------------------------------------------------------------------- */
 } },                                   // End of 'sockreset' function
 /* ========================================================================= */

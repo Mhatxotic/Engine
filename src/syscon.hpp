@@ -38,7 +38,7 @@ struct SysConBase :
   void SysConCanCloseNow() { cvExit.notify_one(); }
    /* -- For handling CTRL_CLOSE_EVENT -------------------------- */ protected:
   bool            bBreakEnabled;       // Is control+c/break enabled?
-  condition_variable cvExit;           // Exit condition variable
+  StdCondVar      cvExit;           // Exit condition variable
   /* -- Constructor -------------------------------------------------------- */
   SysConBase() :
     /* -- Initialisers ----------------------------------------------------- */

@@ -788,6 +788,8 @@ CTOR_BEGIN_ASYNC_DUO(Images, Image, CLHelperUnsafe, ICHelperUnsafe),
     FileMap fmData{ AssetExtract(NameGet()) };
     // Reset memory usage to zero
     ImageDataSetAlloc(0);
+    // Clear active image post-processing flags
+    FlagClear(IL_ACTIVE);
     // Run codecs and filters on it
     AsyncReady(fmData);
   }

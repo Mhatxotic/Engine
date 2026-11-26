@@ -959,7 +959,7 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     MutexUniqueCall(
       [this](UniqueLock &ulUpload)
         { if(ulUpload.owns_lock() && stFWaiting) VideoRenderUnsafe(); },
-      try_to_lock);
+      StdTryToLock);
   }
   /* -- Video is playing? -------------------------------------------------- */
   bool VideoIsPlaying() const { return AsyncGetThread().ThreadIsJoinable(); }

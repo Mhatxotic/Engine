@@ -61,7 +61,7 @@ struct AgMethod { StdString strString;
 // ? if you have an addon system and you need to re-assign the newer callback
 // ? so the older overwritten callback is no longer referenced.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Callback, 0, AgSocket{lS, 1}().SetNewCallback(lS))
+LLFUNC(Callback, 0, AgSocket{lS, 1}().SocketSetNewCallback(lS))
 /* ========================================================================= */
 // $ Socket:CompactRecvQ
 // < Data:Asset=An array of data that was read from the queue.
@@ -72,8 +72,8 @@ LLFUNC(Callback, 0, AgSocket{lS, 1}().SetNewCallback(lS))
 LLFUNC(CompactRecvQ, 1,
   const AgSocket aSocket{lS, 1};
   const AcAsset aAsset{lS};
-  aSocket().CompactRXSafe(aAsset());
-  aAsset().NameSet(StrAppend(aSocket().Serial(), ':', aSocket().GetRXpkt())))
+  aSocket().SocketCompactRXSafe(aAsset());
+  aAsset().NameSetA(aSocket().Serial(), ':', aSocket().SocketGetRXpkt()))
 /* ========================================================================= */
 // $ Socket:CompactSendQ
 // < Data:Asset=An array of data that was waiting to be written to the queue.
@@ -84,8 +84,8 @@ LLFUNC(CompactRecvQ, 1,
 LLFUNC(CompactSendQ, 1,
   const AgSocket aSocket{lS, 1};
   const AcAsset aAsset{lS};
-  aSocket().CompactTXSafe(aAsset());
-  aAsset().NameSet(StrAppend(aSocket().Serial(), ':', aSocket().GetTXpkt())))
+  aSocket().SocketCompactTXSafe(aAsset());
+  aAsset().NameSetA(aSocket().Serial(), ':', aSocket().SocketGetTXpkt()))
 /* ========================================================================= */
 // $ Socket:Destroy
 // ? Aborts, disconnects and destroys the socket object and frees all the
@@ -105,20 +105,21 @@ LLFUNC(Destroyed, 1, LuaUtilPushVar(lS, LuaUtilIsClassDestroyed(lS, cSockets)))
 // ? Disconnects the specified socket. All current asynchronous
 // ? operations are cancelled so make sure they are finished before calling.
 /* ------------------------------------------------------------------------- */
-LLFUNC(Disconnect, 0, AgSocket{lS, 1}().SendDisconnect())
+LLFUNC(Disconnect, 0, AgSocket{lS, 1}().SocketSendDisconnect())
 /* ========================================================================= */
 // $ Socket:GetAddress
 // < Address:string=The address of the socket.
 // ? Returns the hostname of the socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetAddress, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetAddressSafe()))
+LLFUNC(GetAddress, 1,
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetAddressSafe()))
 /* ========================================================================= */
 // $ Socket:GetAddressEx
 // < Address:string=The address and port of the socket in string format.
 // ? Returns the hostname and port of the socket as a string.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetAddressEx, 1,
-  LuaUtilPushVar(lS, AgSocket{lS, 1}().GetAddressAndPortSafe()))
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetAddressAndPortSafe()))
 /* ========================================================================= */
 // $ Socket:GetCipher
 // < Cipher:string=Cipher tokens
@@ -144,7 +145,7 @@ LLFUNC(GetId, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().Serial()))
 // ? been resolved.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetIPAddress, 1,
-  LuaUtilPushVar(lS, AgSocket{lS, 1}().GetIPAddressSafe()))
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetIPAddressSafe()))
 /* ========================================================================= */
 // $ Socket:GetIPAddressEx
 // < Address:string=The IP address of the socket.
@@ -152,13 +153,13 @@ LLFUNC(GetIPAddress, 1,
 // ? hostname has been resolved.
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetIPAddressEx, 1,
-  LuaUtilPushVar(lS, AgSocket{lS, 1}().GetIPAddressAndPortSafe()))
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetIPAddressAndPortSafe()))
 /* ========================================================================= */
 // $ Socket:GetPort
 // < Port:integer=The port number of the socket.
 // ? Returns the port number of the socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetPort, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetPortSafe()))
+LLFUNC(GetPort, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetPortSafe()))
 /* ========================================================================= */
 // $ Socket:GetReason
 // < Reason:string=Reason for last error
@@ -170,19 +171,19 @@ LLFUNC(GetReason, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetErrorStrSafe()))
 // < Total:integer=The number of bytes read from this socket.
 // ? Returns the total number of bytes read from this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRXBytes, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetRX()))
+LLFUNC(GetRXBytes, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetRX()))
 /* ========================================================================= */
 // $ Socket:GetRXPackets
 // < Total:integer=The number of packets read from this socket.
 // ? Returns the total number of packets read from this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetRXPackets, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetRXpkt()))
+LLFUNC(GetRXPackets, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetRXpkt()))
 /* ========================================================================= */
 // $ Socket:GetSecure
 // < State:boolean=Encryption state.
 // ? Returns if this socket was initialised using SSL.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetSecure, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().IsSecure()))
+LLFUNC(GetSecure, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketIsSecure()))
 /* ========================================================================= */
 // $ Socket:GetStatus
 // < Status:integer=The current socket status.
@@ -194,13 +195,13 @@ LLFUNC(GetStatus, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().FlagGet()))
 // < Total:integer=The number of bytes written to this socket.
 // ? Returns the total number of bytes written to this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetTXBytes, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetTX()))
+LLFUNC(GetTXBytes, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetTX()))
 /* ========================================================================= */
 // $ Socket:GetTXPackets
 // < Total:integer=The number of packets written to this socket.
 // ? Returns the total number of packets written to this socket.
 /* ------------------------------------------------------------------------- */
-LLFUNC(GetTXPackets, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetTXpkt()))
+LLFUNC(GetTXPackets, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetTXpkt()))
 /* ========================================================================= */
 // $ Socket:PopRecvQ
 // < Data:Asset=An array of data at the front of the read queue.
@@ -210,7 +211,7 @@ LLFUNC(GetTXPackets, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetTXpkt()))
 // ? instead).
 /* ------------------------------------------------------------------------- */
 LLFUNC(PopRecvQ, 2,
-  LuaUtilPushVar(lS, AgSocket{lS, 1}().GetPacketRXSafe(AcAsset{lS}())))
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetPacketRXSafe(AcAsset{lS}())))
 /* ========================================================================= */
 // $ Socket:PopSendQ
 // < Data:Asset=The data packet at the front of the send queue.
@@ -220,7 +221,7 @@ LLFUNC(PopRecvQ, 2,
 // ? instead).
 /* ------------------------------------------------------------------------- */
 LLFUNC(PopSendQ, 2,
-  LuaUtilPushVar(lS, AgSocket{lS, 1}().GetPacketTXSafe(AcAsset{lS}())))
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetPacketTXSafe(AcAsset{lS}())))
 /* ========================================================================= */
 // $ Socket:PopSendQT
 // < Data:Asset=An array of data that was waiting to be written to the queue.
@@ -228,7 +229,7 @@ LLFUNC(PopSendQ, 2,
 // ? Removes all data from the pending write queue. If used as a HTTP socket
 // ? then this may contain return header information (use PopSendQT() instead).
 /* ------------------------------------------------------------------------- */
-LLFUNC(PopSendQT, 1, AgSocket{lS, 1}().HeadersToTable(lS))
+LLFUNC(PopSendQT, 1, AgSocket{lS, 1}().SocketHeadersToTable(lS))
 /* ========================================================================= */
 // $ Socket:RecvQCount
 // < Count:integer=The current number of packets waiting to be processed.
@@ -236,7 +237,8 @@ LLFUNC(PopSendQT, 1, AgSocket{lS, 1}().HeadersToTable(lS))
 // ? the packets manually. This function shows how many 'read' packets are
 // ? waiting to be processed.
 /* ------------------------------------------------------------------------- */
-LLFUNC(RecvQCount, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetRXQCountSafe()))
+LLFUNC(RecvQCount, 1,
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetRXQCountSafe()))
 /* ========================================================================= */
 // $ Socket:SendQCount
 // < Count:integer=The current number of packets waiting to be written.
@@ -244,7 +246,8 @@ LLFUNC(RecvQCount, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetRXQCountSafe()))
 // ? put in a queue and the worker thread dispatches these packets when it
 // ? can. This functions shows how many packets are waiting to be 'written'.
 /* ------------------------------------------------------------------------- */
-LLFUNC(SendQCount, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetTXQCountSafe()))
+LLFUNC(SendQCount, 1,
+  LuaUtilPushVar(lS, AgSocket{lS, 1}().SocketGetTXQCountSafe()))
 /* ========================================================================= */
 // $ Socket:TConnect
 // < Time:number=The time the socket entered SS_CONNECTING state
@@ -252,7 +255,7 @@ LLFUNC(SendQCount, 1, LuaUtilPushVar(lS, AgSocket{lS, 1}().GetTXQCountSafe()))
 // ? state.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TConnect, 1, LuaUtilPushVar(lS,
-  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().GetTConnect())))
+  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().SocketGetTConnect())))
 /* ========================================================================= */
 // $ Socket:TConnected
 // < Time:number=The time the socket entered SS_CONNECTED state
@@ -260,21 +263,21 @@ LLFUNC(TConnect, 1, LuaUtilPushVar(lS,
 // ? state.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TConnected, 1, LuaUtilPushVar(lS,
-  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().GetTConnected())))
+  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().SocketGetTConnected())))
 /* ========================================================================= */
 // $ Socket:TDisconnect
 // < Time:number=The time the socket was closing.
 // ? Returns the processor time that the socket initiated a close() operation.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TDisconnect, 1, LuaUtilPushVar(lS,
-  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().GetTDisconnect())))
+  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().SocketGetTDisconnect())))
 /* ========================================================================= */
 // $ Socket:TDisconnected
 // < Time:number=The time the socket was closed.
 // ? Returns the processor time that the socket completed a close() operation.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TDisconnected, 1, LuaUtilPushVar(lS, cLog->
-  CCDeltaToClampedDouble(AgSocket{lS, 1}().GetTDisconnected())))
+  CCDeltaToClampedDouble(AgSocket{lS, 1}().SocketGetTDisconnected())))
 /* ========================================================================= */
 // $ Socket:TRead
 // < Time:number=The time the socket last completed a recv() operation.
@@ -282,7 +285,7 @@ LLFUNC(TDisconnected, 1, LuaUtilPushVar(lS, cLog->
 // ? receive operation.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TRead, 1, LuaUtilPushVar(lS,
-  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().GetTRead())))
+  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().SocketGetTRead())))
 /* ========================================================================= */
 // $ Socket:TWrite
 // < Time:number=The time the socket last completed a send() operation.
@@ -290,7 +293,7 @@ LLFUNC(TRead, 1, LuaUtilPushVar(lS,
 // ? send operation.
 /* ------------------------------------------------------------------------- */
 LLFUNC(TWrite, 1, LuaUtilPushVar(lS,
-  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().GetTWrite())))
+  cLog->CCDeltaToClampedDouble(AgSocket{lS, 1}().SocketGetTWrite())))
 /* ========================================================================= */
 // $ Socket:Write
 // > Data:Asset=The data to write.
@@ -301,7 +304,7 @@ LLFUNC(TWrite, 1, LuaUtilPushVar(lS,
 LLFUNC(Write, 0,
   const AgSocket aSocket{lS, 1};
   const AgAsset aAsset{lS, 2};
-  aSocket().SendSafe(aAsset))
+  aSocket().SocketSendSafe(aAsset))
 /* ========================================================================= */
 // $ Socket:WriteString
 // > Text:string=The data string to write.
@@ -312,7 +315,7 @@ LLFUNC(Write, 0,
 LLFUNC(WriteString, 1,
   const AgSocket aSocket{lS, 1};
   const AgNeString aText{lS, 2};
-  aSocket().SendStringSafe(aText()))
+  aSocket().SocketSendStringSafe(aText()))
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Socket:* methods structure                                          ## **
@@ -360,7 +363,7 @@ LLFUNC(Create, 0,
   const AgPort uPort{ lS, 3 };
   const AgString strCipher{ lS, 4 };
   LuaUtilCheckFunc(lS, 5);
-  AcSocket{lS}().Connect(lS, strName, strAddress(), uPort, strCipher()))
+  AcSocket{lS}().SocketConnect(lS, strName, strAddress(), uPort, strCipher()))
 /* ========================================================================= */
 // $ Socket.CreateHTTP
 // > Name:string=Name to identify the socket.
@@ -387,8 +390,8 @@ LLFUNC(CreateHTTP, 0,
   const AgString strHeaders{ lS, 7 };
   const AgString strBody{ lS, 8 };
   LuaUtilCheckFunc(lS, 9);
-  AcSocket{lS}().HTTPRequest(lS, strName, strCipher(), strAddress(), uPort,
-    strRequest(), strMethod(), strHeaders(), strBody()))
+  AcSocket{lS}().SocketHTTPRequest(lS, strName, strCipher(), strAddress(),
+    uPort, strRequest(), strMethod(), strHeaders(), strBody()))
 /* ========================================================================= */
 // $ Socket.Flush
 // < Count:integer=Total number of sockets disconnected.

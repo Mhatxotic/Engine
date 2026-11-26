@@ -20,8 +20,8 @@ template<class...VarArgs>
 /* ------------------------------------------------------------------------- */
 namespace P {                          // Start of public module namespace
 /* -- Dependencies and types ----------------------------------------------- */
-using ::std::condition_variable;       // Condition variable alias
-using ::std::try_to_lock;              // Try to lock and continue if failed
+using StdCondVar = ::std::condition_variable; // Condition variable alias
+constexpr ::std::try_to_lock_t StdTryToLock = ::std::try_to_lock; // Don't wait
 using LockGuard = lock_guard<mutex>;   // Shortcut to a mutex lock guard
 using UniqueLock = unique_lock<mutex>; // Shortcut to a mutex unique lock
 /* -- Dummy mutex lock ----------------------------------------------------- */

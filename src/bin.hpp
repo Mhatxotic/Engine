@@ -34,13 +34,13 @@ class Pack :
   /* -- Private variables ----------------------------------------- */ private:
   RectList         rlUsed, rlFree;     // Used and free data
   /* -- Remove a rect (not that this can cause a realloc) ------------------ */
-  void PruneFreeRect(const size_t stIndex)
+  void BinPruneFreeRect(const size_t stIndex)
     { rlFree.erase(StdNext(rlFree.cbegin(), static_cast<ssize_t>(stIndex))); }
   /* -- Add a rect (note this can cause a realloc) ------------------------- */
   void AddFreeRect(const IntType itX, const IntType itY, const IntType itW,
     const int itH) { rlFree.push_back({ itX, itY, itW, itH }); }
   /* ----------------------------------------------------------------------- */
-  const Rect FindPositionForNewNodeBestShortSideFit(const IntType itW,
+  const Rect BinFindPositionForNewNodeBestShortSideFit(const IntType itW,
     const IntType itH, IntType &itBestShortSideFit, IntType &itBestLongSideFit)
       const
   { // The best node that will be returned
@@ -66,7 +66,7 @@ class Pack :
     return rFound;
   }
   /* -- Do try to split a free node and ------------------------------------ */
-  void SplitFreeNodeUnsafe(const Rect &rFree, const Rect &rUsed,
+  void BinBinSplitFreeNodeUnsafe(const Rect &rFree, const Rect &rUsed,
     const IntType itFreeH, const IntType itUsedH, const IntType itFreeV,
     const IntType itUsedV)
   { // Check horizontal bounds
@@ -92,7 +92,7 @@ class Pack :
     }
   }
   /* -- Try to split a free node and return true if succeeded -------------- */
-  bool SplitFreeNode(const size_t stIndex, const Rect &rUsed)
+  bool BinSplitFreeNode(const size_t stIndex, const Rect &rUsed)
   { // Get reference to free node
     const Rect &rFree = rlFree[stIndex];
     // Calculate maximum bounds of the free and used rslRects.
@@ -114,15 +114,16 @@ class Pack :
       rlFree.reserve(UtilNearestPow2<size_t>(rlFree.size() + 4));
       // Do the split with a NEW evaluation of rlFree[stIndex] as again, the
       // address of rlFree[stIndex] may have changed!
-      SplitFreeNodeUnsafe(rlFree[stIndex], rUsed,
+      BinBinSplitFreeNodeUnsafe(rlFree[stIndex], rUsed,
         itFreeH, itUsedH, itFreeV, itUsedV);
     } // Enough room so we can just continue with the existing reference.
-    else SplitFreeNodeUnsafe(rFree, rUsed, itFreeH, itUsedH, itFreeV, itUsedV);
+    else BinBinSplitFreeNodeUnsafe(rFree,
+      rUsed, itFreeH, itUsedH, itFreeV, itUsedV);
     // Success!
     return true;
   }
   /* ----------------------------------------------------------------------- */
-  static bool IsContainedIn(const Rect &rSrc, const Rect &rDest)
+  static bool BinIsContainedIn(const Rect &rSrc, const Rect &rDest)
   { // Return if the src rect bounds are contained in dest bounds
     return rSrc.CoordGetX() >= rDest.CoordGetX()
         && rSrc.CoordGetY() >= rDest.CoordGetY()
@@ -140,17 +141,17 @@ class Pack :
                  stSubIndex < rlFree.size();
                ++stSubIndex)
       { // If rectangle sub-rect is inside this rect
-        if(IsContainedIn(rlFree[stIndex], rlFree[stSubIndex]))
+        if(BinIsContainedIn(rlFree[stIndex], rlFree[stSubIndex]))
         { // Remove it
-          PruneFreeRect(stIndex);
+          BinPruneFreeRect(stIndex);
           // Decrement index
           --stIndex;
           // We're done with the sub-rect
           break;
         } // Ignore if subrect is inside this rect
-        if(!IsContainedIn(rlFree[stSubIndex], rlFree[stIndex])) continue;
+        if(!BinIsContainedIn(rlFree[stSubIndex], rlFree[stIndex])) continue;
         // Remove sub-rect
-        PruneFreeRect(stSubIndex);
+        BinPruneFreeRect(stSubIndex);
         // Decrement index
         --stSubIndex;
       }
@@ -165,8 +166,8 @@ class Pack :
     rlFree.swap(pOther.rlFree);
   } */
   /* -- (Re)initialise bin to empty state -------------------------- */ public:
-  void Init(const UIntType uitNWidth, const UIntType uitNHeight)
-  { // Init itW and itH
+  void BinInit(const UIntType uitNWidth, const UIntType uitNHeight)
+  { // BinInit itW and itH
     this->DimSet(static_cast<IntType>(uitNWidth),
       static_cast<IntType>(uitNHeight));
     // Clear current usage
@@ -176,22 +177,22 @@ class Pack :
     AddFreeRect(0, 0, this->DimGetWidth(), this->DimGetHeight());
   }
   /* -- Reserve memory ----------------------------------------------------- */
-  void Reserve(const size_t stUsedReserve, const size_t stFreeReserve)
+  void BinReserve(const size_t stUsedReserve, const size_t stFreeReserve)
     { rlUsed.reserve(stUsedReserve); rlFree.reserve(stFreeReserve); }
   /* -- (Re)initialise bin to empty state ---------------------------------- */
-  void Init(const UIntType uitNWidth, const UIntType uitNHeight,
+  void BinInit(const UIntType uitNWidth, const UIntType uitNHeight,
      const size_t stUsedReserve, const size_t stFreeReserve)
   { // Initialise rect
-    Init(uitNWidth, uitNHeight);
+    BinInit(uitNWidth, uitNHeight);
     // Reserve memory
-    Reserve(stUsedReserve, stFreeReserve);
+    BinReserve(stUsedReserve, stFreeReserve);
   }
   /* -- Englarge the bin --------------------------------------------------- */
-  bool Resize(const UIntType uitNWidth, const UIntType uitNHeight)
+  bool BinResize(const UIntType uitNWidth, const UIntType uitNHeight)
   { // If there is nothing in the bin?
     if(rlUsed.empty())
     { // Just reinitialise it
-      Init(uitNWidth, uitNHeight);
+      BinInit(uitNWidth, uitNHeight);
       // Success
       return true;
     } // Convert values to int
@@ -217,19 +218,20 @@ class Pack :
     return true;
   }
   /* -- Test insert a single rectangle into the bin ------------------------ */
-  const Rect Test(const UIntType uitW, const UIntType uitH) const
+  const Rect BinTest(const UIntType uitW, const UIntType uitH) const
   { // Initialise two score values and init to maximum supported int value
     IntType itScore1 = StdLimits<IntType>::max(), itScore2 = itScore1;
     // Find position for new node and return if the size will fit
-    return FindPositionForNewNodeBestShortSideFit(static_cast<IntType>(uitW),
-      static_cast<IntType>(uitH), itScore1, itScore2);
+    return BinFindPositionForNewNodeBestShortSideFit(
+      static_cast<IntType>(uitW), static_cast<IntType>(uitH),
+      itScore1, itScore2);
   }
   /* -- Inserts a single rectangle into the bin ---------------------------- */
-  const Rect Insert(const UIntType uitW, const UIntType uitH)
+  const Rect BinInsert(const UIntType uitW, const UIntType uitH)
   { // Initialise two score values and init to maximum supported int value
     IntType itScore1 = StdLimits<IntType>::max(), itScore2 = itScore1;
     // Find position for new node and return zero (rNew={0,0}) if failed
-    const Rect rNew{ FindPositionForNewNodeBestShortSideFit(
+    const Rect rNew{ BinFindPositionForNewNodeBestShortSideFit(
       static_cast<IntType>(uitW), static_cast<IntType>(uitH),
       itScore1, itScore2) };
     if(rNew.DimGetHeight() == 0) return rNew;
@@ -237,20 +239,20 @@ class Pack :
     size_t stRectanglesToProcess = rlFree.size();
     for(size_t stIndex = 0; stIndex < stRectanglesToProcess; ++stIndex)
     { // Split the free node to accommodate new value and ignore if failed
-      if(!SplitFreeNode(stIndex, rNew)) continue;
+      if(!BinSplitFreeNode(stIndex, rNew)) continue;
       // Remove from free list and update index and counter
-      PruneFreeRect(stIndex);
+      BinPruneFreeRect(stIndex);
       --stIndex;
       --stRectanglesToProcess;
     } // Remove redundant rectangles
     PruneFreeList();
-    // Insert new rect into used list
+    // BinInsert new rect into used list
     rlUsed.emplace_back(rNew);
     // Return size to caller
     return rNew;
   }
   /* -- Returns the % total filled ----------------------------------------- */
-  double Occupancy() const
+  double BinOccupancy() const
   { // Return the ratio of used surface area to the total bin area.
     return StdAccumulate(rlUsed.cbegin(), rlUsed.cend(), 0.0,
       [](double dUsed, const Rect &rNode)
@@ -259,11 +261,11 @@ class Pack :
       (this->template DimGetWidth<double>() * this->DimGetHeight());
   }
   /* -- Return number of rectangles created in the used list --------------- */
-  size_t Used() const { return rlUsed.size(); }
+  size_t BinUsed() const { return rlUsed.size(); }
   /* -- Return number of rectangles created in the free list --------------- */
-  size_t Free() const { return rlFree.size(); }
+  size_t BinFree() const { return rlFree.size(); }
   /* -- Return number of total rectangles created -------------------------- */
-  size_t Total() const { return rlFree.size() + rlUsed.size(); }
+  size_t BinTotal() const { return rlFree.size() + rlUsed.size(); }
   /* -- Default constructor that instantiates an empty bin of size 0x0 ----- */
   Pack()
     /* -- No code ---------------------------------------------------------- */
@@ -276,7 +278,7 @@ class Pack :
     /* -- Initialisers ----------------------------------------------------- */
     Pack{ uitNWidth, uitNHeight }          // Initialise pack
     /* -- Reserve list sizes ----------------------------------------------- */
-    { Reserve(stUsedReserve, stFreeReserve); }
+    { BinReserve(stUsedReserve, stFreeReserve); }
   /* -- Instantiates a bin of the given size ------------------------------- */
   Pack(const UIntType uitNWidth,         // Width of new pack
        const UIntType uitNHeight) :      // Height of new pack

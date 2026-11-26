@@ -144,8 +144,6 @@ CTOR_MEM_BEGIN(Fonts, Font, ICHelperUnsafe, /* n/a */),
   size_t FontGetCharCount() const { return gvData.size() / stMultiplier; }
   /* -- Get character scale ------------------------------------------------ */
   GLfloat FontGetCharScale() const { return glfScale; }
-  /* -- Get bin occupancy -------------------------------------------------- */
-  double FontGetTexOccupancy() const { return ipData.Occupancy(); }
   /* -- Get below baseline height of specified character ------------------- */
   GLfloat FontGetBaselineBelow(const UtfCodepoint utcChar)
   { // Now get character info and return data

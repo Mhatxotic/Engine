@@ -54,6 +54,9 @@ BUILD_FLAGS(unsigned, Pcm,             // PCM loading flags
   PL_TOLE                {PcmFlag[6]}, // Convert to little-endian format
   PL_TOSIGNED            {PcmFlag[7]}, // Convert to signed format
   PL_TOUNSIGNED          {PcmFlag[8]}, // Convert to unsigned format
+  /* -- Mask bits ---------------------------------------------------------- */
+  PL_MASK{ PL_FCE_WAV|PL_FCE_CAF|PL_FCE_OGG|PL_TOSPU|PL_TOBE|PL_TOLE|
+           PL_TOSIGNED|PL_TOUNSIGNED },
   /* -- Private flags (Only used in 'Pcm' class) --------------------------- */
   PL_BE                  {PcmFlag[9]}, // Is big-endian encoded (or LE)?
   PL_DYNAMIC            {PcmFlag[10]}, // Waveform is dynamically created?
@@ -64,11 +67,10 @@ BUILD_FLAGS(unsigned, Pcm,             // PCM loading flags
   PA_TOLE               {PcmFlag[14]}, // Converted to little-endian format
   PA_TOSIGNED           {PcmFlag[15]}, // Converted to signed format
   PA_TOUNSIGNED         {PcmFlag[16]}, // Converted to unsigned format
-  /* -- Purposes ----------------------------------------------------------- */
-  PP_SAMPLE             {PcmFlag[32]}, // Purpose is to be a Sample
-  /* -- Mask bits ---------------------------------------------------------- */
-  PL_MASK{ PL_FCE_WAV|PL_FCE_CAF|PL_FCE_OGG|PL_TOSPU|PL_TOBE|PL_TOLE|
-           PL_TOSIGNED|PL_TOUNSIGNED }
+  /* -- These flags are removed when the PCM is reloaded ------------------- */
+  PL_ACTIVE{ PA_TOSPU|PA_TOBE|PA_TOLE|PA_TOSIGNED|PA_TOUNSIGNED },
+  /* -- PCM purpose (help with debugging) ---------------------------------- */
+  PP_SAMPLE             {PcmFlag[32]}  // Purpose is to be a Sample
 );/* ----------------------------------------------------------------------- */
 }                                      // End of public module namespace
 /* ------------------------------------------------------------------------- */

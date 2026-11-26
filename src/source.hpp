@@ -103,8 +103,8 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   }
   /* -- Reset parameters --------------------------------------------------- */
   void SourceReset() { SourceInit(); SourceSetExternal(true); }
-  /* -- Reinitialise the source id ----------------------------------------- */
-  void SourceReInit() { aluId = cOal->OalCreateSource(); SourceReset(); }
+  /* -- Reinitialise the source id and put in standby ---------------------- */
+  void SourceReInit() { aluId = cOal->OalCreateSource(); SourceInit(); }
   /* -- Unlock a source so it can be recycled ------------------------------ */
   void SourceUnlock()
   { // Clear the attached buffer
@@ -303,7 +303,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   /* -- Constructor -------------------------------------------------------- */
   explicit Source(
     /* -- Parameters ------------------------------------------------------- */
-    const SourceFlagsConst sfFlags=SF_EXTERNAL) :  // Initial source flags
+    const SourceFlagsConst sfFlags = SF_EXTERNAL) : // Initial source flags
     /* -- Initialisers ----------------------------------------------------- */
     ICHelperSource{ cSources, this },  // Register in Sources list
     SerialSlave{ ctParent.Serial() },  // Initialise identification number

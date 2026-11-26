@@ -254,7 +254,7 @@ struct EvtCore :                         // Start of common event system class
         epData.cbfFunc(epData);
       } // Return no significant event
       return EvtNone;
-    }, try_to_lock);
+    }, StdTryToLock);
   }
   /* -- Flush events list -------------------------------------------------- */
   void EvtCoreFlush()

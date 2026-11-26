@@ -1362,7 +1362,7 @@ CTOR_MEM_BEGIN_CSLAVE(Sqls, Sql, ICHelperUnsafe),
   /* -- Init database called from LuaLib ----------------------------------- */
   void SqlInit(const StdStringView &ssvDb)
   { // Set the name of the database with forced extension name
-    NameSet(StrAppend(ssvDb, "." UDB_EXTENSION));
+    NameSetA(ssvDb, "." UDB_EXTENSION);
     // Error if this file is same as the main database
     if(NameGet() == cSql->NameGet())
       XC("Reopen engine database denied!", "Name", NameGet());

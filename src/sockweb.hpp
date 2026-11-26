@@ -18,7 +18,7 @@ enum OpCode : unsigned                 // Websocket packet op codes
   OC_PING        = 0x9,                // Ping the client test
   OC_PONG        = 0xA                 // Server ACK the ping client test.
 }; /* -- Socket write manager ---------------------------------------------- */
-ThreadFlagsType SockWebWriteManager()
+ThreadFlagsType SocketWebWriteManager()
 { // Block until requested to exit
   while(tWriter.ThreadShouldNotExit())
   { // For each packet waiting to be written
@@ -104,68 +104,68 @@ ThreadFlagsType SockWebWriteManager()
           } // Done
           break;
       } // Send it, and kill thread on error
-      if(SockWrite(mPayload) == static_cast<size_t>(TS_ERROR))
+      if(SocketWrite(mPayload) == static_cast<size_t>(TS_ERROR))
         return TS_ERROR;
       // Subtract total bytes counter and pop the packet we just sent
       stTX -= mcPacket.MemSize();
-      PopOldestTXPacketSafe();
+      SocketPopOldestTXPacketSafe();
     } // Wait for more data or exit request
-    SockWriteWaitForMoreData();
+    SocketWriteWaitForMoreData();
   } // Sucesss
   return TS_OK;
 }
 /* -- Socket write manager ------------------------------------------------- */
-ThreadFlagsType SockWriteManager()
+ThreadFlagsType SocketWriteManager()
 { // Block until requested to exit
   while(tWriter.ThreadShouldNotExit())
   { // For each packet waiting to be written
     while(IsTXPacketAvailable())
     { // Get oldest available TX packet, send it, and kill thread on error
       const MemConst &mcPacket = GetOldestTXPacketSafe();
-      if(SockWrite(mcPacket) == static_cast<size_t>(TS_ERROR))
+      if(SocketWrite(mcPacket) == static_cast<size_t>(TS_ERROR))
         return TS_ERROR;
       // Subtract total bytes counter and pop the packet we just sent
       stTX -= mcPacket.MemSize();
-      PopOldestTXPacketSafe();
+      SocketPopOldestTXPacketSafe();
     } // Wait for more data or exit request
-    SockWriteWaitForMoreData();
+    SocketWriteWaitForMoreData();
   } // Sucesss
   return TS_OK;
 }
 /* -- WebSocket write thread ----------------------------------------------- */
-ThreadFlagsType SockWebWriteThreadMain(Thread &)
+ThreadFlagsType SocketWebWriteThreadMain(Thread &)
 { // Return code
   ThreadFlagsType tftReturn;
   // Capture exceptions and execute the manager
-  try { tftReturn = SockWebWriteManager(); }
+  try { tftReturn = SocketWebWriteManager(); }
   // exception occured?
   catch(const StdException &eReason)
   { // Report error
     cLog->LogErrorExSafe("(WEBSOCKET WRITE THREAD EXCEPTION) $", eReason);
     // Set error message
-    tftReturn = SetErrorStaticSafe(eReason.what());
+    tftReturn = SocketSetErrorStaticSafe(eReason.what());
   } // Force close the socket if the reader thread isn't already exiting
-  SendDisconnect();
+  SocketSendDisconnect();
   // Required to stop memory leak
   OPENSSL_thread_stop();
   // Return exit code
   return tftReturn;
 }
 /* -- Web socket main thread function reusing temporary buffer ------------- */
-ThreadFlagsType WebSocketMain(Memory &mDest)
+ThreadFlagsType SocketWebMain(Memory &mDest)
 { // Check for upgrade status and return error if not found
   const ParserStringVolConstIt psvciIt{ GetRegistryIterator("Upgrade") };
   if(psvciIt == psvRegistry.cend())
-    return SetErrorStaticSafe("Missing upgrade header!");
+    return SocketSetErrorStaticSafe("Missing upgrade header!");
   // Must be websocket
   if(psvciIt->second != "websocket")
-    return SetErrorStaticSafe(
+    return SocketSetErrorStaticSafe(
       StrAppend("Invalid upgrade protocol '$'!", psvciIt->second));
   // Create a thread to write data requests
   tWriter.ThreadInit(StrAppend("websocketwriter:", Serial()),
-    bind(&Socket::SockWebWriteThreadMain, this, _1), this);
+    bind(&Socket::SocketWebWriteThreadMain, this, _1), this);
   // Set upgraded status and dispatch event
-  AddStatus(SS_UPGRADED);
+  SocketAddStatus(SS_UPGRADED);
   // Websocket packet op codes
   enum OpCode uOpCode = OC_NONE;
   // Websocket packet read modes
@@ -188,7 +188,7 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
               stTRead += stRead)
     { // Wait for new payload and return if error or quit requested
       const size_t stAmount = mDest.MemSize() - stTRead;
-      stRead = SockRead(mDest.MemRead(stTRead, stAmount), stAmount);
+      stRead = SocketRead(mDest.MemRead(stTRead, stAmount), stAmount);
       if(stRead == static_cast<size_t>(TS_ERROR)) return TS_ERROR;
       if(tReader.ThreadShouldExit()) return TS_OK;
     } // Calculate any extra data we read
@@ -199,7 +199,7 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
       case RM_PAYLOAD: Payload:
       { // Put payload straight into packets
         const size_t stPLPktSize = stTRead - stExtra;
-        PushData(plTemp, stPLCurrent,
+        SocketPushData(plTemp, stPLCurrent,
           mDest.MemRead(0, stPLPktSize), stPLPktSize);
         // Check opcode
         switch(uOpCode)
@@ -218,7 +218,7 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
               stRX += stPLTotal;
             });
             // Tell client that we have data ready
-            DispatchEvent(SS_READPACKET);
+            SocketDispatchEvent(SS_READPACKET);
             // Break to reset counters
             break;
           } // Ping? event?
@@ -227,15 +227,15 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
             cdPing = cmHiRes.ClockGetEpochTime();
             // Compact data segments and send it back
             Memory mTemp;
-            Compact(mTemp, plTemp, stPLCurrent);
+            SocketCompact(mTemp, plTemp, stPLCurrent);
             // Send bytes not supported
-            if(mTemp.MemIsEmpty()) Send(mTemp);
+            if(mTemp.MemIsEmpty()) SocketSend(mTemp);
             // Done
             break;
           } // Pong! event? Ignore packet data.
           case OC_PONG:
           { // Send pong event
-            DispatchEvent(SS_PONG);
+            SocketDispatchEvent(SS_PONG);
             // Clear packet data
             plTemp.clear();
             // Done
@@ -244,7 +244,7 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
           case OC_CLOSE: plTemp.clear(); return TS_OK;
           // Unsupported opcode?
           default: plTemp.clear();
-            return SetErrorStaticSafe(
+            return SocketSetErrorStaticSafe(
               StrAppend("Invalid opcode 0x", StdIOSHex, uOpCode));
         } // Reset to header mode
         uMode = RM_HEADER;
@@ -273,9 +273,9 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
                        uSecond = mDest.MemReadInt<uint8_t>(1);
         // Throw error if reserved bits are set
         if(uFirst & 0x40 || uFirst & 0x20 || uFirst & 0x10)
-          return SetErrorStaticSafe("Reserved headers set!");
+          return SocketSetErrorStaticSafe("Reserved headers set!");
         // Server should not send a mask (bit 8)
-        if(uSecond & 0x80) return SetErrorStaticSafe("Mask bit set!");
+        if(uSecond & 0x80) return SocketSetErrorStaticSafe("Mask bit set!");
         // Set if a final packet (bit 0)
         bFinal = (uFirst & 0x80) != 0;
         // Set the opcode (bit 4-7)
@@ -344,12 +344,12 @@ ThreadFlagsType WebSocketMain(Memory &mDest)
             mDest.MemReadInt<uint8_t>(stIndex);
         // Let's be sensible and deny above 4GB payloads for now
         if(ullPayload > 0xFFFFFFFF)
-          return SetErrorStaticSafe(
+          return SocketSetErrorStaticSafe(
             StrAppend("Payload $ too big", StdIOSHex, ullPayload));
         // Now process payload
         break;
       } // Should never get here
-      default: return SetErrorStaticSafe("Invalid mode!");
+      default: return SocketSetErrorStaticSafe("Invalid mode!");
     } // Set payload mode
     uMode = RM_PAYLOAD;
     // Expecting the payload size next

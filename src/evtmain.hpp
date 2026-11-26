@@ -103,7 +103,7 @@ class EvtMain :                        // Members initially private
     EMC_MAX,                           // Maximum events allowed
     EMC_NONE,                          // Event id for NONE
     EMC_NOLOG>,                        // Event id for NOLOG
-  condition_variable                   // CV for suspending the thread
+  StdCondVar                           // CV for suspending the thread
 { /* -- Private ------------------------------------------------------------ */
   Thread           tEngThread;         // Engine thread
   const RegAuto    raEvents;           // Events to register
@@ -122,7 +122,7 @@ class EvtMain :                        // Members initially private
       const EvtArgs &eaArgs = eEvent.eaArgs;
       // Tell requesting thread that it may continue
       eaArgs.front().Ptr<AtomicBool>()->store(true);
-      eaArgs.back().Ptr<condition_variable>()->notify_one();
+      eaArgs.back().Ptr<StdCondVar>()->notify_one();
       // Wait for thread termination or calling thread to finish
       wait(ulLock, [this]{ return bUnsuspend; });
       // Reset suspension state and resume execution

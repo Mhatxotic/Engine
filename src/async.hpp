@@ -462,7 +462,7 @@ template<class ParentType>class AsyncLoader :
     requires StdIsStrOrCStr<StrType>
   void SyncLoadDataAndRegister(FileMap &fmData, StrType &&strLabel)
   { // Set a generic thread name incase the caller still wants to useit
-    AsyncGetThread().NameSet(StrAppend(strLabel, ':', mtAsyncOwner.Serial()));
+    AsyncGetThread().NameSetA(strLabel, ':', mtAsyncOwner.Serial());
     // Send file map to derived class
     AsyncExecuteReadyCallback(fmData);
     // Load succeeded so register the block.

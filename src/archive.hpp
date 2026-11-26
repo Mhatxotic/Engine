@@ -50,8 +50,8 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
   /* -- Base classes ------------------------------------------------------- */
   public AsyncLoaderArchive,           // Async manager for off-thread loading
   public ArchiveFlags,                 // Archive initialisation flags
-  private MutexLock,                   // Mutex for condition variable
-  private condition_variable           // Waiting for async ops to complete
+  MutexLock,                           // Mutex for condition variable
+  StdCondVar                           // Waiting for async ops to complete
 { /* -- Private Variables -------------------------------------------------- */
   AtomicSizeT      astInUse;           // API in use reference count
   /* ----------------------------------------------------------------------- */
@@ -302,7 +302,7 @@ CTOR_MEM_BEGIN_ASYNC_CSLAVE(Archives, Archive, ICHelperUnsafe),
         } // Extract block
       } // Extract and return decompressed file
       else return ArchiveExtract(strFile, uSrcId, cltrData, csaeData);
-    }, try_to_lock);
+    }, StdTryToLock);
   }
   /* -- Loads a file from archive by filename ------------------------------ */
   FileMap ArchiveExtract(const StdStringView &ssvFile)

@@ -78,6 +78,10 @@ BUILD_FLAGS(uint64_t, Image,           // Shared image flags
   IF_PALETTE          {ImageFlag[52]}, // A palette is included?
   /* -- Texture loaded flags (Only used in 'Image' class) ------------------ */
   TF_DELETE           {ImageFlag[55]}, // Marked for deletion?
+  /* -- Image active flags to remove on reload ----------------------------- */
+  IL_ACTIVE{ IA_TOGPU|IA_TO24BPP|IA_TO32BPP|IA_TOBGR|IA_TORGB|IA_TOBINARY|
+    IA_REVERSE|IA_ATLAS|IF_MIPMAPS|IF_REVERSED|IF_COMPRESSED|IF_DYNAMIC|
+    IF_PALETTE|TF_DELETE },
   /* -- Image purpose (help with debugging) -------------------------------- */
   IP_IMAGE            {ImageFlag[61]}, // Image is stand-alone?
   IP_TEXTURE          {ImageFlag[62]}, // Image is part of a Texture class?

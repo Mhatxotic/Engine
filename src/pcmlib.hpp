@@ -94,7 +94,8 @@ CTOR_MEM_BEGIN_CSLAVE(PcmLibs, PcmLib, ICHelperUnsafe),
 CTOR_END(PcmLibs, PcmLib, PCMLIB,
   reserve(PFMT_MAX); CollectorSetLimit(PFMT_MAX),)
 /* -- Load audio using a specific type ------------------------------------- */
-static void PcmLibLoadFile(const PcmFormat pfId, FileMap &fmData, PcmData &pdData)
+static void PcmLibLoadFile(const PcmFormat pfId,
+  FileMap &fmData, PcmData &pdData)
 { // Get plugin class. We already checked if the index was valid
   const PcmLib &plRef = *cPcmLibs->at(pfId);
   // Capture exceptions

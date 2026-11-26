@@ -71,7 +71,7 @@ class Display :                        // Members initially private
   DimCoInt,                            // Requested window position and size
   public GlFWMonitors,                 // Monitor list data
   MutexLock,                           // Mutex for sychronising engine thread
-  condition_variable,                  // CV for sychronising engine thread
+  StdCondVar,                          // CV for sychronising engine thread
   EvtMainRegAuto,                      // Main events list to register
   EvtWinRegAuto                        // Window events list to register
 { /* -- Monitors and resolutions ------------------------------------------- */
@@ -380,7 +380,7 @@ class Display :                        // Members initially private
       try
       { // Tell engine thread to suspend
         cEvtMain->EvtCoreAdd(EMC_SUSPEND, &abUnsuspend,
-          static_cast<condition_variable*>(this));
+          static_cast<StdCondVar*>(this));
         // Wait for engine thread to tell us it's suspended
         wait(ulLock, [this]{ return abUnsuspend == true; });
         // Reset our unsuspension variable
@@ -556,7 +556,7 @@ class Display :                        // Members initially private
       try
       { // Tell engine thread to suspend
         cEvtMain->EvtCoreAdd(EMC_SUSPEND, &abUnsuspend,
-          static_cast<condition_variable*>(this));
+          static_cast<StdCondVar*>(this));
         // Wait for engine thread to tell us it's suspended
         wait(ulLock, [this]{ return abUnsuspend == true; });
         // Reset our unsuspension variable
