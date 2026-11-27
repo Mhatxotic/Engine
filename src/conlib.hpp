@@ -976,7 +976,7 @@ for(const Image*const iPtr : *cImages)
   }).DataN(iRef.DimGetWidth()).DataN(iRef.DimGetHeight())
     .DataN(iRef.ImageDataGetBitsPerPixel())
     .DataN(iRef.ImageDataGetBytesPerPixel())
-    .DataN(iRef.ImageDataGetSlotCount()).DataN(iRef.GetAlloc())
+    .DataN(iRef.ImageDataGetSlotCount()).DataN(iRef.ImageDataGetAlloc())
     .Data(ImageLibGetPixelFormat(iRef.ImageDataGetPixelType()))
     .Data(iRef.NameGet());
 } // Log texture counts
@@ -1963,44 +1963,70 @@ else cConsole->ConsoleAddLineF("Connection $ $ closed.",
 // ! sources
 // ? Shows all created audio 'Source' object classes created by LUA.
 /* ========================================================================= */
-{ "sources", 1, 1, CFL_AUDIO, [](const Args &){
+{ "sources", 1, 2, CFL_AUDIO, [](const Args &aArgs){
 /* ------------------------------------------------------------------------- */
 // Get reference to sources collector class and lock it so it's not changed
 const LockGuard lgSourcesSync{ cSources->MutexGet() };
-// Text table class to help us write neat output
+// If we have more than one parameter?
+if(aArgs.size() == 2)
+{ // Get slot data and return if it is a bad slot
+  const size_t stId = StrToNum<size_t>(aArgs[1]);
+  if(stId >= cSources->size())
+    return cConsole->ConsoleAddLine("Invalid source id!");
+  const Source &soRef =
+    **StdNext(cSources->cbegin(), static_cast<ssize_t>(stId));
+  // Log texture counts
+  return cConsole->ConsoleAddLineF("Source $ (#$) detail...\n"
+    "- Position: $, $, $.\n"           "- Velocity: $, $, $.\n"
+    "- Direction: $, $, $.\n"          "- Rolloff distance: $.\n"
+    "- Reference distance: $.\n"       "- Maximum distance: $.\n"
+    "- Gain: $.\n"                     "- Minimum gain: $.\n"
+    "- Maximum gain: $.\n"             "- Pitch: $.",
+    soRef.Serial(), stId, soRef.SourceGetPositionX(),
+    soRef.SourceGetPositionY(), soRef.SourceGetPositionZ(),
+    soRef.SourceGetVelocityX(), soRef.SourceGetVelocityY(),
+    soRef.SourceGetVelocityZ(), soRef.SourceGetDirectionX(),
+    soRef.SourceGetDirectionY(), soRef.SourceGetDirectionZ(),
+    soRef.SourceGetRollOff(), soRef.SourceGetRefDist(),
+    soRef.SourceGetMaxDist(), soRef.SourceGetGain(), soRef.SourceGetMinGain(),
+    soRef.SourceGetMaxGain(), soRef.SourceGetPitch());
+} // Text table class to help us write neat output
 Statistic sTable;
-sTable.Header("ID").Header("SID").Header("FLAG").Header("S")
-      .Header("T").Header("BQ").Header("BP").Header("BI").Header("GAIN")
-      .Header("GAINMIN").Header("GAINMAX").Header("PITCH").Header("REFDIST")
-      .Header("MAXDIST", false).Reserve(cSources->size());
+sTable.Header("#").Header("ID").Header("SID").Header("FLAG").Header("BQ")
+      .Header("BP").Header("BI").Header("GAIN").Header("PITCH")
+      .Header("TIME").Header("SAMPLE").Header("BYTE")
+      .Reserve(cSources->size());
+// Id number
+size_t stId = 0;
 // Walk through sources
-for(const Source*const sPtr : *cSources)
+for(const Source*const soPtr : *cSources)
 { // Get reference to class
-  const Source &sRef = *sPtr;
+  const Source &soRef = *soPtr;
   // Get source play state and type
-  const ALenum alState = sRef.SourceGetState();
-  const ALuint uType = sRef.SourceGetType();
+  const ALenum alState = soRef.SourceGetState();
+  const ALuint uType = soRef.SourceGetType();
   // Add data to text table
-  sTable.DataN(sRef.Serial()).DataN(sRef.SourceGet())
-        .DataE({{ sRef.SourceGetClass(),    'C' },
-                { sRef.LockIsSet(),   'L' },
-                { sRef.SourceGetLooping(),  'O' },
-                { sRef.SourceGetRelative(), 'R' },
-                { sRef.SourceGetExternal(), 'X' }})
-        .DataC(alState == AL_INITIAL ? 'I' : (alState == AL_PLAYING ? 'P' :
-              (alState == AL_PAUSED  ? 'H' : (alState == AL_STOPPED ? 'S' :
-                                       '?'))))
-        .DataC(uType == AL_UNDETERMINED ? 'U' : (uType == AL_STATIC ? 'T' :
-              (uType == AL_STREAMING    ? 'S' : '?')))
-        .DataN(sRef.SourceGetBuffersQueued())
-        .DataN(sRef.SourceGetBuffersProcessed())
-        .DataN(sRef.SourceGetBuffer())
-        .DataN(sRef.SourceGetGain(), 6)
-        .DataN(sRef.SourceGetMinGain(), 6)
-        .DataN(sRef.SourceGetMaxGain(), 6)
-        .DataN(sRef.SourceGetPitch(), 6)
-        .DataN(sRef.SourceGetRefDist(), 6)
-        .DataN(sRef.SourceGetMaxDist(), 6);
+  sTable.DataN(stId++).DataN(soRef.Serial()).DataN(soRef.SourceGet())
+        .DataE({{ soRef.SourceIsClass(),     'C' },
+                { soRef.LockIsSet(),         'L' },
+                { soRef.SourceGetLooping(),  'O' },
+                { soRef.SourceGetRelative(), 'R' },
+                { soRef.SourceGetExternal(), 'X' },
+                { true, alState == AL_INITIAL ? 'I' :
+                       (alState == AL_PLAYING ? 'P' :
+                       (alState == AL_PAUSED  ? 'H' :
+                       (alState == AL_STOPPED ? 'S' : '?'))) },
+                { true, uType == AL_UNDETERMINED ? 'U' :
+                       (uType == AL_STATIC       ? 'T' :
+                       (uType == AL_STREAMING    ? 'R' : '?')) }})
+        .DataN(soRef.SourceGetBuffersQueued())
+        .DataN(soRef.SourceGetBuffersProcessed())
+        .DataN(soRef.SourceGetBuffer())
+        .DataN(soRef.SourceGetGain(),6)
+        .DataN(soRef.SourceGetPitch(),6)
+        .DataN(soRef.SourceGetElapsed(),6)
+        .DataN(soRef.SourceGetSample())
+        .DataN(soRef.SourceGetByte());
 } // Show total
 cConsole->ConsoleAddLineA(sTable.Finish(),
   StrPluraliseNum(cSources->size(), "source.", "sources."));

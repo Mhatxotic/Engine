@@ -51,8 +51,14 @@ LLFUNC(GetSampleVolume, 1, LuaUtilPushVar(lS, cMixer->MixerGetSampleVolume()))
 LLFUNC(GetVideoVolume, 1, LuaUtilPushVar(lS, cMixer->MixerGetVideoVolume()))
 /* ========================================================================= */
 // $ Audio.OnUpdate
-// > Func:function=The callback function to use
-// ? Fires when the audio device updates.
+// > Func:function=The callback function to use.
+// ? Fires when the audio device updates. This is an essential event if you
+// ? play looping samples or make use of the 'Source' class as when an audio
+// ? hardware device changes, all the sources and all the buffers have to be
+// ? reinitialised so you should run 'Spawn()' and overwrite your old 'Source'
+// ? classes as they are invalidated and will no longer work, and also 'Play()'
+// ? on all your 'Sample' classes again as the engine will not do this for
+// ? you. However, both 'Stream' and 'Video' classes will resume as normal.
 /* ------------------------------------------------------------------------- */
 LLFUNC(OnUpdate, 0, cLua->LuaSetRef(lS, cAudio->AudioGetUpdateFunc()))
 /* ========================================================================= */

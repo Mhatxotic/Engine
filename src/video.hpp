@@ -937,6 +937,13 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   void VideoReInitDisplayOutput() { FboReInit(); VideoInitTexture(); }
   /* -- De-initialise texture and frame buffer object ---------------------- */
   void VideoDeInitDisplayOutput() { VideoDeInitTexture(); FboDeInit(); }
+  /* -- Reinitialise video ------------------------------------------------- */
+  void VideoReInit()
+  { // Reinitialse FBO and textures
+    VideoReInitDisplayOutput();
+    // Advance to the next frame to rerender the next frame
+    VideoAdvance();
+  }
   /* -- Update volume ------------------------------------------------------ */
   void VideoCommitVolume()
   { // Ignore if no source
@@ -1031,13 +1038,23 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
   }
   /* -- Advance a frame ---------------------------------------------------- */
   void VideoAdvance()
-  { // Return if already playing
-    if(AsyncGetThread().ThreadIsRunning()) return;
-    // Loop until thread should exit
-    if(FlagIsSet(FL_THEORAVORBIS)) // Ogg has both audio and video streams?
-      while(!VideoHandleAudioVideo() && !stFWaiting);
-    else if(FlagIsSet(FL_THEORA))      // Ogg has video only stream?
-      while(!VideoHandleVideoOnly() && !stFWaiting);
+  { // Return if video already playing, stopped or there is no video
+    if(FlagIsAnyOfSet(FL_PLAY|FL_STOP) || FlagIsClear(FL_THEORA)) return;
+    // Awaken the video to reinitialise assets if needed
+    VideoAwaken();
+    // If there are no frames waiting force build the first frame
+    if(!stFWaiting)
+    { // Have audio? Loop until we get a frame
+      if(FlagIsSet(FL_VORBIS))
+        while(VideoHandleAudioVideo() && !stFWaiting);
+      // Video only? Loop until we get a frame
+      else while(VideoHandleVideoOnly() && !stFWaiting);
+      // Force frame to draw because it will be set to skip due to a/v sync
+      faData[stFActive].bDraw = true;
+    } // Force frame to draw because it will be set to skip due to a/v sync
+    faData[stFActive].bDraw = true;
+    // Render the frame
+    VideoRenderUnsafe();
   }
   /* -- Awaken the video --------------------------------------------------- */
   void VideoAwaken()
@@ -1100,12 +1117,12 @@ CTOR_MEM_BEGIN_ASYNC(Videos, Video, ICHelperSafe, /* No CLHelper */),
     if(FlagIsSet(FL_PLAY)) return false;
     // Check that OpenGL and OpenAL is initialised
     VideoAwaken();
+    // Set playing and remove stopped flag
+    FlagSetAndClear(FL_PLAY, FL_STOP);
     // Set reason for playing
     auReason = ubNewReason;
     // Next frame can show immediately
     CISync();
-    // Set playing flag
-    FlagSet(FL_PLAY);
     // Start decoding (reusing the async thread)
     AsyncGetThread().ThreadStart(this);
     // Log that the video was started
@@ -1342,7 +1359,7 @@ static void VideoReInitTextures()
   if(cVideos->empty()) return;
   cLog->LogDebugExSafe("Videos reinitialising $ video surfaces...",
     cVideos->CollectorCountUnsafe());
-  for(Video*const vVideo : *cVideos) vVideo->VideoReInitDisplayOutput();
+  for(Video*const vVideo : *cVideos) vVideo->VideoReInit();
   cLog->LogDebugExSafe("Videos reinitialised $ video surfaces!",
     cVideos->CollectorCountUnsafe());
 }
@@ -1378,7 +1395,7 @@ static void VideoStop()
   });
 }
 /* == DeInit all videos (after engine thread shutdown) ===================== */
-static void VideoDeInit()
+static void VideoDeInitAudio()
 { // Ignore if no videos otherwise deinitialise oal buffers on all videos
   if(cVideos->empty()) return;
   cLog->LogDebugExSafe("Videos deinitialising $ videos...",
@@ -1388,7 +1405,7 @@ static void VideoDeInit()
     cVideos->CollectorCountUnsafe());
 }
 /* == ReInit all videos (after engine thread shutdown) ===================== */
-static void VideoReInit()
+static void VideoReInitAudio()
 { // Ignore if no videos otherwise reinitialise oal buffers on all videos
   if(cVideos->empty()) return;
   cLog->LogDebugExSafe("Videos reinitialising $ videos...",

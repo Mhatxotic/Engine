@@ -84,7 +84,7 @@ class ImageData :                      // Members initially private
   void ImageDataSetBytesAndBitsPerPixelCast(const auto aNBPP)
     { ImageDataSetBytesAndBitsPerPixel(static_cast<ByteDepth>(aNBPP)); }
   /* ----------------------------------------------------------------------- */
-  size_t GetAlloc() const { return stAlloc; }
+  size_t ImageDataGetAlloc() const { return stAlloc; }
   /* ----------------------------------------------------------------------- */
 #define FH(n, f) \
   bool ImageDataIs##n() const { return FlagIsSet(f); } \

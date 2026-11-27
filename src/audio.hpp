@@ -85,7 +85,7 @@ class Audio :                          // Members initially private
     // De-initialise audio thread
     cAudio->AudioDeInitThread();
     // Unload all buffers for streams and samples and destroy all sources
-    VideoDeInit();
+    VideoDeInitAudio();
     StreamDeInit();
     SourceDeInit();
     SampleDeInit();
@@ -101,7 +101,7 @@ class Audio :                          // Members initially private
     SampleReInit();
     SourceReInit();
     StreamReInit();
-    VideoReInit();
+    VideoReInitAudio();
     // Init monitoring thread
     AudioInitThread();
     // Remove reinitialisation flag

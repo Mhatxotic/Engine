@@ -190,7 +190,7 @@ CTOR_MEM_BEGIN(Samples, Sample, ICHelperUnsafe, /* n/a */),
     // Delete the buffers
     ALL(cOal->OalDeleteBuffers(aluvNames),
       "Sample '$' failed to delete $ buffers", NameGet(), SampleNameCount());
-    // Reset buffer
+    // Clear buffer names
     aluvNames.clear();
   }
   /* ----------------------------------------------------------------------- */

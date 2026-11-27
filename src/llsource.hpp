@@ -27,6 +27,8 @@ using namespace ISource::P;            using namespace Common;
 struct AgSource : public ArClass<Source> {
   explicit AgSource(lua_State*const lS, const int iArg) :
     ArClass{LuaUtilGetClassRef<Source>(lS, iArg, cSources)}{} };
+/* -- Read integer --------------------------------------------------------- */
+using AgALint = AgInteger<ALint>;
 /* ========================================================================= **
 ** ######################################################################### **
 ** ## Source:* methods                                                    ## **
@@ -38,6 +40,12 @@ struct AgSource : public ArClass<Source> {
 // ? error will be generated if accessed.
 /* ------------------------------------------------------------------------- */
 LLFUNC(Destroy, 0, LuaUtilClassDestroy<Source>(lS, cSources))
+/* ========================================================================= */
+// $ Source:GetByte
+// < Byte:integer=The byte position of the current playback.
+// ? Returns the current byte position of the sample being played.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetByte, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetByte()))
 /* ========================================================================= */
 // $ Source:GetDirection
 // < X:number=Current X direction.
@@ -129,6 +137,12 @@ LLFUNC(GetRelative, 1,
 /* ------------------------------------------------------------------------- */
 LLFUNC(GetRollOff, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetRollOff()))
 /* ========================================================================= */
+// $ Source:GetSample
+// < Sample:integer=The sample position of the current playback.
+// ? Returns the current sample position of the sample being played.
+/* ------------------------------------------------------------------------- */
+LLFUNC(GetSample, 1, LuaUtilPushVar(lS, AgSource{lS, 1}().SourceGetSample()))
+/* ========================================================================= */
 // $ Source:GetState
 // < State:integer=The current playback state.
 // ? Returns if current playback state.
@@ -189,6 +203,15 @@ LLFUNC(PlayTwo, 0,
            aRight{lS, 2};
   LuaUtilPushVar(lS, aLeft().SourcePlay(aRight())))
 /* ========================================================================= */
+// $ Source:SetByte
+// > Byte:integer=Byte position.
+// ? Sets the byte position to play at in the source.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetByte, 0,
+  const AgSource aSource{lS, 1};
+  const AgALint aByte{lS, 2};
+  aSource().SourceSetByte(aByte))
+/* ========================================================================= */
 // $ Source:SetDirection
 // > X:number=The new X direction.
 // > Y:number=The new Y direction.
@@ -218,6 +241,24 @@ LLFUNC(SetGain, 0,
   const AgALfloat aGain{lS, 2};
   aSource().SourceSetGain(aGain))
 /* ========================================================================= */
+// $ Source:SetLooping
+// > Looping:boolean=The new looping state
+// ? Sets if the source should be looping.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetLooping, 0,
+  const AgSource aSource{lS, 1};
+  const AgBoolean aLooping{lS, 2};
+  aSource().SourceSetLooping(aLooping))
+/* ========================================================================= */
+// $ Source:SetMaxDist
+// > Distance:number=The new maximum distance.
+// ? Sets the maximum distance of the source.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetMaxDist, 0,
+  const AgSource aSource{lS, 1};
+  const AgALfloat aMaxDistance{lS, 2};
+  aSource().SourceSetMaxDist(aMaxDistance))
+/* ========================================================================= */
 // $ Source:SetMaxGain
 // > Gain:number=The new maximum  gain value.
 // ? Sets a new maximum gain of the source.
@@ -245,42 +286,6 @@ LLFUNC(SetPitch, 0,
   const AgALfloat aPitch{lS, 2};
   aSource().SourceSetPitch(aPitch))
 /* ========================================================================= */
-// $ Source:SetRefDist
-// > Distance:number=The new reference distance.
-// ? Sets the new reference distance of the source.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetRefDist, 0,
-  const AgSource aSource{lS, 1};
-  const AgALfloat aRefDistance{lS, 2};
-  aSource().SourceSetRefDist(aRefDistance))
-/* ========================================================================= */
-// $ Source:SetRollOff
-// > RollOff:number=The new rolloff.
-// ? Sets the new rolloff of the source.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetRollOff, 0,
-  const AgSource aSource{lS, 1};
-  const AgALfloat aRollOff{lS, 2};
-  aSource().SourceSetRollOff(aRollOff))
-/* ========================================================================= */
-// $ Source:SetLooping
-// > Looping:boolean=The new looping state
-// ? Sets if the source should be looping.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetLooping, 0,
-  const AgSource aSource{lS, 1};
-  const AgBoolean aLooping{lS, 2};
-  aSource().SourceSetLooping(aLooping))
-/* ========================================================================= */
-// $ Source:SetMaxDist
-// > Distance:number=The new maximum distance.
-// ? Sets the maximum distance of the source.
-/* ------------------------------------------------------------------------- */
-LLFUNC(SetMaxDist, 0,
-  const AgSource aSource{lS, 1};
-  const AgALfloat aMaxDistance{lS, 2};
-  aSource().SourceSetMaxDist(aMaxDistance))
-/* ========================================================================= */
 // $ Source:SetPosition
 // < X:number=The new X position.
 // < Y:number=The new Y position.
@@ -292,6 +297,15 @@ LLFUNC(SetPosition, 0,
   const AgALfloat aX{lS, 2}, aY{lS, 3}, aZ{lS, 4};
   aSource().SourceSetPosition(aX, aY, aZ))
 /* ========================================================================= */
+// $ Source:SetRefDist
+// > Distance:number=The new reference distance.
+// ? Sets the new reference distance of the source.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetRefDist, 0,
+  const AgSource aSource{lS, 1};
+  const AgALfloat aRefDistance{lS, 2};
+  aSource().SourceSetRefDist(aRefDistance))
+/* ========================================================================= */
 // $ Source:SetRelative
 // > Relative:boolean=Sets if the source is relative.
 // ? Sets the new relative state of the source.
@@ -300,6 +314,24 @@ LLFUNC(SetRelative, 0,
   const AgSource aSource{lS, 1};
   const AgBoolean aRelative{lS, 2};
   aSource().SourceSetRelative(aRelative))
+/* ========================================================================= */
+// $ Source:SetRollOff
+// > RollOff:number=The new rolloff.
+// ? Sets the new rolloff of the source.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetRollOff, 0,
+  const AgSource aSource{lS, 1};
+  const AgALfloat aRollOff{lS, 2};
+  aSource().SourceSetRollOff(aRollOff))
+/* ========================================================================= */
+// $ Source:SetSample
+// > Sample:integer=Sample position.
+// ? Sets the sample position to play at in the source.
+/* ------------------------------------------------------------------------- */
+LLFUNC(SetSample, 0,
+  const AgSource aSource{lS, 1};
+  const AgALint aSample{lS, 2};
+  aSource().SourceSetSample(aSample))
 /* ========================================================================= */
 // $ Source:SetVelocity
 // < X:number=The new X velocity.
@@ -322,18 +354,19 @@ LLFUNC(Stop, 0, AgSource{lS, 1}().SourceStop())
 ** ######################################################################### **
 ** ========================================================================= */
 LLRSMFBEGIN                            // Source:* methods begin
-  LLRSFUNC(Destroy),      LLRSFUNC(GetDirection), LLRSFUNC(GetElapsed),
-  LLRSFUNC(GetGain),      LLRSFUNC(GetId),        LLRSFUNC(GetLooping),
-  LLRSFUNC(GetMaxDist),   LLRSFUNC(GetMaxGain),   LLRSFUNC(GetMinGain),
-  LLRSFUNC(GetPitch),     LLRSFUNC(GetPosition),  LLRSFUNC(GetRefDist),
-  LLRSFUNC(GetRelative),  LLRSFUNC(GetRollOff),   LLRSFUNC(GetState),
-  LLRSFUNC(GetVelocity),  LLRSFUNC(IsDestroyed),  LLRSFUNC(IsPlaying),
-  LLRSFUNC(IsStopped),    LLRSFUNC(IsValid),      LLRSFUNC(Play),
-  LLRSFUNC(PlayTwo),      LLRSFUNC(SetDirection), LLRSFUNC(SetElapsed),
-  LLRSFUNC(SetGain),      LLRSFUNC(SetLooping),   LLRSFUNC(SetMaxDist),
-  LLRSFUNC(SetMaxGain),   LLRSFUNC(SetMinGain),   LLRSFUNC(SetPitch),
-  LLRSFUNC(SetPosition),  LLRSFUNC(SetRefDist),   LLRSFUNC(SetRelative),
-  LLRSFUNC(SetRollOff),   LLRSFUNC(SetVelocity),  LLRSFUNC(Stop),
+  LLRSFUNC(Destroy), LLRSFUNC(GetByte), LLRSFUNC(GetDirection),
+  LLRSFUNC(GetElapsed), LLRSFUNC(GetGain), LLRSFUNC(GetId),
+  LLRSFUNC(GetLooping), LLRSFUNC(GetMaxDist), LLRSFUNC(GetMaxGain),
+  LLRSFUNC(GetMinGain), LLRSFUNC(GetPitch), LLRSFUNC(GetPosition),
+  LLRSFUNC(GetRefDist), LLRSFUNC(GetRelative), LLRSFUNC(GetRollOff),
+  LLRSFUNC(GetSample), LLRSFUNC(GetState), LLRSFUNC(GetVelocity),
+  LLRSFUNC(IsDestroyed), LLRSFUNC(IsPlaying), LLRSFUNC(IsStopped),
+  LLRSFUNC(IsValid), LLRSFUNC(Play), LLRSFUNC(PlayTwo), LLRSFUNC(SetByte),
+  LLRSFUNC(SetDirection), LLRSFUNC(SetElapsed), LLRSFUNC(SetGain),
+  LLRSFUNC(SetLooping), LLRSFUNC(SetMaxDist), LLRSFUNC(SetMaxGain),
+  LLRSFUNC(SetMinGain), LLRSFUNC(SetPitch), LLRSFUNC(SetPosition),
+  LLRSFUNC(SetRefDist), LLRSFUNC(SetRelative), LLRSFUNC(SetSample),
+  LLRSFUNC(SetRollOff), LLRSFUNC(SetVelocity), LLRSFUNC(Stop),
 LLRSEND                                // Source:* methods end
 /* ========================================================================= **
 ** ######################################################################### **

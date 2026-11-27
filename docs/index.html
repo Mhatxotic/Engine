@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<!-- Reference for the Mhatxotic Engine API version 26.11.25.5 -->
-<!-- Automatically built at Wed Nov 25 20:36:18 2026 +0000 -->
-<!-- With Mhatxotic Engine Project Management Utility version 26.11.25.5 -->
+<!-- Reference for the Mhatxotic Engine API version 26.11.27.30 -->
+<!-- Automatically built at Fri Nov 27 15:17:27 2026 +0000 -->
+<!-- With Mhatxotic Engine Project Management Utility version 26.11.27.30 -->
 <!-- Copyright (c) 2006-2026 Mhatxotic Design, All Rights Reserved Worldwide -->
 <HTML lang="en-GB">
 <HEAD>
@@ -11,19 +11,19 @@
 	<META name="apple-mobile-web-app-title" content="Mhatxotic Engine API">
 	<META name="author" content="Mhatxotic Design">
 	<META name="copyright" content="Copyright © 2006-2026 Mhatxotic Design, All Rights Reserved">
-	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.25.5">
+	<META name="description" content="Reference for the Mhatxotic Engine API version 26.11.27.30">
 	<META name="format-detection" content="telephone=no">
-	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.25.5">
+	<META name="generator" content="Mhatxotic Engine Project Management Utility version 26.11.27.30">
 	<META name="google-site-verification" content="BvWxrqmgaIxqe_W8AW3OGK0fdCI_JfB_-gcOOxCF9_4">
 	<META name="googlebot" content="index,follow">
-	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.25.5">
+	<META name="og:description" content="Reference for the Mhatxotic Engine API version 26.11.27.30">
 	<META name="og:image" content="https://repository-images.githubusercontent.com/611875607/40b83f0a-0e08-4225-912f-3f7ffe188ba7">
-	<META name="og:title" content="Mhatxotic Engine 26.11.25.5 API reference">
+	<META name="og:title" content="Mhatxotic Engine 26.11.27.30 API reference">
 	<META name="og:url" content="https://mhatxotic.github.io/Engine/">
 	<META name="robots" content="index,follow">
 	<META name="viewport" content="width=device-width, initial-scale=1">
 	<LINK rel="icon" type="image/x-icon" href="favicon.ico">
-	<TITLE>Mhatxotic Engine 26.11.25.5 API reference</TITLE>
+	<TITLE>Mhatxotic Engine 26.11.27.30 API reference</TITLE>
 	<STYLE media="screen">
 	* { margin:0; padding:0 }
 	BODY { background-color:#111; border:0; font-family:sans-serif; overflow-x:hidden; text-shadow: 1px 1px #111 }
@@ -61,7 +61,7 @@
 	</STYLE>
 </HEAD>
 <BODY id="idx.top">
-	<H1>Mhatxotic Engine 26.11.25.5 API reference</H1>
+	<H1>Mhatxotic Engine 26.11.27.30 API reference</H1>
 	<NOSCRIPT>
 		<H2>JavaScript is required to show and hide elements.</H2>
 	</NOSCRIPT>
@@ -100,7 +100,7 @@
 	</SCRIPT>
 	<DIV id="idx" style="display:none">
 		<H2>Table of contents:-</H2>
-		<P>This build of the Mhatxotic Engine API consists of 960 functions (423 members, 537 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
+		<P>This build of the Mhatxotic Engine API consists of 964 functions (423 members, 541 methods) and 32 consts in 31 namespaces with 89 commands and 224 cvars.</P>
 		<OL id="toc">
 			<LI id="idx.ns">
 				<DIV>
@@ -1240,9 +1240,10 @@
 								</OL>
 							</LI>
 							<LI>
-								<B>Methods</B> <I>(36 methods)</I>
+								<B>Methods</B> <I>(40 methods)</I>
 								<OL>
 									<LI><A href="#Source:Destroy">Destroy</A></LI>
+									<LI><A href="#Source:GetByte">GetByte</A></LI>
 									<LI><A href="#Source:GetDirection">GetDirection</A></LI>
 									<LI><A href="#Source:GetElapsed">GetElapsed</A></LI>
 									<LI><A href="#Source:GetGain">GetGain</A></LI>
@@ -1256,6 +1257,7 @@
 									<LI><A href="#Source:GetRefDist">GetRefDist</A></LI>
 									<LI><A href="#Source:GetRelative">GetRelative</A></LI>
 									<LI><A href="#Source:GetRollOff">GetRollOff</A></LI>
+									<LI><A href="#Source:GetSample">GetSample</A></LI>
 									<LI><A href="#Source:GetState">GetState</A></LI>
 									<LI><A href="#Source:GetVelocity">GetVelocity</A></LI>
 									<LI><A href="#Source:IsDestroyed">IsDestroyed</A></LI>
@@ -1264,6 +1266,7 @@
 									<LI><A href="#Source:IsValid">IsValid</A></LI>
 									<LI><A href="#Source:Play">Play</A></LI>
 									<LI><A href="#Source:PlayTwo">PlayTwo</A></LI>
+									<LI><A href="#Source:SetByte">SetByte</A></LI>
 									<LI><A href="#Source:SetDirection">SetDirection</A></LI>
 									<LI><A href="#Source:SetElapsed">SetElapsed</A></LI>
 									<LI><A href="#Source:SetGain">SetGain</A></LI>
@@ -1276,6 +1279,7 @@
 									<LI><A href="#Source:SetRefDist">SetRefDist</A></LI>
 									<LI><A href="#Source:SetRelative">SetRelative</A></LI>
 									<LI><A href="#Source:SetRollOff">SetRollOff</A></LI>
+									<LI><A href="#Source:SetSample">SetSample</A></LI>
 									<LI><A href="#Source:SetVelocity">SetVelocity</A></LI>
 									<LI><A href="#Source:Stop">Stop</A></LI>
 								</OL>
@@ -8171,6 +8175,16 @@
 		<PRE>Stops and destroys the source object and frees all the memory associated with it. The object will no longer be useable after this call and an error will be generated if accessed.<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Source:GetByte" style="display:none">
+		<H3>Source:GetByte</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Byte</U> = Source:GetByte()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Byte</U> <I>(integer)</I> = The byte position of the current playback.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current byte position of the sample being played.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Source:GetDirection" style="display:none">
 		<H3>Source:GetDirection</H3>
 		<H4>Syntax:-</H4>
@@ -8301,6 +8315,16 @@
 		<PRE>Returns the current rolloff of the source.<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
+	<DIV id="Source:GetSample" style="display:none">
+		<H3>Source:GetSample</H3>
+		<H4>Syntax:-</H4>
+		<PRE><U>Sample</U> = Source:GetSample()</PRE>
+		<H4>Return Parameters:-</H4>
+		<PRE><U>Sample</U> <I>(integer)</I> = The sample position of the current playback.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Returns the current sample position of the sample being played.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
 	<DIV id="Source:GetState" style="display:none">
 		<H3>Source:GetState</H3>
 		<H4>Syntax:-</H4>
@@ -8379,6 +8403,16 @@
 		<PRE><U>Success</U> <I>(boolean)</I> = Are the sources now playing?<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Plays two sources. Useful if you want to play a stereo source.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Source:SetByte" style="display:none">
+		<H3>Source:SetByte</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Source:SetByte(<I><U>Byte</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Byte</U> <I>(integer)</I> = Byte position.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Sets the byte position to play at in the source.<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Source:SetDirection" style="display:none">
@@ -8499,6 +8533,16 @@
 		<PRE><U>RollOff</U> <I>(number)</I> = The new rolloff.<BR></PRE>
 		<H4>Synopsis:-</H4>
 		<PRE>Sets the new rolloff of the source.<BR></PRE>
+		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
+	</DIV>
+	<DIV id="Source:SetSample" style="display:none">
+		<H3>Source:SetSample</H3>
+		<H4>Syntax:-</H4>
+		<PRE>Source:SetSample(<I><U>Sample</U></I>)</PRE>
+		<H4>Function Parameters:-</H4>
+		<PRE><U>Sample</U> <I>(integer)</I> = Sample position.<BR></PRE>
+		<H4>Synopsis:-</H4>
+		<PRE>Sets the sample position to play at in the source.<BR></PRE>
 		<H4><A href="#idx:Source">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<DIV id="Source:SetVelocity" style="display:none">
@@ -14037,6 +14081,6 @@
 		<H4><A href="#idx.cv">&#x25B2; Return to table of contents</A></H4>
 	</DIV>
 	<ADDRESS>Copyright &copy; 2026 Mhatxotic Design, All Rights Reserved.<BR>
-	This document was generated at Wed Nov 25 20:36:18 2026 +0000</ADDRESS>
+	This document was generated at Fri Nov 27 15:17:27 2026 +0000</ADDRESS>
 </BODY>
 </HTML>

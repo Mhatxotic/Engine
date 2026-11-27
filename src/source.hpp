@@ -73,15 +73,42 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   { AL(cOal->OalGetSourceVector(SourceGet(), aleP, &alfX, &alfY, &alfZ),
       "Get source vector failed!",
       "Index", SourceGet(), "Param", aleP,
-      "X",     alfX,              "Y",     alfY,
+      "X",     alfX,        "Y",     alfY,
       "Z",     alfZ); }
+  /* -- Get source float vector (X) ---------------------------------------- */
+  ALfloat SourceGetVectorX(const ALenum aleP) const
+  { ALfloat alfDummy, alfX;
+    AL(cOal->OalGetSourceVector(SourceGet(),
+         aleP, &alfX, &alfDummy, &alfDummy),
+       "Get source vector X failed!",
+       "Index", SourceGet(), "Param", aleP, "X", alfX);
+    return alfX;
+  }
+  /* -- Get source float vector (Y) ---------------------------------------- */
+  ALfloat SourceGetVectorY(const ALenum aleP) const
+  { ALfloat alfDummy, alfY;
+    AL(cOal->OalGetSourceVector(SourceGet(),
+         aleP, &alfDummy, &alfY, &alfDummy),
+       "Get source vector Y failed!",
+       "Index", SourceGet(), "Param", aleP, "Y", alfY);
+    return alfY;
+  }
+  /* -- Get source float vector (Z) ---------------------------------------- */
+  ALfloat SourceGetVectorZ(const ALenum aleP) const
+  { ALfloat alfDummy, alfZ;
+    AL(cOal->OalGetSourceVector(SourceGet(),
+         aleP, &alfDummy, &alfDummy, &alfZ),
+       "Get source vector Z failed!",
+       "Index", SourceGet(), "Param", aleP, "Z", alfZ);
+    return alfZ;
+  }
   /* -- Set source float vector (X, Y and Z) ------------------------------- */
   void SourceSetVector(const ALenum aleP,
     const ALfloat alfX, const ALfloat alfY, const ALfloat alfZ) const
   { AL(cOal->OalSetSourceVector(SourceGet(), aleP, alfX, alfY, alfZ),
       "Set source vector failed!",
       "Index", SourceGet(), "Param", aleP,
-      "X",     alfX,              "Y",     alfY,
+      "X",     alfX,        "Y",     alfY,
       "Z",     alfZ); }
   /* -- Reset parameters ------------------------------------------- */ public:
   void SourceInit()
@@ -117,12 +144,21 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   void SourceSetExternal(const bool bState)
     { FlagSetOrClear(SF_EXTERNAL, bState); }
   /* -- Get/set externally managed by LUA source --------------------------- */
-  bool SourceGetClass() const { return FlagIsSet(SF_CLASS); }
+  bool SourceIsClass() const { return FlagIsSet(SF_CLASS); }
+  bool SourceIsNotClass() const { return !SourceIsClass(); }
   void SourceSetClass(const bool bState) { FlagSetOrClear(SF_CLASS, bState); }
   /* -- Get/set elapsed time ----------------------------------------------- */
   ALfloat SourceGetElapsed() const { return SourceGetFloat(AL_SEC_OFFSET); }
   void SourceSetElapsed(const ALfloat alfSeconds) const
     { SourceSetFloat(AL_SEC_OFFSET, alfSeconds); }
+  /* -- Get/set sample offset ---------------------------------------------- */
+  ALfloat SourceGetSample() const { return SourceGetFloat(AL_SAMPLE_OFFSET); }
+  void SourceSetSample(const ALint aliSample) const
+    { SourceSetInt(AL_SAMPLE_OFFSET, aliSample); }
+  /* -- Get/set byte offset ------------------------------------------------ */
+  ALfloat SourceGetByte() const { return SourceGetFloat(AL_BYTE_OFFSET); }
+  void SourceSetByte(const ALint aliByte) const
+    { SourceSetInt(AL_BYTE_OFFSET, aliByte); }
   /* -- Get/set gain ------------------------------------------------------- */
   ALfloat SourceGetGain() const { return SourceGetFloat(AL_GAIN); }
   void SourceSetGain(const ALfloat alfGain) const
@@ -170,18 +206,27 @@ CTOR_MEM_BEGIN_CSLAVE(Sources, Source, ICHelperSafe),
   void SourceSetDirection(const ALfloat alfX, const ALfloat alfY,
     const ALfloat alfZ) const
   { SourceSetVector(AL_DIRECTION, alfX, alfY, alfZ); }
+  ALfloat SourceGetDirectionX() const{ return SourceGetVectorX(AL_DIRECTION); }
+  ALfloat SourceGetDirectionY() const{ return SourceGetVectorY(AL_DIRECTION); }
+  ALfloat SourceGetDirectionZ() const{ return SourceGetVectorZ(AL_DIRECTION); }
   /* -- Get/set position --------------------------------------------------- */
   void SourceGetPosition(ALfloat &alfX, ALfloat &alfY, ALfloat &alfZ) const
     { SourceGetVector(AL_POSITION, alfX, alfY, alfZ); }
   void SourceSetPosition(const ALfloat alfX, const ALfloat alfY,
     const ALfloat alfZ) const
   { SourceSetVector(AL_POSITION, alfX, alfY, alfZ); }
+  ALfloat SourceGetPositionX() const { return SourceGetVectorX(AL_POSITION); }
+  ALfloat SourceGetPositionY() const { return SourceGetVectorY(AL_POSITION); }
+  ALfloat SourceGetPositionZ() const { return SourceGetVectorZ(AL_POSITION); }
   /* -- Get/set velocity --------------------------------------------------- */
   void SourceGetVelocity(ALfloat &alfX, ALfloat &alfY, ALfloat &alfZ) const
     { SourceGetVector(AL_VELOCITY, alfX, alfY, alfZ); }
   void SourceSetVelocity(const ALfloat alfX, const ALfloat alfY,
     const ALfloat alfZ) const
   { SourceSetVector(AL_VELOCITY, alfX, alfY, alfZ); }
+  ALfloat SourceGetVelocityX() const { return SourceGetVectorX(AL_VELOCITY); }
+  ALfloat SourceGetVelocityY() const { return SourceGetVectorY(AL_VELOCITY); }
+  ALfloat SourceGetVelocityZ() const { return SourceGetVectorZ(AL_VELOCITY); }
   /* -- Get source id ------------------------------------------------------ */
   ALuint SourceGet() const { return aluId; }
   /* -- Get/set/clear buffer id -------------------------------------------- */
@@ -362,7 +407,7 @@ static void SourceDeInit()
     Source &soRef = **siIt;
     // If it is not LUA managed then delete it because the Sample, Video and
     // Stream classes will all reinitialise a new source again.
-    if(!soRef.SourceGetClass()) { siIt = cSources->erase(siIt); continue; }
+    if(soRef.SourceIsNotClass()) { siIt = cSources->erase(siIt); continue; }
     // Is a LUA class so just stop and clear it. LUA GC deletes this, not us.
     soRef.SourceStop();
     soRef.SourceClearBuffer();

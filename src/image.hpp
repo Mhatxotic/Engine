@@ -562,7 +562,7 @@ CTOR_BEGIN_ASYNC_DUO(Images, Image, CLHelperUnsafe, ICHelperUnsafe),
     const BitDepth bdOld = ImageDataGetBitsPerPixel();
     const ByteDepth byOld = ImageDataGetBytesPerPixel();
     const TextureType ttOld = ImageDataGetPixelType();
-    const size_t stOld = GetAlloc();
+    const size_t stOld = ImageDataGetAlloc();
     // Convert to GPU copmatible texture?
     if(ImageDataIsConvertGPUCompat())
     { // If it is not already converted by the file filter?
@@ -742,9 +742,9 @@ CTOR_BEGIN_ASYNC_DUO(Images, Image, CLHelperUnsafe, ICHelperUnsafe),
             ImageLibGetPixelFormat(ttOld), StdIOSHex, ttOld,
             ImageLibGetPixelFormat(ImageDataGetPixelType()),
               ImageDataGetPixelType(), StdIOSDec) : cCommon->CommonBlankStr(),
-        stOld != GetAlloc() ?
+        stOld != ImageDataGetAlloc() ?
           StrFormat("\n- Memory usage: $ -> $ bytes.",
-            stOld, GetAlloc()) : cCommon->CommonBlankStr(),
+            stOld, ImageDataGetAlloc()) : cCommon->CommonBlankStr(),
         ImageDataIsActiveAtlas() ? "\n- Slots compacted to atlas." :
           cCommon->CommonBlankStr(),
         ImageDataIsActiveReverse() ? "\n- Pixels reversed." :
